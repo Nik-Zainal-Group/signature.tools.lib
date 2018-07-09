@@ -93,4 +93,187 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
 }
 
 
+# source('../lib/pcf/fastPCF.R')
+# source('../lib/pcf/extract.kat.regions.R')
+# source('../lib/utils/calcIntermutDist.R')
+
+# this is used for per-sample clustering of both single-base substitutions and rearrangement breakpoints
+
+rearrangement.clustering_bedpe <- function(sv_bedpe,
+                                           plot.path=NA,
+                                           kmin=10,# how many points at minimum in a peak, for the pcf algorithm
+                                           kmin.samples=kmin, # how many different samples at minimum in  a peak
+                                           gamma.sdev=25, # 
+                                           PEAK.FACTOR=4,
+                                           thresh.dist=NA,
+                                           gamma=NA,
+                                           kmin.filter=kmin # if the pcf parameter is different from the definition of a peak
+) { 
+  
+  #prepare a dataframe for the calculation
+  rearrs.left <- sv_bedpe[,c('chrom1','start1','sample','name')];
+  names(rearrs.left ) <- NA
+  rearrs.right <- sv_bedpe[,c('chrom2','start2','sample','name')];
+  names(rearrs.right ) <- NA
+  rearrs.cncd <- rbind(rearrs.left , rearrs.right  );
+  rearrs.cncd$isLeft <- c(rep(TRUE, nrow(rearrs.left)), rep(FALSE, nrow(rearrs.left)))
+  colnames(rearrs.cncd) <- c('chr', 'position', 'sample', 'id')
+  sample.bps <- rearrs.cncd
+  
+  #run the algorithm
+  genome.size <- 3 * 10^9
+  MIN.BPS <- 10 # minimal number of breakpoints on a chromosome to do any any segmentation
+  
+  logScale <- FALSE   
+  
+  exp.dist <-genome.size/nrow(sample.bps)
+  
+  if (logScale) {
+    sample.bps$intermut.dist <- log10(calcIntermutDist(sample.bps, first.chrom.na=FALSE)$distPrev) # calculate the distances between the breakpoints
+    if (is.na(thresh.dist)) {
+      thresh.dist <- log10(exp.dist/PEAK.FACTOR) # calculate the threshold to call a peak
+    }
+  } else {
+    
+    sample.bps$intermut.dist <- calcIntermutDist(sample.bps, first.chrom.na=FALSE)$distPrev
+    if (is.na(thresh.dist)) {
+      thresh.dist <- exp.dist/PEAK.FACTOR
+    }
+  }
+  
+  
+  if (is.na(gamma) & !is.na(gamma.sdev)) {
+    # compute the mean absolute deviation
+    sdev <- getMad(sample.bps$intermut.dist);
+    gamma <- gamma.sdev*sdev
+  }
+  
+  
+  
+  sample.bps$is.clustered.single <- rep(FALSE, nrow(sample.bps))
+  
+  all.kat.regions <- data.frame()
+  
+  for (chrom in unique(sample.bps$chr)) { # loop over chromosomes     
+    
+    sample.bps.flag <- sample.bps$chr==chrom #   breakpoints on a current chromosome
+    
+    
+    if (sum(sample.bps.flag )>MIN.BPS ) { # if there are enough breakpoints on a chromosome to run pcf
+      
+      data.points <- sample.bps$intermut.dist[sample.bps.flag]
+      
+      
+      res = exactPcf(data.points, kmin, gamma, T)
+      
+      sample.bps$mean.intermut.dist[sample.bps.flag] <- res$yhat
+      
+      # prepare the points for pcf
+      subs <- data.frame(chr=sample.bps$chr[sample.bps.flag], pos=sample.bps$position[sample.bps.flag], sample=sample.bps$sample[sample.bps.flag])
+      kat.regions <- extract.kat.regions(res, thresh.dist, subs, doMerging=TRUE, kmin.samples=1,  kmin.filter= kmin.filter) # extract peaks, this is special case as we want at least kmin samples
+      
+      all.kat.regions <- rbind(all.kat.regions, kat.regions)
+      if (!is.null(kat.regions) && nrow( kat.regions )>0) { # if there are any kataegis regions found on this chormosome
+        for (k in 1:nrow(kat.regions)) {
+          
+          sample.bps$is.clustered.single[which(sample.bps.flag)[ kat.regions$firstBp[k] : kat.regions$lastBp[k]]] <- TRUE # call all breakpoints as clustered     
+        }                
+      }            
+    } else {
+      
+      sample.bps$mean.intermut.dist[sample.bps.flag] <- mean(sample.bps$intermut.dist[sample.bps.flag])           
+    }        
+  }
+  
+  
+  
+  if (!logScale) { # even if pcf was run on non-logged distances, I log the output
+    sample.bps$intermut.dist <- log10(sample.bps$intermut.dist)
+    sample.bps$mean.intermut.dist <- log10(sample.bps$mean.intermut.dist)
+  }
+  
+  # a rearrangement is in a cluster if any of its breakpoints are
+  sample.bps$is.clustered <- sample.bps$is.clustered.single
+  sample.bps$is.clustered[sample.bps$id %in% subset(sample.bps, is.clustered.single==TRUE)$id] <- TRUE
+  
+  # mark both breakpoints of a rearrangement as clustered if any is
+  sv_bedpe$is.clustered <- sv_bedpe$name %in% sample.bps$id[sample.bps$is.clustered.single]
+  
+  result <- list()
+  result$sv_bedpe <- sv_bedpe
+  result$kat.regions <- all.kat.regions
+  result
+}
+
+
+prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
+  
+  catalogue.labels <- c('clustered_del_1-10Kb', 'clustered_del_10-100Kb', 'clustered_del_100Kb-1Mb', 'clustered_del_1Mb-10Mb', 'clustered_del_>10Mb', 'clustered_tds_1-10Kb', 'clustered_tds_10-100Kb', 'clustered_tds_100Kb-1Mb', 'clustered_tds_1Mb-10Mb', 'clustered_tds_>10Mb', 'clustered_inv_1-10Kb', 'clustered_inv_10-100Kb', 'clustered_inv_100Kb-1Mb', 'clustered_inv_1Mb-10Mb', 'clustered_inv_>10Mb', 'clustered_trans', 'non-clustered_del_1-10Kb', 'non-clustered_del_10-100Kb', 'non-clustered_del_100Kb-1Mb', 'non-clustered_del_1Mb-10Mb', 'non-clustered_del_>10Mb', 'non-clustered_tds_1-10Kb', 'non-clustered_tds_10-100Kb', 'non-clustered_tds_100Kb-1Mb', 'non-clustered_tds_1Mb-10Mb', 'non-clustered_tds_>10Mb', 'non-clustered_inv_1-10Kb', 'non-clustered_inv_10-100Kb', 'non-clustered_inv_100Kb-1Mb', 'non-clustered_inv_1Mb-10Mb', 'non-clustered_inv_>10Mb', 'non-clustered_trans')
+  
+  all_catalogues <- as.data.frame(matrix(nrow = length(catalogue.labels),ncol = 0))
+  rownames(all_catalogues) <- catalogue.labels
+  
+  for (sample_name in unique(sv_bedpe$sample)){
+    sample.rearrs <- sv_bedpe[sv_bedpe$sample==sample_name,]
+    
+    rearr_catalogue <- as.data.frame(matrix(0,nrow = length(catalogue.labels),ncol = 1))
+    
+    if (nrow(sample.rearrs)>0) {
+      
+      label1 <- rep('non-clustered', nrow(sample.rearrs))
+      label1[ sample.rearrs$is.clustered] <- 'clustered'
+      
+      label2 <- rep('', nrow(sample.rearrs))
+      label2[ sample.rearrs$svclass=='deletion'] <- '_del'
+      label2[ sample.rearrs$svclass=='translocation'] <- '_trans'
+      label2[ sample.rearrs$svclass=='inversion'] <- '_inv'
+      label2[ sample.rearrs$svclass=='tandem-duplication'] <- '_tds'
+      
+      label3 <- rep('', nrow(sample.rearrs))
+      sample.rearrs$bkdist <- abs(sample.rearrs$start2 - sample.rearrs$start1)
+      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist<=1e4] <- '_1-10Kb'
+      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e4 & sample.rearrs$bkdist<=1e5 ] <- '_10-100Kb'
+      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e5 & sample.rearrs$bkdist<=1e6 ] <- '_100Kb-1Mb'
+      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e6 & sample.rearrs$bkdist<=1e7 ] <- '_1Mb-10Mb'
+      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e7 ] <- '_>10Mb'
+      
+      sample.rearrs$catalogue.label <- paste0(label1, label2, label3)
+      
+      sample.table <- as.data.frame(table( sample.rearrs$catalogue.label),drop=FALSE)
+      rownames(sample.table ) <- sample.table$Var
+      
+      rearr_catalogue <-  sample.table [as.character(catalogue.labels), 'Freq',drop=FALSE ]
+      
+    }
+    
+    rearr.catalogue <- rearr_catalogue
+    rownames(rearr.catalogue) <- catalogue.labels
+    colnames(rearr.catalogue) <- sample_name
+    rearr.catalogue[is.na(rearr.catalogue)] <- 0
+    
+    all_catalogues <- cbind(all_catalogues,rearr.catalogue)
+  }
+  
+  all_catalogues
+}
+
+
+
+classifyRearrangementsFromBedpe <- function(sv_bedpe){
+  svclass <- c()
+  for (i in 1:nrow(sv_bedpe)){
+    if(sv_bedpe[i,"chrom1"]!=sv_bedpe[i,"chrom2"]){
+      svclass <- c(svclass,"translocation")
+    }else if(sv_bedpe[i,"strand1"]!=sv_bedpe[i,"strand2"]){
+      svclass <- c(svclass,"inversion")
+    }else if(sv_bedpe[i,"strand1"]=="+"){
+      svclass <- c(svclass,"deletion")
+    }else if(sv_bedpe[i,"strand1"]=="-"){
+      svclass <- c(svclass,"tandem-duplication")
+    }
+  }
+  sv_bedpe[,"svclass"] <- svclass
+  #return updated df
+  sv_bedpe
+}
 
