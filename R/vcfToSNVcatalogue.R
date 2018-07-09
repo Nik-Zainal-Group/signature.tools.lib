@@ -13,7 +13,7 @@
 #' @param vcfFilename name of the VCF file to read from
 #' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38) or "hg19" (will load BSgenome.Hsapiens.UCSC.hg19)
 #' @return returns the SNV catalogue for the given sample
-#' @keywords vcf, SNV
+#' @keywords vcf SNV
 #' @export
 #' @examples
 #' file_subs <- "subs.vcf"

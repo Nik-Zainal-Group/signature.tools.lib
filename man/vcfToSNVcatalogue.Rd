@@ -22,4 +22,4 @@ file_subs <- "subs.vcf"
 res <- vcfToSNVcatalogue(file_subs,genome.v = "hg38")
 }
 \keyword{SNV}
-\keyword{vcf,}
+\keyword{vcf}

@@ -54,7 +54,7 @@
 #' 
 #' @param sv_bedpe data frame BEDPE as described above
 #' @return returns the rearrangement catalogue for the given sample
-#' @keywords bedpe, rearrangement
+#' @keywords bedpe rearrangement
 #' @export
 #' @examples
 #' vcf_sv_file.bedpe <- "sample.bedpe"

@@ -68,5 +68,5 @@ sv_bedpe <- read.table(vcf_sv_file.bedpe,sep = "\\t",header = TRUE,
 #build a catalogue from the bedpe file
 res.cat <- bedpeToRearrCatalogue(sv_bedpe)
 }
-\keyword{bedpe,}
+\keyword{bedpe}
 \keyword{rearrangement}

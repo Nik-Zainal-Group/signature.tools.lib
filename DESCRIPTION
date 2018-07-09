@@ -12,5 +12,17 @@ Imports: VariantAnnotation,
     BSgenome.Hsapiens.UCSC.hg19,
     SummarizedExperiment,
     BiocGenerics,
-    GenomeInfoDb
+    GenomeInfoDb,
+    NMF,
+    foreach,
+    doParallel,
+    doMC,
+    lpSolve,
+    ggplot2,
+    methods,
+    cluster,
+    stats,
+    NNLM,
+    nnls,
+    GenSA
 RoxygenNote: 6.0.1

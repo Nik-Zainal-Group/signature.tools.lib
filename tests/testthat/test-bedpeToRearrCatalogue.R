@@ -1,4 +1,4 @@
-context("testing function bedpeToRearrCatalogue()")
+context("testing building a rearrangement catalogue from a BEDPE file")
 
 test_that("test bedpeToRearrCatalogue() using a simple input file", {
   
