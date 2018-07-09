@@ -1,10 +1,16 @@
 # Signature Tools Lib R package
 
-You can install this R package by using:
+You can install this R package by entering the main directory and typing:
 
 ```
 install.packages("devtools")
-devtools::install("signature.tools.lib")
+devtools::install()
+```
+
+You can also test the package by typing:
+
+```
+devtools::test()
 ```
 
 Useful commands for development workflow can be found in the file ```signatures.tools.lib.develop.R```.

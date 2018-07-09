@@ -17,7 +17,6 @@ devtools::use_package("BSgenome.Hsapiens.NCBI.GRCh38")
 devtools::use_package("BSgenome.Hsapiens.UCSC.hg19")
 
 devtools::document()
-setwd("..")
-devtools::install("signature.tools.lib")
-devtools::test("signature.tools.lib")
+devtools::install()
+devtools::test()
 
