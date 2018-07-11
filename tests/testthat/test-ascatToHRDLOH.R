@@ -1,6 +1,6 @@
 context("testing computation of HRDLOH from ascat file")
 
-test_that("test ascatToHRDLOH() using a input file", {
+test_that("test ascatToHRDLOH() using an input file", {
   
   ascat_test.df <- read.table("ascat_test.csv", sep=",", header=F, as.is=T, check.names = FALSE)
   colnames(ascat_test.df) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')

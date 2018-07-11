@@ -24,5 +24,7 @@ Imports: VariantAnnotation,
     stats,
     NNLM,
     nnls,
-    GenSA
+    GenSA,
+    gmp,
+    plyr
 RoxygenNote: 6.0.1

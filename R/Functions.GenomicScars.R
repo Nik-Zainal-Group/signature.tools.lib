@@ -21,6 +21,7 @@
 #' This function computes the number of Telomeric AI (NtAI). Implementation of Nicolai Juul Birkbak, njuul@cbs.dtu.dk (2014-07-02).
 #' This functions generally rely on ASCAT or similarly processed copy number data, in a matrix format with at least the follwing columns in this exact order:
 #' "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction".
+#' NOTE: currently the chrominfo data refers to hg19, while hg38 is not yet supported.
 #' 
 #' @param seg input data frame. Segmented output in the form of an ASCAT out matrix, which also includes ploidy and contamination. Total CN in column 6, nA in column 7, nB in column 8, ploidy in column 9, and contamination in column 10. Requires the following columns in the given order: "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction". 
 #' @param chrominfo data frame that contains necessary chromosome information. No need to specify this for human chromosomes, it will be loaded internally. A 3 column matrix with information about the chromosomes: chromosome name, chromosome length, centromere location.
@@ -192,6 +193,7 @@ calc.ai <- function(seg, chrominfo=chrominfo, min.size=0, min.probes=500, cont =
 #' Popova's cutoffs: 15 LSTs in near-diploid, 20 in near-tetraploid.
 #' This functions generally rely on ASCAT or similarly processed copy number data, in a matrix format with at least the follwing columns in this exact order:
 #' "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction".
+#' NOTE: currently the chrominfo data refers to hg19, while hg38 is not yet supported.
 #' 
 #' @param seg seg must be an ASCAT output object, in DNAcopy format. Requires the following columns in the given order: "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction". Column "nProbes" is not used here and can be set to NA.
 #' @param nA is the column where copy number of A allele is found. This needs to be set to 7, because of the columns are referenced by position according to the required column order of seg.

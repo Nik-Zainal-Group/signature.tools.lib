@@ -17,6 +17,7 @@ This function implements Popova's LST measure as described (Popova 2012, Cancer 
 Popova's cutoffs: 15 LSTs in near-diploid, 20 in near-tetraploid.
 This functions generally rely on ASCAT or similarly processed copy number data, in a matrix format with at least the follwing columns in this exact order:
 "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction".
+NOTE: currently the chrominfo data refers to hg19, while hg38 is not yet supported.
 }
 \examples{
 res <- calc.lst(seg)

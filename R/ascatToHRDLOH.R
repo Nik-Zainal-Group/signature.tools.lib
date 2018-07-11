@@ -51,7 +51,12 @@
 #' 
 #' @param ascat.data data frame with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SAMPLE.ID sample name
+#' @return returns the HRD-LOH index
+#' @references Abkevich, V., Timms, K. M., Hennessy, B. T., Potter, J., Carey, M. S., Meyer, L. a., ... Lanchbury, J. S. (2012). Patterns of genomic loss of heterozygosity predict homologous recombination repair defects in epithelial ovarian cancer. British Journal of Cancer, 107(10), 1776–82. https://doi.org/10.1038/bjc.2012.451
 #' @export
+#' @examples
+#' ascat.data <- read.table("ascat.scv",sep=",",header=TRUE)
+#' hrd_index <- ascatToHRDLOH(ascat.df,"test_sample")
 ascatToHRDLOH <- function(ascat.data,SAMPLE.ID){
 
   #----------------------

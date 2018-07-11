@@ -27,6 +27,7 @@ calc.ai(seg, chrominfo = chrominfo, min.size = 0, min.probes = 500,
 This function computes the number of Telomeric AI (NtAI). Implementation of Nicolai Juul Birkbak, njuul@cbs.dtu.dk (2014-07-02).
 This functions generally rely on ASCAT or similarly processed copy number data, in a matrix format with at least the follwing columns in this exact order:
 "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and	"AberrantCellFraction".
+NOTE: currently the chrominfo data refers to hg19, while hg38 is not yet supported.
 }
 \examples{
 res <- calc.ai(seg)
