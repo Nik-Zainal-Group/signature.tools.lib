@@ -2,7 +2,7 @@
 % Please edit documentation in R/vcfToSNVcatalogue.R
 \name{vcfToSNVcatalogue}
 \alias{vcfToSNVcatalogue}
-\title{vcfToSNVcatalogue}
+\title{VCF to SNV catalogue}
 \usage{
 vcfToSNVcatalogue(vcfFilename, genome.v = "hg19")
 }

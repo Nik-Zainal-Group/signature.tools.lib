@@ -6,7 +6,7 @@
 #library(BSgenome.Hsapiens.NCBI.GRCh38) #hg38
 #library(BSgenome.Hsapiens.UCSC.hg19) #hg19
 
-#' vcfToSNVcatalogue
+#' VCF to SNV catalogue
 #' 
 #' Convert a vcf file containing SNV to SNV 96 channel trinuclotide context catalogue. The VCF file should containt the SNV of a single sample.
 #' 
@@ -46,8 +46,34 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   rgs <- VariantAnnotation::ranges(vcf_data)
   starts <- BiocGenerics::start(rgs)
   ends <-  BiocGenerics::end(rgs)
-  # chroms <- paste('chr', seqnames(rd), sep='')
-  chroms <- sapply(GenomeInfoDb::seqnames(vcf_data),function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x) #line changed, AD
+  
+  #Check chromosome name format
+  chroms <- GenomeInfoDb::seqnames(vcf_data)
+  if (genome.v=="hg19"){
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+    if (length(intersect(chroms,expected_chroms))==0){
+      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
+      chroms <- paste0("chr",chroms)
+      if (length(intersect(chroms,expected_chroms))>0) {
+        message("It seems that chromosome names have been corrected")
+      }else{
+        message("It seems that chromosome names have not been corrected")
+      }
+    }
+  }else if (genome.v=="hg38"){
+    expected_chroms <- c(seq(1:22),"X","Y")
+    if (length(intersect(chroms,expected_chroms))==0){
+      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
+      chroms <- sapply(chroms,function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x)
+      if (length(intersect(chroms,expected_chroms))>0) {
+        message("It seems that chromosome names have been corrected")
+      }else{
+        message("It seems that chromosome names have not been corrected")
+      }
+    }
+  }
+  
+  
   
   
   fxd <- (VariantAnnotation::fixed(vcf_data))
@@ -81,7 +107,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
 
   all.hist <- generateHist(mut.table, normalise=FALSE,mut.order=mut.order)
 
-  names(all.hist) <- mut.order
+  # names(all.hist) <- mut.order
 
   muts <- data.frame(chroms=chroms, starts=starts, ends = ends, wt=wt, mt=mt, pyrwt=mut.table$pyrwt , pyrmut=mut.table$pyrmut, pass=TRUE, barcode=barcode,
                  context=paste(mut.table$pyrbbef, '[',mut.table$pyrwt, '>',mut.table$pyrmut , ']', mut.table$pyrbaft,sep=''),
@@ -92,7 +118,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
                  )
   
   result<- list()
-  result$all.hist <- all.hist
+  result$catalogue <- data.frame(catalogue=all.hist,row.names = names(all.hist))
   result$muts <- muts
   result$mut.table <- mut.table
   result
