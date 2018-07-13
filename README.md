@@ -15,6 +15,8 @@ devtools::test()
 
 Useful commands for development workflow can be found in the file ```signatures.tools.lib.develop.R```.
 
+**PLEASE NOTE:** project-specific file conversions and filtering should be done before and outside the use of this library. This library should only report to the user the data format errors and suggest how to correct them, while it is the responsibility of the user to supply the necessary data formatted correctly with the necessary features and correct column names.
+
 
 Functions for file conversion/manipulation:
 
