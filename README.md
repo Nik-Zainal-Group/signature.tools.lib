@@ -17,6 +17,7 @@ Useful commands for development workflow can be found in the file ```signatures.
 
 **PLEASE NOTE:** project-specific file conversions and filtering should be done before and outside the use of this library. This library should only report to the user the data format errors and suggest how to correct them, while it is the responsibility of the user to supply the necessary data formatted correctly with the necessary features and correct column names.
 
+**BUGS REPORT AND IMPROVEMENTS** you can use the issues page on GitLab to report bugs and suggestions improvements, especially if the code that is/would be affected is under development and curated by someone else.
 
 Functions for file conversion/manipulation:
 
@@ -38,7 +39,7 @@ Functions for HRD indexes
 
 Functions for Indels Classification
 
-- **```vcfToIndelsClassification(...)```** converts a VCF file containing indels into a data frame where the indels are classfied. Also returns a summary of count and proportion of the various classes of indels.
+- **```vcfToIndelsClassification(...)```** converts a VCF file containing indels into a data frame where the indels are classified. Also returns a summary of count and proportion of the various classes of indels.
 
 Functions for HRDetect
 

@@ -190,7 +190,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' @keywords mutational signatures fit
 #' @export
 #' @examples
-#' res.exp <- SignatureFit(catalogues,signature_data_matrix)
+#' res <- SignatureFit_withBootstrap(catalogues,signature_data_matrix)
 SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, channels as rows
                           signature_data_matrix, #signatures, signatures as columns, channels as rows
                           nboot = 50, #number of bootstraps to use, more bootstraps more accurate results
@@ -314,7 +314,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
 #' @keywords mutational signatures fit
 #' @export
 #' @examples
-#' res.exp <- SignatureFit(catalogues,signature_data_matrix)
+#' res <- SignatureFit_withBootstrap_Analysis(catalogues,signature_data_matrix)
 SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for the analysis, remember to add '/' at the end
                                                 cat, #catalogue, patients as columns, channels as rows
                                        signature_data_matrix, #signatures, signatures as columns, channels as rows

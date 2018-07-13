@@ -51,7 +51,7 @@ This probability can be used to decide which exposures to remove from the initia
 thus increasing the sparsity of the exposures.
 }
 \examples{
-res.exp <- SignatureFit(catalogues,signature_data_matrix)
+res <- SignatureFit_withBootstrap_Analysis(catalogues,signature_data_matrix)
 }
 \keyword{fit}
 \keyword{mutational}
