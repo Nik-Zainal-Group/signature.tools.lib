@@ -52,23 +52,23 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   if (genome.v=="hg19"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
     if (length(intersect(chroms,expected_chroms))==0){
-      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
+      message("[info vcfToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
       chroms <- paste0("chr",chroms)
       if (length(intersect(chroms,expected_chroms))>0) {
-        message("It seems that chromosome names have been corrected")
+        message("[info vcfToSNVcatalogue] It seems that chromosome names have been corrected")
       }else{
-        message("It seems that chromosome names have not been corrected")
+        stop("[error vcfToSNVcatalogue] It seems that chromosome names have not been corrected")
       }
     }
   }else if (genome.v=="hg38"){
     expected_chroms <- c(seq(1:22),"X","Y")
     if (length(intersect(chroms,expected_chroms))==0){
-      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
+      message("[info vcfToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
       chroms <- sapply(chroms,function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x)
       if (length(intersect(chroms,expected_chroms))>0) {
-        message("It seems that chromosome names have been corrected")
+        message("[info vcfToSNVcatalogue] It seems that chromosome names have been corrected")
       }else{
-        message("It seems that chromosome names have not been corrected")
+        message("[error vcfToSNVcatalogue] It seems that chromosome names have not been corrected")
       }
     }
   }

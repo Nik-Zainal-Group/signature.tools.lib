@@ -49,23 +49,23 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   if (genome.v=="hg19"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
     if (length(intersect(subs$chr.chr,expected_chroms))==0){
-      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
+      message("[info tabToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
       subs$chr.chr <- paste0("chr",subs$chr.chr)
       if (length(intersect(subs$chr.chr,expected_chroms))>0) {
-        message("It seems that chromosome names have been corrected")
+        message("[info tabToSNVcatalogue] It seems that chromosome names have been corrected")
       }else{
-        message("It seems that chromosome names have not been corrected")
+        stop("[error tabToSNVcatalogue] It seems that chromosome names have not been corrected")
       }
     }
   }else if (genome.v=="hg38"){
     expected_chroms <- c(seq(1:22),"X","Y")
     if (length(intersect(subs$chr.chr,expected_chroms))==0){
-      message("chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
+      message("[info tabToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
       subs$chr.chr <- sapply(subs$chr.chr,function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x)
       if (length(intersect(subs$chr.chr,expected_chroms))>0) {
-        message("It seems that chromosome names have been corrected")
+        message("[info tabToSNVcatalogue] It seems that chromosome names have been corrected")
       }else{
-        message("It seems that chromosome names have not been corrected")
+        stop("[error tabToSNVcatalogue] It seems that chromosome names have not been corrected")
       }
     }
   }

@@ -15,7 +15,7 @@ clustered_inv_100Kb-1Mb	0
 clustered_inv_1Mb-10Mb	0
 clustered_inv_>10Mb	0
 clustered_trans	0
-non-clustered_del_1-10Kb	13
+non-clustered_del_1-10Kb	14
 non-clustered_del_10-100Kb	0
 non-clustered_del_100Kb-1Mb	0
 non-clustered_del_1Mb-10Mb	0
@@ -30,4 +30,4 @@ non-clustered_inv_10-100Kb	3
 non-clustered_inv_100Kb-1Mb	1
 non-clustered_inv_1Mb-10Mb	1
 non-clustered_inv_>10Mb	1
-non-clustered_trans	6
+non-clustered_trans	5

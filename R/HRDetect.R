@@ -11,7 +11,7 @@ HRDetect_pipeline <- function(data_matrix,
                               SNV_catalogues=NULL,
                               Indels_vcf_files=NULL,
                               CNV_vcf_files=NULL,
-                              SV_vcf_files=NULL,
+                              SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
                               nparallel=1){
   #if multiple parallel cores are used, set it here
@@ -22,17 +22,18 @@ HRDetect_pipeline <- function(data_matrix,
   #check that the matrix has correct features (columns)
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
   if (!length(intersect(col_needed,colnames(data_matrix)))==length(col_needed)){
-    stop("incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
-  }else{
-    #message("input data_matrix is formatted correctly")
+    stop("[error HRDetect_pipeline] incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
   }
+  # else{
+  #   message("input data_matrix is formatted correctly")
+  # }
   
   samples_list <- rownames(data_matrix)
   
   #check whether SNV related columns are NA or incomplete and if so check whether the catalogues
   #are available for sig fit, and if not check whether the vcf (or tab) files are available for building catalogues
   
-  message("[info] Single Nucleotide Variations")
+  message("[info HRDetect_pipeline] Single Nucleotide Variations")
   
   SNV_cols <- c("SNV3","SNV8")
   
@@ -40,10 +41,10 @@ HRDetect_pipeline <- function(data_matrix,
   
   if(need_to_compute_SNVexposures){
     
-    message("[info] Some samples in the input data_matrix do not have the exposures for SNV3 and SNV8, checking if the user supplied SNV catalogues, VCF files or TAB files for those samples.")
+    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SNV3 and SNV8, checking if the user supplied SNV catalogues, VCF files or TAB files for those samples.")
     
     #find out which samples that have no exposures have vcf file or catalogue
-    incomplete_samples_pos <- which(apply(data_matrix[,SNV_cols],1,function(x) any(is.na(x))))
+    incomplete_samples_pos <- which(apply(data_matrix[,SNV_cols,drop=FALSE],1,function(x) any(is.na(x))))
     incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
     if (!is.null(SNV_catalogues)){
       incomplete_samples_with_catalogueSNV <- intersect(incomplete_samples,colnames(SNV_catalogues))
@@ -80,7 +81,7 @@ HRDetect_pipeline <- function(data_matrix,
     #compute the SNV catalogue of samples with VCF files where necessary
     if (length(incomplete_samples_with_vcfSNV)>0){
       
-      message("[info] VCF files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_vcfSNV,collapse = " "))
+      message("[info HRDetect_pipeline] VCF files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_vcfSNV,collapse = " "))
       
       cat_list <- foreach::foreach(sample=incomplete_samples_with_vcfSNV) %dopar% {
         res <- vcfToSNVcatalogue(SNV_vcf_files[sample],genome.v = genome.v)
@@ -98,7 +99,7 @@ HRDetect_pipeline <- function(data_matrix,
     #compute the SNV catalogue of samples with TAB files where necessary
     if (length(incomplete_samples_with_tabSNV)>0){
       
-      message("[info] TAB files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_tabSNV,collapse = " "))
+      message("[info HRDetect_pipeline] TAB files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_tabSNV,collapse = " "))
       
       cat_list <- foreach::foreach(sample=incomplete_samples_with_tabSNV) %dopar% {
         subs <- read.table(file = SNV_tab_files[sample],
@@ -121,8 +122,8 @@ HRDetect_pipeline <- function(data_matrix,
     
     #run sigfit with bootstrap if there are samples in the SNV_catalogue
     if(length(incomplete_samples_with_catalogueSNV)>0){
-      message("[info] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
-      message("[info] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+      message("[info HRDetect_pipeline] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
+      message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
       res <- SignatureFit_withBootstrap(SNV_catalogues,
                                         cosmic30,
                                         nboot = 100,
@@ -136,6 +137,118 @@ HRDetect_pipeline <- function(data_matrix,
     
   }
   
+  #check whether SV related columns are NA or incomplete and if so check whether the catalogues
+  #are available for sig fit, and if not check whether the BEDPE files are available for building catalogues
+  
+  message("[info HRDetect_pipeline] Structural Variants (Rearrangements)")
+  
+  SV_cols <- c("SV3","SV5")
+  
+  need_to_compute_SVexposures <- any(is.na(data_matrix[,SV_cols]))
+  
+  
+  if(need_to_compute_SVexposures){
+    
+    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SV3 and SV5, checking if the user supplied SV catalogues or BEDPE files for those samples.")
+    
+    #find out which samples that have no exposures have vcf file or catalogue
+    incomplete_samples_pos <- which(apply(data_matrix[,SNV_cols,drop=FALSE],1,function(x) any(is.na(x))))
+    incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
+    if (!is.null(SNV_catalogues)){
+      incomplete_samples_with_catalogueSNV <- intersect(incomplete_samples,colnames(SNV_catalogues))
+    }else{
+      #there is no SNV catalogue given, so no incomplete sample has a catalogue
+      incomplete_samples_with_catalogueSNV <- character(0)
+    }
+    if (!is.null(SNV_vcf_files)){
+      incomplete_samples_with_vcfSNV <- intersect(incomplete_samples,names(SNV_vcf_files))
+    }else{
+      #there is no SNV vcf files given, so no incomplete sample has a vcf file
+      incomplete_samples_with_vcfSNV <- character(0)
+    }
+    if (!is.null(SNV_tab_files)){
+      incomplete_samples_with_tabSNV <- intersect(incomplete_samples,names(SNV_tab_files))
+    }else{
+      #there is no SNV tab files given, so no incomplete sample has a tab file
+      incomplete_samples_with_tabSNV <- character(0)
+    }
+    #now, check that if a sample has both catalogue and vcf (or tab) file, there is no need to compute the catalogue
+    incomplete_samples_with_vcfSNV <- setdiff(incomplete_samples_with_vcfSNV,incomplete_samples_with_catalogueSNV)
+    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_catalogueSNV)
+    #also if a sample has both vcf and tab file, use the vcf file
+    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_vcfSNV)
+    
+    #initialise the SNV catalogues data frame if necessary
+    mut.order <- c("A[C>A]A","A[C>A]C","A[C>A]G","A[C>A]T","C[C>A]A","C[C>A]C","C[C>A]G","C[C>A]T","G[C>A]A","G[C>A]C","G[C>A]G","G[C>A]T","T[C>A]A","T[C>A]C","T[C>A]G","T[C>A]T","A[C>G]A","A[C>G]C","A[C>G]G","A[C>G]T","C[C>G]A","C[C>G]C","C[C>G]G","C[C>G]T","G[C>G]A","G[C>G]C","G[C>G]G","G[C>G]T","T[C>G]A","T[C>G]C","T[C>G]G","T[C>G]T","A[C>T]A","A[C>T]C","A[C>T]G","A[C>T]T","C[C>T]A","C[C>T]C","C[C>T]G","C[C>T]T","G[C>T]A","G[C>T]C","G[C>T]G","G[C>T]T","T[C>T]A","T[C>T]C","T[C>T]G","T[C>T]T","A[T>A]A","A[T>A]C","A[T>A]G","A[T>A]T","C[T>A]A","C[T>A]C","C[T>A]G","C[T>A]T","G[T>A]A","G[T>A]C","G[T>A]G","G[T>A]T","T[T>A]A","T[T>A]C","T[T>A]G","T[T>A]T","A[T>C]A","A[T>C]C","A[T>C]G","A[T>C]T","C[T>C]A","C[T>C]C","C[T>C]G","C[T>C]T","G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T","A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T","G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
+    if(is.null(SNV_catalogues)){
+      SNV_catalogues <- data.frame(row.names = mut.order)
+    }else{
+      SNV_catalogues <- SNV_catalogues[mut.order,,drop=FALSE]
+    }
+    
+    #compute the SNV catalogue of samples with VCF files where necessary
+    if (length(incomplete_samples_with_vcfSNV)>0){
+      
+      message("[info HRDetect_pipeline] VCF files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_vcfSNV,collapse = " "))
+      
+      cat_list <- foreach::foreach(sample=incomplete_samples_with_vcfSNV) %dopar% {
+        res <- vcfToSNVcatalogue(SNV_vcf_files[sample],genome.v = genome.v)
+        colnames(res$catalogue) <- sample
+        res$catalogue
+      }
+      #add new SNV catalogues to the catalogues matrix
+      for (i in 1:length(cat_list)){
+        newcat <- cat_list[[i]]
+        SNV_catalogues <- cbind(SNV_catalogues,newcat)
+        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
+      }
+    }
+    
+    #compute the SNV catalogue of samples with TAB files where necessary
+    if (length(incomplete_samples_with_tabSNV)>0){
+      
+      message("[info HRDetect_pipeline] TAB files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_tabSNV,collapse = " "))
+      
+      cat_list <- foreach::foreach(sample=incomplete_samples_with_tabSNV) %dopar% {
+        subs <- read.table(file = SNV_tab_files[sample],
+                           sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+        res <- tabToSNVcatalogue(subs,genome.v = genome.v)
+        colnames(res$catalogue) <- sample
+        res$catalogue
+      }
+      #add new SNV catalogues to the catalogues matrix
+      for (i in 1:length(cat_list)){
+        newcat <- cat_list[[i]]
+        SNV_catalogues <- cbind(SNV_catalogues,newcat)
+        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
+      }
+    }
+    
+    #compute exposures for the samples in the catalogueSNV that do not have exposures yet
+    #consider only the catalogues needed
+    SNV_catalogues <- SNV_catalogues[,incomplete_samples_with_catalogueSNV,drop=FALSE]
+    
+    #run sigfit with bootstrap if there are samples in the SNV_catalogue
+    if(length(incomplete_samples_with_catalogueSNV)>0){
+      message("[info HRDetect_pipeline] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
+      message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+      res <- SignatureFit_withBootstrap(SNV_catalogues,
+                                        cosmic30,
+                                        nboot = 100,
+                                        threshold_percent = 5,
+                                        threshold_p.value = 0.05,
+                                        verbose = FALSE)
+      #add the resulting exposures to the 
+      res$E_median_filtered
+      data_matrix[colnames(res$E_median_filtered),SNV_cols] <- t(res$E_median_filtered[c("Signature.3","Signature.8"),])
+    }
+    
+  }
+  
+  
+  
+  
+  #--- return results ---
   
   res <- list()
   res$data_matrix <- data_matrix

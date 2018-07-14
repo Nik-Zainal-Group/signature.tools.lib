@@ -14,50 +14,20 @@ returns the rearrangement catalogue for the given sample
 }
 \description{
 This function converts a data frame BEDPE into a rearrangement catalogue, 
-you should pass rearrangements of only one sample.
+you should pass rearrangements of only one sample, and one rearrangement for each paired-end mates.
+The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). 
+In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
 }
 \details{
-Columns present in the BEDPE should be:
+The column "svclass" should correspon to: (strand1/strand2)
 
-"chrom1"
+inversion (+/+), if mates on the same chromosome
 
-"start1"
+inversion (-/-), if mates on the same chromosome
 
-"end1"
+deletion (+/-), if mates on the same chromosome
 
-"chrom2"
-
-"start2"
-
-"end2"
-
-"sample" sample name
-
-"name" name of mate1
-
-"partner" name of mate2
-
-"score"
-
-In addition, either the strands of the mates:
-
-"strand1": + or -
-
-"strand2": + or -
-
-or the structural variant class
-
-"svclass": translocation, inversion, deletion, tandem-duplication
-
-According to Sanger notation you should have sv class equal to: (strand1/strand2)
-
-inversion (+/-), if mates on the same chromosome
-
-inversion (-/+), if mates on the same chromosome
-
-deletion (+/+), if mates on the same chromosome
-
-tandem-duplication (-/-), if mates on the same chromosome
+tandem-duplication (-/+), if mates on the same chromosome
 
 translocation, if mates are on different chromosomes
 }

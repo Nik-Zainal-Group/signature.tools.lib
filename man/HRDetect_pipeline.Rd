@@ -6,7 +6,7 @@
 \usage{
 HRDetect_pipeline(data_matrix, genome.v = "hg19", SNV_vcf_files = NULL,
   SNV_tab_files = NULL, SNV_catalogues = NULL, Indels_vcf_files = NULL,
-  CNV_vcf_files = NULL, SV_vcf_files = NULL, SV_catalogues = NULL,
+  CNV_vcf_files = NULL, SV_bedpe_files = NULL, SV_catalogues = NULL,
   nparallel = 1)
 }
 \description{

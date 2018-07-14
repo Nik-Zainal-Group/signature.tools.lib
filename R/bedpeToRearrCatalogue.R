@@ -6,49 +6,19 @@
 #' bedpeToRearrCatalogue
 #'
 #' This function converts a data frame BEDPE into a rearrangement catalogue, 
-#' you should pass rearrangements of only one sample.
+#' you should pass rearrangements of only one sample, and one rearrangement for each paired-end mates.
+#' The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). 
+#' In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
 #' 
-#' Columns present in the BEDPE should be:
+#' The column "svclass" should correspon to: (strand1/strand2)
 #' 
-#' "chrom1"
+#' inversion (+/+), if mates on the same chromosome
 #' 
-#' "start1"
+#' inversion (-/-), if mates on the same chromosome
 #' 
-#' "end1"
+#' deletion (+/-), if mates on the same chromosome
 #' 
-#' "chrom2"
-#' 
-#' "start2"
-#' 
-#' "end2"
-#' 
-#' "sample" sample name
-#' 
-#' "name" name of mate1
-#' 
-#' "partner" name of mate2
-#' 
-#' "score"
-#' 
-#' In addition, either the strands of the mates:
-#' 
-#' "strand1": + or -
-#' 
-#' "strand2": + or -
-#' 
-#' or the structural variant class
-#' 
-#' "svclass": translocation, inversion, deletion, tandem-duplication
-#' 
-#' According to Sanger notation you should have sv class equal to: (strand1/strand2)
-#' 
-#' inversion (+/-), if mates on the same chromosome
-#' 
-#' inversion (-/+), if mates on the same chromosome
-#' 
-#' deletion (+/+), if mates on the same chromosome
-#' 
-#' tandem-duplication (-/-), if mates on the same chromosome
+#' tandem-duplication (-/+), if mates on the same chromosome
 #' 
 #' translocation, if mates are on different chromosomes
 #' 
@@ -110,15 +80,29 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
                                            kmin.filter=kmin # if the pcf parameter is different from the definition of a peak
 ) { 
   
+  #add an id to the rearrangement
+  sv_bedpe$id <- 1:nrow(sv_bedpe)
+  
+  #functions below expect rows to be organised by chromosomes and ordered by position on the chromosome
+  
   #prepare a dataframe for the calculation
-  rearrs.left <- sv_bedpe[,c('chrom1','start1','sample','name')];
+  rearrs.left <- sv_bedpe[,c('chrom1','start1','sample')]
   names(rearrs.left ) <- NA
-  rearrs.right <- sv_bedpe[,c('chrom2','start2','sample','name')];
+  rearrs.right <- sv_bedpe[,c('chrom2','start2','sample')]
   names(rearrs.right ) <- NA
-  rearrs.cncd <- rbind(rearrs.left , rearrs.right  );
+  rearrs.cncd <- rbind(rearrs.left , rearrs.right  )
+  colnames(rearrs.cncd) <- c('chr', 'position', 'sample')
   rearrs.cncd$isLeft <- c(rep(TRUE, nrow(rearrs.left)), rep(FALSE, nrow(rearrs.left)))
-  colnames(rearrs.cncd) <- c('chr', 'position', 'sample', 'id')
-  sample.bps <- rearrs.cncd
+  rearrs.cncd$id <- c(sv_bedpe$id, sv_bedpe$id)
+  # sample.bps <- rearrs.cncd
+  #need to reorder
+  sample.bps <- NULL
+  for (chrom_i in unique(rearrs.cncd$chr)){
+    tmptab <- rearrs.cncd[rearrs.cncd$chr==chrom_i,,drop=FALSE]
+    tmptab <- tmptab[order(tmptab$position),,drop=FALSE]
+    sample.bps <- rbind(sample.bps,tmptab)
+  }
+  rownames(sample.bps) <- 1:nrow(sample.bps)
   
   #run the algorithm
   genome.size <- 3 * 10^9
@@ -157,15 +141,17 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
   for (chrom in unique(sample.bps$chr)) { # loop over chromosomes     
     
     sample.bps.flag <- sample.bps$chr==chrom #   breakpoints on a current chromosome
-    
-    
+    # sample.bps.chrom <- sample.bps[sample.bps.flag,]
+    # sample.bps.chrom <- sample.bps.chrom[order(sample.bps.chrom$position),]
+    # 
     if (sum(sample.bps.flag )>MIN.BPS ) { # if there are enough breakpoints on a chromosome to run pcf
       
       data.points <- sample.bps$intermut.dist[sample.bps.flag]
-      
-      
+      # data.points <- sample.bps.chrom$intermut.dist
+        
       res = exactPcf(data.points, kmin, gamma, T)
       
+      #reorder results
       sample.bps$mean.intermut.dist[sample.bps.flag] <- res$yhat
       
       # prepare the points for pcf
@@ -197,7 +183,7 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
   sample.bps$is.clustered[sample.bps$id %in% subset(sample.bps, is.clustered.single==TRUE)$id] <- TRUE
   
   # mark both breakpoints of a rearrangement as clustered if any is
-  sv_bedpe$is.clustered <- sv_bedpe$name %in% sample.bps$id[sample.bps$is.clustered.single]
+  sv_bedpe$is.clustered <- sv_bedpe$id %in% sample.bps$id[sample.bps$is.clustered]
   
   result <- list()
   result$sv_bedpe <- sv_bedpe
@@ -264,7 +250,7 @@ classifyRearrangementsFromBedpe <- function(sv_bedpe){
   for (i in 1:nrow(sv_bedpe)){
     if(sv_bedpe[i,"chrom1"]!=sv_bedpe[i,"chrom2"]){
       svclass <- c(svclass,"translocation")
-    }else if(sv_bedpe[i,"strand1"]!=sv_bedpe[i,"strand2"]){
+    }else if(sv_bedpe[i,"strand1"]==sv_bedpe[i,"strand2"]){
       svclass <- c(svclass,"inversion")
     }else if(sv_bedpe[i,"strand1"]=="+"){
       svclass <- c(svclass,"deletion")
