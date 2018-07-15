@@ -16,14 +16,20 @@ test_that("test HRDetect_pipeline() runs correctly on two samples.", {
   data_matrix <- matrix(NA,nrow = length(sample_names),ncol = length(col_hrdetect),dimnames = list(sample_names,col_hrdetect))
   
   SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
-    "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
   names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
   
   res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
                                                 genome.v="hg19",
                                                 SNV_tab_files=SNV_tab_files,
+                                                SV_bedpe_files=SV_bedpe_files,
                                                 nparallel = 2)
-  res$data_matrix
+  #if no error happen this code can be reached
+  expect_true(TRUE)
 
 })
 
@@ -36,13 +42,15 @@ test_that("test HRDetect_pipeline() runs correctly on one sample.", {
   SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt")
   names(SNV_tab_files) <- sample_names
   
-  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe.gz")
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe")
   names(SV_bedpe_files) <- sample_names
   
   res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
                                                 genome.v="hg19",
                                                 SNV_tab_files=SNV_tab_files,
+                                                SV_bedpe_files=SV_bedpe_files,
                                                 nparallel = 1)
-  res$data_matrix
+  #if no error happen this code can be reached
+  expect_true(TRUE)
   
 })

@@ -118,13 +118,13 @@ HRDetect_pipeline <- function(data_matrix,
     
     #compute exposures for the samples in the catalogueSNV that do not have exposures yet
     #consider only the catalogues needed
-    SNV_catalogues <- SNV_catalogues[,incomplete_samples_with_catalogueSNV,drop=FALSE]
+    SNV_catalogues_toFit <- SNV_catalogues[,incomplete_samples_with_catalogueSNV,drop=FALSE]
     
     #run sigfit with bootstrap if there are samples in the SNV_catalogue
     if(length(incomplete_samples_with_catalogueSNV)>0){
       message("[info HRDetect_pipeline] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
       message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      res <- SignatureFit_withBootstrap(SNV_catalogues,
+      res <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
                                         cosmic30,
                                         nboot = 100,
                                         threshold_percent = 5,
@@ -152,95 +152,69 @@ HRDetect_pipeline <- function(data_matrix,
     message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SV3 and SV5, checking if the user supplied SV catalogues or BEDPE files for those samples.")
     
     #find out which samples that have no exposures have vcf file or catalogue
-    incomplete_samples_pos <- which(apply(data_matrix[,SNV_cols,drop=FALSE],1,function(x) any(is.na(x))))
+    incomplete_samples_pos <- which(apply(data_matrix[,SV_cols,drop=FALSE],1,function(x) any(is.na(x))))
     incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
-    if (!is.null(SNV_catalogues)){
-      incomplete_samples_with_catalogueSNV <- intersect(incomplete_samples,colnames(SNV_catalogues))
+    if (!is.null(SV_catalogues)){
+      incomplete_samples_with_catalogueSV <- intersect(incomplete_samples,colnames(SV_catalogues))
     }else{
-      #there is no SNV catalogue given, so no incomplete sample has a catalogue
-      incomplete_samples_with_catalogueSNV <- character(0)
+      #there is no SV catalogue given, so no incomplete sample has a catalogue
+      incomplete_samples_with_catalogueSV <- character(0)
     }
-    if (!is.null(SNV_vcf_files)){
-      incomplete_samples_with_vcfSNV <- intersect(incomplete_samples,names(SNV_vcf_files))
+    if (!is.null(SV_bedpe_files)){
+      incomplete_samples_with_bedpeSV <- intersect(incomplete_samples,names(SV_bedpe_files))
     }else{
-      #there is no SNV vcf files given, so no incomplete sample has a vcf file
-      incomplete_samples_with_vcfSNV <- character(0)
-    }
-    if (!is.null(SNV_tab_files)){
-      incomplete_samples_with_tabSNV <- intersect(incomplete_samples,names(SNV_tab_files))
-    }else{
-      #there is no SNV tab files given, so no incomplete sample has a tab file
-      incomplete_samples_with_tabSNV <- character(0)
-    }
-    #now, check that if a sample has both catalogue and vcf (or tab) file, there is no need to compute the catalogue
-    incomplete_samples_with_vcfSNV <- setdiff(incomplete_samples_with_vcfSNV,incomplete_samples_with_catalogueSNV)
-    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_catalogueSNV)
-    #also if a sample has both vcf and tab file, use the vcf file
-    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_vcfSNV)
-    
-    #initialise the SNV catalogues data frame if necessary
-    mut.order <- c("A[C>A]A","A[C>A]C","A[C>A]G","A[C>A]T","C[C>A]A","C[C>A]C","C[C>A]G","C[C>A]T","G[C>A]A","G[C>A]C","G[C>A]G","G[C>A]T","T[C>A]A","T[C>A]C","T[C>A]G","T[C>A]T","A[C>G]A","A[C>G]C","A[C>G]G","A[C>G]T","C[C>G]A","C[C>G]C","C[C>G]G","C[C>G]T","G[C>G]A","G[C>G]C","G[C>G]G","G[C>G]T","T[C>G]A","T[C>G]C","T[C>G]G","T[C>G]T","A[C>T]A","A[C>T]C","A[C>T]G","A[C>T]T","C[C>T]A","C[C>T]C","C[C>T]G","C[C>T]T","G[C>T]A","G[C>T]C","G[C>T]G","G[C>T]T","T[C>T]A","T[C>T]C","T[C>T]G","T[C>T]T","A[T>A]A","A[T>A]C","A[T>A]G","A[T>A]T","C[T>A]A","C[T>A]C","C[T>A]G","C[T>A]T","G[T>A]A","G[T>A]C","G[T>A]G","G[T>A]T","T[T>A]A","T[T>A]C","T[T>A]G","T[T>A]T","A[T>C]A","A[T>C]C","A[T>C]G","A[T>C]T","C[T>C]A","C[T>C]C","C[T>C]G","C[T>C]T","G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T","A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T","G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
-    if(is.null(SNV_catalogues)){
-      SNV_catalogues <- data.frame(row.names = mut.order)
-    }else{
-      SNV_catalogues <- SNV_catalogues[mut.order,,drop=FALSE]
+      #there is no SV vcf files given, so no incomplete sample has a vcf file
+      incomplete_samples_with_bedpeSV <- character(0)
     }
     
-    #compute the SNV catalogue of samples with VCF files where necessary
-    if (length(incomplete_samples_with_vcfSNV)>0){
+    #now, check that if a sample has both catalogue and BEDPE file, there is no need to compute the catalogue
+    incomplete_samples_with_bedpeSV <- setdiff(incomplete_samples_with_bedpeSV,incomplete_samples_with_catalogueSV)
+    
+    #initialise the SV catalogues data frame if necessary
+    catalogue.labels <- c('clustered_del_1-10Kb', 'clustered_del_10-100Kb', 'clustered_del_100Kb-1Mb', 'clustered_del_1Mb-10Mb', 'clustered_del_>10Mb', 'clustered_tds_1-10Kb', 'clustered_tds_10-100Kb', 'clustered_tds_100Kb-1Mb', 'clustered_tds_1Mb-10Mb', 'clustered_tds_>10Mb', 'clustered_inv_1-10Kb', 'clustered_inv_10-100Kb', 'clustered_inv_100Kb-1Mb', 'clustered_inv_1Mb-10Mb', 'clustered_inv_>10Mb', 'clustered_trans', 'non-clustered_del_1-10Kb', 'non-clustered_del_10-100Kb', 'non-clustered_del_100Kb-1Mb', 'non-clustered_del_1Mb-10Mb', 'non-clustered_del_>10Mb', 'non-clustered_tds_1-10Kb', 'non-clustered_tds_10-100Kb', 'non-clustered_tds_100Kb-1Mb', 'non-clustered_tds_1Mb-10Mb', 'non-clustered_tds_>10Mb', 'non-clustered_inv_1-10Kb', 'non-clustered_inv_10-100Kb', 'non-clustered_inv_100Kb-1Mb', 'non-clustered_inv_1Mb-10Mb', 'non-clustered_inv_>10Mb', 'non-clustered_trans')
+    if(is.null(SV_catalogues)){
+      SV_catalogues <- data.frame(row.names = catalogue.labels)
+    }else{
+      SV_catalogues <- SV_catalogues[catalogue.labels,,drop=FALSE]
+    }
+    
+    #compute the SV catalogue of samples with BEDPE files where necessary
+    if (length(incomplete_samples_with_bedpeSV)>0){
       
-      message("[info HRDetect_pipeline] VCF files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_vcfSNV,collapse = " "))
+      message("[info HRDetect_pipeline] BEDPE files will be converted to Rearrangement catalogues for the following samples: ",paste(incomplete_samples_with_bedpeSV,collapse = " "))
       
-      cat_list <- foreach::foreach(sample=incomplete_samples_with_vcfSNV) %dopar% {
-        res <- vcfToSNVcatalogue(SNV_vcf_files[sample],genome.v = genome.v)
-        colnames(res$catalogue) <- sample
-        res$catalogue
+      cat_list <- foreach::foreach(sample=incomplete_samples_with_bedpeSV) %dopar% {
+        sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
+                               stringsAsFactors = FALSE,check.names = FALSE)
+        res <- bedpeToRearrCatalogue(sv_bedpe)
+        colnames(res) <- sample
+        res
       }
-      #add new SNV catalogues to the catalogues matrix
+      #add new SV catalogues to the catalogues matrix
       for (i in 1:length(cat_list)){
         newcat <- cat_list[[i]]
-        SNV_catalogues <- cbind(SNV_catalogues,newcat)
-        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
+        SV_catalogues <- cbind(SV_catalogues,newcat)
+        incomplete_samples_with_catalogueSV <- c(incomplete_samples_with_catalogueSV,colnames(newcat))
       }
     }
     
-    #compute the SNV catalogue of samples with TAB files where necessary
-    if (length(incomplete_samples_with_tabSNV)>0){
-      
-      message("[info HRDetect_pipeline] TAB files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_tabSNV,collapse = " "))
-      
-      cat_list <- foreach::foreach(sample=incomplete_samples_with_tabSNV) %dopar% {
-        subs <- read.table(file = SNV_tab_files[sample],
-                           sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
-        res <- tabToSNVcatalogue(subs,genome.v = genome.v)
-        colnames(res$catalogue) <- sample
-        res$catalogue
-      }
-      #add new SNV catalogues to the catalogues matrix
-      for (i in 1:length(cat_list)){
-        newcat <- cat_list[[i]]
-        SNV_catalogues <- cbind(SNV_catalogues,newcat)
-        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
-      }
-    }
-    
-    #compute exposures for the samples in the catalogueSNV that do not have exposures yet
+    #compute exposures for the samples in the catalogueSV that do not have exposures yet
     #consider only the catalogues needed
-    SNV_catalogues <- SNV_catalogues[,incomplete_samples_with_catalogueSNV,drop=FALSE]
+    SV_catalogues_toFit <- SV_catalogues[,incomplete_samples_with_catalogueSV,drop=FALSE]
     
-    #run sigfit with bootstrap if there are samples in the SNV_catalogue
-    if(length(incomplete_samples_with_catalogueSNV)>0){
-      message("[info HRDetect_pipeline] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
+    #run sigfit with bootstrap if there are samples in the SV_catalogue
+    if(length(incomplete_samples_with_catalogueSV)>0){
+      message("[info HRDetect_pipeline] Breast 560 rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
       message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      res <- SignatureFit_withBootstrap(SNV_catalogues,
-                                        cosmic30,
+      res <- SignatureFit_withBootstrap(SV_catalogues_toFit,
+                                        RS.Breast560,
                                         nboot = 100,
                                         threshold_percent = 5,
                                         threshold_p.value = 0.05,
                                         verbose = FALSE)
       #add the resulting exposures to the 
       res$E_median_filtered
-      data_matrix[colnames(res$E_median_filtered),SNV_cols] <- t(res$E_median_filtered[c("Signature.3","Signature.8"),])
+      data_matrix[colnames(res$E_median_filtered),SV_cols] <- t(res$E_median_filtered[c("RS3","RS5"),])
     }
     
   }
@@ -252,14 +226,11 @@ HRDetect_pipeline <- function(data_matrix,
   
   res <- list()
   res$data_matrix <- data_matrix
+  res$SV_catalogues <- SV_catalogues
+  res$SNV_catalogues <- SNV_catalogues
   return(res)
   
 }
-
-
-
-
-
 
 
 

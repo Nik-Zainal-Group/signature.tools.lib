@@ -34,6 +34,12 @@
 #' res.cat <- bedpeToRearrCatalogue(sv_bedpe)
 bedpeToRearrCatalogue <- function(sv_bedpe){
   
+  #check that the required columns are present
+  required_cols <- c("chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample")
+  if(!length(intersect(required_cols,colnames(sv_bedpe)))==length(required_cols) & ("svclass" %in% colnames(sv_bedpe) | all(c("strand1","strand2") %in% colnames(sv_bedpe)))){
+    stop("[error bedpeToRearrCatalogue] missing columns in subs data frame, following columns required: chrom1, start1, end1, chrom2, start2, end2 and sample. In addition either svclass or strand1 and strand2. Check ?bedpeToRearrCatalogue for details.")
+  }
+  
   #Annotate the bedpe if necessary
   
   #check whether column is.clustered is present,

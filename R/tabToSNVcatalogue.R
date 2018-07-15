@@ -29,7 +29,7 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   #check that the required columns are present
   required_cols <- c("chr", "position", "ALT", "REF")
   if(!length(intersect(required_cols,colnames(subs)))==length(required_cols)){
-    stop("missing columns in subs data frame, following columns required: chr, position, REF, ALT")
+    stop("[error tabToSNVcatalogue] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
   }
 
   #Ensure the wt and mt columns (V7 & V8) are read in as characters.
