@@ -11,12 +11,12 @@ applyHRDetectDavies2017(data_matrix, features_names = c("del.mh.prop", "SNV3",
 \item{data_matrix}{data frame containing a row for each sample and at least the columns specified in the features_names parameter}
 
 \item{features_names}{list of column names of the matrix data_matrix. These indicate the features to be passed to HRDetect and should correspond to (in the exact order): 
-1) proportion of deletions with microhomology, 
-2) number of mutations of substitution signature 3,
-3) number of mutations of rearrangemet signature 3,
-4) number of mutations of rearrangemet signature 5,
-5) HRD LOH index,
-6) number of mutations of substitution signature 8.}
+1) proportion of deletions with microhomology (del.mh.prop), 
+2) number of mutations of substitution signature 3 (SNV3),
+3) number of mutations of rearrangemet signature 3 (SV3),
+4) number of mutations of rearrangemet signature 5 (SV5),
+5) HRD LOH index (hrd),
+6) number of mutations of substitution signature 8 (SNV8).}
 
 \item{attachContributions}{set to TRUE if you would like to have the contributions of the individual features to the samples HRDetect BRCAness probabilities.}
 }
@@ -25,12 +25,12 @@ Apply HRDetect with the coeffcients from the Davies et al. 2017 publication.
 This function requires a data frame with six features (columns) for each sample (rows),
 and a list of features indicating which columns of the given matrix correspond to the required features.
 Required features are: 
-1) proportion of deletions with microhomology, 
-2) number of mutations of substitution signature 3,
-3) number of mutations of rearrangemet signature 3,
-4) number of mutations of rearrangemet signature 5,
-5) HRD LOH index,
-6) number of mutations of substitution signature 8.
+1) proportion of deletions with microhomology (del.mh.prop), 
+2) number of mutations of substitution signature 3 (SNV3),
+3) number of mutations of rearrangemet signature 3 (SV3),
+4) number of mutations of rearrangemet signature 5 (SV5),
+5) HRD LOH index (hrd),
+6) number of mutations of substitution signature 8 (SNV8).
 The function will return the HRDetect BRCAness probabilities, along with (optionally) the contributions
 of each of the six features in each samples. The contributions are the normalised (log transoform and standardise) 
 values of the features multiplied for the corresponding HRDetect logistic model coefficient.

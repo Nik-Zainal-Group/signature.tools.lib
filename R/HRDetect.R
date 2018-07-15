@@ -1,8 +1,65 @@
 #' HRDetect Pipeline
 #' 
-#' Run the HRDetect pipeline
+#' Run the HRDetect pipeline. This function allows for flexible input 
+#' specification to the HRDetect pipeline that computes the HRDetect 
+#' BRCAness probability score as published in Davies et al. 2017.
+#' It requires an input data frame "data_matrix", which contains a sample
+#' in each row and one of six necessary features in each column. 
+#' The six features can be computed by the pipeline if the necessary input files are provided.
+#' The six features are:
+#' 1) proportion of deletions at microhomology (del.mh.prop), 
+#' 2) number of mutations of substitution signature 3 (SNV3),
+#' 3) number of mutations of rearrangemet signature 3 (SV3),
+#' 4) number of mutations of rearrangemet signature 5 (SV5),
+#' 5) HRD LOH index (hrd),
+#' 6) number of mutations of substitution signature 8 (SNV8).
+#' For example, if the HRD LOH index has already been calculated, these can be
+#' added to the input data_matrix, or if the SNV catalogues have already been calculated,
+#' these can be supplied using the SNV_catalogues parameter while setting SNV3 and SNV8 columns
+#' as "NA". Also, it is possible to provide different data for different samples. For example,
+#' one can provide SNV3 and SNV8 number of mutations for some samples in data_matrix, while setting
+#' SNV3 and SNV8 to NA for other samples, and providing either SNV catalogues and/or SNV VCF 
+#' files for these samples. The function will return the HRDetect BRCAness probability score for
+#' all the samples for which enough data are available to calculate all six necessary features.
+#' Along with the score, the contribution of each feature to the score will be provided. In addition,
+#' an updated data_matrix and other other data that have been calculated during the execution of the pipeline
+#' will be returned as well.
 #' 
+#' Single Nucleotide Variations. Columns in data_matrix relative to SNV are SNV3 and SNV8. Values
+#' corresponding to number of SNV3 and SNV8 mutations in each sample can be provided in the data frame data_matrix.
+#' Alternatively, an SNV_catalogue data frame can be used to provide 96-channel SNV catalogues for the samples
+#' (96-channels as rows and samples as columns). The 30 consensus COSMIC signatures will be fitted to 
+#' the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SNV3 and SNV8 will be added to the data_matrix.
+#' Alternatively, SNV_catalogues can be constructed providing a list of either SNV VCF files or SNV TAB files.
+#' 
+#' Structural Variants (Rearrangements). Columns in data_matrix relative to SV are SV3 and SV5. Values
+#' corresponding to number of SV3 and SV5 rearrangements in each sample can be provided in the data frame data_matrix.
+#' Alternatively, an SV_catalogue data frame can be used to provide 32-channel SV catalogues for the samples
+#' (32-channels as rows and samples as columns). The 6 Breast Cancer Rearrangement signatures (Nik-Zainal et al. 2016) will be fitted to 
+#' the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SV3 and SV5 will be added to the data_matrix.
+#' Alternatively, SV_catalogues can be constructed providing a list of SV BEDPE files.
+#' 
+#' Deletions at Micro-homology (Indels). The column in data_matrix corresponding to the proportion of deletions at micro-homology is del.mh.prop.
+#' The proportion of deletions at micro-homology for the samples can be calculated by the pipeline if the user provides Indels VCF files.
+#' 
+#' HRD-LOH index (CNV). The column in data_matrix corresponding to the HRD-LOH index is hrd.
+#' The HRD-LOH index for the samples can be calculated by the pipeline if the user provides copy numbers TAB files.
+#' 
+#' @param data_matrix data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).
+#' @param genome.v genome version to use when constructing the SNV catalogue and classifying indels. Set it to either "hg19" or "hg38".
+#' @param SNV_vcf_files list of file names corresponding to SNV VCF files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied.
+#' @param SNV_tab_files list of file names corresponding to SNV TAB files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: chr, position, REF, ALT.
+#' @param SNV_catalogues data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
+#' @param Indels_vcf_files list of file names corresponding to Indels VCF files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.
+#' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
+#' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. #' The column "svclass" should correspon to: inversion (+/+), if mates on the same chromosome, inversion (-/-), if mates on the same chromosome, deletion (+/-), if mates on the same chromosome, tandem-duplication (-/+), if mates on the same chromosome, translocation, if mates are on different chromosomes.
+#' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
+#' @param nparallel how many parallel threads to use.
+#' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 #' @export
+#' @references Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
+#' @references Nik-Zainal, S., Davies, H., Staaf, J., Ramakrishna, M., Glodzik, D., Zou, X., ... Stratton, M. R. (2016). Landscape of somatic mutations in 560 breast cancer whole-genome sequences. Nature, 534(7605), 1–20. https://doi.org/10.1038/nature17676
+#' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
 #' 
 HRDetect_pipeline <- function(data_matrix,
                               genome.v="hg19",
@@ -15,9 +72,7 @@ HRDetect_pipeline <- function(data_matrix,
                               SV_catalogues=NULL,
                               nparallel=1){
   #if multiple parallel cores are used, set it here
-  if(nparallel>1){
-    doMC::registerDoMC(nparallel)
-  }
+  doMC::registerDoMC(nparallel)
   
   #check that the matrix has correct features (columns)
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
@@ -318,7 +373,14 @@ HRDetect_pipeline <- function(data_matrix,
     hrdetect_input <- data_matrix
   }
   
-  hrdetect_output <- applyHRDetectDavies2017(hrdetect_input, attachContributions = TRUE)
+  if(nrow(hrdetect_input)>0){
+    message("[info HRDetect_pipeline] Computing HRDetect score and feature contributions for the following samples: ",paste(rownames(hrdetect_input),collapse = " "))
+    hrdetect_output <- applyHRDetectDavies2017(hrdetect_input, attachContributions = TRUE)
+    message("[info HRDetect_pipeline] HRDetect pipeline completed!")
+  }else{
+    message("[info HRDetect_pipeline] Impossible to compute HRDetect score for the samples in data_matrix, as no sample seems to have all the necessary data. Check output $data_matrix to see what has been computed with the data provided.")
+    hrdetect_output <- NULL
+  }
   
   
   #--- return results ---
@@ -327,6 +389,7 @@ HRDetect_pipeline <- function(data_matrix,
   res$data_matrix <- data_matrix
   res$SV_catalogues <- SV_catalogues
   res$SNV_catalogues <- SNV_catalogues
+  res$hrdetect_output <- hrdetect_output
   return(res)
   
 }
@@ -339,24 +402,24 @@ HRDetect_pipeline <- function(data_matrix,
 #' This function requires a data frame with six features (columns) for each sample (rows),
 #' and a list of features indicating which columns of the given matrix correspond to the required features.
 #' Required features are: 
-#' 1) proportion of deletions with microhomology, 
-#' 2) number of mutations of substitution signature 3,
-#' 3) number of mutations of rearrangemet signature 3,
-#' 4) number of mutations of rearrangemet signature 5,
-#' 5) HRD LOH index,
-#' 6) number of mutations of substitution signature 8.
+#' 1) proportion of deletions with microhomology (del.mh.prop), 
+#' 2) number of mutations of substitution signature 3 (SNV3),
+#' 3) number of mutations of rearrangemet signature 3 (SV3),
+#' 4) number of mutations of rearrangemet signature 5 (SV5),
+#' 5) HRD LOH index (hrd),
+#' 6) number of mutations of substitution signature 8 (SNV8).
 #' The function will return the HRDetect BRCAness probabilities, along with (optionally) the contributions
 #' of each of the six features in each samples. The contributions are the normalised (log transoform and standardise) 
 #' values of the features multiplied for the corresponding HRDetect logistic model coefficient.
 #' 
 #' @param data_matrix data frame containing a row for each sample and at least the columns specified in the features_names parameter
 #' @param features_names list of column names of the matrix data_matrix. These indicate the features to be passed to HRDetect and should correspond to (in the exact order): 
-#' 1) proportion of deletions with microhomology, 
-#' 2) number of mutations of substitution signature 3,
-#' 3) number of mutations of rearrangemet signature 3,
-#' 4) number of mutations of rearrangemet signature 5,
-#' 5) HRD LOH index,
-#' 6) number of mutations of substitution signature 8.
+#' 1) proportion of deletions with microhomology (del.mh.prop), 
+#' 2) number of mutations of substitution signature 3 (SNV3),
+#' 3) number of mutations of rearrangemet signature 3 (SV3),
+#' 4) number of mutations of rearrangemet signature 5 (SV5),
+#' 5) HRD LOH index (hrd),
+#' 6) number of mutations of substitution signature 8 (SNV8).
 #' @param attachContributions set to TRUE if you would like to have the contributions of the individual features to the samples HRDetect BRCAness probabilities.
 #' @export
 #' @references Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
@@ -416,3 +479,112 @@ applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","
   
   return(BRCA_prob)
 }
+
+
+
+#------------------------
+
+#' @export
+plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_output){
+  
+  col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
+  
+  #details plot
+  hrdetect_output <- as.data.frame(hrdetect_output)
+  reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
+  nsamples <- nrow(hrdetect_output)
+  contributions <- hrdetect_output
+  jpeg(filename = file_name,
+       width = max(200+80*nsamples,2400),
+       height = 1200,
+       res = 200)
+  par(mfrow=c(1,1))
+  mat <- matrix(c(1,2,3),ncol = 1)
+  layout(mat, c(1), c(0.8,0.65,1))
+  
+  par(mar=c(1,6,3,4))
+  barplot(height = HRDLOH_index[reorder],
+          ylim = c(0,max(HRDLOH_index)*1.1),
+          ylab = "HRD-LOH score",
+          cex.axis = 1.2,
+          cex = 1.5,
+          cex.lab=1.5)
+  title(main=paste0("HRD-LOH score and BRCA1/BRCA2 deficiency score"), cex.main=2)
+  abline(a=15,b=0,col="red")
+  
+  par(mar=c(1,6,1,4))
+  barplot(height = hrdetect_output$Probability[reorder],
+          ylim = c(0,1),ylab = "BRCA1/BRCA2\n def. score",
+          names.arg = "",
+          cex.axis = 1.2,
+          cex.lab=1.5,
+          cex.names = 1.5)
+  abline(a=0.7,b=0,col="red")
+  #text(x = -0.05,y = 0.75,labels = "0.7",col = "red")
+  matrix_to_plot <- t(hrdetect_output[reorder,col_needed])
+  
+  par(mar=c(8,6,1,4))
+  barplot(height = matrix_to_plot,
+          beside = TRUE,
+          #names.arg = row.names(hrdetect_res),
+          names.arg = rownames(hrdetect_output)[reorder],
+          las = 3,
+          legend.text = c("deletion with MH",
+                          "Substitution Sig. 3",
+                          "Rearrangement Sig. 3",
+                          "Rearrangement Sig. 5",
+                          "HRD-LOH score",
+                          "Substitution Sig. 8"),
+          args.legend = list(x ='bottom', bty='n', inset=c(0,-0.9),horiz=TRUE,cex=1.5),
+          ylim = c(min(matrix_to_plot)*1.1,max(matrix_to_plot)*1.1),
+          col=c("blue","red","black","green","orange","yellow"),
+          ylab = "BRCA1/BRCA2\n def. contribution",
+          cex.axis = 1.2,
+          cex.lab = 1.5,
+          cex.names = 1)
+  
+  dev.off()
+}
+
+#----------------------
+#' @export
+plot_HRDetect_overall <- function(file_name,hrdetect_output){
+  
+  hrdetect_output <- as.data.frame(hrdetect_output)
+  
+  #barplot
+  plot_colours <- rep("grey",nrow(hrdetect_output))
+  # plot_colours[samples_table$BRCA_Status=="BRCA1"] <- "red"
+  # plot_colours[samples_table$BRCA_Status=="BRCA2"] <- "blue"
+  # plot_colours[samples_table$Notes=="BRCA1 Methyaltion" | samples_table$Notes=="BRCA1 Methylation" | samples_table$Notes=="BRCA1 Methylatin"] <- "green"
+  # plot_colours[samples_table$Notes=="BRCA2"] <- "purple"
+  # plot_colours[samples_table$BRCA_Status=="BRCA1/MUTYH"] <- "orange"
+  # plot_colours[samples_table$BRCA_Status=="PALB2"] <-  "yellow"
+  
+  reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
+  plot_colours <- plot_colours[reorder]
+  jpeg(filename = file_name,
+       width = 1500,
+       height = 900,
+       res = 200)
+  par(xpd=FALSE)
+  bp <- barplot(height = hrdetect_output$Probability[reorder],
+                names.arg = "",
+                #las = 2,
+                main = paste0("HRDetect probability score"),
+                ylim = c(0,1),
+                border = 0,
+                space = 0,
+                col = plot_colours,ylab = "score")
+  abline(h=0.7,col="red")
+  par(xpd=TRUE)
+  start <- 0
+  for(i in 1:length(plot_colours)){
+    rect(start, -0.1, start+1, -0.02,col = plot_colours[start+1],lwd = 0)
+    start <- start + 1
+  }
+  # legend("bottom",c("BRCA1","BRCA2","BRCA1 Meth","BRCA2.note","BRCA1/MUTYH","PALB2"),inset=c(0,-0.2), horiz = TRUE, col=c("red","blue","green","purple","orange","yellow"),bty = "n", cex = 0.7,lwd=5)
+  par(xpd=FALSE)
+  dev.off()
+}
+

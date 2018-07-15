@@ -17,7 +17,9 @@ Useful commands for development workflow can be found in the file ```signatures.
 
 **PLEASE NOTE:** project-specific file conversions and filtering should be done before and outside the use of this library. This library should only report to the user the data format errors and suggest how to correct them, while it is the responsibility of the user to supply the necessary data formatted correctly with the necessary features and correct column names.
 
-**BUGS REPORT AND IMPROVEMENTS** you can use the issues page on GitLab to report bugs and suggestions improvements, especially if the code that is/would be affected is under development and curated by someone else.
+**BUGS REPORT AND IMPROVEMENTS:** you can use the issues page on GitLab to report bugs and suggestions improvements, especially if the code that is/would be affected is under development and curated by someone else.
+
+**DOCUMENTATION:** Documentation for each of the functions below is provided as R documentation, and it is installed along with the R package. The documentation should give detailed explanation of the input data required, such as a list of data frame columns and their explanation. To access the documentation you can use the ```?function``` syntax in R, for each of the functions below. For example, in R or RStudio, type ```?HRDetect_pipeline```.
 
 Functions for file conversion/manipulation:
 
@@ -29,6 +31,8 @@ Functions for signature extraction and signature fit
 
 - **```SignatureFit_withBootstrap(...)```**: fit a given set of mutational signatures into mutational catalogues to extimate the activty/exposure of each of the given signatures in the catalogues. Implementation of method similar to Huang 2017, Detecting presence of mutational signatures with confidence, which uses a bootstrap apporach to calculate the empirical probability of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample). This probability can be used to decide which exposures to remove from the initial fit, thus increasing the sparsity of the exposures.
 - **```SignatureExtraction(...)```**: perform signature extraction, by applying NMF to the input matrix. Multiple NMF runs and bootstrapping is used for robustness, followed by clustering of the solutions. A range of number of signatures to be used is required.
+- **```plotSubsSignatures(...)```**: function to plot one or more substitution signatures or catalogues.
+- **```plotRearrSignatures(...)```**: function to plot one or more rearrangement signatures or catalogues.
 
 Functions for HRD indexes
 
@@ -39,9 +43,12 @@ Functions for HRD indexes
 
 Functions for Indels Classification
 
-- **```vcfToIndelsClassification(...)```** converts a VCF file containing indels into a data frame where the indels are classified. Also returns a summary of count and proportion of the various classes of indels.
+- **```vcfToIndelsClassification(...)```**: converts a VCF file containing indels into a data frame where the indels are classified. Also returns a summary of count and proportion of the various classes of indels.
 
 Functions for HRDetect
 
-- **```applyHRDetectDavies2017(...)```** given a data frame with samples as rows and features as columns, this function will compute the HRDetect BRCAness probability for each sample. The following six features should be included in the matrix: 1) proportion of deletions with microhomology, 2) number of mutations of substitution signature 3, 3) number of mutations of rearrangemet signature 3, 4) number of mutations of rearrangemet signature 5, 5) HRD LOH index, 6) number of mutations of substitution signature 8.
+- **```HRDetect_pipeline(...)```**: this is a flexible interface to the HRDetect pipeline to compute the HRDetect BRCAness probability score, as published in Davies et al. 2017.
+- **```applyHRDetectDavies2017(...)```**: given a data frame with samples as rows and features as columns, this function will compute the HRDetect BRCAness probability for each sample. The following six features should be included in the matrix: 1) proportion of deletions with micro-homology, 2) number of mutations of substitution signature 3, 3) number of mutations of rearrangemet signature 3, 4) number of mutations of rearrangemet signature 5, 5) HRD LOH index, 6) number of mutations of substitution signature 8.
+- **```plot_HRDLOH_HRDetect_Contributions(...)```**: uses the ```HRDetect_pipeline``` output to generate a figure with three plots: the HDR-LOH index for each sample, the HRDetect BRCAness probability score for each sample, and the contribution of each of the six features to the HRDetect BRCAness probability score.
+- **```plot_HRDetect_overall```**: uses the ```HRDetect_pipeline``` output to generate an overall plot of the HRDetect BRCAness probability score.
 

@@ -168,7 +168,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' 
 #' Fit a given set of mutational signatures into mutational catalogues to extimate the 
 #' activty/exposure of each of the given signatures in the catalogues. Implementation 
-#' of method similar to Huang 2017, Detecting presence of mutational signatures with 
+#' of method similar to Huang et al. 2017, Detecting presence of mutational signatures with 
 #' confidence, which uses a bootstrap apporach to calculate the empirical probability 
 #' of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample). 
 #' This probability can be used to decide which exposures to remove from the initial fit, 
@@ -188,6 +188,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' @param n_sa_iter set max Simulated Annealing iterations if method==SA
 #' @return returns the activities/exposures of the signatures in the given sample and other information, such as p-values and exposures of individual bootstrap runs.
 #' @keywords mutational signatures fit
+#' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
 #' @export
 #' @examples
 #' res <- SignatureFit_withBootstrap(catalogues,signature_data_matrix)
