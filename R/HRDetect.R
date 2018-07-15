@@ -10,7 +10,7 @@ HRDetect_pipeline <- function(data_matrix,
                               SNV_tab_files=NULL,
                               SNV_catalogues=NULL,
                               Indels_vcf_files=NULL,
-                              CNV_vcf_files=NULL,
+                              CNV_tab_files=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
                               nparallel=1){
@@ -129,7 +129,8 @@ HRDetect_pipeline <- function(data_matrix,
                                         nboot = 100,
                                         threshold_percent = 5,
                                         threshold_p.value = 0.05,
-                                        verbose = FALSE)
+                                        verbose = FALSE,
+                                        nparallel = nparallel)
       #add the resulting exposures to the 
       res$E_median_filtered
       data_matrix[colnames(res$E_median_filtered),SNV_cols] <- t(res$E_median_filtered[c("Signature.3","Signature.8"),])
@@ -151,7 +152,7 @@ HRDetect_pipeline <- function(data_matrix,
     
     message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SV3 and SV5, checking if the user supplied SV catalogues or BEDPE files for those samples.")
     
-    #find out which samples that have no exposures have vcf file or catalogue
+    #find out which samples that have no exposures have BEDPE file or catalogue
     incomplete_samples_pos <- which(apply(data_matrix[,SV_cols,drop=FALSE],1,function(x) any(is.na(x))))
     incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
     if (!is.null(SV_catalogues)){
@@ -163,7 +164,7 @@ HRDetect_pipeline <- function(data_matrix,
     if (!is.null(SV_bedpe_files)){
       incomplete_samples_with_bedpeSV <- intersect(incomplete_samples,names(SV_bedpe_files))
     }else{
-      #there is no SV vcf files given, so no incomplete sample has a vcf file
+      #there is no SV bedpe files given, so no incomplete sample has a bedpe file
       incomplete_samples_with_bedpeSV <- character(0)
     }
     
@@ -204,14 +205,15 @@ HRDetect_pipeline <- function(data_matrix,
     
     #run sigfit with bootstrap if there are samples in the SV_catalogue
     if(length(incomplete_samples_with_catalogueSV)>0){
-      message("[info HRDetect_pipeline] Breast 560 rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
+      message("[info HRDetect_pipeline] Breast 560 rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
       message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
       res <- SignatureFit_withBootstrap(SV_catalogues_toFit,
                                         RS.Breast560,
                                         nboot = 100,
                                         threshold_percent = 5,
                                         threshold_p.value = 0.05,
-                                        verbose = FALSE)
+                                        verbose = FALSE,
+                                        nparallel = nparallel)
       #add the resulting exposures to the 
       res$E_median_filtered
       data_matrix[colnames(res$E_median_filtered),SV_cols] <- t(res$E_median_filtered[c("RS3","RS5"),])
@@ -219,7 +221,104 @@ HRDetect_pipeline <- function(data_matrix,
     
   }
   
+  #check whether small deletion at micro-homology (MH) related column (del.mh.prop) is NA or incomplete, and if so 
+  #check whether the VCF indel files are available for computing the proportion of indels with MH
   
+  message("[info HRDetect_pipeline] Deletions at Micro-homology (Indels)")
+  
+  MH_cols <- c("del.mh.prop")
+  
+  need_to_compute_MH <- any(is.na(data_matrix[,MH_cols]))
+  
+  
+  if(need_to_compute_MH){
+    
+    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the proportion of deletions at micro-homology, checking if the user supplied VCF indels files for those samples.")
+    
+    #find out which samples that have no del.mh.prop have vcf indel file
+    incomplete_samples_pos <- which(apply(data_matrix[,MH_cols,drop=FALSE],1,function(x) any(is.na(x))))
+    incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
+    if (!is.null(Indels_vcf_files)){
+      incomplete_samples_with_vcfIndels <- intersect(incomplete_samples,names(Indels_vcf_files))
+    }else{
+      #there is no Indels vcf files given, so no incomplete sample has a vcf file
+      incomplete_samples_with_vcfIndels <- character(0)
+    }
+    
+    #compute del.mh.prop for the samples with vcf Indels file that do not have del.mh.prop yet
+    if(length(incomplete_samples_with_vcfIndels)>0){
+      message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following samples: ",paste(incomplete_samples_with_vcfIndels,collapse = " "))
+      
+      mh_list <- foreach::foreach(sample=incomplete_samples_with_vcfIndels) %dopar% {
+        res <- vcfToIndelsClassification(Indels_vcf_files[sample],sample,genome.v = genome.v)
+        new.prop.del.mh <- res$count_proportion["del.mh.prop"]
+        new.prop.del.mh <- unlist(new.prop.del.mh)
+        names(new.prop.del.mh) <- sample
+        new.prop.del.mh
+      }
+      #add resulting del.mh.prop to the data_matrix
+      for (i in 1:length(mh_list)){
+        new.prop.del.mh <- mh_list[[i]]
+        data_matrix[names(new.prop.del.mh),MH_cols] <- new.prop.del.mh
+      }
+    }
+    
+  }
+  
+  #check whether HRD-LOH related column (hrd) is NA or incomplete, and if so 
+  #check whether the tab CNV files are available for computing the HRD-LOH index
+  
+  message("[info HRDetect_pipeline] HRD-LOH index (CNV)")
+  
+  hrd_cols <- c("hrd")
+  
+  need_to_compute_hrd <- any(is.na(data_matrix[,hrd_cols]))
+  
+  
+  if(need_to_compute_hrd){
+    
+    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the HRD-LOH index, checking if the user supplied tab CNV files for those samples.")
+    
+    #find out which samples that have no HRD-LOH have tab CNV file
+    incomplete_samples_pos <- which(apply(data_matrix[,hrd_cols,drop=FALSE],1,function(x) any(is.na(x))))
+    incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
+    if (!is.null(CNV_tab_files)){
+      incomplete_samples_with_tabCNV <- intersect(incomplete_samples,names(CNV_tab_files))
+    }else{
+      #there is no CNV tab files given, so no incomplete sample has a CNV tab file
+      incomplete_samples_with_tabCNV <- character(0)
+    }
+    
+    #compute HRD-LOH for the samples with CNV tab file that do not have hrd yet
+    if(length(incomplete_samples_with_tabCNV)>0){
+      message("[info HRDetect_pipeline] HRD-LOH will be computed for the following samples: ",paste(incomplete_samples_with_tabCNV,collapse = " "))
+      
+      hrd_list <- foreach::foreach(sample=incomplete_samples_with_tabCNV) %dopar% {
+        ascat.df <- read.table(CNV_tab_files[sample],sep = "\t",header = TRUE,
+                               stringsAsFactors = FALSE,check.names = FALSE)
+        res <- ascatToHRDLOH(ascat.df,sample)
+        names(res) <- sample
+        res
+      }
+      #add resulting hrd to the data_matrix
+      for (i in 1:length(hrd_list)){
+        res <- hrd_list[[i]]
+        data_matrix[names(res),hrd_cols] <- res
+      }
+    }
+    
+  }
+  
+  #now, compute HRDetect score for all complete cases, so first notify of incomplete cases if any
+  incomplete_cases <- rownames(data_matrix)[!complete.cases(data_matrix)]
+  if(length(incomplete_cases)>0){
+    message("[info HRDetect_pipeline] Some samples do not have data necessary to compute the HRDetect score (check output $data_matrix). Will not compute HRDetect score for the following samples: ",paste(incomplete_cases,collapse = " "))
+    hrdetect_input <- data_matrix[complete.cases(data_matrix),,drop=FALSE]
+  }else{
+    hrdetect_input <- data_matrix
+  }
+  
+  hrdetect_output <- applyHRDetectDavies2017(hrdetect_input, attachContributions = TRUE)
   
   
   #--- return results ---
@@ -263,7 +362,7 @@ HRDetect_pipeline <- function(data_matrix,
 #' @references Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 #' @examples
 #' BRCAprob <- applyHRDetectDavies2017(data_matrix,features_names)
-applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","e.3","SV3","SV5","hrd","e.8"),attachContributions=FALSE){
+applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","SNV3","SV3","SV5","hrd","SNV8"),attachContributions=FALSE){
   #data_matrix:    rows are samples and columns are features
   #features_names: give the names of the features in data_matrix that correspond, in order, to:
   #                1) proportion of deletions with microhomology
@@ -297,7 +396,7 @@ applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","
   
   intercept <- -3.364
   
-  hrdetect_input <- data_matrix[,features_names]
+  hrdetect_input <- data_matrix[,features_names,drop=FALSE]
   #log and scale
   hrdetect_input <- log(hrdetect_input + 1)
   hrdetect_input <- hrdetect_input - matrix(rep(features_mean,nrow(hrdetect_input)),nrow = nrow(hrdetect_input),byrow = TRUE)

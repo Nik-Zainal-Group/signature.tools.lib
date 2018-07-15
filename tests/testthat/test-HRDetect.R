@@ -23,10 +23,20 @@ test_that("test HRDetect_pipeline() runs correctly on two samples.", {
                       "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
   names(SV_bedpe_files) <- sample_names
   
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                      "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
   res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
-                                                genome.v="hg19",
-                                                SNV_tab_files=SNV_tab_files,
-                                                SV_bedpe_files=SV_bedpe_files,
+                                                genome.v = "hg19",
+                                                SNV_tab_files = SNV_tab_files,
+                                                SV_bedpe_files = SV_bedpe_files,
+                                                Indels_vcf_files = Indels_vcf_files,
+                                                CNV_tab_files = CNV_tab_files,
                                                 nparallel = 2)
   #if no error happen this code can be reached
   expect_true(TRUE)
@@ -45,10 +55,18 @@ test_that("test HRDetect_pipeline() runs correctly on one sample.", {
   SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe")
   names(SV_bedpe_files) <- sample_names
   
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
   res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
-                                                genome.v="hg19",
-                                                SNV_tab_files=SNV_tab_files,
-                                                SV_bedpe_files=SV_bedpe_files,
+                                                genome.v = "hg19",
+                                                SNV_tab_files = SNV_tab_files,
+                                                SV_bedpe_files = SV_bedpe_files,
+                                                Indels_vcf_files = Indels_vcf_files,
+                                                CNV_tab_files = CNV_tab_files,
                                                 nparallel = 1)
   #if no error happen this code can be reached
   expect_true(TRUE)

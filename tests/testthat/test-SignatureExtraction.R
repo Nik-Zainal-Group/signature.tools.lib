@@ -1,4 +1,4 @@
-context("testing Signature Extraction, should take no more than 5 minutes")
+context("testing Signature Extraction, this should not take more than 5 minutes")
 
 test_that("test that SignatureExtraction() works on a random matrix", {
   
