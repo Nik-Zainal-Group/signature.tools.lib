@@ -49,6 +49,10 @@ confidence, which uses a bootstrap apporach to calculate the empirical probabili
 of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample). 
 This probability can be used to decide which exposures to remove from the initial fit, 
 thus increasing the sparsity of the exposures.
+Note that SignatureFit_withBootstrap_Analysis will save the results of SignatureFit_withBootstrap
+in the outdir directory using the R save() function. If SignatureFit_withBootstrap_Analysis
+is rerun with the same setting, the saved file will be loaded to avoid rerunning the Signature Fit
+and figures will be replotted.
 }
 \examples{
 res <- SignatureFit_withBootstrap_Analysis(catalogues,signature_data_matrix)

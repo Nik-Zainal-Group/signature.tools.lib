@@ -297,6 +297,10 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
 #' of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample). 
 #' This probability can be used to decide which exposures to remove from the initial fit, 
 #' thus increasing the sparsity of the exposures.
+#' Note that SignatureFit_withBootstrap_Analysis will save the results of SignatureFit_withBootstrap
+#' in the outdir directory using the R save() function. If SignatureFit_withBootstrap_Analysis
+#' is rerun with the same setting, the saved file will be loaded to avoid rerunning the Signature Fit
+#' and figures will be replotted.
 #' 
 #' @param outdir output directory for the analysis, remember to add '/' at the end
 #' @param cat catalogue matrix, patients as columns, channels as rows
