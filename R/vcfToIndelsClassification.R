@@ -98,7 +98,7 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     
     
     ref.length <- Biostrings::width(SummarizedExperiment::rowRanges(indel.data)$REF)
-    alt.length <- Biostrings::width(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
+    alt.length <- Biostrings::width(BiocGenerics::unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
     indel.length <- abs(ref.length - alt.length)
     
     indel.type <- rep(NA, nrow(indel.data))
