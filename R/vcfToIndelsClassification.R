@@ -97,8 +97,8 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
   if (nrow(indel.data)>0) {
     
     
-    ref.length <- width(SummarizedExperiment::rowData(indel.data)$REF)
-    alt.length <- width(unlist(SummarizedExperiment::rowData(indel.data)$ALT))
+    ref.length <- BiocGenerics::width(SummarizedExperiment::rowRanges(indel.data)$REF)
+    alt.length <- BiocGenerics::width(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
     indel.length <- abs(ref.length - alt.length)
     
     indel.type <- rep(NA, nrow(indel.data))
@@ -109,9 +109,9 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     
     # sequence of change
     change <- vector()
-    change[indel.type=='DI'] <-  substr( as.character(SummarizedExperiment::rowData(indel.data)$REF)[indel.type=='DI'],2,1e5)
-    change[indel.type=='I'] <- substr( as.character(unlist(SummarizedExperiment::rowData(indel.data)$ALT))[indel.type=='I'], 2, 1e5)
-    change[indel.type=='D'] <- substr( as.character(SummarizedExperiment::rowData(indel.data)$REF), 2, 1e5)[indel.type=='D']
+    change[indel.type=='DI'] <-  substr( as.character(SummarizedExperiment::rowRanges(indel.data)$REF)[indel.type=='DI'],2,1e5)
+    change[indel.type=='I'] <- substr( as.character(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))[indel.type=='I'], 2, 1e5)
+    change[indel.type=='D'] <- substr( as.character(SummarizedExperiment::rowRanges(indel.data)$REF), 2, 1e5)[indel.type=='D']
     
     min.position <- start(indel.data)
     max.position <- start(indel.data) + indel.length 
@@ -136,8 +136,8 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     indel.df <- data.frame(
       chr=as.character(GenomeInfoDb::seqnames(indel.data)),
       pos=BiocGenerics::start(IRanges::ranges(indel.data)),
-      ref=as.character(SummarizedExperiment::rowData(indel.data)$REF),
-      alt=as.character(unlist(SummarizedExperiment::rowData(indel.data)$ALT)),
+      ref=as.character(SummarizedExperiment::rowRanges(indel.data)$REF),
+      alt=as.character(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT)),
       indel.type=indel.type,
       change=change,
       slice3=slice3,

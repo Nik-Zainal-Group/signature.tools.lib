@@ -39,11 +39,11 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   #vcf_data <- keepSeqlevels(vcf_data, seqnames(genomeSeq))
   
   #filters failed for each variant
-  rd <- SummarizedExperiment::rowData(vcf_data)
+  rd <- SummarizedExperiment::rowRanges(vcf_data)
   
   info.data <- VariantAnnotation::info(vcf_data)
   
-  rgs <- VariantAnnotation::ranges(vcf_data)
+  rgs <- IRanges::ranges(vcf_data)
   starts <- BiocGenerics::start(rgs)
   ends <-  BiocGenerics::end(rgs)
   
