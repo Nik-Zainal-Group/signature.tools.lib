@@ -97,8 +97,8 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
   if (nrow(indel.data)>0) {
     
     
-    ref.length <- IRanges::width(SummarizedExperiment::rowRanges(indel.data)$REF)
-    alt.length <- IRanges::width(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
+    ref.length <- Biostrings::width(SummarizedExperiment::rowRanges(indel.data)$REF)
+    alt.length <- Biostrings::width(unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
     indel.length <- abs(ref.length - alt.length)
     
     indel.type <- rep(NA, nrow(indel.data))
