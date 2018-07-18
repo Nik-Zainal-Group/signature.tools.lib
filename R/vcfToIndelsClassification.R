@@ -53,7 +53,7 @@
 #' @return the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion
 #' @export
 #' @examples 
-#' res <- signature.tools.lib::vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
+#' res <- vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
 vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   
   if(genome.v=="hg19"){

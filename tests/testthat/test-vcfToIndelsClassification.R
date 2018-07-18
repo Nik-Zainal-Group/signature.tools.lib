@@ -2,7 +2,7 @@ context("testing Indels classification from VCF file")
 
 test_that("test vcfToIndelsClassification() using an input file, check count and proportion of indels is correct", {
 
-  res <- signature.tools.lib::vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
+  res <- vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
   
   expect_count_proportion <- data.frame(sample = "testSample",
                                         del.mh = 48,

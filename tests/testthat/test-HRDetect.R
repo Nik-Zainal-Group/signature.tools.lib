@@ -3,7 +3,7 @@ context("testing HRDetect pipeline")
 test_that("test HRDetect_pipeline() to make sure it raises an error when the input data matrix is not properly formatted.", {
 
   data_matrix <- NULL
-  expect_error(res <- signature.tools.lib::HRDetect_pipeline(data_matrix))
+  expect_error(res <- HRDetect_pipeline(data_matrix))
   
 
   
@@ -31,7 +31,7 @@ test_that("test HRDetect_pipeline() runs correctly on two samples.", {
                      "test_hrdetect_2/test_hrdetect_2.cna.txt")
   names(CNV_tab_files) <- sample_names
   
-  res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
+  res <- HRDetect_pipeline(data_matrix,
                                                 genome.v = "hg19",
                                                 SNV_tab_files = SNV_tab_files,
                                                 SV_bedpe_files = SV_bedpe_files,
@@ -61,7 +61,7 @@ test_that("test HRDetect_pipeline() runs correctly on one sample.", {
   CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt")
   names(CNV_tab_files) <- sample_names
   
-  res <- signature.tools.lib::HRDetect_pipeline(data_matrix,
+  res <- HRDetect_pipeline(data_matrix,
                                                 genome.v = "hg19",
                                                 SNV_tab_files = SNV_tab_files,
                                                 SV_bedpe_files = SV_bedpe_files,

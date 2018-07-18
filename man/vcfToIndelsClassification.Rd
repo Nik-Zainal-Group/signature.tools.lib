@@ -20,5 +20,5 @@ the function returns a list with elements "indels_classified", which is a table 
 Convert a VCF file containing Indels into a data frame where each indel is classified as repet-mediated, Microhomology-mediated or other. A summary of the count of indels (deletions and insertions) and their proportion with respect to the total is also provided.
 }
 \examples{
-res <- signature.tools.lib::vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
+res <- vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
 }

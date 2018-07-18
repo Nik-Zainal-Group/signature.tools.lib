@@ -5,7 +5,7 @@ test_that("test ascatToHRDLOH() using an input file 1/2", {
   ascat_test.df <- read.table("ascat_test.csv", sep=",", header=F, as.is=T, check.names = FALSE)
   colnames(ascat_test.df) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')
   
-  res <- signature.tools.lib::ascatToHRDLOH(ascat_test.df,"testSample")
+  res <- ascatToHRDLOH(ascat_test.df,"testSample")
   
   expected_res <- 19
   names(expected_res) <- "testSample"
@@ -33,7 +33,7 @@ test_that("test ascatToHRDLOH() using an input file 2/2", {
   # 
   # write.table(ascat_test.df,file = "test_hrdetect_1/test_hrdetect_1.cna.txt", sep="\t",quote = FALSE,row.names = FALSE,col.names = TRUE)
   # 
-  res <- signature.tools.lib::ascatToHRDLOH(ascat_test.df,"test_hrdetect_1")
+  res <- ascatToHRDLOH(ascat_test.df,"test_hrdetect_1")
   
   expected_res <- 5
   names(expected_res) <- "test_hrdetect_1"

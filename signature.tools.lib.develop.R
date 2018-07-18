@@ -29,6 +29,7 @@ devtools::use_package("nnls")
 devtools::use_package("GenSA")
 devtools::use_package("gmp")
 devtools::use_package("plyr") 
+devtools::load_all()
 
 #add internal data
 RS.Breast560 <- read.table("data/Breast560_rearrangement.signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)

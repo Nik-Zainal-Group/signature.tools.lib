@@ -7,11 +7,11 @@ test_that("test tabToSNVcatalogue() to convert a tab file with SNV into an SNV c
   
   expected_cat <- read.table(file="test.snv.tab",sep = "\t",header = TRUE,stringsAsFactors = FALSE)
   
-  res_cat <- signature.tools.lib::tabToSNVcatalogue(testSNVdf,genome.v = "hg19")
+  res_cat <- tabToSNVcatalogue(testSNVdf,genome.v = "hg19")
   
   expect_equal(res_cat$catalogue,expected_cat)
   
-  #expect_error(res <- signature.tools.lib::HRDetect_pipeline(data_matrix))
+  #expect_error(res <- HRDetect_pipeline(data_matrix))
   #write.table(res_cat$catalogue,file="test.snv.tab",sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
 })
