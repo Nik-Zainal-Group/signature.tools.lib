@@ -40,6 +40,7 @@ preprocessCatalgue <- function(d, mut_thr){
 }
 
 
+#' @export
 sortCatalogue <- function(cat){
   all_bp <- c("A", "C", "G", "T")
   pyr_muts <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
@@ -122,6 +123,7 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
 }
 
 #compute the cosine similarity
+#' @export
 cos.sim <- function(a, b){
   return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
 } 
@@ -825,7 +827,7 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
   ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w)
 }
 
-
+#' @export
 plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylabel = ""){
   cos.sim <- function(a, b){
     return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
@@ -844,6 +846,7 @@ plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylab
 #means that Cosmic (C) signatures 1, 3 and 13 were found, while
 #signatures N1 and N2 are unknown signatures (N for not found), based on the fact
 #that no similarity >=threshold was found with the Cosmic 30
+#' @export
 findClosestCOSMIC30 <- function(sigs,threshold){
   #load COSMIC30
   # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
@@ -863,6 +866,7 @@ findClosestCOSMIC30 <- function(sigs,threshold){
 }
 
 #automatically detect similarity with sum of two COSMIC30
+#' @export
 findClosestCOSMIC30andCombinations <- function(sigs,threshold){
   #load COSMIC30
   # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
@@ -894,6 +898,7 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
 #res$cos.sim = c(0.94,0.85,0.7)
 #means that Cosmic (C) signatures 1, 3 and 13 were found, while
 #the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
+#' @export
 findClosestCOSMIC30_withSimilarity <- function(sigs){
   #load COSMIC30
   # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
@@ -914,6 +919,7 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
 }
 
 #automatically detect similarity with sum of two COSMIC30
+#' @export
 findClosestCOSMIC30andCombinations_withSimilarity <- function(sigs){
   #load COSMIC30
   # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
@@ -988,6 +994,7 @@ findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
   return(res)
 }
 
+#' @export
 KLD <- function(m1,m2){
   # print(sessionInfo())
   # print(m1)
@@ -1000,6 +1007,7 @@ KLD <- function(m1,m2){
 }
 
 #samples/sigantures are ararnged by columns
+#' @export
 computeCorrelationOfTwoSetsOfSigs <- function(sigs1,sigs2){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs1)){
@@ -1030,13 +1038,17 @@ normaliseSamples <- function(cat){
   return(cat/matrix(rep(apply(cat,2,sum),nrow(cat)),nrow = nrow(cat),byrow = TRUE))
 }
 
+#' @export
 RMSE <- function(m1,m2){
   sqrt(sum((m1-m2)^2)/(ncol(m1)*nrow(m1)))
 }
 
+#' @export
 writeTable <- function(t,file){
   write.table(t,file = file,sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
 }
+
+#' @export
 readTable <- function(file){
   read.table(file = file,sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE)
 }
