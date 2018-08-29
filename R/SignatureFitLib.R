@@ -778,3 +778,111 @@ export_SignatureFit_withBootstrap_to_JSON <- function(outdir,res){
 
 }
 
+#' Distribution of Signatures in Samples
+#' 
+#' Given a catalogue of samples and an exposures table, compute the relative amount of each signature
+#' in each sample and the unassigned mutations. Also cluster the samples with hierarchical clustering
+#' with average linkage and order the samples according to the clustering. Optionally, plot to file.
+#' 
+#' @param fileout if specified, generate a plot, otherwise no plot is generated
+#' @param catalogue original catalogue, channels as rows and samples as columns
+#' @param exposures exposures/activities of signatures in each sample. Signatures as rows, samples as columns
+#' @keywords unexplained samples
+#' @return list with to objects: the matrix of the distribution of the signatures in the samples and the hierachical clustering object
+#' @export
+#' @examples
+#' res <- SignatureFit_withBootstrap(cat = catalogue,
+#'                   signature_data_matrix = cosmic30,
+#'                   nboot = 5,
+#'                   threshold_percent = 0.1,
+#'                   threshold_p.value = 0.1)
+#' distribution_object <- exposureDistributionBarplot(catalogue=catalogue,
+#'                   exposures=res$E_median_filtered)
+exposureDistributionBarplot <- function(fileout=NULL,catalogue,exposures){
+  total_mut_in_exp <- apply(exposures,2,sum)
+  total_mut_in_cat <- apply(catalogue,2,sum)
+  unassigned_mut <- total_mut_in_cat - total_mut_in_exp
+  unassigned_mut[unassigned_mut < 0] <- 0
+  plot_matrix <- rbind(exposures,unassigned_mut)
+  plot_matrix <- plot_matrix/matrix(rep(total_mut_in_cat,nrow(plot_matrix)),byrow = TRUE,nrow = nrow(plot_matrix))*100
+  #cluster samples
+  d <- dist(t(plot_matrix), method = "euclidean") # distance matrix
+  fit <- hclust(d, method="average") 
+  #order according to clustering
+  plot_matrix <- plot_matrix[,fit$order]
+  kelly_colors <- c('F2F3F4', '222222', 'F3C300', '875692', 'F38400', 'A1CAF1', 'BE0032', 
+                    'C2B280', '848482', '008856', 'E68FAC', '0067A5', 'F99379', '604E97', 
+                    'F6A600', 'B3446C', 'DCD300', '882D17', '8DB600', '654522', 'E25822', '2B3D26','CCCCCC','CCCCCC','CCCCCC')
+  kelly_colors <- paste0("#",kelly_colors)
+  if(!is.null(fileout)){
+    jpeg(filename = fileout,width = max(1800,200+ncol(exposures)*3),height = 1000,res = 200)
+    par(mar=c(4,4,3,5),mgp=c(1.5,0.5,0))
+    barplot(plot_matrix[,fit$order],col = c(kelly_colors[1:nrow(exposures)],"grey"),
+            border = NA,ylab = "% of mutation",xlab = "samples",xaxt="n",space=0)
+    legend(x="topright",title = "Signatures",legend = c(rownames(exposures),"other"),fill = c(kelly_colors[1:nrow(exposures)],"grey"),bty = "n",inset = c(-0.08,0),xpd = TRUE)
+    dev.off()
+  }
+  res <- list()
+  res$distribution_matrix <- plot_matrix
+  res$clustering_object <- fit
+  return(res)
+}
+
+
+#' Estimate samples not fully explained by signature fit
+#' 
+#' Given a catalogue of samples, signatures and exposures, compute the sum of the absolute deviations (SAD)
+#' between the original catalogue and the reconstructed samples (i.e. signatures x exposures) and
+#' normalise this sum by the total number of mutations in the sample. Then, for each sample, compare its
+#' normalised SAD to the normalised SAD of the other samples and check if it is significantly different. In practice,
+#' a p-value is computed fitting a gaussian distribution to the other samples.
+#' 
+#' @param fileout if specified, generate a plot, otherwise no plot is generated
+#' @param catalogue original catalogue, channels as rows and samples as columns
+#' @param sigs mutational signautures used for fitting, channels as rows, signatures as columns
+#' @param exposures exposures/activities of signatures in each sample. Signatures as rows, samples as columns
+#' @param pvalue_threshold threshold for statistical significance
+#' @keywords unexplained samples
+#' @return table of unexplained samples
+#' @export
+#' @examples
+#' res <- SignatureFit_withBootstrap(cat = catalogue,
+#'                   signature_data_matrix = cosmic30,
+#'                   nboot = 5,
+#'                   threshold_percent = 0.1,
+#'                   threshold_p.value = 0.1)
+#' s_table <- unexplainedSamples(catalogue=catalogue,
+#'                   sigs=cosmic30,
+#'                   exposures=res$E_median_filtered)
+unexplainedSamples <- function(fileout=NULL,catalogue,sigs,exposures,pvalue_threshold=0.01){
+  reconstructed <- as.matrix(sigs) %*% as.matrix(exposures)
+  
+  #look at various metrics, normalised by number of mutation
+  norm_SAD <- c()
+  for (i in 1:ncol(catalogue)){
+    norm_SAD <- c(norm_SAD,sum(abs(reconstructed[,i] - catalogue[,i]))/sum(catalogue[,i]))
+  }
+  
+  pval_norm_SAD <- c()
+  for (i in 1:length(norm_SAD)){
+    m <- mean(norm_SAD[-i])
+    s <- sd(norm_SAD[-i])
+    pval_norm_SAD <- c(pval_norm_SAD,1 - pnorm(norm_SAD[i],mean = m,sd = s,lower.tail = TRUE))
+  }
+  which_significant <- which(pval_norm_SAD<pvalue_threshold)
+  
+  #plot the outliers
+  if(!is.null(fileout)){
+    jpeg(filename = fileout,width = 1200,height = 800,res = 200)
+    par(mar=c(4,4,5,2))
+    plot(norm_SAD,
+         col=rgb(0.5,0.5,0.5,0.5),
+         pch = 16, ylab = "SAD/n. mutations",xlab = "samples",main = paste0("Normalised Sum of Absolute Deviations (SAD)\n between original and reconstrucated catalogue"))
+    points(which_significant,norm_SAD[which_significant],col="red",pch = 16)
+    legend(x="topleft",legend = c(paste0("significantly higher (p-value<",pvalue_threshold,")")),col = "red",pch = 16,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
+    dev.off()
+  }
+  #also write the outliers
+  res <- data.frame(index=which_significant,sample=colnames(catalogue)[which_significant],normSAD=norm_SAD[which_significant])
+  return(res)
+}
