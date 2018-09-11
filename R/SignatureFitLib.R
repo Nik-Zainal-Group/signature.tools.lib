@@ -877,7 +877,7 @@ unexplainedSamples <- function(fileout=NULL,catalogue,sigs,exposures,pvalue_thre
     par(mar=c(4,4,5,2))
     plot(norm_SAD,
          col=rgb(0.5,0.5,0.5,0.5),
-         pch = 16, ylab = "SAD/n. mutations",xlab = "samples",main = paste0("Normalised Sum of Absolute Deviations (SAD)\n between original and reconstrucated catalogue"))
+         pch = 16, ylab = "SAD/n. mutations",xlab = "samples",main = paste0("Normalised Sum of Absolute Deviations (SAD)\n between original and reconstructed catalogue"))
     points(which_significant,norm_SAD[which_significant],col="red",pch = 16)
     legend(x="topleft",legend = c(paste0("significantly higher (p-value<",pvalue_threshold,")")),col = "red",pch = 16,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
     dev.off()
