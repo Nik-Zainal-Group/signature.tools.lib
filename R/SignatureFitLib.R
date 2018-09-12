@@ -376,7 +376,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
     text(x = 1.2, y = yb,labels = "-1")
   }
   
-  reconstructed_with_median <- as.matrix(signature_data_matrix) %*% res$E_median_filtered
+  reconstructed_with_median <- round(as.matrix(signature_data_matrix) %*% res$E_median_filtered)
   #provide a series of plots for each sample
   #plot_nrows <- ncol(cat)
   rows_ordered_from_best <- order(res$KLD_samples)
