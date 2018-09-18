@@ -7,7 +7,7 @@ Depends: R (>= 3.2.1)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-biocViews:
+biocViews: 
 Imports: VariantAnnotation,
     BSgenome.Hsapiens.NCBI.GRCh38,
     BSgenome.Hsapiens.UCSC.hg19,
@@ -27,5 +27,8 @@ Imports: VariantAnnotation,
     nnls,
     GenSA,
     gmp,
-    plyr
+    plyr,
+    RCircos,
+    scales,
+    GenomicRanges
 RoxygenNote: 6.0.1

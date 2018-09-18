@@ -28,7 +28,9 @@ devtools::use_package("NNLM")
 devtools::use_package("nnls")
 devtools::use_package("GenSA")
 devtools::use_package("gmp")
-devtools::use_package("plyr") 
+devtools::use_package("plyr")
+devtools::use_package("RCircos")
+devtools::use_package("scales")
 devtools::load_all()
 
 #add internal data
