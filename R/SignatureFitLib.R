@@ -208,7 +208,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
     # library(foreach)
     # library(doParallel)
     # library(doMC)
-    doParallel::registerDoParallel(4)
+    doParallel::registerDoParallel(nparallel)
     boot_list <- foreach::foreach(j=1:nboot) %dopar% {
       bootcat <- generateRandMuts(cat)
       SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter)
@@ -817,7 +817,7 @@ exposureDistributionBarplot <- function(fileout=NULL,catalogue,exposures){
   if(!is.null(fileout)){
     jpeg(filename = fileout,width = max(1800,200+ncol(exposures)*3),height = 1000,res = 200)
     par(mar=c(4,4,3,5),mgp=c(1.5,0.5,0))
-    barplot(plot_matrix[,fit$order],col = c(kelly_colors[1:nrow(exposures)],"grey"),
+    barplot(plot_matrix,col = c(kelly_colors[1:nrow(exposures)],"grey"),
             border = NA,ylab = "% of mutation",xlab = "samples",xaxt="n",space=0)
     legend(x="topright",title = "Signatures",legend = c(rownames(exposures),"other"),fill = c(kelly_colors[1:nrow(exposures)],"grey"),bty = "n",inset = c(-0.08,0),xpd = TRUE)
     dev.off()
