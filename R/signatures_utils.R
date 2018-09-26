@@ -515,7 +515,7 @@ plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum
             col=rearr.colours,
             beside = TRUE,
             las=2,
-            cex.names = 1)
+            cex.names = 1,border = NA,space = 0.2)
   }
   title(main = overall_title,outer = TRUE,cex.main = 2)
   if(!is.null(output_file)) dev.off()
@@ -562,11 +562,11 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_m
                           beside = TRUE,
                           ylim = ylimit,
                           las=2,
-                          cex.names = 1)
+                          cex.names = 1,border = NA,space = 0.2)
     # segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
     #          mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
     segments(barCenters, mean_matrix[,pos], barCenters,
-             mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
+             mean_matrix[,pos] + sd_matrix[,pos], lwd = 1)
     
     # arrows(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
     #        mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
