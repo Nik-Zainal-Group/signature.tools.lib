@@ -3,15 +3,16 @@
 
 #vcf_data is a vcf file loaded with readVCF
 #library("VariantAnnotation")
-#library(BSgenome.Hsapiens.NCBI.GRCh38) #hg38
-#library(BSgenome.Hsapiens.UCSC.hg19) #hg19
+#library("GenomicRanges")
+#library(BSgenome.Hsapiens.UCSC.hg38) #hg38
+#library(BSgenome.Hsapiens.1000genomes.hs37d5) #hg19
 
 #' VCF to SNV catalogue
 #' 
 #' Convert a vcf file containing SNV to SNV 96 channel trinuclotide context catalogue. The VCF file should containt the SNV of a single sample.
 #' 
-#' @param vcfFilename name of the VCF file to read from
-#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38) or "hg19" (will load BSgenome.Hsapiens.UCSC.hg19)
+#' @param vcfFilename path to input VCF (file must be tabix indexed)
+#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38) or "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5)
 #' @return returns the SNV catalogue for the given sample
 #' @keywords vcf SNV
 #' @export
@@ -21,22 +22,25 @@
 vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   
   if(genome.v=="hg19"){
-    genomeSeq <- BSgenome.Hsapiens.UCSC.hg19::Hsapiens
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
   }else if(genome.v=="hg38"){
-    genomeSeq <- BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }
-  
+ 
   mut.order <- c("A[C>A]A","A[C>A]C","A[C>A]G","A[C>A]T","C[C>A]A","C[C>A]C","C[C>A]G","C[C>A]T","G[C>A]A","G[C>A]C","G[C>A]G","G[C>A]T","T[C>A]A","T[C>A]C","T[C>A]G","T[C>A]T","A[C>G]A","A[C>G]C","A[C>G]G","A[C>G]T","C[C>G]A","C[C>G]C","C[C>G]G","C[C>G]T","G[C>G]A","G[C>G]C","G[C>G]G","G[C>G]T","T[C>G]A","T[C>G]C","T[C>G]G","T[C>G]T","A[C>T]A","A[C>T]C","A[C>T]G","A[C>T]T","C[C>T]A","C[C>T]C","C[C>T]G","C[C>T]T","G[C>T]A","G[C>T]C","G[C>T]G","G[C>T]T","T[C>T]A","T[C>T]C","T[C>T]G","T[C>T]T","A[T>A]A","A[T>A]C","A[T>A]G","A[T>A]T","C[T>A]A","C[T>A]C","C[T>A]G","C[T>A]T","G[T>A]A","G[T>A]C","G[T>A]G","G[T>A]T","T[T>A]A","T[T>A]C","T[T>A]G","T[T>A]T","A[T>C]A","A[T>C]C","A[T>C]G","A[T>C]T","C[T>C]A","C[T>C]C","C[T>C]G","C[T>C]T","G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T","A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T","G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
   
-  # plots mutation-context for all variants in the vcf file
-  # and separately for the variants that passed
-  
+  # read only chr seqnames from VCF, not contigs
+  gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+  if (genome.v=="hg19") {
+    GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  }
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames 
+  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+
   # load the vcf file
-  vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v)
-  
-  #browser()
-  
-  #vcf_data <- keepSeqlevels(vcf_data, seqnames(genomeSeq))
+  vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v, gr)
   
   #filters failed for each variant
   rd <- SummarizedExperiment::rowRanges(vcf_data)
@@ -47,34 +51,12 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   starts <- BiocGenerics::start(rgs)
   ends <-  BiocGenerics::end(rgs)
   
-  #Check chromosome name format
+  #Check chromosomes exist
   chroms <- GenomeInfoDb::seqnames(vcf_data)
-  if (genome.v=="hg19"){
-    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
-    if (length(intersect(chroms,expected_chroms))==0){
-      message("[info vcfToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
-      chroms <- paste0("chr",chroms)
-      if (length(intersect(chroms,expected_chroms))>0) {
-        message("[info vcfToSNVcatalogue] It seems that chromosome names have been corrected")
-      }else{
-        stop("[error vcfToSNVcatalogue] It seems that chromosome names have not been corrected")
-      }
-    }
-  }else if (genome.v=="hg38"){
-    expected_chroms <- c(seq(1:22),"X","Y")
-    if (length(intersect(chroms,expected_chroms))==0){
-      message("[info vcfToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
-      chroms <- sapply(chroms,function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x)
-      if (length(intersect(chroms,expected_chroms))>0) {
-        message("[info vcfToSNVcatalogue] It seems that chromosome names have been corrected")
-      }else{
-        message("[error vcfToSNVcatalogue] It seems that chromosome names have not been corrected")
-      }
-    }
+
+  if (length(chroms)==0){ 
+     stop("[error vcfToSNVcatalogue] Input vcf does not contain variants ", vcfFilename)
   }
-  
-  
-  
   
   fxd <- (VariantAnnotation::fixed(vcf_data))
   wt <- as.character(rd$REF)

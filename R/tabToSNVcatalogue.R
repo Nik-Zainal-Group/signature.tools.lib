@@ -16,9 +16,9 @@
 tabToSNVcatalogue <- function(subs, genome.v="hg19") {
 
   if(genome.v=="hg19"){
-    genomeSeq <- BSgenome.Hsapiens.UCSC.hg19::Hsapiens
+    genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
   }else if(genome.v=="hg38"){
-    genomeSeq <- BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens
+    genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }
   
   # plots mutation-context for all variants in the vcf file
@@ -35,7 +35,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   #Ensure the wt and mt columns (V7 & V8) are read in as characters.
   #---> subs <- read.table(SUBS.PATH, header=FALSE, sep='\t', quote = "", stringsAsFactors=FALSE, colClasses=c(V7="character",V8="character"))
   # subs$chr <- as.character(subs$V5)
-  subs$chr.chr<- subs$chr
   # subs$position <- subs$V6
   subs$wt <- subs$REF
   subs$mt <- subs$ALT
@@ -44,31 +43,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   noPyrBases <- (subs$wt=='G') | (subs$wt=='A')
   subs$ref_base_pyrimidine_context[noPyrBases ] <- toPyr(subs$wt[noPyrBases])
   subs$mutant_base_pyrimidine_context[noPyrBases ]  <- toPyr(subs$mt[noPyrBases])
-  
-  #Check chromosome name format
-  if (genome.v=="hg19"){
-    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
-    if (length(intersect(subs$chr.chr,expected_chroms))==0){
-      message("[info tabToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.UCSC.hg19::Hsapiens, trying to correct")
-      subs$chr.chr <- paste0("chr",subs$chr.chr)
-      if (length(intersect(subs$chr.chr,expected_chroms))>0) {
-        message("[info tabToSNVcatalogue] It seems that chromosome names have been corrected")
-      }else{
-        stop("[error tabToSNVcatalogue] It seems that chromosome names have not been corrected")
-      }
-    }
-  }else if (genome.v=="hg38"){
-    expected_chroms <- c(seq(1:22),"X","Y")
-    if (length(intersect(subs$chr.chr,expected_chroms))==0){
-      message("[info tabToSNVcatalogue] chromosome names may be incorrect as they don't seem to match BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens, trying to correct")
-      subs$chr.chr <- sapply(subs$chr.chr,function(x) if(substr(x,start = 1,stop = 3)=="chr") substring(x,first = 4) else x)
-      if (length(intersect(subs$chr.chr,expected_chroms))>0) {
-        message("[info tabToSNVcatalogue] It seems that chromosome names have been corrected")
-      }else{
-        stop("[error tabToSNVcatalogue] It seems that chromosome names have not been corrected")
-      }
-    }
-  }
 
   # the mutations originally not in pyramidine contex
   not.pyr <- ((subs$wt=='G') | (subs$wt=='A'))
@@ -77,9 +51,19 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   subs$pyrwt[not.pyr] <- as.character(toPyr(subs$wt[not.pyr]))
   subs$pyrmut[not.pyr] <- as.character(toPyr(subs$mt[not.pyr]))
 
+  # currently we support chromosomes, not contigs
+  if (genome.v=="hg19"){
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+  }else if (genome.v=="hg38"){
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+  }
+  if (length(intersect(subs$chr,expected_chroms))==0) {
+     stop("[error tabToSNVcatalogue] Input tab file does not contain seqnames ", paste(expected_chroms,collapse=" "))
+  }
+
   # barcode <- paste(subs$chr, '-',subs$position ,'-', subs$mt, sep='')
 
-  muts <- data.frame(chroms=subs$chr.chr, 
+  muts <- data.frame(chroms=subs$chr, 
                      starts=subs$position, 
                      ends = subs$position, 
                      wt=subs$wt, 
@@ -92,10 +76,10 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   result$muts <- muts
   ######
 
-  subs$bb <- as.character(BSgenome::getSeq(genomeSeq, subs$chr.chr, start=subs$position-1, end=subs$position-1))
-  subs$ba <- as.character(BSgenome::getSeq(genomeSeq, subs$chr.chr, start=subs$position+1, end=subs$position+1))
-  subs$wt.ref <- as.character(BSgenome::getSeq(genomeSeq, subs$chr.chr, start=subs$position, end=subs$position))
-  subs$triplets <- as.character(BSgenome::getSeq(genomeSeq, subs$chr.chr, start=subs$position-1, end=subs$position+1))
+  subs$bb <- as.character(BSgenome::getSeq(genomeSeq, subs$chr, start=subs$position-1, end=subs$position-1))
+  subs$ba <- as.character(BSgenome::getSeq(genomeSeq, subs$chr, start=subs$position+1, end=subs$position+1))
+  subs$wt.ref <- as.character(BSgenome::getSeq(genomeSeq, subs$chr, start=subs$position, end=subs$position))
+  subs$triplets <- as.character(BSgenome::getSeq(genomeSeq, subs$chr, start=subs$position-1, end=subs$position+1))
 
   # table of mutations
   mut.table <- data.frame(bbef=as.character(subs$bb ), 

@@ -9,8 +9,8 @@ Encoding: UTF-8
 LazyData: true
 biocViews: 
 Imports: VariantAnnotation,
-    BSgenome.Hsapiens.NCBI.GRCh38,
-    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Hsapiens.1000genomes.hs37d5,
     SummarizedExperiment,
     BiocGenerics,
     GenomeInfoDb,
@@ -30,5 +30,6 @@ Imports: VariantAnnotation,
     plyr,
     RCircos,
     scales,
-    GenomicRanges
-RoxygenNote: 6.0.1
+    GenomicRanges,
+    IRanges
+RoxygenNote: 6.1.0

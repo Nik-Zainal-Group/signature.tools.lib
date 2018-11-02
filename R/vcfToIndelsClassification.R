@@ -35,8 +35,9 @@
 # 
 # #make dir if not exists
 # system(paste0("mkdir -p ",work_dir_indels))
-# 
+
 # library("VariantAnnotation")
+# library("GenomicRanges")
 # library('GenomicFeatures')
 # library(BSgenome.Hsapiens.UCSC.hg19)
 # 
@@ -47,7 +48,7 @@
 #' 
 #' Convert a VCF file containing Indels into a data frame where each indel is classified as repet-mediated, Microhomology-mediated or other. A summary of the count of indels (deletions and insertions) and their proportion with respect to the total is also provided.
 #' 
-#' @param indelsVCF.file name of the VCF file to load. This file should have been already filtered for the final indels sets to be used in the analysis.
+#' @param indelsVCF.file path to input VCF (file must be tabix indexed). This file should have been already filtered for the final indels sets to be used in the analysis. 
 #' @param sampleID name of the sample
 #' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19" or "hg38"
 #' @return the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion
@@ -55,15 +56,25 @@
 #' @examples 
 #' res <- vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
 vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
-  
+
   if(genome.v=="hg19"){
-    Hsapiens <- BSgenome.Hsapiens.UCSC.hg19::Hsapiens
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+    Hsapiens <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
   }else if(genome.v=="hg38"){
-    Hsapiens <- BSgenome.Hsapiens.NCBI.GRCh38::Hsapiens
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+    Hsapiens <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }
 
+  # read only chr seqnames from VCF, not contigs
+  gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+  if (genome.v=="hg19") {
+    GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  }
+  vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
+  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+
   # load the indel VCF file
-  indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v)
+  indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
   # filter the indels as required
   #indel.data <- indel.data[rowData(indel.data )$FILTER=='PASS' ,] #pancan consensus
   # convert formats, and find context of the indels
@@ -121,9 +132,9 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     extend3 = max.position + indel.length+25;
     
     
-    slice5 <- as.character(BSgenome::getSeq(Hsapiens, paste0('chr',indel.chr), extend5, min.position))
+    slice5 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, extend5, min.position))
     # in my opinnion this doesn't make sense, or only makes sense for deletions
-    slice3 <- as.character(BSgenome::getSeq(Hsapiens, paste0('chr',indel.chr), max.position+1, extend3))
+    slice3 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, max.position+1, extend3))
     
     
     

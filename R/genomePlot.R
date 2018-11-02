@@ -9,11 +9,14 @@ set.plot.params <- function(colour.scheme = "ascat"){
   params.my$point.type <- 19
   params.my$radius.len <- 3
   params.my$chr.ideog.pos <- 3.2
-  params.my$highlight.pos <- 3.35
-  params.my$chr.name.pos <- 3.45
+  params.my$highlight.pos <- 2.09 #3.35
+  params.my$chr.name.pos <- 2.14 #3.45
   params.my$plot.radius <- 3.55
   params.my$track.in.start <- 3.05
   params.my$track.out.start <- 3.2
+
+  params.my$tracks.inside <- 10
+  params.my$tracks.outside <- 1
 
   params.my$line.width <- 1
   params.my$link.line.width <- 0.5
@@ -103,8 +106,8 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   library(scales)
 
   genome.bsgenome = switch(genome.v,
-    "hg19" = "BSgenome.Hsapiens.UCSC.hg19",
-    "hg38" = "BSgenome.Hsapiens.NCBI.GRCh38",
+    "hg19" = "BSgenome.Hsapiens.1000genomes.hs37d5",
+    "hg38" = "BSgenome.Hsapiens.UCSC.hg38",
     "mm10" = "BSgenome.Mmusculus.UCSC.mm10",
     "rn4"  = "BSgenome.Rnorvegicus.UCSC.rn4"
   )
@@ -125,11 +128,9 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     data(list=genome.ideogram);
     species.cyto <- get(genome.ideogram);
   }
-  RCircos.Set.Core.Components(cyto.info=species.cyto, chr.exclude=NULL,  tracks.inside=10, tracks.outside=1);
 
-  # set plot colours and parameters
   params.my <- set.plot.params()
-
+  
   # rearrangement links colors
   inv.col <- alpha('dodgerblue2', 1)
   del.col <- alpha('coral2', 1) # originally .5
@@ -138,7 +139,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   transloc.colour <- alpha('gray35', 1) # originally 0.5
 
   #Set up height, width and resolution parameters
-  cPanelWidth = 0.17
+  cPanelWidth = 0 #0.17
   graph.height = 4100
   graph.wd_ht_ratio = (5400/4100)  #width/height ratio
   graph.width = graph.height * graph.wd_ht_ratio
@@ -161,22 +162,32 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
       dels <- indels[which(indels$indel.type=='D' | indels$indel.type=='DI'),]
       ins$end <- ins$pos + ins$indel.length
       dels$end <- dels$pos + dels$indel.length
-      ins.formatted <- ins[,c('chr', 'pos', 'end')]; names( ins.formatted) <- c('Chromosome','chromStart','chromEnd')
-      dels.formatted <- dels[,c('chr', 'pos', 'end')]; names( dels.formatted) <- c('Chromosome','chromStart','chromEnd')
-      if (nrow(ins.formatted)>0) { ins.formatted$Chromosome <- paste('chr',ins.formatted$Chromosome ,sep='')}
-      if (nrow(dels.formatted)>0) { dels.formatted$Chromosome <- paste('chr',dels.formatted$Chromosome ,sep='')}
+      ins.formatted <- ins[,c('chr', 'pos', 'end')]; 
+      names(ins.formatted) <- c('Chromosome','chromStart','chromEnd')
+      dels.formatted <- dels[,c('chr', 'pos', 'end')]; 
+      names(dels.formatted) <- c('Chromosome','chromStart','chromEnd')      
+      if (nrow(ins.formatted)>0 && genome.v=="hg19") { 
+        ins.formatted$Chromosome <- paste('chr',ins.formatted$Chromosome ,sep='')
+      }
+      if (nrow(dels.formatted)>0 && genome.v=="hg19") { 
+        dels.formatted$Chromosome <- paste('chr',dels.formatted$Chromosome ,sep='')
+      }
       tile.cols <- vector()
       tile.cols[dels$classification=='Microhomology-mediated'] <- params.my$indel.mhomology #'firebrick4'
       tile.cols[dels$classification=='Repeat-mediated'] <- params.my$indel.repeatmediated #'firebrick1'
       tile.cols[dels$classification=='None'] <- params.my$indel.other #'firebrick3'
   } 
 
-  cat(paste( dim(indels)[1], ' indels \n'))
+  cat(paste(dim(indels)[1], ' indels \n'))
 
   # rearrangements
   rearrs.formatted <- data.frame()
   if (!no_rearrangements) {
     rearrs.formatted <- read.brass.bedpe(rearrBedpe.file, onlyAssembled = rearr_only_assembled)
+    if (genome.v=="hg19") {
+      rearrs.formatted$Chromosome <- paste('chr', rearrs.formatted$Chromosome,sep='')
+      rearrs.formatted$Chromosome.1 <- paste('chr', rearrs.formatted$Chromosome.1,sep='')
+    }
   }
 
 
@@ -184,7 +195,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   subs.data <- getMutTables(subsVcf.file, onlyPASSED=FALSE, genome.v=genome.v, genomeSeq=get(genome.bsgenome))
   #subs.data <- getMutTablesTab(subsTab.file, onlyPASSED=FALSE, genomeSeq=get(genome.bsgenome))
 
-  subs <- data.frame(chr=substring(subs.data$muts$chroms,4,100),
+  subs <- data.frame(chr=subs.data$muts$chroms,
                      position = subs.data$muts$starts,
                      wt = subs.data$muts$wt,
                      mt =  subs.data$muts$mt,
@@ -197,7 +208,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   scatter.data <- subs$scatter.data
   scatter.colors <- subs$scatter.colors
   scatter.data.formatted <- data.frame(chromosome=scatter.data$chr,
-                                       start=scatter.data$position ,
+                                       start=scatter.data$position,
                                        stop=scatter.data$position,
                                        logDistPrev=log10(scatter.data$distPrev),
                                        color=scatter.colors,
@@ -208,7 +219,10 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   cv.data <- data.frame()
   #Skip if no copynumber was requested
   if (!no_copynumber) {
-      cv.data <- read.ascat(cnvsTab.file)
+    cv.data <- read.ascat(cnvsTab.file)
+    if (genome.v=="hg19") {
+      cv.data$Chromosome <- paste('chr', cv.data$Chromosome,sep='')
+    }
   }
 
 ################################################################################
@@ -223,12 +237,20 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     stop("Invalid file type. Only png and svg are supported");
   }
 
+  RCircos.Set.Core.Components(cyto.info=species.cyto, chr.exclude=NULL,  tracks.inside=params.my$tracks.inside, tracks.outside=params.my$tracks.outside);
+
+  # set plot colours and parameters
   params <- RCircos.Get.Plot.Parameters();
-  params[names(params.my)] <- params.my
-  params$sub.tracks <- 1
+  #RCircos doesn't allow resetting certain parameters
+  #see implementation of RCircos.Reset.Plot.Parameters
+  #params[which(names(params) %in% c("radius.len","plot.radius","chr.ideo.pos"))] <- NULL
+  toReset<-setdiff(names(params),c("radius.len","plot.radius","chr.ideo.pos"))
+  params[toReset] <- params.my[toReset]
+  #params$sub.tracks <- 1
   #RCircos.Reset.Plot.Parameters(params)
+
   par(mar=c(0.001, 0.001, 0.001, 0.001))
-  par(fig=c(cPanelWidth,0.75*(1-cPanelWidth)+cPanelWidth,0,1))
+  par(fig=c(cPanelWidth,0.75*(1-cPanelWidth)+cPanelWidth,0,1),cex=1.2)
 
   #RCircos.List.Parameters();
 
@@ -324,7 +346,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   }
 
   # side plots
-  par(cex=0.6)
+  par(cex=0.5)
 
 
   if (exists("subs.data") && !is.null(subs.data$passed.hist)) {

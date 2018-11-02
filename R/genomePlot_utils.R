@@ -4,7 +4,7 @@ processSubs <- function(subs)
 	scatter.data  <-  calcIntermutDist(subs)
 	scatter.data$mutType <- paste(scatter.data$ref_base_pyrimidine_context,'>',scatter.data$mutant_base_pyrimidine_context ,sep='')
 
-	scatter.colors <- rep("", nrow(scatter.data))
+	scatter.colors <- rep("gold", nrow(scatter.data)) #default color for multi-allelics
 	scatter.colors[scatter.data$mutType=="C>A"] <- "royalblue"
 	scatter.colors[scatter.data$mutType=="C>G"] <- "black"
 	scatter.colors[scatter.data$mutType=="C>T"] <- "red"
@@ -51,13 +51,26 @@ merge.with.order <- function(x,y, ..., sort = T, keep_order)
 }
 
 
-getMutTables <- function(myFile, onlyPASSED=FALSE, genome.v="hg19", genomeSeq=Hsapiens, addContext=TRUE) {
+getMutTables <- function(myFile, onlyPASSED=FALSE, genome.v="hg19", genomeSeq, addContext=TRUE) {
   # plots mutation-context for all variants in the vcf file
   # and separately for the variants that passed
 
+if(genome.v=="hg19"){
+  expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+}else if(genome.v=="hg38"){
+  expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+}
+
+# read only chr seqnames from VCF, not contigs
+gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+if (genome.v=="hg19") {
+  GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+}
+vcf_seqnames <- Rsamtools::headerTabix(myFile)$seqnames 
+gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
 
 # load the vcf file
-vcf_data <- VariantAnnotation::readVcf(myFile, genome.v)
+vcf_data <- VariantAnnotation::readVcf(myFile, genome.v, gr)
 
 #browser()
 
@@ -84,11 +97,12 @@ info.data <- VariantAnnotation::info(vcf_data)
 rgs <- IRanges::ranges(vcf_data)
 starts <- BiocGenerics::start(rgs)
 ends <-  BiocGenerics::end(rgs)
-chroms <- paste('chr', GenomeInfoDb::seqnames(vcf_data), sep='')
+chroms <- GenomeInfoDb::seqnames(vcf_data)
 
 wt <- as.character(rd$REF)
-mt <- as.character(unlist(rd$ALT))
-
+#mt <- as.character(unlist(rd$ALT))
+mt <- IRanges::CharacterList(rd$ALT)
+mt <- unstrsplit(mt, sep = ",")
 
 barcode <- paste(chroms, '-',starts,'-', mt, sep='')
 
@@ -305,12 +319,7 @@ read.ascat <- function(FILE.CN)
     cv.data$Chromosome <- as.character(cv.data$Chromosome)
     cv.data$Chromosome[cv.data$Chromosome=='23'] <- 'X'
     cv.data$Chromosome[cv.data$Chromosome=='24'] <- 'Y'
-    
-    if (nrow(cv.data)>0) {
-        cv.data$Chromosome <- paste('chr', cv.data$Chromosome,sep='')
-    }
-
-    
+       
     cv.data$major.copy.number.inTumour <- cv.data$total.copy.number.inTumour - cv.data$minor.copy.number.inTumour
     
     
@@ -353,8 +362,12 @@ read.brass.bedpe <- function(FILE.REARR, onlyAssembled = TRUE)
 {
     rearrs <- try(read.table(gzfile(FILE.REARR), header=TRUE, sep='\t',  comment.char = ''))
     names(rearrs)[1] <- 'chr1'
+    names(rearrs)[2] <- 'start1'
+    names(rearrs)[3] <- 'end1'
     names(rearrs)[4] <- 'chr2'
-    
+    names(rearrs)[5] <- 'start2'
+    names(rearrs)[6] <- 'end2'
+
     if (!inherits(rearrs, "try-error")) {
         rearrs$chr1 <- as.character(rearrs$chr1)
         rearrs$chr2 <- as.character(rearrs$chr2)
