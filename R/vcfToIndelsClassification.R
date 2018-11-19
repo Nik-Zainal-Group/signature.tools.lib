@@ -66,7 +66,8 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   }
 
   # read only chr seqnames from VCF, not contigs
-  gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+  #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(Hsapiens))
   if (genome.v=="hg19") {
     GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
@@ -75,6 +76,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
 
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
+  
   # filter the indels as required
   #indel.data <- indel.data[rowData(indel.data )$FILTER=='PASS' ,] #pancan consensus
   # convert formats, and find context of the indels

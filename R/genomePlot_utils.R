@@ -62,7 +62,7 @@ if(genome.v=="hg19"){
 }
 
 # read only chr seqnames from VCF, not contigs
-gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
+gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
 if (genome.v=="hg19") {
   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
 }

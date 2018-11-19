@@ -185,9 +185,13 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   rearrs.formatted <- data.frame()
   if (!no_rearrangements) {
     rearrs.formatted <- read.brass.bedpe(rearrBedpe.file, onlyAssembled = rearr_only_assembled)
-    if (genome.v=="hg19") {
-      rearrs.formatted$Chromosome <- paste('chr', rearrs.formatted$Chromosome,sep='')
-      rearrs.formatted$Chromosome.1 <- paste('chr', rearrs.formatted$Chromosome.1,sep='')
+    if(nrow(rearrs.formatted)==0){
+      no_rearrangements <- TRUE
+    }else{
+      if (genome.v=="hg19") {
+        rearrs.formatted$Chromosome <- paste('chr', rearrs.formatted$Chromosome,sep='')
+        rearrs.formatted$Chromosome.1 <- paste('chr', rearrs.formatted$Chromosome.1,sep='')
+      }
     }
   }
 
