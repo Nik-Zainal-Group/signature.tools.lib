@@ -7,7 +7,7 @@
 vcfToIndelsClassification(indelsVCF.file, sampleID, genome.v = "hg19")
 }
 \arguments{
-\item{indelsVCF.file}{name of the VCF file to load. This file should have been already filtered for the final indels sets to be used in the analysis.}
+\item{indelsVCF.file}{path to input VCF (file must be tabix indexed). This file should have been already filtered for the final indels sets to be used in the analysis.}
 
 \item{sampleID}{name of the sample}
 

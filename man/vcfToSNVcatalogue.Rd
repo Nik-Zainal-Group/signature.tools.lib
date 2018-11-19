@@ -7,7 +7,7 @@
 vcfToSNVcatalogue(vcfFilename, genome.v = "hg19")
 }
 \arguments{
-\item{vcfFilename}{name of the VCF file to read from}
+\item{vcfFilename}{path to input VCF (file must be tabix indexed)}
 
 \item{genome.v}{either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38) or "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5)}
 }
