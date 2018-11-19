@@ -72,8 +72,14 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
     GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
-  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
-
+  
+  if(tools:::.BioC_version_associated_with_R_version()<3.5){
+    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+  }else{
+    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  }
+    
+  
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
   

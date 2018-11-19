@@ -67,7 +67,12 @@ if (genome.v=="hg19") {
   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
 }
 vcf_seqnames <- Rsamtools::headerTabix(myFile)$seqnames 
-gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+
+if(tools:::.BioC_version_associated_with_R_version()<3.5){
+  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+}else{
+  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+}
 
 # load the vcf file
 vcf_data <- VariantAnnotation::readVcf(myFile, genome.v, gr)
