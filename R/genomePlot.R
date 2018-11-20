@@ -101,32 +101,36 @@ set.plot.params <- function(colour.scheme = "ascat"){
 
 # main plotting function
 #' @export
-genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file, sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL, no_copynumber = FALSE, no_rearrangements = FALSE, no_indels = FALSE, no_subs_legend = FALSE, out_format = "png", out_path = ".", rearr_only_assembled = FALSE, base.per.unit = NULL) {
+genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file, 
+                       sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL, 
+                       no_copynumber = FALSE, no_rearrangements = FALSE, no_indels = FALSE, 
+                       no_subs_legend = FALSE, out_format = "png", out_path = ".", 
+                       rearr_only_assembled = FALSE, base.per.unit = NULL) {
   
   library(RCircos);
   library(scales)
 
   genome.bsgenome = switch(genome.v,
-    "hg19" = "BSgenome.Hsapiens.1000genomes.hs37d5",
-    "hg38" = "BSgenome.Hsapiens.UCSC.hg38",
-    "mm10" = "BSgenome.Mmusculus.UCSC.mm10",
-    "rn4"  = "BSgenome.Rnorvegicus.UCSC.rn4"
+    "hg19" = BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5,
+    "hg38" = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.1000genomes.hs37d5,
+    #"mm10" = "BSgenome.Mmusculus.UCSC.mm10",
+    #"rn4"  = "BSgenome.Rnorvegicus.UCSC.rn4"
   )
 
   genome.ideogram = switch(genome.v,
     "hg19" = "UCSC.HG19.Human.CytoBandIdeogram",
     "hg38" = "UCSC.HG38.Human.CytoBandIdeogram",
-    "mm10" = "UCSC.Mouse.GRCm38.CytoBandIdeogram",
-    "rn4"  = "UCSC.Baylor.3.4.Rat.cytoBandIdeogram"
+    #"mm10" = "UCSC.Mouse.GRCm38.CytoBandIdeogram",
+    #"rn4"  = "UCSC.Baylor.3.4.Rat.cytoBandIdeogram"
   )
 
   # load required genome and ideogram
-  library(genome.bsgenome, character.only = TRUE)
+  #library(genome.bsgenome, character.only = TRUE)
 
   if (!is.null(file.ideogram) && file.exists(file.ideogram)) {
     species.cyto <- read.table(file.ideogram, header=TRUE, sep='\t');
   } else {
-    data(list=genome.ideogram);
+    data(list=genome.ideogram,package = "RCircos");
     species.cyto <- get(genome.ideogram);
   }
 
@@ -197,7 +201,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
 
 
   # substitutions
-  subs.data <- getMutTables(subsVcf.file, onlyPASSED=FALSE, genome.v=genome.v, genomeSeq=get(genome.bsgenome))
+  subs.data <- getMutTables(subsVcf.file, onlyPASSED=FALSE, genome.v=genome.v, genomeSeq=genome.bsgenome)
   #subs.data <- getMutTablesTab(subsTab.file, onlyPASSED=FALSE, genomeSeq=get(genome.bsgenome))
 
   subs <- data.frame(chr=subs.data$muts$chroms,

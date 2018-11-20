@@ -107,7 +107,7 @@ chroms <- GenomeInfoDb::seqnames(vcf_data)
 wt <- as.character(rd$REF)
 #mt <- as.character(unlist(rd$ALT))
 mt <- IRanges::CharacterList(rd$ALT)
-mt <- unstrsplit(mt, sep = ",")
+mt <- Biostrings::unstrsplit(mt, sep = ",")
 
 barcode <- paste(chroms, '-',starts,'-', mt, sep='')
 

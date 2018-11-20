@@ -72,7 +72,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 plotCatalogue = FALSE, #also plot the catalogue, this may crash the library if the catalogue is too big, should work up to ~300 samples
                                 plotResultsFromAllClusteringMethods=TRUE){ #if TRUE, all clustering methods are used and results are reported and plotted for all of them. If FALSE, only the requested clustering is reported
   
-  # library(NMF)
+  library(NMF)
   # library(foreach)
   # library(doParallel)
   # library(doMC)
