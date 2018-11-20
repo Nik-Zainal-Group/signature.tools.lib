@@ -112,7 +112,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
 
   genome.bsgenome = switch(genome.v,
     "hg19" = BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5,
-    "hg38" = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.1000genomes.hs37d5,
+    "hg38" = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38,
     #"mm10" = "BSgenome.Mmusculus.UCSC.mm10",
     #"rn4"  = "BSgenome.Rnorvegicus.UCSC.rn4"
   )
