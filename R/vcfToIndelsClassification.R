@@ -132,8 +132,8 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     change[indel.type=='I'] <- substr( as.character(BiocGenerics::unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))[indel.type=='I'], 2, 1e5)
     change[indel.type=='D'] <- substr( as.character(SummarizedExperiment::rowRanges(indel.data)$REF), 2, 1e5)[indel.type=='D']
     
-    min.position <- start(indel.data)
-    max.position <- start(indel.data) + indel.length 
+    min.position <- BiocGenerics::start(indel.data)
+    max.position <- BiocGenerics::start(indel.data) + indel.length 
     indel.chr <- as.character(GenomeInfoDb::seqnames(indel.data))
     
     extend5 = min.position-indel.length-25;

@@ -51,7 +51,7 @@ merge.with.order <- function(x,y, ..., sort = T, keep_order)
 }
 
 
-getMutTables <- function(myFile, onlyPASSED=FALSE, genome.v="hg19", genomeSeq, addContext=TRUE) {
+getMutTables <- function(myFile, onlyPASSED=FALSE, genome.v="hg19", genomeSeq, addContext=TRUE,mut.order) {
   # plots mutation-context for all variants in the vcf file
   # and separately for the variants that passed
 
@@ -234,7 +234,7 @@ result
 }
 
 
-getMutTablesTab <- function(SUBS.PATH, onlyPASSED=FALSE, genomeSeq=Hsapiens, addContext=TRUE) {
+getMutTablesTab <- function(SUBS.PATH, onlyPASSED=FALSE, genomeSeq=Hsapiens, addContext=TRUE,mut.order) {
 	# plots mutation-context for all variants in the vcf file
 	# and separately for the variants that passed
 
