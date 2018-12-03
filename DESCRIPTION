@@ -8,7 +8,8 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 biocViews: 
-Imports: VariantAnnotation,
+Imports: 
+    VariantAnnotation,
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Hsapiens.1000genomes.hs37d5,
     SummarizedExperiment,
@@ -31,5 +32,6 @@ Imports: VariantAnnotation,
     RCircos,
     scales,
     GenomicRanges,
-    IRanges
-RoxygenNote: 6.1.0
+    IRanges,
+    BSgenome
+RoxygenNote: 6.1.1
