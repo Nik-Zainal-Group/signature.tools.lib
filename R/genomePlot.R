@@ -3,15 +3,19 @@ set.plot.params <- function(colour.scheme = "ascat"){
 
   # circos parameters
   params.my <- list()
+  
+  #use these two params to adjust circle size
+  params.my$plot.radius <- 2.15
+  params.my$genomeplot.margin <- 0.25
+  
   params.my$track.background <- 'white'
   params.my$highlight.width <- 0.2
-  params.my$point.size <- 0.15
-  params.my$point.type <- 19
+  params.my$point.size <- 0.3
+  params.my$point.type <- 16
   params.my$radius.len <- 3
   params.my$chr.ideog.pos <- 3.2
   params.my$highlight.pos <- 2.09 #3.35
   params.my$chr.name.pos <- 2.14 #3.45
-  params.my$plot.radius <- 3.55
   params.my$track.in.start <- 3.05
   params.my$track.out.start <- 3.2
 
@@ -265,10 +269,14 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   #RCircos doesn't allow resetting certain parameters
   #see implementation of RCircos.Reset.Plot.Parameters
   #params[which(names(params) %in% c("radius.len","plot.radius","chr.ideo.pos"))] <- NULL
-  toReset<-setdiff(names(params),c("radius.len","plot.radius","chr.ideo.pos"))
-  params[toReset] <- params.my[toReset]
+  
+  #toReset<-setdiff(names(params.my),c("radius.len","plot.radius","chr.ideo.pos","highlight.pos","chr.name.pos"))
+  #params[toReset] <- params.my[toReset]
+  
   #params$sub.tracks <- 1
-  #RCircos.Reset.Plot.Parameters(params)
+  params$point.type <- params.my$point.type
+  params$point.size <- params.my$point.size
+  RCircos.Reset.Plot.Parameters(params)
 
   par(mar=c(0.001, 0.001, 0.001, 0.001))
   par(fig=c(cPanelWidth,0.75*(1-cPanelWidth)+cPanelWidth,0,1),cex=1.2)
@@ -282,9 +290,14 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     RCircos.Reset.Plot.Parameters(params);
   }
 
-  RCircos.Set.Plot.Area();
+  #RCircos.Set.Plot.Area(margins = 0.05);
+  par(mai=c(params.my$genomeplot.margin, params.my$genomeplot.margin, params.my$genomeplot.margin, params.my$genomeplot.margin))
+  plot.new()
+  plot.window(c(-params.my$plot.radius,params.my$plot.radius), c(-params.my$plot.radius, params.my$plot.radius))
   RCircos.Chromosome.Ideogram.Plot.my(params.my$chr.text.color, params.my$grid.line.color, params.my$text.size);
-
+  
+  title(main = sampleID)
+  
   if (!is.null(plot_title)) {
     title(paste(plot_title, sep=''), line=-1);
   }
@@ -367,7 +380,8 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   }
 
   # side plots
-  par(cex=0.5)
+  margins <- 0.25
+  par(cex=0.5,mai = c(margins, margins, margins, margins))
 
 
   if (exists("subs.data") && !is.null(subs.data$passed.hist)) {
