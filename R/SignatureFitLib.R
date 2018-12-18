@@ -194,8 +194,8 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' res <- SignatureFit_withBootstrap(catalogues,signature_data_matrix)
 SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, channels as rows
                           signature_data_matrix, #signatures, signatures as columns, channels as rows
-                          nboot = 50, #number of bootstraps to use, more bootstraps more accurate results
-                          threshold_percent = 1, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
+                          nboot = 100, #number of bootstraps to use, more bootstraps more accurate results
+                          threshold_percent = 5, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
                           threshold_p.value = 0.05, #p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
                           method = "KLD", #KLD or SA, just don't use SA or you will wait forever, expecially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
                           bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1
@@ -323,9 +323,9 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
 SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for the analysis, remember to add '/' at the end
                                                 cat, #catalogue, patients as columns, channels as rows
                                        signature_data_matrix, #signatures, signatures as columns, channels as rows
-                                       nboot = 50, #number of bootstraps to use, more bootstraps more accurate results
+                                       nboot = 100, #number of bootstraps to use, more bootstraps more accurate results
                                        type_of_mutations="subs", #use one of c("subs","rearr","generic")
-                                       threshold_percent = 1, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
+                                       threshold_percent = 5, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
                                        threshold_p.value = 0.05, #p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
                                        method = "KLD", #KLD or SA, just don't use SA or you will wait forever, expecially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
                                        bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1
