@@ -59,7 +59,6 @@ devtools::test(pkg = ".",filter = "HRDetect")
 devtools::test(pkg = ".",filter = "tabToSNVcatalogue")
 devtools::test(pkg = ".",filter = "vcfToSNVcatalogue")
 devtools::test(pkg = ".",filter = "bedpeToRearrCatalogue")
-devtools::test(pkg = ".",filter = "vcfToIndelsClassification")
 devtools::test(pkg = ".",filter = "genomePlot")
 devtools::test(pkg = ".",filter = "SignatureExtraction")
 

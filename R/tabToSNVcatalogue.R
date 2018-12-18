@@ -69,7 +69,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
                      wt=subs$wt, 
                      mt=subs$mt, 
                      pyrwt=subs$pyrwt , 
-                     pyrmut=subs$pyrmut)
+                     pyrmut=subs$pyrmut,
+                     stringsAsFactors = FALSE)
 
 
   result<- list()
@@ -85,7 +86,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   mut.table <- data.frame(bbef=as.character(subs$bb ), 
                           wt=as.character(subs$wt), 
                           mt=as.character(subs$mt), 
-                          baft=as.character(subs$ba ))
+                          baft=as.character(subs$ba ),
+                          stringsAsFactors = FALSE)
   mut.table$pyrwt <- mut.table$wt
   mut.table$pyrmut <- mut.table$mt
   mut.table$pyrbbef <- mut.table$bbef
