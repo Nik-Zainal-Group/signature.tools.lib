@@ -242,7 +242,8 @@ HRDetect_pipeline <- function(data_matrix,
       cat_list <- foreach::foreach(sample=incomplete_samples_with_bedpeSV) %dopar% {
         sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
                                stringsAsFactors = FALSE,check.names = FALSE)
-        res <- bedpeToRearrCatalogue(sv_bedpe)
+        reslist <- bedpeToRearrCatalogue(sv_bedpe)
+        res <- reslist$rearr_catalogue
         colnames(res) <- sample
         res
       }

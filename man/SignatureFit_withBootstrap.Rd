@@ -4,8 +4,8 @@
 \alias{SignatureFit_withBootstrap}
 \title{Mutational Signatures Fit with Bootstrap}
 \usage{
-SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 50,
-  threshold_percent = 1, threshold_p.value = 0.05, method = "KLD",
+SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
+  threshold_percent = 5, threshold_p.value = 0.05, method = "KLD",
   bf_method = "CosSim", alpha = -1, verbose = TRUE, doRound = TRUE,
   nparallel = 1, n_sa_iter = 500)
 }

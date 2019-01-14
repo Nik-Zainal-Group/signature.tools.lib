@@ -10,7 +10,7 @@ bedpeToRearrCatalogue(sv_bedpe)
 \item{sv_bedpe}{data frame BEDPE as described above}
 }
 \value{
-returns the rearrangement catalogue for the given sample
+returns a list with 1) the rearrangement catalogue for the given sample and 2) the annotated bedpe for the given sample
 }
 \description{
 This function converts a data frame BEDPE into a rearrangement catalogue, 

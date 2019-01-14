@@ -23,7 +23,7 @@
 #' translocation, if mates are on different chromosomes
 #' 
 #' @param sv_bedpe data frame BEDPE as described above
-#' @return returns the rearrangement catalogue for the given sample
+#' @return returns a list with 1) the rearrangement catalogue for the given sample and 2) the annotated bedpe for the given sample
 #' @keywords bedpe rearrangement
 #' @export
 #' @examples
@@ -65,7 +65,11 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
   }
   
   #now compute the catalogue
-  prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  return_list <- list()
+  return_list$rearr_catalogue <- rearr_catalogue
+  return_list$annotated_bedpe <- sv_bedpe
+  return(return_list)
 }
 
 
