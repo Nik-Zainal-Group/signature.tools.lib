@@ -104,6 +104,9 @@ set.plot.params <- function(colour.scheme = "ascat"){
 }
 
 # main plotting function
+
+#' Genome Plot
+#' 
 #' @export
 genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file, 
                        sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL, 

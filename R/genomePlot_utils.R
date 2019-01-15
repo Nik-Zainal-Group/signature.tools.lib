@@ -316,10 +316,17 @@ getMutTablesTab <- function(SUBS.PATH, onlyPASSED=FALSE, genomeSeq=Hsapiens, add
 # FILE.CN - full path the the ascat output (extension .ascat.summary.csv or ascat_ngs.summary.csv)
 read.ascat <- function(FILE.CN) 
 {
-	cv.data <- read.table(FILE.CN,header=FALSE, sep=',') # ASCAT
-    cd.data <- cv.data[,2:8]
+    #first row
+    firstline <- read.table(text=gsub(",", "\t",readLines(FILE.CN,n = 1)),header=FALSE, sep='\t',nrows = 1,stringsAsFactors = FALSE)
+    if(typeof(firstline[1,1])=="integer"){
+      #no header used
+  	  cv.data <- read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=FALSE, sep='\t',stringsAsFactors = FALSE) # ASCAT
+  	  names(cv.data) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')
+    }else{
+      #assume there is an appropriate header
+      cv.data <- read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=TRUE, sep='\t',stringsAsFactors = FALSE) # CN
+    }
     cat( paste( dim(cv.data)[1], ' copy-number segments \n'))
-    names(cv.data) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')
     cv.data$seg_no <- NULL
     cv.data$Chromosome <- as.character(cv.data$Chromosome)
     cv.data$Chromosome[cv.data$Chromosome=='23'] <- 'X'
