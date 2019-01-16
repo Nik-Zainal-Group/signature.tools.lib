@@ -485,6 +485,13 @@ applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","
 
 #------------------------
 
+#' plot_HRDLOH_HRDetect_Contributions
+#' 
+#' Function for plotting HRDetect results and contributions to HRDetect score.
+#' 
+#' @param file_name name of the output file (jpg)
+#' @param HRDLOH_index HRD index score 
+#' @param hrdetect_output output of HRDetect, containing contributions of each feature
 #' @export
 plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_output){
   
@@ -548,6 +555,13 @@ plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_o
 }
 
 #----------------------
+
+#' plot_HRDetect_overall
+#' 
+#' Overall plot of scores obtained from HRDetect.
+#' 
+#' @param file_name name of the output file (jpg)
+#' @param hrdetect_output output of HRDetect, containing contributions of each feature
 #' @export
 plot_HRDetect_overall <- function(file_name,hrdetect_output){
   

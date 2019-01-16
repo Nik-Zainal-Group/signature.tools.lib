@@ -53,6 +53,10 @@ Functions for HRDetect
 - **```plot_HRDLOH_HRDetect_Contributions(...)```**: uses the ```HRDetect_pipeline``` output to generate a figure with three plots: the HDR-LOH index for each sample, the HRDetect BRCAness probability score for each sample, and the contribution of each of the six features to the HRDetect BRCAness probability score.
 - **```plot_HRDetect_overall```**: uses the ```HRDetect_pipeline``` output to generate an overall plot of the HRDetect BRCAness probability score.
 
+Function for data visualisation
+
+- **```genomePlot(...)```**: generates a plot for the visualisation of somatic variants across the genome, organised in a circle. Variants plotted are single nucleotide variations (SNV), small insertions and deletions (indels), copy number variations (CNV) and rearrangements.
+
 Function for web formats export
 
 - **```export_SignatureFit_withBootstrap_to_JSON```**: Given a res file obtained from the ```SignatureFit_withBootstrap``` or ```SignatureFit_withBootstrap_Analysis``` function, export it to a set of JSON files that can be used for web visualisation
