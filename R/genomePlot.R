@@ -107,6 +107,27 @@ set.plot.params <- function(colour.scheme = "ascat"){
 
 #' Genome Plot
 #' 
+#' Generates a plot for the visualisation of somatic variants across the genome, organised in a circle.
+#' Variants plotted are single nucleotide variations (SNV), small insertions and deletions (indels),
+#' copy number variations (CNV) and rearrangements.
+#' 
+#' @param subsVcf.file SNV VCF file. The file should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied.
+#' @param indelsVcf.file Indels VCF file to be used to classify Indels and compute the proportion of indels at micro-homology. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.
+#' @param cnvsTab.file CNV TAB file (similar to ASCAT format). The file should be tab separated and contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
+#' @param rearrBedpe.file SV (Rearrangements) BEDPE file. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The file should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. #' The column "svclass" should correspon to: inversion (+/+), if mates on the same chromosome, inversion (-/-), if mates on the same chromosome, deletion (+/-), if mates on the same chromosome, tandem-duplication (-/+), if mates on the same chromosome, translocation, if mates are on different chromosomes.
+#' @param sampleID Name of the sample.
+#' @param genome.v set genome version: hg19 or hg38.
+#' @param file.ideogram name of the file that contain a user defined genome ideogram. Leave to NULL to load appropriate ideogram according to genome version.
+#' @param plot_title title of the plot.
+#' @param no_copynumber set to TRUE to disable plotting of copy number data
+#' @param no_rearrangements set to TRUE to disable plotting of rearrangement data
+#' @param no_indels set to TRUE to disable plotting of indels data
+#' @param no_subs_legend set to TRUE to disable plotting of substitutions legend
+#' @param out_format set to either png or svg
+#' @param out_path directory where to place the plot.
+#' @param rearr_only_assembled only include the rearrangements that have an assembly score
+#' @param base.per.unit set RCircos base.per.unit parameter. Useful for whole exome data.
+#' @return return the generated plot file name.
 #' @export
 genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file, 
                        sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL, 
