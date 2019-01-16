@@ -876,6 +876,7 @@ plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylab
 #' 
 #' @param sigs matrix with 96-channel substitution signatures as columns
 #' @param threshold cosine similarity threshold
+#' @return the list of signatures identified
 #' @export
 findClosestCOSMIC30 <- function(sigs,threshold){
   #load COSMIC30
@@ -896,6 +897,18 @@ findClosestCOSMIC30 <- function(sigs,threshold){
 }
 
 #automatically detect similarity with sum of two COSMIC30
+
+#' Find closest COSMIC30 signatures or combination of COSMIC30
+#' 
+#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
+#' returns the list of signatures identified. For example,
+#' c("C1","C3","N1","C2+13","N2") means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
+#' signatures N1 and N2 are unknown signatures (N for not found), based on a similarity threshold (similarity >=threshold)
+#' comparing to COSMIC30 or the sum of two COSMIC30 sigs.
+#' 
+#' @param sigs matrix with 96-channel substitution signatures as columns
+#' @param threshold cosine similarity threshold
+#' @return the list of signatures identified
 #' @export
 findClosestCOSMIC30andCombinations <- function(sigs,threshold){
   #load COSMIC30
@@ -923,11 +936,17 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
   return(closestCosmic)
 }
 
-#returns the list of signatures identified and the corresponding similarity. For example,
-#res$cosmic = c("C1","C3","C13")
-#res$cos.sim = c(0.94,0.85,0.7)
-#means that Cosmic (C) signatures 1, 3 and 13 were found, while
-#the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
+
+#' Find closest COSMIC30 signatures
+#' 
+#' Compares a set of signatures to the COSMIC30 signatures and 
+#' returns the list of signatures identified and the corresponding similarity. For example,
+#' list(cosmic = c("C1","C3","C13"),cos.sim = c(0.94,0.85,0.7))
+#' means that Cosmic (C) signatures 1, 3 and 13 were found, while
+#' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
+#' 
+#' @param sigs matrix with 96-channel substitution signatures as columns
+#' @return the list of signatures identified and corresponding similarities
 #' @export
 findClosestCOSMIC30_withSimilarity <- function(sigs){
   #load COSMIC30
@@ -948,7 +967,16 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
   return(res)
 }
 
-#automatically detect similarity with sum of two COSMIC30
+#' Find closest COSMIC30 signatures or combination of COSMIC30
+#' 
+#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
+#' returns the list of signatures identified and the corresponding similarity. For example,
+#' list(cosmic = c("C1","C3","C2+C13"),cos.sim = c(0.94,0.85,0.7))
+#' means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
+#' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
+#' 
+#' @param sigs matrix with 96-channel substitution signatures as columns
+#' @return the list of signatures identified and corresponding similarities
 #' @export
 findClosestCOSMIC30andCombinations_withSimilarity <- function(sigs){
   #load COSMIC30
@@ -1024,6 +1052,13 @@ findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
   return(res)
 }
 
+#' KL-divergence
+#' 
+#' Compute the Kullback-Leibler Divergence between two matrices. In order to compute the divergence, .Machine$double.eps is added to matrices zero entries.
+#' 
+#' @param m1 original matrix
+#' @param m2 matrix to be used to approximate m1
+#' @return KL-Divergence
 #' @export
 KLD <- function(m1,m2){
   # print(sessionInfo())
@@ -1037,6 +1072,14 @@ KLD <- function(m1,m2){
 }
 
 #samples/sigantures are ararnged by columns
+
+#' computeCorrelationOfTwoSetsOfSigs
+#' 
+#' Compute the cosine similarity between two sets of signatures, which results in a cosine similarity matrix.
+#' 
+#' @param sig1 matrix of signatures, with signatures as columns
+#' @param sig2 matrix of signatures, with signatures as columns
+#' @return cosine similarity matrix
 #' @export
 computeCorrelationOfTwoSetsOfSigs <- function(sigs1,sigs2){
   cos_sim_df <- data.frame()
@@ -1068,16 +1111,34 @@ normaliseSamples <- function(cat){
   return(cat/matrix(rep(apply(cat,2,sum),nrow(cat)),nrow = nrow(cat),byrow = TRUE))
 }
 
+#' RMSE
+#' 
+#' Function to compute the root mean squared error between two matrices.
+#' 
+#' @param m1 first matrix to compare
+#' @param m2 second matrix to compare
+#' @return root mean squared error
 #' @export
 RMSE <- function(m1,m2){
   sqrt(sum((m1-m2)^2)/(ncol(m1)*nrow(m1)))
 }
 
+#' writeTable
+#' 
+#' Utility function for simple write table with the following parameters: (sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
+#' 
+#' @param t R table or matrix
+#' @param file name of the output plain text file
 #' @export
 writeTable <- function(t,file){
   write.table(t,file = file,sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
 }
 
+#' readTable
+#' 
+#' Utility function for simple read table with the following parameters: (sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
+#' 
+#' @param file name of the plain text file to read
 #' @export
 readTable <- function(file){
   read.table(file = file,sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE)
