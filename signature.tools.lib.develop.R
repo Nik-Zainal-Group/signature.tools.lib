@@ -61,6 +61,7 @@ devtools::test(pkg = ".",filter = "vcfToSNVcatalogue")
 devtools::test(pkg = ".",filter = "bedpeToRearrCatalogue")
 devtools::test(pkg = ".",filter = "genomePlot")
 devtools::test(pkg = ".",filter = "SignatureExtraction")
+devtools::test(pkg = ".",filter = "SignatureFit")
 
 
 

@@ -399,6 +399,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
          res = 150)
     par(mfrow=c(plot_nrows,plot_ncol))
     for(i in current_samples){
+      unassigned_mut <- sprintf("%.2f",(sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
       percentdiff <- sprintf("%.2f",sum(abs(cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
       if(type_of_mutations=="subs"){
         #1 original
@@ -407,7 +408,8 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           #2 reconstructed
           plotSubsSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
-          plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
+          #plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
+          plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="rearr"){
         #1 original
@@ -416,7 +418,8 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           #2 reconstructed
           plotRearrSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(12,3,5,2))
           #3 difference
-          plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(12,3,5,2))
+          #plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(12,3,5,2))
+          plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(12,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="generic"){
         #1 original
@@ -425,7 +428,8 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           #2 reconstructed
           plotGenericSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
-          plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
+          #plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
+          plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }
       if(sum(cat[,i,drop=FALSE])>0){
@@ -441,7 +445,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
         legend(x="topright",legend = c("threshold"),col = "green",lty = 1,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
         if(ncol(signature_data_matrix)>1){
           #5 top correlated signatures
-          res.cor <- cor(t(res$samples_list[[i]]),method = "spearman")
+          res.cor <- suppressWarnings(cor(t(res$samples_list[[i]]),method = "spearman"))
           res.cor_triangular <- res.cor
           res.cor_triangular[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- 0
           res.cor_triangular_label <- matrix(sprintf("%0.2f",res.cor_triangular),nrow = nrow(res.cor_triangular))

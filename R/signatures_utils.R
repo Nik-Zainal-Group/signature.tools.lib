@@ -39,7 +39,16 @@ preprocessCatalgue <- function(d, mut_thr){
   return(d)
 }
 
-
+#' Sort 96-channel Substitution Catalogues
+#' 
+#' This function sorts a matrix of 96-channel Substitution Catalogues,
+#' so that the channels (rows) are in the correct order.
+#' where each column is a catalogue and each row is a channel.
+#' rownames should be set as the name of the channel in the format 
+#' 5' base[Normal base>Tumour base]3' base, for example A[C>A]A.
+#' 
+#' @param cat catalogues matrix where each column is a catalogue and each row is a channel. Rownames should be set as the name of the channel in the format 5' base[Normal base>Tumour base]3' base, for example A[C>A]A.
+#' @return ordered catalogue
 #' @export
 sortCatalogue <- function(cat){
   all_bp <- c("A", "C", "G", "T")
@@ -122,7 +131,13 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
   return(out)
 }
 
-#compute the cosine similarity
+#' Cosine Similarity
+#' 
+#' Compute the cosine similarity between two vectors, using the formula sum(a*b)/sqrt(sum(a^2)*sum(b^2)).
+#' 
+#' @param a first vector to compare
+#' @param b second vector to compare
+#' @return cosine similarity
 #' @export
 cos.sim <- function(a, b){
   return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
@@ -827,6 +842,16 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
   ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w)
 }
 
+#' plot.CosSimSignatures
+#' 
+#' Plot a matrix of cosine similarities between two sets of signatures.
+#' 
+#' @param sig1 matrix with signatures as columns
+#' @param sig2 matrix with signatures as columns
+#' @param output_file name of the output file (jpg)
+#' @param dpi dots per inch
+#' @param xlabel label for x axis
+#' @param ylabel label for y axis
 #' @export
 plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylabel = ""){
   cos.sim <- function(a, b){
@@ -841,11 +866,16 @@ plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylab
   plot.CosSimMatrix(cos_sim_df,output_file,dpi=dpi,xlabel = xlabel,ylabel = ylabel)
 }
 
-#returns the list of signatures identified. For example,
-#c("C1","C3","N1","C13","N2")
-#means that Cosmic (C) signatures 1, 3 and 13 were found, while
-#signatures N1 and N2 are unknown signatures (N for not found), based on the fact
-#that no similarity >=threshold was found with the Cosmic 30
+#' Find closest COSMIC30 signatures
+#' 
+#' Compares a set of signatures to the COSMIC30 signatures and 
+#' returns the list of signatures identified. For example,
+#' c("C1","C3","N1","C13","N2") means that Cosmic (C) signatures 1, 3 and 13 were found, while
+#' signatures N1 and N2 are unknown signatures (N for not found), based on a similarity threshold (similarity >=threshold)
+#' comparing to COSMIC30
+#' 
+#' @param sigs matrix with 96-channel substitution signatures as columns
+#' @param threshold cosine similarity threshold
 #' @export
 findClosestCOSMIC30 <- function(sigs,threshold){
   #load COSMIC30
