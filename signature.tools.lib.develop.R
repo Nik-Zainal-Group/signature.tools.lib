@@ -54,6 +54,7 @@ devtools::test()
 
 #some individual tests
 devtools::test(pkg = ".",filter = "ascatToHRDLOH")
+devtools::test(pkg = ".",filter = "tabToIndelsClassification")
 devtools::test(pkg = ".",filter = "vcfToIndelsClassification")
 devtools::test(pkg = ".",filter = "HRDetect")
 devtools::test(pkg = ".",filter = "tabToSNVcatalogue")
