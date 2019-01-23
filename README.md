@@ -45,6 +45,7 @@ Functions for HRD indexes
 Functions for Indels Classification
 
 - **```vcfToIndelsClassification(...)```**: converts a VCF file containing indels into a data frame where the indels are classified. Also returns a summary of count and proportion of the various classes of indels.
+- **```tabToIndelsClassification(...)```**: converts a data frame containing indels into a data frame where the indels are classified. Also returns a summary of count and proportion of the various classes of indels.
 
 Functions for HRDetect
 
