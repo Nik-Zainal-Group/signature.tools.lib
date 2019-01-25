@@ -504,25 +504,26 @@ plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)) {
-    jpeg(output_file,width = 3*800,height = nplotrows*400,res = 220)
+    jpeg(output_file,width = 3*800,height = nplotrows*320,res = 220)
     par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
   }
   for (pos in 1:ncol(signature_data_matrix)){
     if(is.null(mar)){
-      par(mar=c(5,3,2,2))
+      par(mar=c(2,3,2,2))
     }else{
       par(mar=mar)
     }
     title <- colnames(signature_data_matrix)[pos]
     if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," substitutions)")
     if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
+    muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
     xlabels <- rep("",96)
-    xlabels[8] <- "C > A"
-    xlabels[24] <- "C > G"
-    xlabels[40] <- "C > T"
-    xlabels[56] <- "T > A"
-    xlabels[72] <- "T > C"
-    xlabels[88] <- "T > G"
+    # xlabels[8] <- "C > A"
+    # xlabels[24] <- "C > G"
+    # xlabels[40] <- "C > T"
+    # xlabels[56] <- "T > A"
+    # xlabels[72] <- "T > C"
+    # xlabels[88] <- "T > G"
     barplot(signature_data_matrix[,pos],
             main = title,
             #names.arg = row.names(signature_data_matrix),
@@ -531,6 +532,23 @@ plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum
             beside = TRUE,
             las=2,
             cex.names = 1,border = NA,space = 0.2)
+    par(xpd=TRUE)
+    par(usr = c(0, 1, 0, 1))
+    recttop <- -0.02
+    rectbottom <- -0.16
+    start1 <- 0.035
+    gap <- 0.155
+    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    textposx <- 0.04+seq(8,88,16)/104
+    text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
+    text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
+    #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
+    par(xpd=FALSE)
   }
   title(main = overall_title,outer = TRUE,cex.main = 2)
   if(!is.null(output_file)) dev.off()
@@ -540,20 +558,21 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_m
   colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>20) paste0(substr(x,1,17),"...") else x)
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ncol(signature_data_matrix)
-  if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*400,res = 220)
+  if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
   par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
   if(is.null(mar)){
-    par(mar=c(5,3,2,2))
+    par(mar=c(2,3,2,2))
   }else{
     par(mar=mar)
   }
+  muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
   xlabels <- rep("",96)
-  xlabels[8] <- "C > A"
-  xlabels[24] <- "C > G"
-  xlabels[40] <- "C > T"
-  xlabels[56] <- "T > A"
-  xlabels[72] <- "T > C"
-  xlabels[88] <- "T > G"
+  # xlabels[8] <- "C > A"
+  # xlabels[24] <- "C > G"
+  # xlabels[40] <- "C > T"
+  # xlabels[56] <- "T > A"
+  # xlabels[72] <- "T > C"
+  # xlabels[88] <- "T > G"
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
@@ -568,6 +587,22 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_m
             ylim = ylimit,
             las=2,
             cex.names = 1)
+    par(xpd=TRUE)
+    par(usr = c(0, 1, 0, 1))
+    recttop <- -0.02
+    rectbottom <- -0.16
+    start1 <- 0.035
+    gap <- 0.155
+    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    textposx <- 0.04+seq(8,88,16)/104
+    text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
+    text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
+    par(xpd=FALSE)
     barCenters <- barplot(mean_matrix[,pos],
                           main = "mean and sd of cluster",
                           #names.arg = row.names(signature_data_matrix),
@@ -582,10 +617,25 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_m
     #          mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
     segments(barCenters, mean_matrix[,pos], barCenters,
              mean_matrix[,pos] + sd_matrix[,pos], lwd = 1)
-    
     # arrows(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
     #        mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
     #        code = 3, length = 0.05)
+    par(xpd=TRUE)
+    par(usr = c(0, 1, 0, 1))
+    recttop <- -0.02
+    rectbottom <- -0.16
+    start1 <- 0.035
+    gap <- 0.155
+    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    textposx <- 0.04+seq(8,88,16)/104
+    text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
+    text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
+    par(xpd=FALSE)
   }
   title(main = overall_title,outer = TRUE,cex.main = 2)
   if(!is.null(output_file)) dev.off()
@@ -1142,4 +1192,20 @@ writeTable <- function(t,file){
 #' @export
 readTable <- function(file){
   read.table(file = file,sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE)
+}
+
+#function to add shadowtext.
+#Copied from https://github.com/cran/TeachingDemos/blob/master/R/shadowtext.R
+#author: Greg Snow <538280@gmail.com>
+shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
+                       theta= seq(pi/4, 2*pi, length.out=8), r=0.1, ... ) {
+  
+  xy <- xy.coords(x,y)
+  xo <- r*strwidth('A')
+  yo <- r*strheight('A')
+  
+  for (i in theta) {
+    text( xy$x + cos(i)*xo, xy$y + sin(i)*yo, labels, col=bg, ... )
+  }
+  text(xy$x, xy$y, labels, col=col, ... )
 }
