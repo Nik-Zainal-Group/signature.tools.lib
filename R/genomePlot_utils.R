@@ -393,6 +393,12 @@ read.brass.bedpe <- function(FILE.REARR, onlyAssembled = TRUE)
             f.1  <- rearrs$TYPE=="INV"; pf[f.1] <- 1 # inversion +-
             f.2  <- rearrs$TYPE=="DEL"; pf[f.2] <- 2 # deletion ++
         } 
+        else if ("svclass" %in% names(rearrs)) 
+        {
+          f.32 <- rearrs$svclass=="translocation"; pf[f.32] <- 32 # translocations
+          f.1  <- rearrs$svclass=="inversion"; pf[f.1] <- 1 # inversion +-
+          f.2  <- rearrs$svclass=="deletion"; pf[f.2] <- 2 # deletion ++
+        } 
         else 
         {
             f.32 <- rearrs$chr1!=rearrs$chr2; pf[f.32] <- 32 # translocations

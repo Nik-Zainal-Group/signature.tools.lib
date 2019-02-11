@@ -19,15 +19,15 @@ The BEDPE data fram should contain the following columns: "chrom1", "start1", "e
 In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
 }
 \details{
-The column "svclass" should correspon to: (strand1/strand2)
+The column "svclass" should correspon to (Sanger BRASS convention): (strand1/strand2)
 
-inversion (+/+), if mates on the same chromosome
+inversion (+/-), if mates on the same chromosome
 
-inversion (-/-), if mates on the same chromosome
+inversion (-/+), if mates on the same chromosome
 
-deletion (+/-), if mates on the same chromosome
+deletion (+/+), if mates on the same chromosome
 
-tandem-duplication (-/+), if mates on the same chromosome
+tandem-duplication (-/-), if mates on the same chromosome
 
 translocation, if mates are on different chromosomes
 }

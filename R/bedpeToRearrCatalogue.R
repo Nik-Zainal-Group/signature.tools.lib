@@ -10,15 +10,15 @@
 #' The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). 
 #' In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
 #' 
-#' The column "svclass" should correspon to: (strand1/strand2)
+#' The column "svclass" should correspon to (Sanger BRASS convention): (strand1/strand2)
 #' 
-#' inversion (+/+), if mates on the same chromosome
+#' inversion (+/-), if mates on the same chromosome
 #' 
-#' inversion (-/-), if mates on the same chromosome
+#' inversion (-/+), if mates on the same chromosome
 #' 
-#' deletion (+/-), if mates on the same chromosome
+#' deletion (+/+), if mates on the same chromosome
 #' 
-#' tandem-duplication (-/+), if mates on the same chromosome
+#' tandem-duplication (-/-), if mates on the same chromosome
 #' 
 #' translocation, if mates are on different chromosomes
 #' 
@@ -260,7 +260,7 @@ classifyRearrangementsFromBedpe <- function(sv_bedpe){
   for (i in 1:nrow(sv_bedpe)){
     if(sv_bedpe[i,"chrom1"]!=sv_bedpe[i,"chrom2"]){
       svclass <- c(svclass,"translocation")
-    }else if(sv_bedpe[i,"strand1"]==sv_bedpe[i,"strand2"]){
+    }else if(sv_bedpe[i,"strand1"]!=sv_bedpe[i,"strand2"]){
       svclass <- c(svclass,"inversion")
     }else if(sv_bedpe[i,"strand1"]=="+"){
       svclass <- c(svclass,"deletion")
