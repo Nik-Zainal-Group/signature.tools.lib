@@ -883,7 +883,7 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
   df$labels[df$value==0] <- ""
   
   #Plot the Data (500+150*nsamples)x1200
-  g <- ggplot2::ggplot(df, aes(Var1, Var2)) + ggplot2::geom_point(ggplot2::aes(size = value, colour = value>thresholdMark)) + ggplot2::theme_bw() + ggplot2::xlab(xlabel) + ggplot2::ylab(ylabel)
+  g <- ggplot2::ggplot(df, ggplot2::aes(Var1, Var2)) + ggplot2::geom_point(ggplot2::aes(size = value, colour = value>thresholdMark)) + ggplot2::theme_bw() + ggplot2::xlab(xlabel) + ggplot2::ylab(ylabel)
   g <- g + ggplot2::scale_size_continuous(range=c(0,10)) + ggplot2::geom_text(ggplot2::aes(label = labels))
   g + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, size=14),
             axis.text.y = ggplot2::element_text(vjust = 1, size=14)) + ggplot2::theme(legend.position="none")
