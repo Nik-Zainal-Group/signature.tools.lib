@@ -306,6 +306,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
 #' @param cat catalogue matrix, patients as columns, channels as rows
 #' @param signature_data_matrix signatures, signatures as columns, channels as rows
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
+#' @param type_of_mutations either "subs", "rearr" or "generic" 
 #' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
 #' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
 #' @param method KLD or NNLS or SA

@@ -18,6 +18,8 @@ SignatureFit_withBootstrap_Analysis(outdir, cat, signature_data_matrix,
 
 \item{nboot}{number of bootstraps to use, more bootstraps more accurate results}
 
+\item{type_of_mutations}{either "subs", "rearr" or "generic"}
+
 \item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered}
 
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
