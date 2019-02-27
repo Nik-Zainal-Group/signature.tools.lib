@@ -12,5 +12,5 @@ writeTable(t, file)
 \item{file}{name of the output plain text file}
 }
 \description{
-Utility function for simple write table with the following parameters: (sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
+Utility function for simple write table with the following parameters: (sep = "\\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
 }

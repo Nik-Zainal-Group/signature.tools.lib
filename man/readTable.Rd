@@ -10,5 +10,5 @@ readTable(file)
 \item{file}{name of the plain text file to read}
 }
 \description{
-Utility function for simple read table with the following parameters: (sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
+Utility function for simple read table with the following parameters: (sep = "\\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
 }

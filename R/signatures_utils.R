@@ -1175,7 +1175,7 @@ RMSE <- function(m1,m2){
 
 #' writeTable
 #' 
-#' Utility function for simple write table with the following parameters: (sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
+#' Utility function for simple write table with the following parameters: (sep = "\\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
 #' 
 #' @param t R table or matrix
 #' @param file name of the output plain text file
@@ -1186,7 +1186,7 @@ writeTable <- function(t,file){
 
 #' readTable
 #' 
-#' Utility function for simple read table with the following parameters: (sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
+#' Utility function for simple read table with the following parameters: (sep = "\\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
 #' 
 #' @param file name of the plain text file to read
 #' @export
