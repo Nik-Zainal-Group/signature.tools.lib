@@ -1,7 +1,3 @@
-# source('../lib/utils/rearrangement.clustering_bedpe.R')
-# source('../lib/utils/prepare.rearr.catalogue_fromAnnotatedBedpe.R')
-# source('../lib/classifyRearrangementsFromBedpe.R')
-
 
 #' bedpeToRearrCatalogue
 #'

@@ -73,32 +73,6 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 plotResultsFromAllClusteringMethods=TRUE){ #if TRUE, all clustering methods are used and results are reported and plotted for all of them. If FALSE, only the requested clustering is reported
   
   library(NMF)
-  # library(foreach)
-  # library(doParallel)
-  # library(doMC)
-  # library(methods)
-  # source("../lib/matchedClustering.R")
-  
-  #------ code for debugging, normally should be commented out
-  # setwd("~/sandbox/SignatureTools/lib")
-  # catFile="../data/pancan_catalogues/project_BRCA.subs.catalogue.txt"
-  # cat <- read.table(catFile, sep="\t", header=T, as.is=T, check.names = FALSE)
-  # outFilePath="../results/pancan_only_tests/"
-  # project <- "BRCA"
-  # nboots=4
-  # nrepeats=10
-  # nparallel=3
-  # #nsig=c(2:20)
-  # nsig=c(4,5)
-  # mut_thr=0
-  # cos_sim_thr=0.90
-  # merge_thr=0.8
-  # type_of_extraction="rearr"
-  # parallel=TRUE
-  # ns=4
-  # catFile=paste0("../data/pancan_catalogues/project_",project,".",type_of_extraction,".catalogue.txt")
-  # outFilePath=paste0("../results/newExtr7_",project,"_",type_of_extraction,"/")
-  #------ code for debugging, end
   
   #tmp for debug
   if (completeLinkageFlag) tmp_outFilePath <- outFilePath
@@ -431,14 +405,6 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         #cat <- all_rows_cat
       }
       
-      #debug code below
-      # ns <- 6
-      # load(bootstraps_file)
-      # nboots <- 1000
-      # displace <- 0
-      # e_boot <- e_boot[,1:(nboots*ns) + displace]
-      # p_boot <- p_boot[,1:(nboots*ns) + displace]
-      
       # ## Compute the average silhouette grouping all the computed solutions in ns clusters
       #sil <- c(sil, summary(silhouette(pam(p_boot, ns)))$avg.width)
       #above dissimilarity is not based on cosine similarity
@@ -598,21 +564,6 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         mmcs_MC <- c(mmcs_MC,NA)
       }
       
-      # rmse_list <- c()
-      # kld_list <- c()
-      # for (i in 1:saved_nmf_runs){
-      #   selection <- ((i-1)*ns+1):(i*ns)
-      #   current_p <- p_boot[,selection]
-      #   current_e <- e_boot[,selection]
-      #   rmse_list <- c(rmse_list,sqrt(sum((cat - current_p %*% t(current_e))^2)/(dim(cat)[1]*dim(cat)[2])))
-      #   kld_list <- c(kld_list,KLD(cat,current_p %*% t(current_e)))
-      # }
-      # # #Save errors
-      # ave.RMSE <- c(ave.RMSE,mean(rmse_list))
-      # sd.RMSE <- c(sd.RMSE,sd(rmse_list))
-      # ave.KLD <- c(ave.KLD,mean(kld_list))
-      # sd.KLD <- c(sd.KLD,sd(kld_list))
-      # 
       
       #error
       rmse_list <- c()
@@ -766,20 +717,6 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
     }
     
     #Collect metrics
-    # overall_metrics <- data.frame(nsig,
-    #                               ave.RMSE,
-    #                               sd.RMSE,
-    #                               ave.SilWid.hclust,
-    #                               ave.SilWid.PAM,
-    #                               cophenetic.corr.hclust,
-    #                               min.MinWCCS.hclust,
-    #                               min.MinWCCS.PAM,
-    #                               max.MaxBCCS.hclust,
-    #                               max.MaxBCCS.PAM,
-    #                               mmcs_hclust,
-    #                               mmcs_pam,
-    #                               ave.KLD,
-    #                               sd.KLD)
     overall_metrics <- data.frame(nsig,       #1
                                   ave.RMSE,   #2
                                   sd.RMSE,    #3

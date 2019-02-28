@@ -1,11 +1,3 @@
-# source("../lib/toPyr.R")
-# source("../lib/generateHist.R")
-
-#vcf_data is a vcf file loaded with readVCF
-#library("VariantAnnotation")
-#library("GenomicRanges")
-#library(BSgenome.Hsapiens.UCSC.hg38) #hg38
-#library(BSgenome.Hsapiens.1000genomes.hs37d5) #hg19
 
 #' VCF to SNV catalogue
 #' 

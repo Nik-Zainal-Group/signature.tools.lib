@@ -1,6 +1,4 @@
 
-#minimal columns: chr, position, REF, ALT
-
 #' TAB to SNV Catalogue
 #' 
 #' Convert a data frame containing SNV, possibly loaded from a tab seperated text file, to SNV 96 channel trinuclotide context catalogue. The data frame should containt the SNV of a single sample, and the following minimal columns: chr, position, REF, ALT.
@@ -32,10 +30,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
     stop("[error tabToSNVcatalogue] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
   }
 
-  #Ensure the wt and mt columns (V7 & V8) are read in as characters.
-  #---> subs <- read.table(SUBS.PATH, header=FALSE, sep='\t', quote = "", stringsAsFactors=FALSE, colClasses=c(V7="character",V8="character"))
-  # subs$chr <- as.character(subs$V5)
-  # subs$position <- subs$V6
   subs$wt <- subs$REF
   subs$mt <- subs$ALT
   subs$ref_base_pyrimidine_context <- subs$wt
@@ -60,8 +54,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   if (length(intersect(subs$chr,expected_chroms))==0) {
      stop("[error tabToSNVcatalogue] Input tab file does not contain seqnames ", paste(expected_chroms,collapse=" "))
   }
-
-  # barcode <- paste(subs$chr, '-',subs$position ,'-', subs$mt, sep='')
 
   muts <- data.frame(chroms=subs$chr, 
                      starts=subs$position, 
@@ -100,14 +92,11 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   mut.table$pyrbaft[not.pyr] <- as.character(toPyr(mut.table$bbef[not.pyr]))
 
   all.hist <- generateHist(mut.table, normalise=FALSE,mut.order=mut.order)
-  # passed.hist <- generateHist(mut.table[fs.passed,], normalise=FALSE)
 
-  #names(all.hist) <- mut.order
 
   muts$context <- paste(mut.table$pyrbbef, '[',mut.table$pyrwt, '>',mut.table$pyrmut , ']', mut.table$pyrbaft,sep='')
 
   result$catalogue <- data.frame(catalogue=all.hist,row.names = names(all.hist))
-  # result$passed.hist <- passed.hist
   result$muts <- muts
 
   result

@@ -1,8 +1,4 @@
 
-
-
-# library("lpSolve")
-
 #' Clustering with Matches
 #' 
 #' Compute the clustering into ns clusters of elements for which a distance matrix (distMatrix) is given, subject to the constraint that groups of ns elements cannot be inthe same cluster. For example, elements from 1 to ns cannot be in the same cluster, and so it is for elements from ns+1 to 2*ns, 2*ns+1 to 3*ns, and so on.

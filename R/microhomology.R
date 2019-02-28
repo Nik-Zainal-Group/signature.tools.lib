@@ -1,5 +1,3 @@
-# library(gmp)
-# library(plyr) 
 
 # micro-homology between the deleted sequence and 3' sequence (number of bases)
 mhcaller <- function(d, prime3) {

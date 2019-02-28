@@ -1,48 +1,3 @@
-# #setwd("~/sandbox/HRDetectScripts/bin")
-# 
-# indel.file <- NULL
-# project_id <- NULL
-# sample_id <- NULL
-# work_dir_indels <- NULL
-# 
-# 
-# args = commandArgs(trailingOnly=TRUE)
-# if (length(args)!=4) {
-#   message("--------------------------------------")
-#   message("I was expecting four inputs, but a number of inputs different from four was supplied. Entering debug mode!")
-#   #indel.file <- paste0('../data/pancan/0009b464-b376-4fbc-8a56-da538269a02f/0009b464-b376-4fbc-8a56-da538269a02f.consensus.20161006.somatic.indel.vcf.gz')
-#   indel.file <- paste0('../data/pancan/0c7aca3f-e006-4de3-afc2-20b4f727d4fd/0c7aca3f-e006-4de3-afc2-20b4f727d4fd.consensus.20161006.somatic.indel.vcf.gz')
-#   project_id <- "BLCA-US"
-#   sample_id <- "0c7aca3f-e006-4de3-afc2-20b4f727d4fd"
-#   work_dir_indels <- paste0("../results/pancan/",project_id,"/indels/")
-#   message("ENTERING DEBUG MODE, using the following settings:")
-#   message("indel.file ",indel.file)
-#   message("project_id ",project_id)
-#   message("sample_id ",sample_id)
-#   message("work_dir_indels ",work_dir_indels)
-#   message("--------------------------------------")
-# } else {
-#   indel.file <- args[1]
-#   project_id <- args[2]
-#   sample_id <- args[3]
-#   work_dir_indels <- args[4]
-#   message("Running indels classification with the folloing settings:")
-#   message("indel.file ",indel.file)
-#   message("project_id ",project_id)
-#   message("sample_id ",sample_id)
-#   message("work_dir_indels ",work_dir_indels)
-# }
-# 
-# #make dir if not exists
-# system(paste0("mkdir -p ",work_dir_indels))
-
-# library("VariantAnnotation")
-# library("GenomicRanges")
-# library('GenomicFeatures')
-# library(BSgenome.Hsapiens.UCSC.hg19)
-# 
-# source('../lib/domTools/microhomology.R')
-# source('../lib/domTools/prepare.indel.df.R')
 
 #' VCF to Indels Classification
 #' 
@@ -83,23 +38,8 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
   
-  # filter the indels as required
-  #indel.data <- indel.data[rowData(indel.data )$FILTER=='PASS' ,] #pancan consensus
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df(indel.data,Hsapiens)
-  # indel classification
-  # indel.classified.df <- mh(indel.df)
-  
-  # if (nrow(indel.classified.df)>0){
-  #   write.table(indel.classified.df,
-  #               file = paste0(work_dir_indels,sample_id,"-",project_id,"_mh.tab"),
-  #               sep = "\t",
-  #               col.names = TRUE,
-  #               row.names = FALSE)
-  # }else{
-  #   line_to_write <- paste0(c("chr","pos",	"ref",	"alt",	"indel.type",	"change",	"slice3",	"slice5",	"indel.length",	"classification"),collapse = "\t")
-  #   write(line_to_write,file=paste0(work_dir_indels,sample_id,"-",project_id,"_mh.tab"))
-  # }
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -141,17 +81,12 @@ prepare.indel.df <- function(indel.data,Hsapiens) {
     
     
     slice5 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, extend5, min.position))
-    # in my opinnion this doesn't make sense, or only makes sense for deletions
+    # 
     slice3 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, max.position+1, extend3))
     
     
     
-    # indel.df needs following columns:
-    # indel.type
-    # change
-    # slice3
-    # slice5
-    # indel.length
+
     indel.df <- data.frame(
       chr=as.character(GenomeInfoDb::seqnames(indel.data)),
       pos=BiocGenerics::start(IRanges::ranges(indel.data)),

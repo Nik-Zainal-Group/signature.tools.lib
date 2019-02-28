@@ -569,12 +569,6 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
   
   #barplot
   plot_colours <- rep("grey",nrow(hrdetect_output))
-  # plot_colours[samples_table$BRCA_Status=="BRCA1"] <- "red"
-  # plot_colours[samples_table$BRCA_Status=="BRCA2"] <- "blue"
-  # plot_colours[samples_table$Notes=="BRCA1 Methyaltion" | samples_table$Notes=="BRCA1 Methylation" | samples_table$Notes=="BRCA1 Methylatin"] <- "green"
-  # plot_colours[samples_table$Notes=="BRCA2"] <- "purple"
-  # plot_colours[samples_table$BRCA_Status=="BRCA1/MUTYH"] <- "orange"
-  # plot_colours[samples_table$BRCA_Status=="PALB2"] <-  "yellow"
   
   reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
   plot_colours <- plot_colours[reorder]

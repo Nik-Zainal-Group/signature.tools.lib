@@ -1,7 +1,3 @@
-#Fork of SigFit from Sandro Morganella 2017
-#Andrea Degasperi, ad923@cam.ac.uk
-# library(NNLM)
-# library(nnls)
 
 #' Mutational Signatures Fit
 #' 
@@ -232,11 +228,6 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
       samples_list[[j]][,i] <- boot_list[[i]][,j]
     }
   }
-  #-- tests
-  # boxplot(t(samples_list[[1]]))
-  # points(1:10,E[,1],col="red")
-  # plot(samples_list[[1]][3,],samples_list[[1]][6,])
-  #--
   E_median_notfiltered <- matrix(NA,nrow = ncol(signature_data_matrix),ncol = ncol(cat))
   E_median_filtered <- matrix(NA,nrow = ncol(signature_data_matrix),ncol = ncol(cat))
   E_p.values <- matrix(NA,nrow = ncol(signature_data_matrix),ncol = ncol(cat))
@@ -357,10 +348,6 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
     save(file = file_store,res,nboot)
   }
   
-  
-  # source("../lib/SignatureExtractionLib.R")
-  #library(gplots)
-  
   #function to draw a legend for the heatmap of the correlation matrix
   draw_legend <- function(col,xl,xr,yb,yt){
     par(xpd=TRUE)
@@ -388,11 +375,6 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
   plotsdir <- paste0(outdir,"SigFit_withBootstrap_Summary_m",method,"_bfm",bf_method,"_alpha",alpha,"_tr",threshold_percent,"_p",threshold_p.value,"/")
   dir.create(plotsdir,recursive = TRUE,showWarnings = FALSE)
   for(p in 1:howmanyplots){
-    # if (plot_nrows+(p-1)*plot_nrows>=length(rows_ordered_from_best)){
-    #   current_samples <- rows_ordered_from_best[1:plot_nrows+(p-1)*plot_nrows]
-    # }else{
-    #   current_samples <- rows_ordered_from_best[(1+(p-1)*plot_nrows):length(rows_ordered_from_best)]
-    # }
     current_samples <- p
     jpeg(filename = paste0(plotsdir,"sigfit_bootstrap_",p,"of",howmanyplots,".jpg"),
          width = 640*(plot_ncol),
@@ -451,13 +433,6 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           res.cor_triangular[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- 0
           res.cor_triangular_label <- matrix(sprintf("%0.2f",res.cor_triangular),nrow = nrow(res.cor_triangular))
           res.cor_triangular_label[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- ""
-          # heatmap(res.cor_triangular,
-          #           Rowv = NA,
-          #           Colv = NA,
-          #           scale = "none",
-          #           col = col,
-          #           symm = TRUE,
-          #           breaks=seq(-1,1,length.out = 52))
           par(mar=c(6,8,5,6))
           par(xpd=FALSE)
           col<- colorRampPalette(c("blue", "white", "red"))(51)

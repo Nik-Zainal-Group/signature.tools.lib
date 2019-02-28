@@ -36,19 +36,6 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df_tabversion(indel.data,Hsapiens)
-  # indel classification
-  # indel.classified.df <- mh(indel.df)
-  
-  # if (nrow(indel.classified.df)>0){
-  #   write.table(indel.classified.df,
-  #               file = paste0(work_dir_indels,sample_id,"-",project_id,"_mh.tab"),
-  #               sep = "\t",
-  #               col.names = TRUE,
-  #               row.names = FALSE)
-  # }else{
-  #   line_to_write <- paste0(c("chr","pos",	"ref",	"alt",	"indel.type",	"change",	"slice3",	"slice5",	"indel.length",	"classification"),collapse = "\t")
-  #   write(line_to_write,file=paste0(work_dir_indels,sample_id,"-",project_id,"_mh.tab"))
-  # }
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -89,17 +76,9 @@ prepare.indel.df_tabversion <- function(indel.data,Hsapiens) {
     
     
     slice5 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, extend5, min.position))
-    # in my opinnion this doesn't make sense, or only makes sense for deletions
+    # 
     slice3 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, max.position+1, extend3))
     
-    
-    
-    # indel.df needs following columns:
-    # indel.type
-    # change
-    # slice3
-    # slice5
-    # indel.length
     indel.df <- data.frame(
       chr=as.character(indel.data$chr),
       pos=indel.data$position,
