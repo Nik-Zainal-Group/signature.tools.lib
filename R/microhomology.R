@@ -118,7 +118,7 @@ repcaller <- function(d, prime3, prime5, l) {
         rep = '-'
         
         for (t in seq(from=(nchar(d)-1), to=2)) {  # Look for repeats of 2bp to n-1 bp of the length of the indel
-            if (grepl(substring(d,1,t), prime3)) {
+            if (grepl(substring(d,1,t), prime3, perl=TRUE)) {
                   countrep = tandemcount(substr(d, 1, t),prime3)
                   rep = findsmallestrep(substr(d, 1, t))
                   unit = tandemcount(rep,d)*nchar(rep)
