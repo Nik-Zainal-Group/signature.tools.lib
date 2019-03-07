@@ -262,6 +262,11 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   }
   names(KLD_samples) <- colnames(cat)
   
+  #unassigned mutations
+  reconstructed_with_median <- round(as.matrix(signature_data_matrix) %*% as.matrix(E_median_filtered))
+  unassigned_muts <- sapply(1:ncol(reconstructed_with_median),function(i) (sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
+  names(unassigned_muts) <- colnames(cat)
+  
   res <- list()
   res$E_median_filtered <- E_median_filtered
   res$E_p.values <- E_p.values
@@ -273,6 +278,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   res$threshold_p.value <- threshold_p.value
   res$nboots <- nboot
   res$method <- method
+  res$unassigned_muts <- unassigned_muts
   return(res)
 }
 
@@ -466,6 +472,17 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
   }
   # res$E_median_filtered[,i,drop=FALSE]
   
+  #also plot and save exposures
+  sums_exp <- apply(cat, 2, sum)
+  exposures <- res$E_median_filtered
+  denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
+  
+  file_table_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",method,"_bfm",bf_method,"_alpha",alpha,"_tr",threshold_percent,"_p",threshold_p.value,".tsv")
+  file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",method,"_bfm",bf_method,"_alpha",alpha,"_tr",threshold_percent,"_p",threshold_p.value,".jpg")
+  
+  plot.CosSimMatrix(as.data.frame((exposures/denominator*100)),output_file = file_plot_exp)
+  write.table(exposures,file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
   return(res)
 }
