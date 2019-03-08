@@ -390,6 +390,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
     for(i in current_samples){
       unassigned_mut <- sprintf("%.2f",(sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
       percentdiff <- sprintf("%.2f",sum(abs(cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
+      cos_sim <- sprintf("%.2f",cos.sim(cat[,i,drop=FALSE],reconstructed_with_median[,i,drop=FALSE]))
       if(type_of_mutations=="subs"){
         #1 original
         plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
@@ -398,7 +399,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           plotSubsSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
           #plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
-          plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(6,3,5,2),plot_sum = FALSE)
+          plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="rearr"){
         #1 original
@@ -408,7 +409,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           plotRearrSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(12,3,5,2))
           #3 difference
           #plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(12,3,5,2))
-          plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(12,3,5,2),plot_sum = FALSE)
+          plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(12,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="generic"){
         #1 original
@@ -418,7 +419,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
           plotGenericSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
           #plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
-          plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Unassigned, ",unassigned_mut,"%"),mar=c(6,3,5,2),plot_sum = FALSE)
+          plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }
       if(sum(cat[,i,drop=FALSE])>0){
