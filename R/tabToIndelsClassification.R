@@ -5,7 +5,7 @@
 #' 
 #' @param indel.data dataframe with indels from a single sample and the following minimal columns: chr, position, REF, ALT.  
 #' @param sampleID name of the sample
-#' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19" or "hg38"
+#' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19", "hg38" or "mm10"
 #' @return the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion
 #' @export
 #' @examples 
@@ -14,16 +14,19 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   
   if(genome.v=="hg19"){
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
-    Hsapiens <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
+    genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
   }else if(genome.v=="hg38"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
-    Hsapiens <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+    genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+  }else if(genome.v=="mm10"){
+    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
+    genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }
   
   # read only chr seqnames from VCF, not contigs
   #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
-  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(Hsapiens))
-  if (genome.v=="hg19") {
+  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
+  if (genome.v=="hg19" || genome.v=="mm10") {
     GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
   vcf_seqnames <- unique(indel.data$chr) 
@@ -35,7 +38,7 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   }
   
   # convert formats, and find context of the indels
-  indel.df <- prepare.indel.df_tabversion(indel.data,Hsapiens)
+  indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq)
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -47,7 +50,7 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
 
 ###########################################################
 
-prepare.indel.df_tabversion <- function(indel.data,Hsapiens) {
+prepare.indel.df_tabversion <- function(indel.data,genomeSeq) {
   
   if (nrow(indel.data)>0) {
     
@@ -70,14 +73,17 @@ prepare.indel.df_tabversion <- function(indel.data,Hsapiens) {
     min.position <- indel.data$position
     max.position <- indel.data$position + indel.length 
     indel.chr <- as.character(indel.data$chr)
+    if (genomeSeq@provider_version=="mm10"){
+      indel.chr <- paste('chr',indel.chr,sep='')
+    }
     
     extend5 = min.position-indel.length-25;
     extend3 = max.position + indel.length+25;
     
     
-    slice5 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, extend5, min.position))
+    slice5 <- as.character(BSgenome::getSeq(genomeSeq, indel.chr, extend5, min.position))
     # 
-    slice3 <- as.character(BSgenome::getSeq(Hsapiens, indel.chr, max.position+1, extend3))
+    slice3 <- as.character(BSgenome::getSeq(genomeSeq, indel.chr, max.position+1, extend3))
     
     indel.df <- data.frame(
       chr=as.character(indel.data$chr),
