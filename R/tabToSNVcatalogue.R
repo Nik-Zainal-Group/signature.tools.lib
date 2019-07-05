@@ -4,7 +4,7 @@
 #' Convert a data frame containing SNV, possibly loaded from a tab seperated text file, to SNV 96 channel trinuclotide context catalogue. The data frame should containt the SNV of a single sample, and the following minimal columns: chr, position, REF, ALT.
 #' 
 #' @param subs data frame with subs from a single sample and the following minimal columns: chr, position, REF, ALT.
-#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38) or "hg19" (will load BSgenome.Hsapiens.UCSC.hg19)
+#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38), "hg19" (will load BSgenome.Hsapiens.UCSC.hg19) or mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10)
 #' @return returns the SNV catalogue for the given sample
 #' @keywords tab SNV
 #' @export
@@ -17,6 +17,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
     genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
   }else if(genome.v=="hg38"){
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+  }else if(genome.v=="mm10"){
+    genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }
   
   # plots mutation-context for all variants in the vcf file
@@ -50,6 +52,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
   }else if (genome.v=="hg38"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+  }else if (genome.v=="mm10"){
+    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
   }
   if (length(intersect(subs$chr,expected_chroms))==0) {
      stop("[error tabToSNVcatalogue] Input tab file does not contain seqnames ", paste(expected_chroms,collapse=" "))

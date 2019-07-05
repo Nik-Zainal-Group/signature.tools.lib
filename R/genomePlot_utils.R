@@ -59,11 +59,13 @@ if(genome.v=="hg19"){
   expected_chroms <- paste0(c(seq(1:22),"X","Y"))
 }else if(genome.v=="hg38"){
   expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+}else if(genome.v=="mm10"){
+   expected_chroms <- paste0(c(seq(1:19),"X","Y")) 
 }
 
 # read only chr seqnames from VCF, not contigs
 gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-if (genome.v=="hg19") {
+if (genome.v=="hg19" || genome.v=="mm10") {
   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
 }
 vcf_seqnames <- Rsamtools::headerTabix(myFile)$seqnames 
@@ -103,6 +105,9 @@ rgs <- IRanges::ranges(vcf_data)
 starts <- BiocGenerics::start(rgs)
 ends <-  BiocGenerics::end(rgs)
 chroms <- GenomeInfoDb::seqnames(vcf_data)
+if (genome.v=="mm10"){
+  chroms <- paste('chr',chroms,sep='')
+}
 
 wt <- as.character(rd$REF)
 #mt <- as.character(unlist(rd$ALT))
