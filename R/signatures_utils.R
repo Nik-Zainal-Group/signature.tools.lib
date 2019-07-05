@@ -889,7 +889,7 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
             axis.text.y = ggplot2::element_text(vjust = 1, size=14)) + ggplot2::theme(legend.position="none")
   w <- (extraWidth+150*length(sample.names))/dpi
   h <- (extraHeight+150*length(signatures.names))/dpi
-  ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w)
+  ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w,limitsize = FALSE)
 }
 
 #' plot.CosSimSignatures
