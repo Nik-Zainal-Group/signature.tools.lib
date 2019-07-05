@@ -22,7 +22,7 @@ genomePlot(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file,
 
 \item{sampleID}{Name of the sample.}
 
-\item{genome.v}{set genome version: hg19 or hg38.}
+\item{genome.v}{set genome version: hg19, hg38 or mm10.}
 
 \item{file.ideogram}{name of the file that contain a user defined genome ideogram. Leave to NULL to load appropriate ideogram according to genome version.}
 

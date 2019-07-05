@@ -9,7 +9,7 @@ tabToSNVcatalogue(subs, genome.v = "hg19")
 \arguments{
 \item{subs}{data frame with subs from a single sample and the following minimal columns: chr, position, REF, ALT.}
 
-\item{genome.v}{either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38) or "hg19" (will load BSgenome.Hsapiens.UCSC.hg19)}
+\item{genome.v}{either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38), "hg19" (will load BSgenome.Hsapiens.UCSC.hg19) or mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10)}
 }
 \value{
 returns the SNV catalogue for the given sample
