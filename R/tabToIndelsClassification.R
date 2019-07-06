@@ -19,14 +19,14 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }else if(genome.v=="mm10"){
-    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }
   
   # read only chr seqnames from VCF, not contigs
   #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
   gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  if (genome.v=="hg19" || genome.v=="mm10") {
+  if (genome.v=="hg38" || genome.v=="mm10") {
     GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
   vcf_seqnames <- unique(indel.data$chr) 
@@ -38,7 +38,7 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   }
   
   # convert formats, and find context of the indels
-  indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq)
+  indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq,genome.v,expected_chrom)
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -50,7 +50,7 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
 
 ###########################################################
 
-prepare.indel.df_tabversion <- function(indel.data,genomeSeq) {
+prepare.indel.df_tabversion <- function(indel.data,genomeSeq,genome.v,expected_chrom) {
   
   if (nrow(indel.data)>0) {
     
@@ -73,10 +73,12 @@ prepare.indel.df_tabversion <- function(indel.data,genomeSeq) {
     min.position <- indel.data$position
     max.position <- indel.data$position + indel.length 
     indel.chr <- as.character(indel.data$chr)
-    if (genomeSeq@provider_version=="mm10"){
-      indel.chr <- paste('chr',indel.chr,sep='')
+    # if (genomeSeq@provider_version=="mm10"){
+    #   indel.chr <- paste('chr',indel.chr,sep='')
+    # }
+    if (genome.v=="hg38" || genome.v=="mm10") {
+      if(length(intersect(indel.chr,expected_chroms))==0) indel.chr <- paste0("chr",indel.chr)
     }
-    
     extend5 = min.position-indel.length-25;
     extend3 = max.position + indel.length+25;
     

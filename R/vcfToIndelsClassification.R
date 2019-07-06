@@ -19,17 +19,20 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }else if(genome.v=="mm10"){
-    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }
 
   # read only chr seqnames from VCF, not contigs
   #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
   gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  if (genome.v=="hg19" || genome.v=="mm10") {
-    GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
-  }
+  # if (genome.v=="hg38" || genome.v=="mm10") {
+  #   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  # }
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
+  }
   
   if(tools:::.BioC_version_associated_with_R_version()<3.5){
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
@@ -37,12 +40,16 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
   }
     
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  }
   
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
   
   # convert formats, and find context of the indels
-  indel.df <- prepare.indel.df(indel.data,genomeSeq)
+  indel.df <- prepare.indel.df(indel.data,genomeSeq,genome.v,expected_chrom)
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -54,7 +61,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
 
 ###########################################################
 
-prepare.indel.df <- function(indel.data,genomeSeq) {
+prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chrom) {
   
   if (nrow(indel.data)>0) {
     
@@ -78,8 +85,11 @@ prepare.indel.df <- function(indel.data,genomeSeq) {
     min.position <- BiocGenerics::start(indel.data)
     max.position <- BiocGenerics::start(indel.data) + indel.length 
     indel.chr <- as.character(GenomeInfoDb::seqnames(indel.data))
-    if (genomeSeq@provider_version=="mm10"){
-      indel.chr <- paste('chr',indel.chr,sep='')
+    # if (genomeSeq@provider_version=="mm10"){
+    #   indel.chr <- paste('chr',indel.chr,sep='')
+    # }
+    if (genome.v=="hg38" || genome.v=="mm10") {
+      if(length(intersect(indel.chr,expected_chroms))==0) indel.chr <- paste0("chr",indel.chr)
     }
     extend5 = min.position-indel.length-25;
     extend3 = max.position + indel.length+25;

@@ -20,7 +20,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }else if(genome.v=="mm10"){
-    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }
  
@@ -29,15 +29,23 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   # read only chr seqnames from VCF, not contigs
   #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
   gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  if (genome.v=="hg19" || genome.v=="mm10") {
-    GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
-  }
+  # if (genome.v=="hg38" || genome.v=="mm10") {
+  #   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  # }
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames 
+    if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
+  }
   
   if(tools:::.BioC_version_associated_with_R_version()<3.5){
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
   }else{
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  }
+  
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
   
   # load the vcf file
@@ -57,6 +65,10 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
 
   if (length(chroms)==0){ 
      stop("[error vcfToSNVcatalogue] Input vcf does not contain variants ", vcfFilename)
+  }
+  
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(chroms,expected_chroms))==0) chroms <- paste0("chr",chroms)
   }
   
   fxd <- (VariantAnnotation::fixed(vcf_data))

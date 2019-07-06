@@ -53,10 +53,14 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   }else if (genome.v=="hg38"){
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
   }else if (genome.v=="mm10"){
-    expected_chroms <- paste0(c(seq(1:19),"X","Y"))
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
   }
-  if (length(intersect(subs$chr,expected_chroms))==0) {
-     stop("[error tabToSNVcatalogue] Input tab file does not contain seqnames ", paste(expected_chroms,collapse=" "))
+  
+  # if (length(intersect(subs$chr,expected_chroms))==0) {
+  #    stop("[error tabToSNVcatalogue] Input tab file does not contain seqnames ", paste(expected_chroms,collapse=" "))
+  # }
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(subs$chr,expected_chroms))==0) subs$chr <- paste0("chr",subs$chr)
   }
 
   muts <- data.frame(chroms=subs$chr, 
