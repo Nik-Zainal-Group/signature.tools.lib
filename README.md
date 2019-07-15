@@ -1,25 +1,75 @@
 # Signature Tools Lib R package
 
-You can install this R package by entering the main directory and typing:
+## Table of content
+
+[TOC]
+
+## Introduction to the package
+
+Signature Tools Lib is an R package for mutational signatures analysis. Mutational signatures are patterns of somatic mutations that reveal what mutational processes have been active in a cell. Mutational processes can be due to exposure to mutagens, such as chemicals present in cigarettes, or defects in DNA repair pathways, such as Homologous Recombination Repair.
+
+The package supports hg19 and hg38 as well as mm10. It provides our latest algorithms for signature fit and extraction, as well as various utility functions and the HRDetect pipeline. The list and description of these functions is given below.
+
+## Systems Requirements
+
+No special hardware is required to run this software. This is an R package so it will work on any computer with R (>=3.2.1) installed. You can install this package by entering the R environment from the main directory and typing:
 
 ```
 install.packages("devtools")
 devtools::install()
 ```
 
-You can also test the package by typing:
+The above commands will take care of all the dependencies. In some cases, it may happen that some dependencies cannot be installed automatically. In this case, an error will indicate which package could not be found, then simply install these packages manually. The installation should not take more than a few minutes.
+
+This is the full list of R package dependencies:
+
+```
+    VariantAnnotation,
+    BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Hsapiens.1000genomes.hs37d5,
+    BSgenome.Mmusculus.UCSC.mm10,
+    SummarizedExperiment,
+    BiocGenerics,
+    GenomeInfoDb,
+    NMF,
+    foreach,
+    doParallel,
+    doMC,
+    lpSolve,
+    ggplot2,
+    methods,
+    cluster,
+    stats,
+    NNLM,
+    nnls,
+    GenSA,
+    gmp,
+    plyr,
+    RCircos,
+    scales,
+    GenomicRanges,
+    IRanges,
+    BSgenome
+```
+
+## Testing the package
+
+You can test the package by entering the package main directory and typing from the R invironment:
 
 ```
 devtools::test()
 ```
 
-Useful commands for development workflow can be found in the file ```signatures.tools.lib.develop.R```.
+## How to use this package
 
 **PLEASE NOTE:** project-specific file conversions and filtering should be done before and outside the use of this library. This library should only report to the user the data format errors and suggest how to correct them, while it is the responsibility of the user to supply the necessary data formatted correctly with the necessary features and correct column names.
 
-**BUGS REPORT AND IMPROVEMENTS:** you can use the issues page on GitLab to report bugs and suggestions improvements, especially if the code that is/would be affected is under development and curated by someone else.
+## Package documentation
 
 **DOCUMENTATION:** Documentation for each of the functions below is provided as R documentation, and it is installed along with the R package. The documentation should give detailed explanation of the input data required, such as a list of data frame columns and their explanation. To access the documentation you can use the ```?function``` syntax in R, for each of the functions below. For example, in R or RStudio, type ```?HRDetect_pipeline```.
+
+
+## Functions provided by the package
 
 Functions for file conversion/manipulation:
 
@@ -61,4 +111,50 @@ Function for data visualisation
 Function for web formats export
 
 - **```export_SignatureFit_withBootstrap_to_JSON```**: Given a res file obtained from the ```SignatureFit_withBootstrap``` or ```SignatureFit_withBootstrap_Analysis``` function, export it to a set of JSON files that can be used for web visualisation
+
+## Examples
+
+### Test examples
+
+A good place to look for examples is the tests/testthat/ directory, where for each function of the package we provide a test using test data. These are the tests that are run when running:
+
+```
+devtools::test()
+```
+
+Moreover, examples of typical workflows are given below.
+
+### Example 01
+
+In this example we illustrate a typical workflow for signature fit and HRDetect using two test samples. This code can be easily adapted to be used on your data, provided you have formatted the input data as described in the ```?function``` documentation.
+
+This example, along with expected output files, can be found in the ```examples/Example01/``` directory.
+
+We begin by setting variables containing file names. These should be vectors indexed by sample names.
+
+```
+#set directory to this file location
+
+#import the package
+library(signature.tools.lib)
+
+#set sample names
+sample_names <- c("sample1","sample2")
+
+#set the file names. 
+SNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+SV_bedpe_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                    "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+Indels_vcf_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                      "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+CNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.cna.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.cna.txt")
+
+#name the vectors entries with the sample names
+names(SNV_tab_files) <- sample_names
+names(SV_bedpe_files) <- sample_names
+names(Indels_vcf_files) <- sample_names
+names(CNV_tab_files) <- sample_names
+```
 
