@@ -9,8 +9,8 @@
 - [Package documentation](#docs)
 - [Functions provided by the package](#functions)
 - [Examples](#examples)
-		- [Test examples](#examplestests)
-		- [Example 01](#examplese01)
+  - [Test examples](#examplestests)
+  - [Example 01](#examplese01)
 
 
 <a name="intro"/>
@@ -183,4 +183,72 @@ names(SV_bedpe_files) <- sample_names
 names(Indels_vcf_files) <- sample_names
 names(CNV_tab_files) <- sample_names
 ```
+
+We can now load the SNV tab data and build the SNV mutational catalogues.
+
+```
+#load SNV data and convert to SNV mutational catalogues
+SNVcat_list <- list()
+for (i in 1:length(SNV_tab_files)){
+  tmpSNVtab <- read.table(SNV_tab_files[i],sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+  #convert to SNV catalogue, see ?tabToSNVcatalogue or ?vcfToSNVcatalogue for details
+  res <- tabToSNVcatalogue(subs = tmpSNVtab,genome.v = "hg19")
+  colnames(res$catalogue) <- sample_names[i]
+  SNVcat_list[[i]] <- res$catalogue
+}
+#bind the catalogues in one table
+SNV_catalogues <- do.call(cbind,SNVcat_list)
+```
+
+At this point you can plot the mutational catalogues and compare them with the expected output files in the ```Example01``` directory.
+
+```
+#the catalogues can be plotted as follows
+plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output_file = "SNV_catalogues.jpg")
+
+```
+
+We can now perform signature fit analysis, i.e. identify which mutational signatures are present in the sample. We suggest to use a small *a priori* set of signatures, for example here we use the signatures identified in breast cancer.
+
+```
+#fit the 12 breast cancer signatures using the bootstrap signature fit approach
+sigsToUse <- c(1,2,3,5,6,8,13,17,18,20,26,30)
+subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
+                                                    cat = SNV_catalogues,
+                                                    signature_data_matrix = cosmic30[,sigsToUse],
+                                                    type_of_mutations = "subs",
+                                                    nboot = 100,nparallel = 4)
+
+#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
+snv_exp <- subs_fit_res$E_median_filtered
+```
+In this case we used the ```SignatureFit_withBootstrap_Analysis``` function, which will use the bootstrap fitting method and provide several plots, which can be compared to the expected output plots in the ```Example01``` directory.
+
+Finally, we can apply HRDetect on these two samples. Notice that The HRDetect pipeline allows us to specify the amount of SNV Signature 3 and 8 that we have already estimated above, so we only need to supply the additional files to compute indels classification, rearrangements and the copy number based score HRD-LOH. Please see the documentation in ```?HRDetect_pipeline``` for more details.
+
+```
+#The HRDetect pipeline will compute the HRDetect probability score for the samples to be Homologous Recombination Deficient. HRDetect is a logistic regression classifier that requires 6 features to compute the probability score. These features can be supplied directly in an input matrix, or pipeline can compute these features for you if you supply the file names. It is possible to supply a mix of features and file names.
+
+#Initialise feature matrix
+col_hrdetect <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
+input_matrix <- matrix(NA,nrow = length(sample_names),ncol = length(col_hrdetect),dimnames = list(sample_names,col_hrdetect))
+
+#We have already quantified the amount of SNV signatures in the samples, so we can supply these via the input matrix
+input_matrix[colnames(snv_exp),"SNV3"] <- snv_exp["Signature.3",]
+input_matrix[colnames(snv_exp),"SNV8"] <- snv_exp["Signature.8",]
+
+#run the HRDetect pipeline, for more information see ?HRDetect_pipeline
+res <- HRDetect_pipeline(input_matrix,
+                         genome.v = "hg19",
+                         SV_bedpe_files = SV_bedpe_files,
+                         Indels_vcf_files = Indels_vcf_files,
+                         CNV_tab_files = CNV_tab_files,
+                         nparallel = 2)
+
+#save HRDetect scores
+writeTable(res$hrdetect_output,file = "HRDetect_res.tsv")
+
+```
+
+Also in this case, you can compare your output with the expected output in the ```Example01``` directory.
 
