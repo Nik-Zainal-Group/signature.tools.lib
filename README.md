@@ -2,18 +2,19 @@
 
 ## Table of content
 
-[Introduction to the package](#intro)
-[Systems Requirements](#req)
-[Testing the package](#test)
-[How to use this package](#howtouse)
-[Package documentation](#docs)
-[Functions provided by the package](#functions)
-[Examples](#examples)
-		[Test examples](#examplestests)
-		[Example 01](#examplese01)
+- [Introduction to the package](#intro)
+- [Systems Requirements](#req)
+- [Testing the package](#test)
+- [How to use this package](#howtouse)
+- [Package documentation](#docs)
+- [Functions provided by the package](#functions)
+- [Examples](#examples)
+		- [Test examples](#examplestests)
+		- [Example 01](#examplese01)
 
 
 <a name="intro"/>
+
 ## Introduction to the package
 
 Signature Tools Lib is an R package for mutational signatures analysis. Mutational signatures are patterns of somatic mutations that reveal what mutational processes have been active in a cell. Mutational processes can be due to exposure to mutagens, such as chemicals present in cigarettes, or defects in DNA repair pathways, such as Homologous Recombination Repair.
@@ -21,6 +22,7 @@ Signature Tools Lib is an R package for mutational signatures analysis. Mutation
 The package supports hg19 and hg38 as well as mm10. It provides our latest algorithms for signature fit and extraction, as well as various utility functions and the HRDetect pipeline. The list and description of these functions is given below.
 
 <a name="req"/>
+
 ## Systems Requirements
 
 No special hardware is required to run this software. This is an R package so it will work on any computer with R (>=3.2.1) installed. You can install this package by entering the R environment from the main directory and typing:
@@ -64,6 +66,7 @@ This is the full list of R package dependencies:
 ```
 
 <a name="test"/>
+
 ## Testing the package
 
 You can test the package by entering the package main directory and typing from the R invironment:
@@ -73,16 +76,19 @@ devtools::test()
 ```
 
 <a name="howtouse"/>
+
 ## How to use this package
 
 **PLEASE NOTE:** project-specific file conversions and filtering should be done before and outside the use of this library. This library should only report to the user the data format errors and suggest how to correct them, while it is the responsibility of the user to supply the necessary data formatted correctly with the necessary features and correct column names.
 
 <a name="docs"/>
+
 ## Package documentation
 
 **DOCUMENTATION:** Documentation for each of the functions below is provided as R documentation, and it is installed along with the R package. The documentation should give detailed explanation of the input data required, such as a list of data frame columns and their explanation. To access the documentation you can use the ```?function``` syntax in R, for each of the functions below. For example, in R or RStudio, type ```?HRDetect_pipeline```.
 
 <a name="functions"/>
+
 ## Functions provided by the package
 
 Functions for file conversion/manipulation:
@@ -127,9 +133,11 @@ Function for web formats export
 - **```export_SignatureFit_withBootstrap_to_JSON```**: Given a res file obtained from the ```SignatureFit_withBootstrap``` or ```SignatureFit_withBootstrap_Analysis``` function, export it to a set of JSON files that can be used for web visualisation
 
 <a name="examples"/>
+
 ## Examples
 
 <a name="examplestests"/>
+
 ### Test examples
 
 A good place to look for examples is the tests/testthat/ directory, where for each function of the package we provide a test using test data. These are the tests that are run when running:
@@ -141,6 +149,7 @@ devtools::test()
 Moreover, examples of typical workflows are given below.
 
 <a name="examplese01"/>
+
 ### Example 01
 
 In this example we illustrate a typical workflow for signature fit and HRDetect using two test samples. This code can be easily adapted to be used on your data, provided you have formatted the input data as described in the ```?function``` documentation.
