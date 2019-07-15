@@ -40,7 +40,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
   }
     
-  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
+  vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
@@ -49,7 +49,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
   
   # convert formats, and find context of the indels
-  indel.df <- prepare.indel.df(indel.data,genomeSeq,genome.v,expected_chrom)
+  indel.df <- prepare.indel.df(indel.data,genomeSeq,genome.v,expected_chroms)
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -61,7 +61,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
 
 ###########################################################
 
-prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chrom) {
+prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
   
   if (nrow(indel.data)>0) {
     
