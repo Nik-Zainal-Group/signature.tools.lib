@@ -38,33 +38,40 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
   
   #Annotate the bedpe if necessary
   
-  #check whether column is.clustered is present,
-  #if not, compute it
-  if (! "is.clustered" %in% colnames(sv_bedpe)){
-    clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
-                                                        plot.path = NA,
-                                                        kmin=10,                                                  
-                                                        kmin.samples=1,
-                                                        gamma.sdev=25,
-                                                        PEAK.FACTOR=10,
-                                                        thresh.dist=NA)
-    sv_bedpe <- clustering.result$sv_bedpe
-  }
-  #check whether column svclass is present,
-  #if not, compute it
-  if (! "svclass" %in% colnames(sv_bedpe)){
-    if ("strand1" %in% colnames(sv_bedpe) & "strand2" %in% colnames(sv_bedpe)){
-      sv_bedpe <- classifyRearrangementsFromBedpe(sv_bedpe)
-    }else{
-      message("cannot classify rearrangements: svclass column missing, and cannot compute it because strand1 and strand2 are missing.")
+  if(nrow(sv_bedpe)>0){
+    #check whether column is.clustered is present,
+    #if not, compute it
+    if (! "is.clustered" %in% colnames(sv_bedpe)){
+      clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
+                                                          plot.path = NA,
+                                                          kmin=10,                                                  
+                                                          kmin.samples=1,
+                                                          gamma.sdev=25,
+                                                          PEAK.FACTOR=10,
+                                                          thresh.dist=NA)
+      sv_bedpe <- clustering.result$sv_bedpe
     }
+    #check whether column svclass is present,
+    #if not, compute it
+    if (! "svclass" %in% colnames(sv_bedpe)){
+      if ("strand1" %in% colnames(sv_bedpe) & "strand2" %in% colnames(sv_bedpe)){
+        sv_bedpe <- classifyRearrangementsFromBedpe(sv_bedpe)
+      }else{
+        message("cannot classify rearrangements: svclass column missing, and cannot compute it because strand1 and strand2 are missing.")
+      }
+    }
+    
+    #now compute the catalogue
+    rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  }else{
+    #case in which the sv_bedpe table has 0 rows
+    rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
   }
   
-  #now compute the catalogue
-  rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
   return_list$annotated_bedpe <- sv_bedpe
+  
   return(return_list)
 }
 
@@ -205,47 +212,48 @@ prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
   all_catalogues <- as.data.frame(matrix(nrow = length(catalogue.labels),ncol = 0))
   rownames(all_catalogues) <- catalogue.labels
   
-  for (sample_name in unique(sv_bedpe$sample)){
-    sample.rearrs <- sv_bedpe[sv_bedpe$sample==sample_name,]
-    
-    rearr_catalogue <- as.data.frame(matrix(0,nrow = length(catalogue.labels),ncol = 1))
-    
-    if (nrow(sample.rearrs)>0) {
+  if (nrow(sv_bedpe)>0){
+    for (sample_name in unique(sv_bedpe$sample)){
+      sample.rearrs <- sv_bedpe[sv_bedpe$sample==sample_name,]
       
-      label1 <- rep('non-clustered', nrow(sample.rearrs))
-      label1[ sample.rearrs$is.clustered] <- 'clustered'
+      rearr_catalogue <- as.data.frame(matrix(0,nrow = length(catalogue.labels),ncol = 1))
       
-      label2 <- rep('', nrow(sample.rearrs))
-      label2[ sample.rearrs$svclass=='deletion'] <- '_del'
-      label2[ sample.rearrs$svclass=='translocation'] <- '_trans'
-      label2[ sample.rearrs$svclass=='inversion'] <- '_inv'
-      label2[ sample.rearrs$svclass=='tandem-duplication'] <- '_tds'
+      if (nrow(sample.rearrs)>0) {
+        
+        label1 <- rep('non-clustered', nrow(sample.rearrs))
+        label1[ sample.rearrs$is.clustered] <- 'clustered'
+        
+        label2 <- rep('', nrow(sample.rearrs))
+        label2[ sample.rearrs$svclass=='deletion'] <- '_del'
+        label2[ sample.rearrs$svclass=='translocation'] <- '_trans'
+        label2[ sample.rearrs$svclass=='inversion'] <- '_inv'
+        label2[ sample.rearrs$svclass=='tandem-duplication'] <- '_tds'
+        
+        label3 <- rep('', nrow(sample.rearrs))
+        sample.rearrs$bkdist <- abs(sample.rearrs$start2 - sample.rearrs$start1)
+        label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist<=1e4] <- '_1-10Kb'
+        label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e4 & sample.rearrs$bkdist<=1e5 ] <- '_10-100Kb'
+        label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e5 & sample.rearrs$bkdist<=1e6 ] <- '_100Kb-1Mb'
+        label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e6 & sample.rearrs$bkdist<=1e7 ] <- '_1Mb-10Mb'
+        label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e7 ] <- '_>10Mb'
+        
+        sample.rearrs$catalogue.label <- paste0(label1, label2, label3)
+        
+        sample.table <- as.data.frame(table( sample.rearrs$catalogue.label),drop=FALSE)
+        rownames(sample.table ) <- sample.table$Var
+        
+        rearr_catalogue <-  sample.table [as.character(catalogue.labels), 'Freq',drop=FALSE ]
+        
+      }
       
-      label3 <- rep('', nrow(sample.rearrs))
-      sample.rearrs$bkdist <- abs(sample.rearrs$start2 - sample.rearrs$start1)
-      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist<=1e4] <- '_1-10Kb'
-      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e4 & sample.rearrs$bkdist<=1e5 ] <- '_10-100Kb'
-      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e5 & sample.rearrs$bkdist<=1e6 ] <- '_100Kb-1Mb'
-      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e6 & sample.rearrs$bkdist<=1e7 ] <- '_1Mb-10Mb'
-      label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e7 ] <- '_>10Mb'
+      rearr.catalogue <- rearr_catalogue
+      rownames(rearr.catalogue) <- catalogue.labels
+      colnames(rearr.catalogue) <- sample_name
+      rearr.catalogue[is.na(rearr.catalogue)] <- 0
       
-      sample.rearrs$catalogue.label <- paste0(label1, label2, label3)
-      
-      sample.table <- as.data.frame(table( sample.rearrs$catalogue.label),drop=FALSE)
-      rownames(sample.table ) <- sample.table$Var
-      
-      rearr_catalogue <-  sample.table [as.character(catalogue.labels), 'Freq',drop=FALSE ]
-      
+      all_catalogues <- cbind(all_catalogues,rearr.catalogue)
     }
-    
-    rearr.catalogue <- rearr_catalogue
-    rownames(rearr.catalogue) <- catalogue.labels
-    colnames(rearr.catalogue) <- sample_name
-    rearr.catalogue[is.na(rearr.catalogue)] <- 0
-    
-    all_catalogues <- cbind(all_catalogues,rearr.catalogue)
   }
-  
   all_catalogues
 }
 

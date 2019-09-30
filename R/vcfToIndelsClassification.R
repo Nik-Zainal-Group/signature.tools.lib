@@ -47,6 +47,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
+  indel.data <- VariantAnnotation::expand(indel.data)
   
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df(indel.data,genomeSeq,genome.v,expected_chroms)
@@ -67,7 +68,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
     
     
     ref.length <- Biostrings::width(SummarizedExperiment::rowRanges(indel.data)$REF)
-    alt.length <- Biostrings::width(BiocGenerics::unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))
+    alt.length <- Biostrings::width(SummarizedExperiment::rowRanges(indel.data)$ALT)
     indel.length <- abs(ref.length - alt.length)
     
     indel.type <- rep(NA, nrow(indel.data))
@@ -79,7 +80,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
     # sequence of change
     change <- vector()
     change[indel.type=='DI'] <-  substr( as.character(SummarizedExperiment::rowRanges(indel.data)$REF)[indel.type=='DI'],2,1e5)
-    change[indel.type=='I'] <- substr( as.character(BiocGenerics::unlist(SummarizedExperiment::rowRanges(indel.data)$ALT))[indel.type=='I'], 2, 1e5)
+    change[indel.type=='I'] <- substr( as.character(SummarizedExperiment::rowRanges(indel.data)$ALT)[indel.type=='I'], 2, 1e5)
     change[indel.type=='D'] <- substr( as.character(SummarizedExperiment::rowRanges(indel.data)$REF), 2, 1e5)[indel.type=='D']
     
     min.position <- BiocGenerics::start(indel.data)
@@ -106,7 +107,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
       chr=as.character(GenomeInfoDb::seqnames(indel.data)),
       pos=BiocGenerics::start(IRanges::ranges(indel.data)),
       ref=as.character(SummarizedExperiment::rowRanges(indel.data)$REF),
-      alt=as.character(BiocGenerics::unlist(SummarizedExperiment::rowRanges(indel.data)$ALT)),
+      alt=as.character(SummarizedExperiment::rowRanges(indel.data)$ALT),
       indel.type=indel.type,
       change=change,
       slice3=slice3,

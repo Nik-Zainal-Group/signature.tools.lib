@@ -50,6 +50,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   
   # load the vcf file
   vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v, gr)
+  vcf_data <- VariantAnnotation::expand(vcf_data)
   
   #filters failed for each variant
   rd <- SummarizedExperiment::rowRanges(vcf_data)
@@ -73,7 +74,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   
   fxd <- (VariantAnnotation::fixed(vcf_data))
   wt <- as.character(rd$REF)
-  mt <- as.character(unlist(rd$ALT))
+  mt <- as.character(rd$ALT)
   
   
   barcode <- paste(chroms, '-',starts,'-', mt, sep='')
