@@ -54,6 +54,7 @@
 #' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
 #' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
+#' @param signature_type either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
 #' @param nparallel how many parallel threads to use.
 #' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 #' @export
@@ -61,7 +62,7 @@
 #' @references Nik-Zainal, S., Davies, H., Staaf, J., Ramakrishna, M., Glodzik, D., Zou, X., ... Stratton, M. R. (2016). Landscape of somatic mutations in 560 breast cancer whole-genome sequences. Nature, 534(7605), 1–20. https://doi.org/10.1038/nature17676
 #' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
 #' 
-HRDetect_pipeline <- function(data_matrix,
+HRDetect_pipeline <- function(data_matrix=NULL,
                               genome.v="hg19",
                               SNV_vcf_files=NULL,
                               SNV_tab_files=NULL,
@@ -70,20 +71,62 @@ HRDetect_pipeline <- function(data_matrix,
                               CNV_tab_files=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
+                              signature_type="COSMIC",
                               nparallel=1){
   #if multiple parallel cores are used, set it here
   doMC::registerDoMC(nparallel)
   
   #check that the matrix has correct features (columns)
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
-  if (!length(intersect(col_needed,colnames(data_matrix)))==length(col_needed)){
-    stop("[error HRDetect_pipeline] incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
-  }
-  # else{
-  #   message("input data_matrix is formatted correctly")
-  # }
   
+  if (!is.null(data_matrix)){
+    if (!length(intersect(col_needed,colnames(data_matrix)))==length(col_needed)){
+      stop("[error HRDetect_pipeline] incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
+    }
+  }else{
+    #there is no data_matrix, just build it from files
+    #get the sample names from all the file lists
+    sample_names <- unique(unlist(sapply(list(SNV_vcf_files,
+                                SNV_tab_files,
+                                SNV_catalogues,
+                                Indels_vcf_files,
+                                CNV_tab_files,
+                                SV_bedpe_files,
+                                SV_catalogues), function(x) names(x))))
+    if(!is.null(sample_names)){
+      data_matrix <- matrix(NA,ncol = 6,nrow = length(sample_names),dimnames = list(sample_names,col_needed))
+    }else{
+      stop("[error HRDetect_pipeline] no input data provided.")
+    }
+  }
   samples_list <- rownames(data_matrix)
+  
+  #check that the signature_type option is valid
+  #get available organs
+  available_organs <- intersect(unique(sapply(strsplit(colnames(all_organ_sigs_subs),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))),
+  unique(sapply(strsplit(colnames(all_organ_sigs_rearr),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))))
+  
+  if(!(signature_type %in% c("COSMIC",available_organs))){
+    stop(paste0("[error HRDetect_pipeline] invalid signature_type ",signature_type,"."))
+  }
+  
+  #use either COSMIC sigs or tissue-specific sigs
+  if(signature_type=="COSMIC"){
+    sigstofit_subs <- cosmic30
+    sigstofit_rearr <- RS.Breast560
+  }else{
+    sigstofit_subs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",signature_type),colnames(all_organ_sigs_subs))]]
+    sigstofit_rearr <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",signature_type),colnames(all_organ_sigs_rearr))]]
+  }
+  
+  #initialise bootstrap fit variables to NULL
+  bootstrap_fit_subs <- NULL
+  bootstrap_fit_rearr <- NULL
+  #initialise final exposures output table
+  exposures_subs <- NULL
+  exposures_rearr <- NULL
+  #initialise indels classification table
+  indels_classification_table <- NULL
   
   #check whether SNV related columns are NA or incomplete and if so check whether the catalogues
   #are available for sig fit, and if not check whether the vcf (or tab) files are available for building catalogues
@@ -177,18 +220,38 @@ HRDetect_pipeline <- function(data_matrix,
     
     #run sigfit with bootstrap if there are samples in the SNV_catalogue
     if(length(incomplete_samples_with_catalogueSNV)>0){
-      message("[info HRDetect_pipeline] COSMIC30 signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
+      message("[info HRDetect_pipeline] Substitution signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
       message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      res <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
-                                        cosmic30,
+      bootstrap_fit_subs <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
+                                        sigstofit_subs,
                                         nboot = 100,
                                         threshold_percent = 5,
                                         threshold_p.value = 0.05,
                                         verbose = FALSE,
                                         nparallel = nparallel)
-      #add the resulting exposures to the 
-      res$E_median_filtered
-      data_matrix[colnames(res$E_median_filtered),SNV_cols] <- t(res$E_median_filtered[c("Signature.3","Signature.8"),])
+      #add the resulting exposures to the data_matrix
+      exposures_subs <- bootstrap_fit_subs$E_median_filtered
+      exposures_subs[is.nan(exposures_subs)] <- 0
+      
+      if(signature_type=="COSMIC"){
+        data_matrix[colnames(exposures_subs),SNV_cols] <- t(exposures_subs[c("Signature.3","Signature.8"),])
+      }else{
+        #convert to reference signatures
+        exposures_subs <- t(conversion_matrix_subs[colnames(sigstofit_subs),]) %*% exposures_subs
+        exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,]
+        #add to data_matrix if present
+        if("Ref.Sig.3" %in% colnames(exposures_subs)){
+          data_matrix[row.names(exposures_subs),"SNV3"] <- exposures_subs[,"Ref.Sig.3"]
+        }else{
+          data_matrix[row.names(exposures_subs),"SNV3"] <- 0
+        }
+        if("Ref.Sig.8" %in% colnames(exposures_subs)){
+          data_matrix[row.names(exposures_subs),"SNV8"] <- exposures_subs[,"Ref.Sig.8"]
+        }else{
+          data_matrix[row.names(exposures_subs),"SNV8"] <- 0
+        }
+        
+      }
     }
     
   }
@@ -261,18 +324,41 @@ HRDetect_pipeline <- function(data_matrix,
     
     #run sigfit with bootstrap if there are samples in the SV_catalogue
     if(length(incomplete_samples_with_catalogueSV)>0){
-      message("[info HRDetect_pipeline] Breast 560 rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
+      message("[info HRDetect_pipeline] Rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
       message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      res <- SignatureFit_withBootstrap(SV_catalogues_toFit,
-                                        RS.Breast560,
+      bootstrap_fit_rearr <- SignatureFit_withBootstrap(SV_catalogues_toFit,
+                                        sigstofit_rearr,
                                         nboot = 100,
                                         threshold_percent = 5,
                                         threshold_p.value = 0.05,
                                         verbose = FALSE,
                                         nparallel = nparallel)
-      #add the resulting exposures to the 
-      res$E_median_filtered
-      data_matrix[colnames(res$E_median_filtered),SV_cols] <- t(res$E_median_filtered[c("RS3","RS5"),])
+      #add the resulting exposures to the data_matrix
+      exposures_rearr <- bootstrap_fit_rearr$E_median_filtered
+      exposures_rearr[is.nan(exposures_rearr)] <- 0
+      
+      if(signature_type=="COSMIC"){
+        data_matrix[colnames(exposures_rearr),SV_cols] <- t(exposures_rearr[c("RS3","RS5"),])
+      }else{
+        #convert to reference signatures
+        exposures_rearr <- t(conversion_matrix_rearr[colnames(sigstofit_rearr),]) %*% exposures_rearr
+        exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,]
+        #add to data_matrix if present
+        if("RefSig R3" %in% colnames(exposures_rearr)){
+          data_matrix[row.names(exposures_rearr),"SV3"] <- exposures_rearr[,"Ref.Sig.3"]
+        }else{
+          data_matrix[row.names(exposures_rearr),"SV3"] <- 0
+        }
+        if("RefSig R5" %in% colnames(exposures_rearr)){
+          data_matrix[row.names(exposures_rearr),"SV5"] <- exposures_rearr[,"RefSig R5"]
+        }else{
+          data_matrix[row.names(exposures_rearr),"SV5"] <- 0
+        }
+        if("RefSig R9" %in% colnames(exposures_rearr)){
+          data_matrix[row.names(exposures_rearr),"SV5"] <- data_matrix[row.names(exposures_rearr),"SV5"] + exposures_rearr[,"RefSig R9"]
+        }
+      }
+      
     }
     
   }
@@ -307,16 +393,12 @@ HRDetect_pipeline <- function(data_matrix,
       
       mh_list <- foreach::foreach(sample=incomplete_samples_with_vcfIndels) %dopar% {
         res <- vcfToIndelsClassification(Indels_vcf_files[sample],sample,genome.v = genome.v)
-        new.prop.del.mh <- res$count_proportion["del.mh.prop"]
-        new.prop.del.mh <- unlist(new.prop.del.mh)
-        names(new.prop.del.mh) <- sample
-        new.prop.del.mh
+        res$count_proportion
       }
-      #add resulting del.mh.prop to the data_matrix
-      for (i in 1:length(mh_list)){
-        new.prop.del.mh <- mh_list[[i]]
-        data_matrix[names(new.prop.del.mh),MH_cols] <- new.prop.del.mh
-      }
+      #combine in one table and add to data_matrix
+      indels_classification_table <- do.call(rbind,mh_list)
+      rownames(indels_classification_table) <- indels_classification_table[,"sample"]
+      data_matrix[rownames(indels_classification_table),MH_cols] <- indels_classification_table[,"del.mh.prop"]
     }
     
   }
@@ -391,6 +473,11 @@ HRDetect_pipeline <- function(data_matrix,
   res$SV_catalogues <- SV_catalogues
   res$SNV_catalogues <- SNV_catalogues
   res$hrdetect_output <- hrdetect_output
+  res$exposures_subs <- exposures_subs
+  res$exposures_rearr <- exposures_rearr
+  res$bootstrap_fit_subs <- bootstrap_fit_subs
+  res$bootstrap_fit_rearr <- bootstrap_fit_rearr
+  res$indels_classification_table <- indels_classification_table
   return(res)
   
 }

@@ -39,12 +39,20 @@ devtools::load_all()
 #add internal data
 RS.Breast560 <- read.table("data/Breast560_rearrangement.signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
 cosmic30 <- read.table("data/COSMIC30_subs_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
+all_organ_sigs_subs <- read.table("data/2019_01_10_all_PCAWG_sigs_subs.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+all_organ_sigs_rearr <- read.table("data/2019_01_10_all_PCAWG_sigs_rearr.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+conversion_matrix_subs <- read.table("data/2019_01_10_ConversionMatrix_subs.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+conversion_matrix_rearr <- read.table("data/2019_01_10_ConversionMatrix_rearr.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
 load("data/chrominfo.RData")
 load("data/chrominfo.snp6.hg19.RData")
-devtools::use_data(RS.Breast560,
+usethis::use_data(RS.Breast560,
                    cosmic30,
                    chrominfo,
-                   chrominfo.snp6, 
+                   chrominfo.snp6,
+                   all_organ_sigs_subs,
+                   all_organ_sigs_rearr,
+                   conversion_matrix_subs,
+                   conversion_matrix_rearr,
                    internal = TRUE,overwrite = TRUE)
 
 devtools::document()
