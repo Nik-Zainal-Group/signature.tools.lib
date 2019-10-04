@@ -4,10 +4,11 @@
 \alias{HRDetect_pipeline}
 \title{HRDetect Pipeline}
 \usage{
-HRDetect_pipeline(data_matrix, genome.v = "hg19", SNV_vcf_files = NULL,
-  SNV_tab_files = NULL, SNV_catalogues = NULL,
+HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
+  SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
   Indels_vcf_files = NULL, CNV_tab_files = NULL,
-  SV_bedpe_files = NULL, SV_catalogues = NULL, nparallel = 1)
+  SV_bedpe_files = NULL, SV_catalogues = NULL,
+  signature_type = "COSMIC", nparallel = 1)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}
@@ -27,6 +28,8 @@ HRDetect_pipeline(data_matrix, genome.v = "hg19", SNV_vcf_files = NULL,
 \item{SV_bedpe_files}{list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..}
 
 \item{SV_catalogues}{data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
+
+\item{signature_type}{either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
 
 \item{nparallel}{how many parallel threads to use.}
 }
