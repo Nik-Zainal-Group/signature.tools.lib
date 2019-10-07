@@ -8,7 +8,7 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
   SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
   Indels_vcf_files = NULL, CNV_tab_files = NULL,
   SV_bedpe_files = NULL, SV_catalogues = NULL,
-  signature_type = "COSMIC", nparallel = 1)
+  signature_type = "COSMIC", bootstrap_scores = FALSE, nparallel = 1)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}
@@ -30,6 +30,8 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 \item{SV_catalogues}{data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
 
 \item{signature_type}{either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+
+\item{bootstrap_scores}{perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.}
 
 \item{nparallel}{how many parallel threads to use.}
 }

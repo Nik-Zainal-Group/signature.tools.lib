@@ -483,7 +483,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       bootstrap_samples <- intersect(bootstrap_samples,rownames(hrdetect_input))
       
       if(length(bootstrap_samples)>0){
-        message("[info HRDetect_pipeline] computing HRDetect boostrap for the following samples: ",paste(bootstrap_samples,collapse = ", "))
+        message("[info HRDetect_pipeline] Computing HRDetect boostrap for the following samples: ",paste(bootstrap_samples,collapse = ", "))
         
         #run hrdetect bootstrap scores for the bootstrap_samples
         nboots_hr <- 1000
@@ -794,3 +794,57 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
   dev.off()
 }
 
+#----------------------
+
+#' plot_HRDetect_BootstrapScores
+#' 
+#' Overall plot of scores obtained from HRDetect with bootstrap.
+#' 
+#' @param outdir output directory for the plot
+#' @param hrdetect_res output of HRDetect_pipeline, ran with bootstrap_scores=TRUE
+#' @param main plot title. If not specified: "Distribution of HRDetect scores"
+#' @param mar plot margin. If not specified: c(9,4,3,2)
+#' @param pwidth plot width in pixels. If not specified: max(1000,400+120*number_of_samples)
+#' @param pheight plot height in pixels. If not specified: 1000
+#' @param pres plot resolution. If not specified: 200
+#' @export
+plot_HRDetect_BootstrapScores <- function(outdir,
+                                          hrdetect_res,
+                                          main="Distribution of HRDetect scores",
+                                          mar=c(9,4,3,2),
+                                          pwidth=NULL,
+                                          pheight=1000,
+                                          pres=200){
+  
+  #boxplot
+  bootstrap_samples <- rownames(hrdetect_res$q_5_50_95)
+  samples_labels <- bootstrap_samples
+  
+  if(pwidth==NULL) pwidth <- max(1000,400+120*length(bootstrap_samples))
+  
+  o <- order(hrdetect_res$hrdetect_output[bootstrap_samples,"Probability"],decreasing = TRUE)
+  jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)
+  par(mar=mar)
+  boxplot(hrdetect_res$hrdetect_bootstrap_table, xaxt="n", yaxt="n",ylim = c(0,1),border="white")
+  grid()
+  lines(x=c(0,ncol(hrdetect_res$hrdetect_bootstrap_table)+1),y=c(0.7,0.7),lty=2,col="red")
+  boxplot(hrdetect_res$hrdetect_bootstrap_table[,o],ylim = c(0,1),main="",
+          ylab="HRDetect score",las=3,names=samples_labels[o],add = TRUE)
+  thisvalues <- hrdetect_res$hrdetect_bootstrap_table
+  # take the x-axis indices and add a jitter, proportional to the N in each level
+  for(i in 1:ncol(thisvalues)){
+    myjitter<-jitter(rep(i, length(thisvalues[,o[i]])), amount=0.2)
+    points(myjitter, thisvalues[,o[i]], pch=20, col=rgb(0,0,1,.1))
+    rect(xleft = i+0.15,ybottom = hrdetect_res$q_5_50_95[o[i],"5%"],xright = i+0.22,ytop = hrdetect_res$q_5_50_95[o[i],"95%"],col = "grey")
+  }
+  points(hrdetect_res$hrdetect_output[bootstrap_samples,"Probability"][o],pch=23,col="black",bg="white")
+  
+  title(main = main,line = 1.8)
+  legend(x="topleft",legend = c("Davies et al. 2017"),pch = 23,col="black",bg="green",cex = 0.8,bty = "n",inset = c(0,-0.145),xpd = TRUE)
+  legend(x="topright",legend = c("5-95% CI"),col="black",fill="grey",cex = 0.8,bty = "n",inset = c(0,-0.145),xpd = TRUE)
+  legend(x="topleft",legend = c("classification threshold, Davies et al. 2017"),lty = 2,col="red",cex = 0.8,bty = "n",inset = c(0,-0.095),xpd = TRUE)
+  legend(x="topright",legend = c(paste0("n=",nrow(hrdetect_res$hrdetect_bootstrap_table))),lty = 2,col="white",cex = 0.8,bty = "n",inset = c(0,-0.095),xpd = TRUE)
+  
+  dev.off()
+  
+}
