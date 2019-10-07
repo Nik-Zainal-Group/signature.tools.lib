@@ -55,6 +55,7 @@
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
 #' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
 #' @param signature_type either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param bootstrap_scores perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.
 #' @param nparallel how many parallel threads to use.
 #' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 #' @export
@@ -72,6 +73,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
                               signature_type="COSMIC",
+                              bootstrap_scores=FALSE,
                               nparallel=1){
   #if multiple parallel cores are used, set it here
   doMC::registerDoMC(nparallel)
@@ -127,6 +129,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   exposures_rearr <- NULL
   #initialise indels classification table
   indels_classification_table <- NULL
+  #initialise hrdetect bootstrap tables
+  hrdetect_bootstrap_table <- NULL
+  q_5_50_95 <- NULL
   
   #check whether SNV related columns are NA or incomplete and if so check whether the catalogues
   #are available for sig fit, and if not check whether the vcf (or tab) files are available for building catalogues
@@ -238,17 +243,17 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       }else{
         #convert to reference signatures
         exposures_subs <- t(conversion_matrix_subs[colnames(sigstofit_subs),]) %*% exposures_subs
-        exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,]
+        exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
         #add to data_matrix if present
-        if("Ref.Sig.3" %in% colnames(exposures_subs)){
-          data_matrix[row.names(exposures_subs),"SNV3"] <- exposures_subs[,"Ref.Sig.3"]
+        if("Ref.Sig.3" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Ref.Sig.3",]
         }else{
-          data_matrix[row.names(exposures_subs),"SNV3"] <- 0
+          data_matrix[colnames(exposures_subs),"SNV3"] <- 0
         }
-        if("Ref.Sig.8" %in% colnames(exposures_subs)){
-          data_matrix[row.names(exposures_subs),"SNV8"] <- exposures_subs[,"Ref.Sig.8"]
+        if("Ref.Sig.8" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Ref.Sig.8",]
         }else{
-          data_matrix[row.names(exposures_subs),"SNV8"] <- 0
+          data_matrix[colnames(exposures_subs),"SNV8"] <- 0
         }
         
       }
@@ -342,20 +347,20 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       }else{
         #convert to reference signatures
         exposures_rearr <- t(conversion_matrix_rearr[colnames(sigstofit_rearr),]) %*% exposures_rearr
-        exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,]
+        exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
         #add to data_matrix if present
-        if("RefSig R3" %in% colnames(exposures_rearr)){
-          data_matrix[row.names(exposures_rearr),"SV3"] <- exposures_rearr[,"Ref.Sig.3"]
+        if("RefSig R3" %in% rownames(exposures_rearr)){
+          data_matrix[colnames(exposures_rearr),"SV3"] <- exposures_rearr["RefSig R3",]
         }else{
-          data_matrix[row.names(exposures_rearr),"SV3"] <- 0
+          data_matrix[colnames(exposures_rearr),"SV3"] <- 0
         }
-        if("RefSig R5" %in% colnames(exposures_rearr)){
-          data_matrix[row.names(exposures_rearr),"SV5"] <- exposures_rearr[,"RefSig R5"]
+        if("RefSig R5" %in% rownames(exposures_rearr)){
+          data_matrix[colnames(exposures_rearr),"SV5"] <- exposures_rearr["RefSig R5",]
         }else{
-          data_matrix[row.names(exposures_rearr),"SV5"] <- 0
+          data_matrix[colnames(exposures_rearr),"SV5"] <- 0
         }
-        if("RefSig R9" %in% colnames(exposures_rearr)){
-          data_matrix[row.names(exposures_rearr),"SV5"] <- data_matrix[row.names(exposures_rearr),"SV5"] + exposures_rearr[,"RefSig R9"]
+        if("RefSig R9" %in% rownames(exposures_rearr)){
+          data_matrix[colnames(exposures_rearr),"SV5"] <- data_matrix[colnames(exposures_rearr),"SV5"] + exposures_rearr["RefSig R9",]
         }
       }
       
@@ -459,9 +464,112 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   if(nrow(hrdetect_input)>0){
     message("[info HRDetect_pipeline] Computing HRDetect score and feature contributions for the following samples: ",paste(rownames(hrdetect_input),collapse = " "))
     hrdetect_output <- applyHRDetectDavies2017(hrdetect_input, attachContributions = TRUE)
+    
+    #attempt to run HRDetect with bootstrap if requested
+    if(bootstrap_scores){
+      message("[info HRDetect_pipeline] HRDetect boostrap scores requested!")
+      
+      #check whether we have all we need and for which samples
+      bootstrap_samples <- c()
+      
+      #bootstrap exposures are required
+      if(!is.null(bootstrap_fit_subs)) bootstrap_samples <- colnames(bootstrap_fit_subs$E_median_filtered)
+      if(!is.null(bootstrap_fit_rearr)) bootstrap_samples <- intersect(bootstrap_samples,colnames(bootstrap_fit_rearr$E_median_filtered))
+      
+      #indels classification tables are required
+      if(!is.null(indels_classification_table)) bootstrap_samples <- intersect(bootstrap_samples,rownames(indels_classification_table))
+      
+      #If samples are in the hrdetect_input table then they also have the HRD-LOH score
+      bootstrap_samples <- intersect(bootstrap_samples,rownames(hrdetect_input))
+      
+      if(length(bootstrap_samples)>0){
+        message("[info HRDetect_pipeline] computing HRDetect boostrap for the following samples: ",paste(bootstrap_samples,collapse = ", "))
+        
+        #run hrdetect bootstrap scores for the bootstrap_samples
+        nboots_hr <- 1000
+        
+        hrdetect_bootstrap_table <- list()
+        for (j in 1:nboots_hr){
+          tmp_data_matrix <- data_matrix[bootstrap_samples,,drop=FALSE]
+          tmp_data_matrix[1:nrow(tmp_data_matrix),1:ncol(tmp_data_matrix)] <- NA
+          
+          #1) sample del.mh.prop
+          deletions_muts <- t(indels_classification_table[,c("del.mh.count","del.rep.count","del.none.count")])[,bootstrap_samples,drop=FALSE]
+          ndeletions <- apply(deletions_muts,2,sum)
+          samples_deletions_muts <- generateRandMuts(deletions_muts)
+          samples_ndeletions <- apply(samples_deletions_muts,2,sum)
+          samples_deletions_prop <- t(samples_deletions_muts/matrix(rep(samples_ndeletions,3),nrow = nrow(samples_deletions_muts),ncol = ncol(samples_deletions_muts),byrow = TRUE))
+          colnames(samples_deletions_prop) <- c("del.mh.prop","del.rep.prop","del.none.prop")
+          tmp_data_matrix[bootstrap_samples,"del.mh.prop"] <- samples_deletions_prop[bootstrap_samples,"del.mh.prop"]
+          
+          #2) sample HRD-LOH index
+          tmp_data_matrix[bootstrap_samples,"hrd"] <- rpois(length(bootstrap_samples),data_matrix[bootstrap_samples,"hrd"])
+          
+          #3) sample subs exposures
+          subs_boots <- bootstrap_fit_subs$boot_list
+          s1 <- sample(length(subs_boots),size = 1)
+          current_subs <- t(subs_boots[[s1]])
+          current_subs[is.na(current_subs)] <- 0
+          #sparsity correction 5%
+          sel <- t(apply(current_subs,1,function(x) x<sum(x)*0.05))
+          current_subs[sel] <- 0
+          #convert to ref sig
+          exposures_RefSigs <- t(as.matrix(current_subs) %*% as.matrix(conversion_matrix_subs[colnames(current_subs),]))
+          exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
+          if("Ref.Sig.3" %in% rownames(exposures_RefSigs)){
+            tmp_data_matrix[bootstrap_samples,"SNV3"] <- exposures_RefSigs["Ref.Sig.3",bootstrap_samples]
+          }else{
+            tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
+          }
+          if("Ref.Sig.8" %in% rownames(exposures_RefSigs)){
+            tmp_data_matrix[bootstrap_samples,"SNV8"] <- exposures_RefSigs["Ref.Sig.8",bootstrap_samples]
+          }else{
+            tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
+          }
+          
+          #4) sample rearr exposures
+          rearr_boots <- bootstrap_fit_rearr$boot_list
+          s1 <- sample(length(rearr_boots),size = 1)
+          current_rearr <- t(rearr_boots[[s1]])
+          current_rearr[is.na(current_rearr)] <- 0
+          #sparsity correction 5%
+          sel <- t(apply(current_rearr,1,function(x) x<sum(x)*0.05))
+          current_rearr[sel] <- 0
+          #convert to ref sig
+          exposures_RefSigs <- t(as.matrix(current_rearr) %*% as.matrix(conversion_matrix_rearr[colnames(current_rearr),]))
+          exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
+          if("RefSig R3" %in% rownames(exposures_RefSigs)){
+            tmp_data_matrix[bootstrap_samples,"SV3"] <- exposures_RefSigs["RefSig R3",bootstrap_samples]
+          }else{
+            tmp_data_matrix[bootstrap_samples,"SV3"] <- 0
+          }
+          if("RefSig R5" %in% rownames(exposures_RefSigs)){
+            tmp_data_matrix[bootstrap_samples,"SV5"] <- exposures_RefSigs["RefSig R5",bootstrap_samples]
+          }else{
+            tmp_data_matrix[bootstrap_samples,"SV5"] <- 0
+          }
+          if("RefSig R9" %in% rownames(exposures_RefSigs)){
+            tmp_data_matrix[bootstrap_samples,"SV5"] <- tmp_data_matrix[bootstrap_samples,"SV5"] + exposures_RefSigs["RefSig R9",bootstrap_samples]
+          }
+          
+          
+          hrdetect_bootstrap_table[[j]] <- t(applyHRDetectDavies2017(data_matrix = tmp_data_matrix,attachContributions = FALSE))
+        }
+        
+        hrdetect_bootstrap_table <- do.call(rbind,hrdetect_bootstrap_table)
+        rownames(hrdetect_bootstrap_table) <- 1:nrow(hrdetect_bootstrap_table)
+        q_5_50_95 <- t(apply(hrdetect_bootstrap_table,2,function(x) quantile(x,c(0.05,0.5,0.95))))
+        
+        message("[info HRDetect_pipeline] HRDetect with bootstrap successful!")
+        
+      }else{
+        message("[info HRDetect_pipeline] Not enough data to run HRDetect boostrap scores.")
+      }
+    }
+    
     message("[info HRDetect_pipeline] HRDetect pipeline completed!")
   }else{
-    message("[info HRDetect_pipeline] Impossible to compute HRDetect score for the samples in data_matrix, as no sample seems to have all the necessary data. Check output $data_matrix to see what has been computed with the data provided.")
+    message("[info HRDetect_pipeline] Impossible to compute any HRDetect score, as no sample seems to have all the necessary data. Check output $data_matrix to see what has been computed with the data provided.")
     hrdetect_output <- NULL
   }
   
@@ -478,6 +586,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res$bootstrap_fit_subs <- bootstrap_fit_subs
   res$bootstrap_fit_rearr <- bootstrap_fit_rearr
   res$indels_classification_table <- indels_classification_table
+  res$hrdetect_bootstrap_table <- hrdetect_bootstrap_table
+  res$q_5_50_95 <- q_5_50_95
   return(res)
   
 }

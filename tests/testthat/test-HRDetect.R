@@ -100,3 +100,99 @@ test_that("test HRDetect_pipeline() runs correctly on one sample with Breast sig
   expect_true(TRUE)
   
 })
+
+
+test_that("test HRDetect_pipeline() runs correctly on two samples with Breast signatures and no data_matrix provided.", {
+  
+  sample_names <- c("test_hrdetect_1","test_hrdetect_2")
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                        "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  res <- HRDetect_pipeline(genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "Breast",
+                           nparallel = 2)
+  #if no error happen this code can be reached
+  expect_true(TRUE)
+  
+})
+
+test_that("test HRDetect_pipeline() runs correctly on one sample with Breast signatures and no data_matrix provided and with bootstrap.", {
+  
+  sample_names <- c("test_hrdetect_1")
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  res <- HRDetect_pipeline(genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "Breast",
+                           bootstrap_scores = TRUE,
+                           nparallel = 1)
+  
+  #if no error happen this code can be reached
+  expect_true(nrow(res$q_5_50_95)==1)
+  
+})
+
+test_that("test HRDetect_pipeline() runs correctly on two samples with Breast signatures and no data_matrix provided and with bootstrap.", {
+  
+  sample_names <- c("test_hrdetect_1","test_hrdetect_2")
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                        "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  res <- HRDetect_pipeline(genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "Breast",
+                           bootstrap_scores = TRUE,
+                           nparallel = 2)
+  #if no error happen this code can be reached
+  expect_true(nrow(res$q_5_50_95)==2)
+  
+})
