@@ -128,47 +128,88 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
 save(hrdet_res,file = paste0(outdir,"/hrdet_res.rData"))
 
 #saving tables
+message("Writing table data_matrix...")
 write.table(hrdet_res$data_matrix,sep = "\t",
             file = paste0(outdir,"/data_matrix.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
+message("Writing table hrdetect_output...")
 write.table(hrdet_res$hrdetect_output,sep = "\t",
             file = paste0(outdir,"/hrdetect_output.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
-if (bootstrap_scores) write.table(hrdet_res$q_5_50_95,sep = "\t",
+if (bootstrap_scores) {
+  message("Writing table hrdetect_output_confidence...")
+  write.table(hrdet_res$q_5_50_95,sep = "\t",
                                   file = paste0(outdir,"/hrdetect_output_confidence.tsv"),
                                   col.names = TRUE,row.names = TRUE,quote = FALSE)
+}
+
+message("Writing SNV and SV catalogues tables...")
 write.table(hrdet_res$SNV_catalogues,sep = "\t",
             file = paste0(outdir,"/SNV_catalogues.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
 write.table(hrdet_res$SV_catalogues,sep = "\t",
             file = paste0(outdir,"/SV_catalogues.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
+
+message("Writing siganture exposure tables...")
 write.table(hrdet_res$exposures_subs,sep = "\t",
             file = paste0(outdir,"/Exposures_subs.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
 write.table(hrdet_res$exposures_rearr,sep = "\t",
             file = paste0(outdir,"/Exposures_rearr.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
+
+message("Writing table indels_classification_table...")
 write.table(hrdet_res$indels_classification_table,sep = "\t",
             file = paste0(outdir,"/indels_classification_table.tsv"),
             col.names = TRUE,row.names = FALSE,quote = FALSE)
 
 #plotting
+message("Plotting HRDetect contributions...")
 plot_HRDLOH_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.jpg"),
                                    HRDLOH_index = hrdet_res$data_matrix[rownames(hrdet_res$hrdetect_output),"del.mh.prop"],
                                    hrdetect_output = hrdet_res$hrdetect_output)
 
+message("Plotting HRDetect overall plot...")
 plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
                       hrdetect_output = hrdet_res$hrdetect_output)
 
-if (bootstrap_scores) plot_HRDetect_BootstrapScores(outdir = outdir,
+if (bootstrap_scores) {
+  message("Plotting HRDetect with Bootstrap...")
+  plot_HRDetect_BootstrapScores(outdir = outdir,
                                                     hrdetect_res = hrdet_res)
+}
 
+message("Plotting Subs and Rearr Signature Fit files...")
 plot_SignatureFit_withBootstrap(outdir = paste0(outdir,"/subsfit/"),
                                 boostrapFit_res = hrdet_res$bootstrap_fit_subs,
                                 type_of_mutations = "subs")
 plot_SignatureFit_withBootstrap(outdir = paste0(outdir,"/rearrfit/"),
                                 boostrapFit_res = hrdet_res$bootstrap_fit_rearr,
                                 type_of_mutations = "rearr")
+
+#genomeplots
+dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)
+for (s in samples) {
+  SNV_vcf_file <- SNV_vcf_files[s]
+  if(!is.null(SNV_vcf_file)){
+    if(is.na(SNV_vcf_files[s])) SNV_vcf_file <- NULL
+  }
+  if(!is.null(SNV_vcf_file)){
+    message("Generating genomeplot for ",s,"...")
+    genomePlot(subsVcf.file = SNV_vcf_file,
+               indelsVcf.file = Indels_vcf_files[s],
+               cnvsTab.file = CNV_tab_files[s],
+               rearrBedpe.file = SV_bedpe_files[s],
+               sampleID = s,
+               genome.v = genomev,
+               out_path = paste0(outdir,"/genomeplots/"))
+  }else{
+    message("Skipping genomeplot for ",s," because of missing SNV VCF file.")
+  }
+}
+message(" ")
+message("Done!")
+message(" ")
 
 q(status = 0,save = "no")
