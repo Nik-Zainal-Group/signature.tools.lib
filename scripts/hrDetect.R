@@ -166,8 +166,7 @@ write.table(hrdet_res$indels_classification_table,sep = "\t",
 
 #plotting
 message("Plotting HRDetect contributions...")
-plot_HRDLOH_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.jpg"),
-                                   HRDLOH_index = hrdet_res$data_matrix[rownames(hrdet_res$hrdetect_output),"del.mh.prop"],
+plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.jpg"),
                                    hrdetect_output = hrdet_res$hrdetect_output)
 
 message("Plotting HRDetect overall plot...")

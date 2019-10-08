@@ -848,3 +848,67 @@ plot_HRDetect_BootstrapScores <- function(outdir,
   dev.off()
   
 }
+
+#' plot_HRDetect_Contributions
+#' 
+#' Function for plotting HRDetect results and contributions to HRDetect score.
+#' 
+#' @param file_name name of the output file (jpg)
+#' @param par_title title of the plot (optional) 
+#' @param hrdetect_output output of HRDetect, containing contributions of each feature
+#' @export
+plot_HRDetect_Contributions <- function(file_name,
+                                                      hrdetect_output,
+                                                      par_title = "HRDetect Score and Contributions"){
+  
+  col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
+  
+  #details plot
+  hrdetect_output <- as.data.frame(hrdetect_output)
+  reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
+  nsamples <- nrow(hrdetect_output)
+  contributions <- hrdetect_output
+  jpeg(filename = file_name,
+       width = max(200+120*nsamples,2400),
+       height = 1200,
+       res = 170)
+  par(mfrow=c(1,1),oma=c(0,0,1,0))
+  mat <- matrix(c(1,2),ncol = 1)
+  layout(mat, c(1), c(0.65,1))
+  
+  par(mar=c(1,6,1,1))
+  barplot(height = hrdetect_output$Probability[reorder],
+          ylim = c(0,1),ylab = "BRCA1/BRCA2\n def. score",
+          names.arg = "",
+          cex.axis = 1.2,
+          cex.lab=1.2,
+          cex.names = 1.5)
+  title(main=paste0(par_title), cex.main=1.6)
+  abline(a=0.7,b=0,col="red")
+  text(x = 0.75*nrow(hrdetect_output),y = 0.77,labels = "classification threshold",col = "red",cex = 1.5)
+  matrix_to_plot <- t(hrdetect_output[reorder,col_needed])
+  
+  par(mar=c(10,6,1,1))
+  barplot(height = matrix_to_plot,
+          beside = TRUE,
+          #names.arg = row.names(hrdetect_res),
+          names.arg = rownames(hrdetect_output)[reorder],
+          las = 3,
+          legend.text = c("deletion with MH",
+                          "Substitution Sig. 3",
+                          "Rearrangement Sig. 3",
+                          "Rearrangement Sig. 5",
+                          "HRD-LOH score",
+                          "Substitution Sig. 8"),
+          args.legend = list(x ='bottom', bty='n', inset=c(0,-1.0),horiz=TRUE,cex=0.9),
+          # ylim = c(min(matrix_to_plot)*1.1,max(matrix_to_plot)*1.1),
+          ylim = c(-3.5,4.5),
+          col=c("blue","red","black","green","orange","yellow"),
+          ylab = "BRCA1/BRCA2\n def. contribution",
+          cex.axis = 1.2,
+          cex.lab = 1.2,
+          cex.names = 0.8)
+  
+  dev.off()
+}
+
