@@ -820,7 +820,7 @@ plot_HRDetect_BootstrapScores <- function(outdir,
   bootstrap_samples <- rownames(hrdetect_res$q_5_50_95)
   samples_labels <- bootstrap_samples
   
-  if(pwidth==NULL) pwidth <- max(1000,400+120*length(bootstrap_samples))
+  if(is.null(pwidth)) pwidth <- max(1000,400+120*length(bootstrap_samples))
   
   o <- order(hrdetect_res$hrdetect_output[bootstrap_samples,"Probability"],decreasing = TRUE)
   jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)

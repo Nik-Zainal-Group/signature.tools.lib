@@ -827,7 +827,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       }else if(type_of_mutations=="rearr"){
         #1 original
         plotRearrSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(12,3,5,2))
-        if(sum(cat[,i,drop=FALSE])>0){
+        if(sum(res$cat[,i,drop=FALSE])>0){
           #2 reconstructed
           plotRearrSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(12,3,5,2))
           #3 difference
@@ -837,7 +837,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       }else if(type_of_mutations=="generic"){
         #1 original
         plotGenericSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
-        if(sum(cat[,i,drop=FALSE])>0){
+        if(sum(res$cat[,i,drop=FALSE])>0){
           #2 reconstructed
           plotGenericSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
