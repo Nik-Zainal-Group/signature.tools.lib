@@ -13,7 +13,7 @@ how_to <- function(){
   message("    -o OUTDIR        Name of the output directory. If omitted a name will be given automatically.")
   message("    -b               Request HRDetect with bootstrap")
   message("    -s SIGTYPE       Either COSMIC or one of the following organs: Biliary, Bladder, Bone_SoftTissue, Breast, Cervix, CNS, Colorectal, Esophagus, Head_neck, Kidney, Liver, Lung, Lymphoid, Ovary, Pancreas, Prostate, Skin, Stomach, Uterus")
-  message("    -e GENOMEV       Indicate the genome version to be used: hg19 or hg38")
+  message("    -e GENOMEV       Indicate the genome version to be used: hg19, hg38 or mm10")
   message("    -n NPARALLEL     Number of parallel CPUs to be used")
   message("    -h               Show this explanation")
   message(" ")
