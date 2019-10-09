@@ -253,6 +253,8 @@ prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
       
       all_catalogues <- cbind(all_catalogues,rearr.catalogue)
     }
+  }else{
+    all_catalogues <- as.data.frame(matrix(0,nrow = length(catalogue.labels),ncol = 1))
   }
   all_catalogues
 }
