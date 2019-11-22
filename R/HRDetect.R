@@ -513,20 +513,24 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           #sparsity correction 5%
           sel <- t(apply(current_subs,1,function(x) x<sum(x)*0.05))
           current_subs[sel] <- 0
-          #convert to ref sig
-          exposures_RefSigs <- t(as.matrix(current_subs) %*% as.matrix(conversion_matrix_subs[colnames(current_subs),]))
-          exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
-          if("Ref.Sig.3" %in% rownames(exposures_RefSigs)){
-            tmp_data_matrix[bootstrap_samples,"SNV3"] <- exposures_RefSigs["Ref.Sig.3",bootstrap_samples]
+          if(signature_type=="COSMIC"){
+            tmp_data_matrix[bootstrap_samples,"SNV3"] <- current_subs[bootstrap_samples,"Signature.3"]
+            tmp_data_matrix[bootstrap_samples,"SNV8"] <- current_subs[bootstrap_samples,"Signature.8"]
           }else{
-            tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
+            #convert to ref sig
+            exposures_RefSigs <- t(as.matrix(current_subs) %*% as.matrix(conversion_matrix_subs[colnames(current_subs),]))
+            exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
+            if("Ref.Sig.3" %in% rownames(exposures_RefSigs)){
+              tmp_data_matrix[bootstrap_samples,"SNV3"] <- exposures_RefSigs["Ref.Sig.3",bootstrap_samples]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
+            }
+            if("Ref.Sig.8" %in% rownames(exposures_RefSigs)){
+              tmp_data_matrix[bootstrap_samples,"SNV8"] <- exposures_RefSigs["Ref.Sig.8",bootstrap_samples]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
+            }
           }
-          if("Ref.Sig.8" %in% rownames(exposures_RefSigs)){
-            tmp_data_matrix[bootstrap_samples,"SNV8"] <- exposures_RefSigs["Ref.Sig.8",bootstrap_samples]
-          }else{
-            tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
-          }
-          
           #4) sample rearr exposures
           rearr_boots <- bootstrap_fit_rearr$boot_list
           s1 <- sample(length(rearr_boots),size = 1)
@@ -535,23 +539,27 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           #sparsity correction 5%
           sel <- t(apply(current_rearr,1,function(x) x<sum(x)*0.05))
           current_rearr[sel] <- 0
-          #convert to ref sig
-          exposures_RefSigs <- t(as.matrix(current_rearr) %*% as.matrix(conversion_matrix_rearr[colnames(current_rearr),]))
-          exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
-          if("RefSig R3" %in% rownames(exposures_RefSigs)){
-            tmp_data_matrix[bootstrap_samples,"SV3"] <- exposures_RefSigs["RefSig R3",bootstrap_samples]
+          if(signature_type=="COSMIC"){
+            tmp_data_matrix[bootstrap_samples,"SV3"] <- current_rearr[bootstrap_samples,"RS3"]
+            tmp_data_matrix[bootstrap_samples,"SV5"] <- current_rearr[bootstrap_samples,"RS5"]
           }else{
-            tmp_data_matrix[bootstrap_samples,"SV3"] <- 0
+            #convert to ref sig
+            exposures_RefSigs <- t(as.matrix(current_rearr) %*% as.matrix(conversion_matrix_rearr[colnames(current_rearr),]))
+            exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
+            if("RefSig R3" %in% rownames(exposures_RefSigs)){
+              tmp_data_matrix[bootstrap_samples,"SV3"] <- exposures_RefSigs["RefSig R3",bootstrap_samples]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SV3"] <- 0
+            }
+            if("RefSig R5" %in% rownames(exposures_RefSigs)){
+              tmp_data_matrix[bootstrap_samples,"SV5"] <- exposures_RefSigs["RefSig R5",bootstrap_samples]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SV5"] <- 0
+            }
+            if("RefSig R9" %in% rownames(exposures_RefSigs)){
+              tmp_data_matrix[bootstrap_samples,"SV5"] <- tmp_data_matrix[bootstrap_samples,"SV5"] + exposures_RefSigs["RefSig R9",bootstrap_samples]
+            }
           }
-          if("RefSig R5" %in% rownames(exposures_RefSigs)){
-            tmp_data_matrix[bootstrap_samples,"SV5"] <- exposures_RefSigs["RefSig R5",bootstrap_samples]
-          }else{
-            tmp_data_matrix[bootstrap_samples,"SV5"] <- 0
-          }
-          if("RefSig R9" %in% rownames(exposures_RefSigs)){
-            tmp_data_matrix[bootstrap_samples,"SV5"] <- tmp_data_matrix[bootstrap_samples,"SV5"] + exposures_RefSigs["RefSig R9",bootstrap_samples]
-          }
-          
           
           hrdetect_bootstrap_table[[j]] <- t(applyHRDetectDavies2017(data_matrix = tmp_data_matrix,attachContributions = FALSE))
         }
