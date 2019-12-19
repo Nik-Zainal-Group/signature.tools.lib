@@ -13,6 +13,7 @@ how_to <- function(){
   message("    -o OUTDIR        Name of the output directory. If omitted a name will be given automatically.")
   message("    -b               Request HRDetect with bootstrap")
   message("    -s SIGTYPE       Either COSMIC or one of the following organs: Biliary, Bladder, Bone_SoftTissue, Breast, Cervix, CNS, Colorectal, Esophagus, Head_neck, Kidney, Liver, Lung, Lymphoid, Ovary, Pancreas, Prostate, Skin, Stomach, Uterus")
+  message("    -l COSMICLIST    If SIGTYPE is COSMIC, specify a comma separated list of number of cosmic signatures to use, such as: 1,2,5,8,13")
   message("    -e GENOMEV       Indicate the genome version to be used: hg19, hg38 or mm10")
   message("    -n NPARALLEL     Number of parallel CPUs to be used")
   message("    -h               Show this explanation")
@@ -27,6 +28,7 @@ spec = matrix(c(
   'bootstrap',     'b', 0, "logical",
   'outdir',        'o', 1, "character",
   'sigtype',       's', 1, "character",
+  'cosmiclist',    'l', 1, "character",
   'nparallel',     'n', 1, "double",
   'genomev',       'e', 1, "character"
 ), byrow=TRUE, ncol=4)
@@ -57,6 +59,9 @@ if ( is.null(opt$outdir) ) {
 }
 if ( is.null(opt$sigtype) ) { 
   opt$sigtype = "COSMIC"    
+}
+if ( !is.null(opt$cosmiclist) ) {
+  cosmic_siglist <- as.numeric(unlist(strsplit(cosmiclist,split = ",")))
 }
 if ( is.null(opt$nparallel) ) { 
   opt$nparallel = 1   
@@ -122,6 +127,7 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                SV_bedpe_files = SV_bedpe_files,
                                bootstrap_scores = bootstrap_scores,
                                signature_type = signature_type,
+                               cosmic_siglist=cosmic_siglist,
                                nparallel = nparallel)
 
 #save object

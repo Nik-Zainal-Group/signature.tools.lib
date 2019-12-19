@@ -73,6 +73,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
                               signature_type="COSMIC",
+                              cosmic_siglist=NULL,
                               bootstrap_scores=FALSE,
                               nparallel=1){
   #if multiple parallel cores are used, set it here
@@ -114,7 +115,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   
   #use either COSMIC sigs or tissue-specific sigs
   if(signature_type=="COSMIC"){
-    sigstofit_subs <- cosmic30
+    if (is.null(cosmic_siglist)) cosmic_siglist <- 1:30
+    sigstofit_subs <- cosmic30[,cosmic_siglist,drop=FALSE]
     sigstofit_rearr <- RS.Breast560
   }else{
     sigstofit_subs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",signature_type),colnames(all_organ_sigs_subs))]]

@@ -196,3 +196,39 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with Breast si
   expect_true(nrow(res$q_5_50_95)==2)
   
 })
+
+test_that("test HRDetect_pipeline() runs correctly on two samples with subset of COSMIC signatures.", {
+  
+  sample_names <- c("test_hrdetect_1","test_hrdetect_2")
+  col_hrdetect <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
+  data_matrix <- matrix(NA,nrow = length(sample_names),ncol = length(col_hrdetect),dimnames = list(sample_names,col_hrdetect))
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                        "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  res <- HRDetect_pipeline(data_matrix,
+                           genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "COSMIC",
+                           cosmic_siglist = c(1,2,3,8,13),
+                           nparallel = 2)
+  #if no error happen this code can be reached
+  expect_true(TRUE)
+  
+})
