@@ -241,7 +241,17 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       exposures_subs[is.nan(exposures_subs)] <- 0
       
       if(signature_type=="COSMIC"){
-        data_matrix[colnames(exposures_subs),SNV_cols] <- t(exposures_subs[c("Signature.3","Signature.8"),])
+        if("Signature.3" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Signature.3",]
+        }else{
+          data_matrix[colnames(exposures_subs),"SNV3"] <- 0
+        }
+        if("Signature.8" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Signature.8",]
+        }else{
+          data_matrix[colnames(exposures_subs),"SNV8"] <- 0
+        }
+        # data_matrix[colnames(exposures_subs),SNV_cols] <- t(exposures_subs[c("Signature.3","Signature.8"),])
       }else{
         #convert to reference signatures
         exposures_subs <- t(conversion_matrix_subs[colnames(sigstofit_subs),]) %*% exposures_subs
@@ -516,8 +526,16 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           sel <- t(apply(current_subs,1,function(x) x<sum(x)*0.05))
           current_subs[sel] <- 0
           if(signature_type=="COSMIC"){
-            tmp_data_matrix[bootstrap_samples,"SNV3"] <- current_subs[bootstrap_samples,"Signature.3"]
-            tmp_data_matrix[bootstrap_samples,"SNV8"] <- current_subs[bootstrap_samples,"Signature.8"]
+            if("Signature.3" %in% colnames(current_subs)){
+              tmp_data_matrix[bootstrap_samples,"SNV3"] <- current_subs[bootstrap_samples,"Signature.3"]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
+            }
+            if("Signature.8" %in% colnames(current_subs)){
+              tmp_data_matrix[bootstrap_samples,"SNV8"] <- current_subs[bootstrap_samples,"Signature.8"]
+            }else{
+              tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
+            }
           }else{
             #convert to ref sig
             exposures_RefSigs <- t(as.matrix(current_subs) %*% as.matrix(conversion_matrix_subs[colnames(current_subs),]))

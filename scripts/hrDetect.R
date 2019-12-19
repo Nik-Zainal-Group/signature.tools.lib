@@ -61,7 +61,7 @@ if ( is.null(opt$sigtype) ) {
   opt$sigtype = "COSMIC"    
 }
 if ( !is.null(opt$cosmiclist) ) {
-  cosmic_siglist <- as.numeric(unlist(strsplit(cosmiclist,split = ",")))
+  cosmic_siglist <- as.numeric(unlist(strsplit(opt$cosmiclist,split = ",")))
 }
 if ( is.null(opt$nparallel) ) { 
   opt$nparallel = 1   
