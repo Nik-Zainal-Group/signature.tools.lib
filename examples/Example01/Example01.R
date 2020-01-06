@@ -41,7 +41,7 @@ plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output
 sigsToUse <- c(1,2,3,5,6,8,13,17,18,20,26,30)
 subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
                                                     cat = SNV_catalogues,
-                                                    signature_data_matrix = cosmic30[,sigsToUse],
+                                                    signature_data_matrix = COSMIC30_subs_signatures[,sigsToUse],
                                                     type_of_mutations = "subs",
                                                     nboot = 100,nparallel = 4)
 
@@ -68,3 +68,4 @@ res <- HRDetect_pipeline(input_matrix,
 
 #save HRDetect scores
 writeTable(res$hrdetect_output,file = "HRDetect_res.tsv")
+

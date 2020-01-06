@@ -320,7 +320,7 @@ signatures identified in breast cancer.
 sigsToUse <- c(1,2,3,5,6,8,13,17,18,20,26,30)
 subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
                                     cat = SNV_catalogues,
-                                    signature_data_matrix = cosmic30[,sigsToUse],
+                                    signature_data_matrix = COSMIC30_subs_signatures[,sigsToUse],
                                     type_of_mutations = "subs",
                                     nboot = 100,nparallel = 4)
 
