@@ -8,7 +8,8 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
   SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
   Indels_vcf_files = NULL, CNV_tab_files = NULL,
   SV_bedpe_files = NULL, SV_catalogues = NULL,
-  signature_type = "COSMIC", bootstrap_scores = FALSE, nparallel = 1)
+  signature_type = "COSMIC", cosmic_siglist = NULL,
+  bootstrap_scores = FALSE, nparallel = 1)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}

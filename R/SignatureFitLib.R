@@ -355,7 +355,8 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
                                           alpha = alpha,
                                           doRound = doRound,
                                           nparallel = nparallel,
-                                          n_sa_iter = n_sa_iter)
+                                          n_sa_iter = n_sa_iter,
+                                          verbose = FALSE)
     save(file = file_store,res,nboot)
   }
   
@@ -504,6 +505,7 @@ objSimAnnelaingFunction <- function(x, xsample, xsignature){
 
 
 
+#' @export
 plot.exposures <- function(exposures,output_file,dpi=300){
   # library("ggplot2")
   
@@ -513,15 +515,15 @@ plot.exposures <- function(exposures,output_file,dpi=300){
   
   # Create the data frame
   df <- expand.grid(sample.names,signatures.names)
-  df$value <- unlist(exposures)   
-  df$labels <- sprintf("%.2f", df$value)
+  df$value <- unlist(as.data.frame(exposures))   
+  df$labels <- sprintf("%.0f", df$value)
   df$labels[df$value==0] <- ""
   
   #Plot the Data (500+150*nsamples)x1200
   g <- ggplot2::ggplot(df, ggplot2::aes(Var1, Var2)) + ggplot2::geom_point(ggplot2::aes(size = value), colour = "green") + ggplot2::theme_bw() + ggplot2::xlab("") + ggplot2::ylab("")
   g <- g + ggplot2::scale_size_continuous(range=c(0,10)) + ggplot2::geom_text(ggplot2::aes(label = labels))
   g + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, size=14),
-            axis.text.y = ggplot2::element_text(vjust = 1, size=14))
+                     axis.text.y = ggplot2::element_text(vjust = 1, size=14))
   w <- (500+150*length(sample.names))/dpi
   h <- (500+150*length(signatures.names))/dpi
   ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w,limitsize = FALSE)

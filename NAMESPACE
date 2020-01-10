@@ -2,6 +2,7 @@
 
 export(cos.sim)
 export(plot.CosSimSignatures)
+export(plot.exposures)
 export(HRDetect_pipeline)
 export(KLD)
 export(RMSE)
