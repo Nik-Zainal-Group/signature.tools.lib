@@ -345,9 +345,9 @@ RCircos.Heatmap.Plot.my <- function (heatmap.data, data.col, track.num, side, pl
 
         the.start <- start[a.point]
         the.end <- end[a.point]
-        if (is.na(the.start) |  is.na(the.end)) {
-            browser()
-        }
+        #if (is.na(the.start) |  is.na(the.end)) {
+        #    browser()
+        #}
 
       #Catch positions that fall outside a band (eg when using exome ideogram)
       if (is.na(the.start) || (is.na(the.end))) {

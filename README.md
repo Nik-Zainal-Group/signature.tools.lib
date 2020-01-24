@@ -56,6 +56,7 @@ This is the full list of R package dependencies:
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Hsapiens.1000genomes.hs37d5,
     BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome.Cfamiliaris.UCSC.canFam3,
     SummarizedExperiment,
     BiocGenerics,
     GenomeInfoDb,

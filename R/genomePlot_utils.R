@@ -61,6 +61,8 @@ if(genome.v=="hg19"){
   expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
 }else if(genome.v=="mm10"){
    expected_chroms <- paste0(c(seq(1:19),"X","Y")) 
+}else if (genome.v=="canFam3"){
+   expected_chroms <- paste0("chr",c(seq(1:38),"X"))  
 }
 
 # read only chr seqnames from VCF, not contigs
@@ -322,42 +324,44 @@ getMutTablesTab <- function(SUBS.PATH, onlyPASSED=FALSE, genomeSeq=Hsapiens, add
 read.ascat <- function(FILE.CN) 
 {
     #first row
-    firstline <- read.table(text=gsub(",", "\t",readLines(FILE.CN,n = 1)),header=FALSE, sep='\t',nrows = 1,stringsAsFactors = FALSE)
+    firstline <- tryCatch(read.table(text=gsub(",", "\t",readLines(FILE.CN,n = 1)),header=FALSE, sep='\t',nrows = 1,stringsAsFactors = FALSE), error=function(e) NULL)
     if(typeof(firstline[1,1])=="integer"){
       #no header used
-  	  cv.data <- read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=FALSE, sep='\t',stringsAsFactors = FALSE) # ASCAT
+  	  cv.data <- tryCatch(read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=FALSE, sep='\t',stringsAsFactors = FALSE), error=function(e) NULL) # ASCAT
   	  names(cv.data) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')
     }else{
       #assume there is an appropriate header
-      cv.data <- read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=TRUE, sep='\t',stringsAsFactors = FALSE) # CN
+      cv.data <- tryCatch(read.table(text = gsub(",", "\t", readLines(FILE.CN)),header=TRUE, sep='\t',stringsAsFactors = FALSE), error=function(e) NULL) # CN
     }
     cat( paste( dim(cv.data)[1], ' copy-number segments \n'))
-    cv.data$seg_no <- NULL
-    cv.data$Chromosome <- as.character(cv.data$Chromosome)
-    cv.data$Chromosome[cv.data$Chromosome=='23'] <- 'X'
-    cv.data$Chromosome[cv.data$Chromosome=='24'] <- 'Y'
-       
-    cv.data$major.copy.number.inTumour <- cv.data$total.copy.number.inTumour - cv.data$minor.copy.number.inTumour
-    
-    
-    cv.data$major.copy.number.inTumour.temp <- pmax(cv.data$major.copy.number.inTumour, cv.data$minor.copy.number.inTumour)
-    cv.data$minor.copy.number.inTumour.temp <- pmin(cv.data$major.copy.number.inTumour, cv.data$minor.copy.number.inTumour)
-    
-    cv.data$major.copy.number.inTumour <- cv.data$major.copy.number.inTumour.temp
-    cv.data$minor.copy.number.inTumour <- cv.data$minor.copy.number.inTumour.temp
 
-    cv.data
+    if (!is.null(cv.data) && !inherits(cv.data, "try-error")) {
+        cv.data$seg_no <- NULL
+        cv.data$Chromosome <- as.character(cv.data$Chromosome)
+        #cv.data$Chromosome[cv.data$Chromosome=='23'] <- 'X'
+        #cv.data$Chromosome[cv.data$Chromosome=='24'] <- 'Y'    
+        cv.data$major.copy.number.inTumour <- cv.data$total.copy.number.inTumour - cv.data$minor.copy.number.inTumour
+        cv.data$major.copy.number.inTumour.temp <- pmax(cv.data$major.copy.number.inTumour, cv.data$minor.copy.number.inTumour)
+        cv.data$minor.copy.number.inTumour.temp <- pmin(cv.data$major.copy.number.inTumour, cv.data$minor.copy.number.inTumour)
+        
+        cv.data$major.copy.number.inTumour <- cv.data$major.copy.number.inTumour.temp
+        cv.data$minor.copy.number.inTumour <- cv.data$minor.copy.number.inTumour.temp
+        return(cv.data)
+    } else {
+        return(data.frame())
+    }    
+
 }
 
 
 read.brassII <- function(FILE.REARR) 
 {
-    rearrs <- try(suppressWarnings(read.table(FILE.REARR, header=FALSE, sep='\t')))
+    rearrs <- tryCatch(suppressWarnings(read.table(FILE.REARR, header=FALSE, sep='\t')), error=function(e) NULL)
     if (!inherits(rearrs, "try-error")) {
         rearrs$V1 <- as.character(rearrs$V1 )
         rearrs$V5 <- as.character(rearrs$V5 )
-        rearrs$V1 [rearrs$V1=='23'] <- 'X'
-        rearrs$V5[rearrs$V5=='24'] <- 'Y'
+        #rearrs$V1 [rearrs$V1=='23'] <- 'X'
+        #rearrs$V5[rearrs$V5=='24'] <- 'Y'
         cat(paste( dim(rearrs)[1], ' rearrs \n'))
         
         pf <- rep(4,nrow(rearrs))
@@ -377,15 +381,16 @@ read.brassII <- function(FILE.REARR)
 
 read.brass.bedpe <- function(FILE.REARR, onlyAssembled = TRUE) 
 {
-    rearrs <- try(read.table(gzfile(FILE.REARR), header=TRUE, sep='\t',  comment.char = ''))
-    names(rearrs)[1] <- 'chr1'
-    names(rearrs)[2] <- 'start1'
-    names(rearrs)[3] <- 'end1'
-    names(rearrs)[4] <- 'chr2'
-    names(rearrs)[5] <- 'start2'
-    names(rearrs)[6] <- 'end2'
+    rearrs <- tryCatch(read.table(gzfile(FILE.REARR), header=TRUE, sep='\t',  comment.char = ''), error=function(e) NULL)
 
-    if (!inherits(rearrs, "try-error")) {
+    if (!is.null(rearrs) && !inherits(rearrs, "try-error")) {
+        names(rearrs)[1] <- 'chr1'
+        names(rearrs)[2] <- 'start1'
+        names(rearrs)[3] <- 'end1'
+        names(rearrs)[4] <- 'chr2'
+        names(rearrs)[5] <- 'start2'
+        names(rearrs)[6] <- 'end2'
+
         rearrs$chr1 <- as.character(rearrs$chr1)
         rearrs$chr2 <- as.character(rearrs$chr2)
 
@@ -438,12 +443,12 @@ read.brass.bedpe <- function(FILE.REARR, onlyAssembled = TRUE)
 read.brassII <- function(FILE.REARR) {
 
 
-    rearrs <- try(suppressWarnings(read.table(FILE.REARR, header=FALSE, sep='\t')))
+    rearrs <- tryCatch(suppressWarnings(read.table(FILE.REARR, header=FALSE, sep='\t')), error=function(e) NULL)
     if (!inherits(rearrs, "try-error")) {
         rearrs$V1 <- as.character(rearrs$V1 )
         rearrs$V5 <- as.character(rearrs$V5 )
-        rearrs$V1 [rearrs$V1=='23'] <- 'X'
-        rearrs$V5[rearrs$V5=='24'] <- 'Y'
+        #rearrs$V1 [rearrs$V1=='23'] <- 'X'
+        #rearrs$V5[rearrs$V5=='24'] <- 'Y'
         cat(paste( dim(rearrs)[1], ' rearrs \n'))
         
         pf <- rep(4,nrow(rearrs))

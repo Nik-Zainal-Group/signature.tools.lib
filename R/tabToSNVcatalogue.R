@@ -4,7 +4,7 @@
 #' Convert a data frame containing SNV, possibly loaded from a tab seperated text file, to SNV 96 channel trinuclotide context catalogue. The data frame should containt the SNV of a single sample, and the following minimal columns: chr, position, REF, ALT.
 #' 
 #' @param subs data frame with subs from a single sample and the following minimal columns: chr, position, REF, ALT.
-#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38), "hg19" (will load BSgenome.Hsapiens.UCSC.hg19) or mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10)
+#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.NCBI.GRCh38), "hg19" (will load BSgenome.Hsapiens.UCSC.hg19), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
 #' @return returns the SNV catalogue for the given sample
 #' @keywords tab SNV
 #' @export
@@ -19,6 +19,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }else if(genome.v=="mm10"){
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+  }else if(genome.v=="canFam3"){
+    genomeSeq <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
   }
   
   # plots mutation-context for all variants in the vcf file
@@ -54,6 +56,8 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
     expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
   }else if (genome.v=="mm10"){
     expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
+  }else if (genome.v=="canFam3"){
+    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
   }
   
   # if (length(intersect(subs$chr,expected_chroms))==0) {

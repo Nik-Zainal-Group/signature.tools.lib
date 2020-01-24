@@ -116,7 +116,7 @@ set.plot.params <- function(colour.scheme = "ascat"){
 #' @param cnvsTab.file CNV TAB file (similar to ASCAT format). The file should be tab separated and contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param rearrBedpe.file SV (Rearrangements) BEDPE file. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The file should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes).
 #' @param sampleID Name of the sample.
-#' @param genome.v set genome version: hg19, hg38 or mm10.
+#' @param genome.v set genome version: hg19, hg38, mm10 or canFam3.
 #' @param file.ideogram name of the file that contain a user defined genome ideogram. Leave to NULL to load appropriate ideogram according to genome version.
 #' @param plot_title title of the plot.
 #' @param no_copynumber set to TRUE to disable plotting of copy number data
@@ -142,6 +142,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     "hg19" = BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5,
     "hg38" = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38,
     "mm10" = BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10,
+    "canFam3" = BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
     #"rn4"  = "BSgenome.Rnorvegicus.UCSC.rn4"
   )
 
@@ -149,6 +150,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     "hg19" = "UCSC.HG19.Human.CytoBandIdeogram",
     "hg38" = "UCSC.HG38.Human.CytoBandIdeogram",
     "mm10" = "UCSC.Mouse.GRCm38.CytoBandIdeogram",
+    "canFam3" = "NA"
     #"rn4"  = "UCSC.Baylor.3.4.Rat.cytoBandIdeogram"
   )
 
@@ -217,7 +219,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   rearrs.formatted <- data.frame()
   if (!no_rearrangements) {
     rearrs.formatted <- read.brass.bedpe(rearrBedpe.file, onlyAssembled = rearr_only_assembled)
-    if(nrow(rearrs.formatted)==0){
+    if(is.null(rearrs.formatted) || nrow(rearrs.formatted)==0){
       no_rearrangements <- TRUE
     }else{
       if (genome.v=="hg19" || genome.v=="mm10") {
@@ -269,7 +271,9 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   #Skip if no copynumber was requested
   if (!no_copynumber) {
     cv.data <- read.ascat(cnvsTab.file)
-    if (genome.v=="hg19" || genome.v=="mm10") {
+    if(is.null(cv.data) || nrow(cv.data)==0){
+      no_copynumber <- TRUE
+    } else if (genome.v=="hg19" || genome.v=="mm10" || genome.v=="canFam3") {
       cv.data$Chromosome <- paste('chr', cv.data$Chromosome,sep='')
     }
   }
@@ -346,9 +350,6 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   params$tile.color <- 'darkgreen'
   RCircos.Reset.Plot.Parameters(params)
 
-  op <- par(lwd = 0.1)     
-  # square plotting region,
-  # independent of device size
   if (exists("ins.formatted") && nrow(ins.formatted)>0) {
       my.RCircos.Tile.Plot(tile.data=ins.formatted, track.num=5, side="in");
   }
@@ -360,9 +361,6 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
       my.RCircos.Tile.Plot(tile.data=dels.formatted, track.num=6, side="in", tile.colors=tile.cols);
   }
   cat('indels plotted \n')
-
-  ## At end of plotting, reset to previous settings:
-  par(op)
 
   # copy number
   if (exists('cv.data') && (nrow(cv.data)>0)) {
@@ -380,8 +378,8 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     heatmap.ranges.minor <-params.my$heatmap.ranges.loh
     heatmap.color.minor <-params.my$heatmap.color.loh
     heatmap.data.col.minor <-params.my$heatmap.data.col.loh
-
     RCircos.Heatmap.Plot.my(heatmap.data=cv.data, data.col=heatmap.data.col.minor, track.num=8, side="in", heatmap.ranges=heatmap.ranges.minor , heatmap.color=heatmap.color.minor ); # minor copy number
+    
   }
 
   cat('copy number plotted \n')
@@ -402,6 +400,12 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
       cat('rearrangements plotted \n')
     }
   }
+
+  op <- par(lwd = 0.1)     
+  # square plotting region,
+  # independent of device size
+  ## At end of plotting, reset to previous settings:
+  par(op)
 
   # side plots
   margins <- 0.25

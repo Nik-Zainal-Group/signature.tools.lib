@@ -5,7 +5,7 @@
 #' 
 #' @param indelsVCF.file path to input VCF (file must be tabix indexed). This file should have been already filtered for the final indels sets to be used in the analysis. 
 #' @param sampleID name of the sample
-#' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19", "hg38" or "mm10"
+#' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19", "hg38", "mm10" or "canFam3"
 #' @return the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion
 #' @export
 #' @examples 
@@ -21,6 +21,9 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   }else if(genome.v=="mm10"){
     expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+  }else if(genome.v=="canFam3"){
+    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
+    genomeSeq <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
   }
 
   # read only chr seqnames from VCF, not contigs
