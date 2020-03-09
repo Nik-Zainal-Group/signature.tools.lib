@@ -269,22 +269,14 @@ library(signature.tools.lib)
 sample_names <- c("sample1","sample2")
 
 #set the file names. 
-SNV_tab_files <-
-c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
-                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2
-.snv.simple.txt")
-SV_bedpe_files <-
-c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.sv.bedpe",
-                    "../../tests/testthat/test_hrdetect_2/
-test_hrdetect_2.sv.bedpe")
-Indels_vcf_files <-
-c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
-                      "../../tests/testthat/test_hrdetect_2/
-test_hrdetect_2.indel.vcf.gz")
-CNV_tab_files <-
-c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.cna.txt",
-                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2
-.cna.txt")
+SNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+SV_bedpe_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                    "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+Indels_vcf_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                      "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+CNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.cna.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.cna.txt")
 
 #name the vectors entries with the sample names
 names(SNV_tab_files) <- sample_names
@@ -418,14 +410,14 @@ In general, a more advanced way to do this, whichever signatures you choose to f
 
 During the investigation of Signature Extraction methods, we have defined multiple useful metrics. Some of these were not reported in the Nature Cancer paper, as we did not find them essential. The metrics are:
 
-- norm.Error: this is the normlised average error between the model and the bootstrapped catalogue. This error is always decreasing as the number of signatures extracted increases.
-- norm.Error (orig. cat.): this is the normalised average error between the modela and the original catalogue. This error will eventually increase when the number of signatures used is too large, as the algorithm overfits the bootstrapped catalogues.
-- Ave.SilWid: this is the average silhouette width, which indicates a good the clustering is. The value will be affected by the clustering algorithm used. The Ave.SilWid will begin decreasing when highly similar signatures are extracted, possibly indicating that one is trying to use more signatures than there are actually present in the data.
-- mmcs: minimum medoid cosine similarity. This indicates the cosine similarity between the two most similar medoids of the clusters. This is in fact the similarity of the two most similar signatures. 
-- min.Min.WCCS: minimum of the minimum within cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of each cluster, and for each cluster we report the minimum cosine similarity. Finally we report the minimum of the minimum cosine similarities, which indicates how different the signatures can be in the least homogeneous (most spread) cluster. This value becomes low when at least one cluster is beginning to include very different signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
-- max.Max.BCCS: maximum of the maximum between cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of different clusters, and for each cluster pairs we report the maximum cosine similarity. Finally we report the maximum of the maximum cosine similarities, which indicates how similar the signatures can be when they belong to different clusters. This value becomes high when two clusters are beginning to include very similar signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
+- **norm.Error**: this is the normlised average error between the model and the bootstrapped catalogue. This error is always decreasing as the number of signatures extracted increases.
+- **norm.Error (orig. cat.)**: this is the normalised average error between the modela and the original catalogue. This error will eventually increase when the number of signatures used is too large, as the algorithm overfits the bootstrapped catalogues.
+- **Ave.SilWid**: this is the average silhouette width, which indicates a good the clustering is. The value will be affected by the clustering algorithm used. The Ave.SilWid will begin decreasing when highly similar signatures are extracted, possibly indicating that one is trying to use more signatures than there are actually present in the data.
+- **mmcs**: minimum medoid cosine similarity. This indicates the cosine similarity between the two most similar medoids of the clusters. This is in fact the similarity of the two most similar signatures. 
+- **min.Min.WCCS**: minimum of the minimum within cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of each cluster, and for each cluster we report the minimum cosine similarity. Finally we report the minimum of the minimum cosine similarities, which indicates how different the signatures can be in the least homogeneous (most spread) cluster. This value becomes low when at least one cluster is beginning to include very different signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
+- **max.Max.BCCS**: maximum of the maximum between cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of different clusters, and for each cluster pairs we report the maximum cosine similarity. Finally we report the maximum of the maximum cosine similarities, which indicates how similar the signatures can be when they belong to different clusters. This value becomes high when two clusters are beginning to include very similar signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
 
-While it can be interesting to look at all these metrics, we reccommend to mostly use *norm.Error (orig. cat.)* and *Ave.SilWid*, using a suitable number of bootstraps and repeats and with the Clustering with Matching (MC) clustering algorithm, as described in our Nature cancer paper.
+While it can be interesting to look at all these metrics, we reccommend to mostly use **norm.Error (orig. cat.)** and **Ave.SilWid**, using a suitable number of bootstraps and repeats and with the Clustering with Matching (MC) clustering algorithm, as described in our Nature cancer paper.
 
 **What parameters should I use for signature extraction?**
 
