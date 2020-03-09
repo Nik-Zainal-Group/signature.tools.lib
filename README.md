@@ -3,6 +3,7 @@
 ## Table of content
 
 - [Introduction to the package](#intro)
+- [How to cite us](#cite)
 - [Systems Requirements](#req)
 - [Testing the package](#test)
 - [How to use this package](#howtouse)
@@ -28,6 +29,17 @@ The package supports hg19 and hg38 as well as mm10. It provides our
 latest algorithms for signature fit and extraction, as well as various
 utility functions and the HRDetect pipeline. The list and description of
 these functions is given below.
+
+
+## How to cite us
+
+<a name="cite"/>
+
+I you are using this package please cite:
+
+A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies**, *Nature Cancer*, [https://doi.org/10.1038/s43018-020-0027-5], 2020.
+
+In this publication will find a lot of useful information to help you to understand how to use this package.
 
 <a name="req"/>
 
@@ -384,7 +396,7 @@ in the ```Example01``` directory.
 
 <a name="faq"/>
 
-**Hi, in R/HRDetect.R, the function applyHRDetectDavies2017 seems to have mean/sd values hardcoded for each input feature. This results in input data not being standardized to mean=0/sd=1. Is this intentional?
+**In R/HRDetect.R, the function applyHRDetectDavies2017 seems to have mean/sd values hardcoded for each input feature. This results in input data not being standardized to mean=0/sd=1. Is this intentional?
 I'm assuming these values come from the results for the 371 samples in the 2017 paper?**
 
 Yes it is intentional. In order for the parameters of the linear model to be meaningful the new input data has to be processed in the same way as the training data, which means that the same mean and sd of the training data should be provided. Please check the R documentation of the function for the details of how to input your data.
@@ -393,5 +405,38 @@ Yes it is intentional. In order for the parameters of the linear model to be mea
 
 Before running HRDetect we make sure that the data is of a good quality and try to reduce artefacts and other false positives. We mostly worked with Sanger cgp pipeline, and also adapted output from other pipelines sometimes with filters to get the same level of specificity, and found that HRDetect is quite robust.
 What I mean is that rather than retraining HRDetect for different pipelines, we usually prefer to work on the pipeline until we are happy with the calls.
-I can advise to have a look at samples in the same tumour type from highly curated resources like PCAWG. You can browse some at signal.mutationalsignatures.com.
+I can advise to have a look at samples in the same tumour type from highly curated resources like PCAWG. You can browse some at [signal.mutationalsignatures.com].
 
+**Should I use COSMIC signatures or Tissue Specific signatures with my data? Which will give more accurate signature assignment?**
+
+In general we expect tissue specific signatures to be more accurate, though for now in practice it depends on tumour types.
+We performed signature extraction in each organ to get the organ specific signatures, which you can also find here [https://signal.mutationalsignatures.com/]. Some of the tumour types have more reliable signatures than others (e.g. due to sample size, number of signatures present, similarity between signatures present...). Just double check on signal that you are happy with the signatures (both subs and rearr) of your cancer type. We plan to update these signatures as we get more samples, hopefully making them more reliable with the time.
+If you choose to use the COSMIC signatures, that can also be fine, though we do not advise fitting all 30 (or 60 with the new PCAWG paper) subs signatures at the same time. It is better to try to find which COSMIC signatures to expect in your tumour type. A disadvantage of using the COSMIC option in the signature_type, is that there is no equivalent of COSMIC for rearrangement signatures, so only the rearrangement signatures from the 560 breast cancer paper are used.
+In general, a more advanced way to do this, whichever signatures you choose to fit, would be to check whether your fitted model looks like the data (for example using the ```SignatureFit_withBootstrap_Analysis(...)``` function, which generates a detailed plot for each sample). The difference between model and data can give you a clue of other signatures that should be added in the fitting (if any). Also, if you are unsure whether a signature is really there or not, then you can try to refit without that signature and see if the similarity between model and data is reduced significantly and whether a pattern similar to the removed signature appears in the difference plot.
+
+**How do I interpret the Overall Metrics plot that I obtain from SignatureExtraction? What are all these metrics?
+
+During the investigation of Signature Extraction methods, we have defined multiple useful metrics. Some of these were not reported in the Nature Cancer paper, as we did not find them essential. The metrics are:
+
+- norm.Error: this is the normlised average error between the model and the bootstrapped catalogue. This error is always decreasing as the number of signatures extracted increases.
+- norm.Error (orig. cat.): this is the normalised average error between the modela and the original catalogue. This error will eventually increase when the number of signatures used is too large, as the algorithm overfits the bootstrapped catalogues.
+- Ave.SilWid: this is the average silhouette width, which indicates a good the clustering is. The value will be affected by the clustering algorithm used. The Ave.SilWid will begin decreasing when highly similar signatures are extracted, possibly indicating that one is trying to use more signatures than there are actually present in the data.
+- mmcs: minimum medoid cosine similarity. This indicates the cosine similarity between the two most similar medoids of the clusters. This is in fact the similarity of the two most similar signatures. 
+- min.Min.WCCS: minimum of the minimum within cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of each cluster, and for each cluster we report the minimum cosine similarity. Finally we report the minimum of the minimum cosine similarities, which indicates how different the signatures can be in the least homogeneous (most spread) cluster. This value becomes low when at least one cluster is beginning to include very different signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
+- max.Max.BCCS: maximum of the maximum between cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of different clusters, and for each cluster pairs we report the maximum cosine similarity. Finally we report the maximum of the maximum cosine similarities, which indicates how similar the signatures can be when they belong to different clusters. This value becomes high when two clusters are beginning to include very similar signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
+
+While it can be interesting to look at all these metrics, we reccommend to mostly use *norm.Error (orig. cat.)* and *Ave.SilWid*, using a suitable number of bootstraps and repeats and with the Clustering with Matching (MC) clustering algorithm, as described in our Nature cancer paper.
+
+**What parameters should I use for signature extraction?**
+
+It depends on how many samples you have, with more samples requiring more repeats. In general, we advise to use 20 bootstraps, 200 repeats, the clustering with matching algorithm (CM), the KLD objective function (nmfmethod brunet) and RTOL=0.001. The number of repeats (nrepeats) is more important than the number of bootstraps, because at least 100 repeats are necessary to obtain enough results to then select best runs using the RTOL threshold (Extended Data Figure 1 of our Nature Cancer paper). The disadvantage of this method is that this can increase the computation time required significantly if one uses more than 500/1000 samples. 
+
+**Where do I find the activity (exposures) matrix after running the signature extraction?**
+
+We do not report the activity matrix from the extraction, only the
+signatures. We then use a signature fit procedure (described in the Nature Cancer paper, here ```SignatureFit_withBootstrap````)
+to estimate the activities. We tend to think of the estimation of the
+activities as a separate procedure, performed holding a given set of a
+priori signatures fixed. This allows for more playing around with the
+signature fit, for example excluding clear false positive signatures from
+the fit.
