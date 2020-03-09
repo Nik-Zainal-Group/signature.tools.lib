@@ -11,7 +11,7 @@
 - [Examples](#examples)
   - [Test examples](#examplestests)
   - [Example 01](#examplese01)
-
+- [Frequently Asked Questions](#faq)
 
 <a name="intro"/>
 
@@ -377,4 +377,21 @@ writeTable(res$hrdetect_output,file = "HRDetect_res.tsv")
 
 Also in this case, you can compare your output with the expected output
 in the ```Example01``` directory.
+
+
+
+## Frequently Asked Questions
+
+<a name="faq"/>
+
+**Hi, in R/HRDetect.R, the function applyHRDetectDavies2017 seems to have mean/sd values hardcoded for each input feature. This results in input data not being standardized to mean=0/sd=1. Is this intentional?
+I'm assuming these values come from the results for the 371 samples in the 2017 paper?**
+
+Yes it is intentional. In order for the parameters of the linear model to be meaningful the new input data has to be processed in the same way as the training data, which means that the same mean and sd of the training data should be provided. Please check the R documentation of the function for the details of how to input your data.
+
+**We have a set of samples from non-BRCA cancers, sequenced on a Novaseq, and aligned/called through our in-house pipeline. Are these differences in sequencing/processing large enough to render the parameters of the HRDetect model meaningless?**
+
+Before running HRDetect we make sure that the data is of a good quality and try to reduce artefacts and other false positives. We mostly worked with Sanger cgp pipeline, and also adapted output from other pipelines sometimes with filters to get the same level of specificity, and found that HRDetect is quite robust.
+What I mean is that rather than retraining HRDetect for different pipelines, we usually prefer to work on the pipeline until we are happy with the calls.
+I can advise to have a look at samples in the same tumour type from highly curated resources like PCAWG. You can browse some at signal.mutationalsignatures.com.
 
