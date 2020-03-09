@@ -35,11 +35,11 @@ these functions is given below.
 
 <a name="cite"/>
 
-I you are using this package please cite:
+If you are using this package please cite:
 
 A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies**, *Nature Cancer*, [https://doi.org/10.1038/s43018-020-0027-5], 2020.
 
-In this publication will find a lot of useful information to help you to understand how to use this package.
+In this publication you will find a lot of useful information for using this package.
 
 <a name="req"/>
 
@@ -405,16 +405,16 @@ Yes it is intentional. In order for the parameters of the linear model to be mea
 
 Before running HRDetect we make sure that the data is of a good quality and try to reduce artefacts and other false positives. We mostly worked with Sanger cgp pipeline, and also adapted output from other pipelines sometimes with filters to get the same level of specificity, and found that HRDetect is quite robust.
 What I mean is that rather than retraining HRDetect for different pipelines, we usually prefer to work on the pipeline until we are happy with the calls.
-I can advise to have a look at samples in the same tumour type from highly curated resources like PCAWG. You can browse some at [signal.mutationalsignatures.com].
+I can advise to have a look at samples in the same tumour type from highly curated resources like PCAWG. You can browse some at https://signal.mutationalsignatures.com.
 
 **Should I use COSMIC signatures or Tissue Specific signatures with my data? Which will give more accurate signature assignment?**
 
 In general we expect tissue specific signatures to be more accurate, though for now in practice it depends on tumour types.
-We performed signature extraction in each organ to get the organ specific signatures, which you can also find here [https://signal.mutationalsignatures.com/]. Some of the tumour types have more reliable signatures than others (e.g. due to sample size, number of signatures present, similarity between signatures present...). Just double check on signal that you are happy with the signatures (both subs and rearr) of your cancer type. We plan to update these signatures as we get more samples, hopefully making them more reliable with the time.
+We performed signature extraction in each organ to get the organ specific signatures, which you can also find here https://signal.mutationalsignatures.com/. Some of the tumour types have more reliable signatures than others (e.g. due to sample size, number of signatures present, similarity between signatures present...). Please double check on SIGNAL that you are happy with the signatures (both substitution and rearrarangement) of your cancer type. We plan to update these signatures as we get more samples, hopefully making them more reliable with the time.
 If you choose to use the COSMIC signatures, that can also be fine, though we do not advise fitting all 30 (or 60 with the new PCAWG paper) subs signatures at the same time. It is better to try to find which COSMIC signatures to expect in your tumour type. A disadvantage of using the COSMIC option in the signature_type, is that there is no equivalent of COSMIC for rearrangement signatures, so only the rearrangement signatures from the 560 breast cancer paper are used.
 In general, a more advanced way to do this, whichever signatures you choose to fit, would be to check whether your fitted model looks like the data (for example using the ```SignatureFit_withBootstrap_Analysis(...)``` function, which generates a detailed plot for each sample). The difference between model and data can give you a clue of other signatures that should be added in the fitting (if any). Also, if you are unsure whether a signature is really there or not, then you can try to refit without that signature and see if the similarity between model and data is reduced significantly and whether a pattern similar to the removed signature appears in the difference plot.
 
-**How do I interpret the Overall Metrics plot that I obtain from SignatureExtraction? What are all these metrics?
+**How do I interpret the Overall Metrics plot that I obtain from SignatureExtraction? What are all these metrics?**
 
 During the investigation of Signature Extraction methods, we have defined multiple useful metrics. Some of these were not reported in the Nature Cancer paper, as we did not find them essential. The metrics are:
 
@@ -434,7 +434,7 @@ It depends on how many samples you have, with more samples requiring more repeat
 **Where do I find the activity (exposures) matrix after running the signature extraction?**
 
 We do not report the activity matrix from the extraction, only the
-signatures. We then use a signature fit procedure (described in the Nature Cancer paper, here ```SignatureFit_withBootstrap````)
+signatures. We then use a signature fit procedure (described in the Nature Cancer paper, here ```SignatureFit_withBootstrap```)
 to estimate the activities. We tend to think of the estimation of the
 activities as a separate procedure, performed holding a given set of a
 priori signatures fixed. This allows for more playing around with the
