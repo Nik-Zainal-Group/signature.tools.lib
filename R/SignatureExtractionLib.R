@@ -8,6 +8,7 @@
 #' Perform signature extraction, by applying NMF to the input matrix. Multiple NMF runs and bootstrapping is used for robustness, followed by clustering of the solutions. A range of number of signatures to be used is required.
 #' 
 #' @param cat matrix with samples as columns and channels as rows
+#' @param matrix_of_fixed_signatures matrix with known signatures as columns and channels as rows. Used for partial extraction with NNLM package, with Lee KLD (brunet) only. If NULL, NMF package is used instead and different nmf methods can be used.
 #' @param outFilePath path were the extraction output files should go. Remember to add "/" at the end of the path
 #' @param blacklist list of samples (column names) to ignore
 #' @param nrepeats how many runs for each bootstrap (if filterBestOfEachBootstrap=TRUE with default params, only at most 10 runs within 0.1 percent of best will be considered, so nrepeats should be at least 10)
@@ -51,6 +52,7 @@
 #'                       nmfmethod = "brunet")
 SignatureExtraction <- function(cat, #matrix with samples as columns and channels as rows.
                                 outFilePath, #path were the extraction output files should go. Remember to add "/" at the end of the path
+                                matrix_of_fixed_signatures=NULL, #matrix with known signatures as columns and channels as rows.
                                 blacklist=c(), #list of samples (column names) to ignore
                                 nrepeats=10, #how many runs for each bootstrap (if filterBestOfEachBootstrap=TRUE with default params, only at most 10 runs within 0.1% of best will be considered, so nrepeats should be at least 10)
                                 nboots=20, #how many bootstrapped catalogues to use
@@ -218,6 +220,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         p_boot <- matrix(0, nrow(cat), 0)
         err_boot <- c()
         boot_tracker <- c()
+        boot_tracker_e <- c()
         #boots_list <- list()
         boot_cat <- list()
         ## Run NMF on nboots bootsrapped catalogues
@@ -235,21 +238,45 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
             boots_list <- foreach::foreach(i=1:nparallel) %dopar%{						
               rnd_cat <- boot_cat[[(tt-1)*nparallel + i]]			
               rnd_cat <- preprocessCatalgue(rnd_cat, mut_thr) #remove channels with 0 mutations
-              NMF::nmf(rnd_cat, rank=ns,nrun=nrepeats,method = nmfmethod,.options="k-p")
+              if(!is.null(matrix_of_fixed_signatures)){
+                nnmf.res <- list()
+                for (i in 1:nrepeats){
+                  nnmf.res[[i]] <- NNLM::nnmf(as.matrix(rnd_cat),
+                                        init = list(W0 = as.matrix(matrix_of_fixed_signatures[rownames(rnd_cat),,drop=F])),
+                                        loss = "mkl",
+                                        method = "lee",
+                                        k = ns,
+                                        max.iter = 10000,check.k = FALSE)
+                }
+                nnmf.res
+              }else{
+                NMF::nmf(rnd_cat, rank=ns,nrun=nrepeats,method = nmfmethod,.options="k-p")
+              }
             }
             #Extract data already to save memory
             for(i in 1:length(boots_list)){
               nmf_res <- boots_list[[i]]
-              best_residual <- NMF::residuals(nmf_res)
-              residuals_list <- c()
-              if(length(nmf_res)==1){
-                residuals_list <- NMF::residuals(nmf_res)
-              }else{
-                for (j in 1:length(nmf_res@.Data)){
+              # get residuals and best residuals
+              if(!is.null(matrix_of_fixed_signatures)){
+                residuals_list <- c()
+                for (j in 1:length(nmf_res)){
                   #avoid numerical error (minimum cannot be less than 0)
-                  residuals_list <- c(residuals_list,max(0,NMF::residuals(nmf_res@.Data[[j]])))
+                  residuals_list <- c(residuals_list,max(0,nmf_res[[j]]$mkl[length(nmf_res[[j]]$mkl)]))
+                }
+                best_residual <- min(residuals_list)
+              }else{
+                best_residual <- NMF::residuals(nmf_res)
+                residuals_list <- c()
+                if(length(nmf_res)==1){
+                  residuals_list <- NMF::residuals(nmf_res)
+                }else{
+                  for (j in 1:length(nmf_res@.Data)){
+                    #avoid numerical error (minimum cannot be less than 0)
+                    residuals_list <- c(residuals_list,max(0,NMF::residuals(nmf_res@.Data[[j]])))
+                  }
                 }
               }
+              # decide what to keep
               if(filterBestOfEachBootstrap){
                 #filter the best runs
                 runsToChooseFrom <- which(best_residual*(1+filterBest_RTOL)>=residuals_list)
@@ -261,6 +288,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                 #just take all the runs
                 runsToChooseFrom <- 1:length(nmf_res)
               }
+              
               countRuns <- 1
               for (j in 1:length(nmf_res)){
                 #keep at most 10 repeats that have residuals close to the best (within 0.1% more than residual)
@@ -268,7 +296,11 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                 if (j %in% runsToChooseFrom) {
                   if(length(nmf_res)==1){
                     #here is where I fix channels by adding back the channels I removed
-                    bbb <- NMF::basis(nmf_res)
+                    if(!is.null(matrix_of_fixed_signatures)){
+                      bbb <- nmf_res[[j]]$W[,1:ns,drop=F]
+                    }else{
+                      bbb <- NMF::basis(nmf_res)
+                    }
                     coln <- paste0("b",i,"r",j,"s",1:ns)
                     p_boot_tmp <- matrix(0,nrow = nrow(cat),ncol = ns,dimnames = list(rownames(cat),coln))
                     p_boot_tmp[rownames(bbb),] <- bbb
@@ -277,11 +309,20 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                     }else{
                       p_boot <- cbind(p_boot , p_boot_tmp)
                     }
-                    e_boot <- cbind(e_boot , t(NMF::coef(nmf_res)))
-                    err_boot <- c(err_boot,NMF::residuals(nmf_res))
+                    if(!is.null(matrix_of_fixed_signatures)){
+                      e_boot <- cbind(e_boot , t(nmf_res[[j]]$H))
+                      err_boot <- c(err_boot,nmf_res[[j]]$mkl[length(nmf_res[[j]]$mkl)])
+                    }else{
+                      e_boot <- cbind(e_boot , t(NMF::coef(nmf_res)))
+                      err_boot <- c(err_boot,NMF::residuals(nmf_res))
+                    }
                   }else{
                     #here is where I fix channels by adding back the channels I removed
-                    bbb <- NMF::basis(nmf_res@.Data[[j]])
+                    if(!is.null(matrix_of_fixed_signatures)){
+                      bbb <- nmf_res[[j]]$W[,1:ns,drop=F]
+                    }else{
+                      bbb <- NMF::basis(nmf_res@.Data[[j]])
+                    }
                     coln <- paste0("b",i,"r",j,"s",1:ns)
                     p_boot_tmp <- matrix(0,nrow = nrow(cat),ncol = ns,dimnames = list(rownames(cat),coln))
                     p_boot_tmp[rownames(bbb),] <- bbb
@@ -290,11 +331,22 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                     }else{
                       p_boot <- cbind(p_boot , p_boot_tmp)
                     }
-                    e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
-                    err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
+                    if(!is.null(matrix_of_fixed_signatures)){
+                      e_boot <- cbind(e_boot , t(nmf_res[[j]]$H))
+                      err_boot <- c(err_boot,nmf_res[[j]]$mkl[length(nmf_res[[j]]$mkl)])
+                    }else{
+                      e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
+                      err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
+                    }
+                    
                   }
 
                   boot_tracker <- c(boot_tracker,rep((tt-1)*nparallel + i,ns))
+                  if(!is.null(matrix_of_fixed_signatures)){
+                    boot_tracker_e <- c(boot_tracker_e,rep((tt-1)*nparallel + i,ns+ncol(matrix_of_fixed_signatures)))
+                  }else{
+                    boot_tracker_e <- c(boot_tracker_e,rep((tt-1)*nparallel + i,ns))
+                  }
                   countRuns <- countRuns + 1
                 }
               }
@@ -306,9 +358,10 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
           }
           #Now you need to cut so that you have only nboots and not more
           selection_of_boots <- boot_tracker <= nboots
+          selection_of_boots_e <- boot_tracker_e <= nboots
           selection_of_boots_runs <- boot_tracker[seq(1,length(boot_tracker),ns)] <= nboots
           p_boot <- p_boot[,selection_of_boots]
-          e_boot <- e_boot[,selection_of_boots]
+          e_boot <- e_boot[,selection_of_boots_e]
           err_boot <- err_boot[selection_of_boots_runs]
           boot_tracker <- boot_tracker[selection_of_boots]
           # boot_pos <- 1
@@ -325,18 +378,40 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
             boot_cat[[i]] <- generateRandMuts(cat)
             if(normaliseCatalogue) boot_cat[[i]] <- normaliseSamples(boot_cat[[i]])
             rnd_cat <- preprocessCatalgue(boot_cat[[i]], mut_thr) #remove channels with 0 mutations
-            nmf_res <- NMF::nmf(rnd_cat, rank=ns,nrun=nrepeats,method = nmfmethod,.options="k-p")
-            #extract already to save memory
-            best_residual <- NMF::residuals(nmf_res)
-            residuals_list <- c()
-            if(length(nmf_res)==1){
-              residuals_list <- NMF::residuals(nmf_res)
+            if(!is.null(matrix_of_fixed_signatures)){
+              nnmf.res <- list()
+              for (j in 1:nrepeats){
+                nnmf.res[[j]] <- nnmf(as.matrix(rnd_cat),
+                                      init = list(W0 = as.matrix(matrix_of_fixed_signatures[row.names(rnd_cat),,drop=F])),
+                                      loss = "mkl",
+                                      method = "lee",
+                                      k = ns,
+                                      max.iter = 10000,check.k = FALSE)
+              }
             }else{
-              for (j in 1:length(nmf_res@.Data)){
+              nmf_res <- NMF::nmf(rnd_cat, rank=ns,nrun=nrepeats,method = nmfmethod,.options="k-p")
+            }
+            #extract already to save memory
+            if(!is.null(matrix_of_fixed_signatures)){
+              residuals_list <- c()
+              for (j in 1:length(nnmf.res)){
                 #avoid numerical error (minimum cannot be less than 0)
-                residuals_list <- c(residuals_list,max(0,NMF::residuals(nmf_res@.Data[[j]])))
+                residuals_list <- c(residuals_list,max(0,nnmf.res[[j]]$mkl[length(nnmf.res[[j]]$mkl)]))
+              }
+              best_residual <- min(residuals_list)
+            }else{
+              best_residual <- NMF::residuals(nmf_res)
+              residuals_list <- c()
+              if(length(nmf_res)==1){
+                residuals_list <- NMF::residuals(nmf_res)
+              }else{
+                for (j in 1:length(nmf_res@.Data)){
+                  #avoid numerical error (minimum cannot be less than 0)
+                  residuals_list <- c(residuals_list,max(0,NMF::residuals(nmf_res@.Data[[j]])))
+                }
               }
             }
+            
             if(filterBestOfEachBootstrap){
               #filter the best runs
               runsToChooseFrom <- which(best_residual*(1+filterBest_RTOL)>=residuals_list)
@@ -354,21 +429,12 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
               #if (best_residual*1.001>residuals_list[j] & countRuns <= 10) {
               if (j %in% runsToChooseFrom) {
                 #here is where I fix channels by adding back the channels I removed
-                bbb <- NMF::basis(nmf_res)
-                coln <- paste0("b",i,"r",j,"s",1:ns)
-                p_boot_tmp <- matrix(0,nrow = nrow(cat),ncol = ns,dimnames = list(rownames(cat),coln))
-                p_boot_tmp[rownames(bbb),] <- bbb
                 if(length(nmf_res)==1){
-                  if (nmfmethod=="nsNMF"){
-                    p_boot <- cbind(p_boot , p_boot_tmp %*% S)
+                  if(!is.null(matrix_of_fixed_signatures)){
+                    bbb <- nnmf.res[[j]]$W[,1:ns,drop=F]
                   }else{
-                    p_boot <- cbind(p_boot , p_boot_tmp)
+                    bbb <- NMF::basis(nmf_res)
                   }
-                  e_boot <- cbind(e_boot , t(NMF::coef(nmf_res)))
-                  err_boot <- c(err_boot,NMF::residuals(nmf_res))
-                }else{
-                  #here is where I fix channels by adding back the channels I removed
-                  bbb <- NMF::basis(nmf_res@.Data[[j]])
                   coln <- paste0("b",i,"r",j,"s",1:ns)
                   p_boot_tmp <- matrix(0,nrow = nrow(cat),ncol = ns,dimnames = list(rownames(cat),coln))
                   p_boot_tmp[rownames(bbb),] <- bbb
@@ -377,10 +443,39 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                   }else{
                     p_boot <- cbind(p_boot , p_boot_tmp)
                   }
-                  e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
-                  err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
+                  if(!is.null(matrix_of_fixed_signatures)){
+                    e_boot <- cbind(e_boot , t(nnmf.res[[j]]$H))
+                    err_boot <- c(err_boot,nnmf.res[[j]]$mkl[length(nnmf.res[[j]]$mkl)])
+                  }else{
+                    e_boot <- cbind(e_boot , t(NMF::coef(nmf_res)))
+                    err_boot <- c(err_boot,NMF::residuals(nmf_res))
+                  }
+                }else{
+                  #here is where I fix channels by adding back the channels I removed
+                  if(!is.null(matrix_of_fixed_signatures)){
+                    bbb <- nnmf.res[[j]]$W[,1:ns,drop=F]
+                  }else{
+                    bbb <- NMF::basis(nmf_res@.Data[[j]])
+                  }
+                  coln <- paste0("b",i,"r",j,"s",1:ns)
+                  p_boot_tmp <- matrix(0,nrow = nrow(cat),ncol = ns,dimnames = list(rownames(cat),coln))
+                  p_boot_tmp[rownames(bbb),] <- bbb
+                  if (nmfmethod=="nsNMF"){
+                    p_boot <- cbind(p_boot , p_boot_tmp %*% S)
+                  }else{
+                    p_boot <- cbind(p_boot , p_boot_tmp)
+                  }
+                  if(!is.null(matrix_of_fixed_signatures)){
+                    e_boot <- cbind(e_boot , t(nnmf.res[[j]]$H))
+                    err_boot <- c(err_boot,nnmf.res[[j]]$mkl[length(nnmf.res[[j]]$mkl)])
+                  }else{
+                    e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
+                    err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
+                  }
+                  
                 }
                 boot_tracker <- c(boot_tracker,rep(i,ns))
+                boot_tracker_e <- c(boot_tracker_e,rep(i,ns+ncol(matrix_of_fixed_signatures)))
                 countRuns <- countRuns + 1
               }
             }
@@ -390,20 +485,20 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         }
         #how many solutions were saved?
         saved_nmf_runs <- ncol(p_boot)/ns
-        save(file = bootstraps_file,ns,nboots,nrepeats,e_boot,p_boot,err_boot,cat,all_rows_cat,saved_nmf_runs,boot_tracker,boot_cat)
+        save(file = bootstraps_file,ns,nboots,nrepeats,e_boot,p_boot,err_boot,cat,all_rows_cat,saved_nmf_runs,boot_tracker,boot_tracker_e,boot_cat)
       }
       
       #now add back the missing channel and reset cat to all channels
       
-      if(channelsRemoved){
-        lmissing <- setdiff(rownames(all_rows_cat),rownames(cat))
-        nmissing <- length(lmissing)
-        newrows <- matrix(0,nrow = nmissing,ncol = ncol(p_boot))
-        colnames(newrows) <- colnames(p_boot)
-        rownames(newrows) <- lmissing
-        p_boot <- rbind(p_boot,newrows)[rownames(all_rows_cat),]
-        #cat <- all_rows_cat
-      }
+      # if(channelsRemoved){
+      #   lmissing <- setdiff(rownames(all_rows_cat),rownames(cat))
+      #   nmissing <- length(lmissing)
+      #   newrows <- matrix(0,nrow = nmissing,ncol = ncol(p_boot))
+      #   colnames(newrows) <- colnames(p_boot)
+      #   rownames(newrows) <- lmissing
+      #   p_boot <- rbind(p_boot,newrows)[rownames(all_rows_cat),]
+      #   #cat <- all_rows_cat
+      # }
       
       # ## Compute the average silhouette grouping all the computed solutions in ns clusters
       #sil <- c(sil, summary(silhouette(pam(p_boot, ns)))$avg.width)
@@ -514,6 +609,12 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
             sd_signatures[[cm]][is.na(sd_signatures[[cm]][,nsi]),nsi] <- 0
           }
         }
+        if(!is.null(matrix_of_fixed_signatures)){
+          mean_signatures[[cm]] <- cbind(matrix_of_fixed_signatures,mean_signatures[[cm]])
+          tmpmatrix <- matrix_of_fixed_signatures
+          tmpmatrix[,] <- 0
+          sd_signatures[[cm]] <- cbind(tmpmatrix,sd_signatures[[cm]])
+        }
       }
       
       if(ns>1 & saved_nmf_runs>1){
@@ -573,16 +674,18 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
       for (i in 1:saved_nmf_runs){
         selection <- ((i-1)*ns+1):(i*ns)
         current_cat <- boot_cat[[boot_tracker[selection][1]]]
-        if(channelsRemoved){
-          current_p <- p_boot[!row.names(p_boot) %in% lmissing,selection]
+        if(!is.null(matrix_of_fixed_signatures)){
+          selection_e <- ((i-1)*(ns+ncol(matrix_of_fixed_signatures))+1):(i*(ns+ncol(matrix_of_fixed_signatures)))
+          current_p <- as.matrix(cbind(p_boot[,selection,drop=F],matrix_of_fixed_signatures))
+          current_e <- e_boot[,selection_e]
+          reconstructed_cat <- current_p %*% t(current_e)
         }else{
-          current_p <- p_boot[,selection]
+          current_p <- p_boot[,selection,drop=F]
+          current_e <- e_boot[,selection,drop=F]
+          reconstructed_cat <- current_p %*% t(current_e)
         }
-        current_e <- e_boot[,selection]
-        reconstructed_cat <- current_p %*% t(current_e)
         rmse_list <- c(rmse_list,sqrt(sum((current_cat - reconstructed_cat)^2)/(dim(current_cat)[1]*dim(current_cat)[2])))
         kld_list <- c(kld_list,KLD(current_cat,reconstructed_cat))
-        
         rmse_orig_list <- c(rmse_orig_list,sqrt(sum((ncat - reconstructed_cat)^2)/(dim(ncat)[1]*dim(ncat)[2])))
         kld_orig_list <- c(kld_orig_list,KLD(ncat,reconstructed_cat))
       }
@@ -625,6 +728,9 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         
         colnames(signature_data_matrix) <- signature_names
         row.names(signature_data_matrix) <- row.names(p_boot)
+        if(!is.null(matrix_of_fixed_signatures)){
+          signature_data_matrix <- cbind(matrix_of_fixed_signatures,signature_data_matrix)
+        }
         subs_file <- paste0(outNsDir,"Sigs_plot_",group,"_ns",ns,"_nboots",nboots,cl,".jpg")
         if (type_of_extraction == "subs"){
           #plotSubsSignatures(signature_data_matrix,subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
