@@ -500,7 +500,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,s
 #' @param mar set the option par(mar=mar)
 #' @export
 plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>20) paste0(substr(x,1,17),"...") else x)
+  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)) {
@@ -555,7 +555,7 @@ plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum
 }
 
 plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>20) paste0(substr(x,1,17),"...") else x)
+  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
@@ -655,7 +655,7 @@ plotRearrSignatures <-function(signature_data_matrix,output_file = NULL,plot_sum
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>20) paste0(substr(x,1,17),"...") else x)
+  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
@@ -752,7 +752,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,mean_matrix,sd_m
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>20) paste0(substr(x,1,17),"...") else x)
+  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
