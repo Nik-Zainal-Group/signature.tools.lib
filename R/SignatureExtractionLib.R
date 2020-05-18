@@ -70,6 +70,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 parallel=FALSE, # set to TRUE to use parallel computation (Recommended)
                                 nmfmethod="brunet", #choose among {"brunet","lee","nsNMF"}
                                 removeDuplicatesInCatalogue = FALSE, #remove 0.99 cos sim similar samples
+                                removeDuplicatesThreshold = 0.98,
                                 normaliseCatalogue = FALSE, # scale samples to sum to 1
                                 plotCatalogue = FALSE, #also plot the catalogue, this may crash the library if the catalogue is too big, should work up to ~300 samples
                                 plotResultsFromAllClusteringMethods=TRUE){ #if TRUE, all clustering methods are used and results are reported and plotted for all of them. If FALSE, only the requested clustering is reported
@@ -95,7 +96,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
   message("[STEP 1]: Reading and Preprocessing the Catalogue...", appendLF=F)
   if (type_of_extraction=="subs") cat <- sortCatalogue(cat)
   if(removeDuplicatesInCatalogue){
-    cat <- removeSimilarCatalogueSamples(cat)
+    cat <- removeSimilarCatalogueSamples(cat,cosSimThreshold = removeDuplicatesThreshold)
   }
   #Save catalogue used
   nsamples <- ncol(cat)
