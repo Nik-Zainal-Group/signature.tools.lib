@@ -74,6 +74,7 @@ devtools::test(pkg = ".",filter = "genomePlot")
 devtools::test(pkg = ".",filter = "SignatureExtraction")
 devtools::test(pkg = ".",filter = "SignaturePartialExtraction")
 devtools::test(pkg = ".",filter = "SignatureFit")
+devtools::test(pkg = ".",filter = "snvTabToDNVcatalogue")
 
 
 
