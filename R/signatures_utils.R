@@ -1292,19 +1292,19 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 getOrganSignatures <- function(organ,typemut="subs"){
   
   if(typemut=="subs"){
-    available_organs <- unique(unlist(sapply(colnames(all_organ_sigs_subs),function(x){
+    available_organs <- unique(sapply(colnames(all_organ_sigs_subs),function(x){
       txtspl <- strsplit(x,split = "_")[[1]]
-      txtspl[1:(length(txtspl)-1)]
-    })))
+      paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
+    }))
     if (!(organ %in% available_organs)) {
       message("Organ ",organ, " not available for mutation type ",typemut)
     }
     sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
   }else if(typemut=="rearr"){
-    available_organs <- unique(unlist(sapply(colnames(all_organ_sigs_rearr),function(x){
+    available_organs <- unique(sapply(colnames(all_organ_sigs_rearr),function(x){
       txtspl <- strsplit(x,split = "_")[[1]]
-      txtspl[1:(length(txtspl)-1)]
-    })))
+      paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
+    }))
     if (!(organ %in% available_organs)) {
       message("Organ ",organ, " not available for mutation type ",typemut)
     }
