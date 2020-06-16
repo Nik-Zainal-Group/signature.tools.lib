@@ -570,12 +570,12 @@ plotSubsSignatures <- function(signature_data_matrix,
     rectbottom <- -0.16
     start1 <- 0.035
     gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0,border = NA)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0,border = NA)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0,border = NA)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0,border = NA)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0,border = NA)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0,border = NA)
     textposx <- 0.04+seq(8,88,16)/104
     text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
@@ -639,12 +639,12 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     rectbottom <- -0.16
     start1 <- 0.035
     gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0,border = NA)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0,border = NA)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0,border = NA)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0,border = NA)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0,border = NA)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0,border = NA)
     textposx <- 0.04+seq(8,88,16)/104
     text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
@@ -775,25 +775,25 @@ plotRearrSignatures <-function(signature_data_matrix,
     for(i in 1:2){
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"del",col = "white")
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"tds",col = "white")
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"inv",col = "white")
       start <- stop
       stop <- start + tr_size
-      rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0,border = NA)
       text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white")
     }
     xsep2 <- 3*xsep+tr_size
-    rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0)
+    rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)
     text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
-    rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0)
+    rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
     text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
     
     #restore old coordinates
@@ -866,25 +866,25 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     for(i in 1:2){
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"del",col = "white")
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"tds",col = "white")
       start <- stop
       stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0,border = NA)
       text(x = start+0.5*xsep,y = -0.08,"inv",col = "white")
       start <- stop
       stop <- start + tr_size
-      rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0)
+      rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0,border = NA)
       text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white")
     }
     xsep2 <- 3*xsep+tr_size
-    rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0)
+    rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)
     text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
-    rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0)
+    rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
     text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
     
     #restore old coordinates
