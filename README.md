@@ -12,6 +12,7 @@
 - [Examples](#examples)
   - [Test examples](#examplestests)
   - [Example 01](#examplese01)
+  - [Example 02](#examplese02)
 - [Frequently Asked Questions](#faq)
 
 <a name="intro"/>
@@ -382,6 +383,7 @@ writeTable(res$hrdetect_output,file = "HRDetect_res.tsv")
 Also in this case, you can compare your output with the expected output
 in the ```Example01``` directory.
 
+<a name="examplese02"/>
 
 ### Example 02
 
@@ -420,7 +422,8 @@ catalogues.
 #load SNV data and convert to SNV mutational catalogues
 SNVcat_list <- list()
 for (i in 1:length(SNV_tab_files)){
-  tmpSNVtab <- read.table(SNV_tab_files[i],sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+  tmpSNVtab <- read.table(SNV_tab_files[i],sep = "\t",header = TRUE,
+                          check.names = FALSE,stringsAsFactors = FALSE)
   #convert to SNV catalogue, see ?tabToSNVcatalogue or ?vcfToSNVcatalogue for details
   res <- tabToSNVcatalogue(subs = tmpSNVtab,genome.v = "hg19")
   colnames(res$catalogue) <- sample_names[i]
@@ -434,7 +437,8 @@ Then we can plot the catalogues, in this case using pdf format.
 
 ```
 #the catalogues can be plotted as follows
-plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output_file = "SNV_catalogues.pdf")
+plotSubsSignatures(signature_data_matrix = SNV_catalogues,
+                   plot_sum = TRUE,output_file = "SNV_catalogues.pdf")
 ```
 
 Than we can perform signature fit using organ specific signatures, here breast cancer signatures.
@@ -514,3 +518,25 @@ activities as a separate procedure, performed holding a given set of a
 priori signatures fixed. This allows for more playing around with the
 signature fit, for example excluding clear false positive signatures from
 the fit.
+
+**Can I use your package on my Whole Exome Sequenced data?**
+
+Mostly, no. All algorithms included in this package, from signature extraction, to signature fit, to HRDetect, have been developed and tested using only Whole Genome Sequenced data, and are meant to be used only on Whole Genome Sequenced data.
+The main problem is that a typical Whole Exome sample has ~100x less mutations than a Whole Genome sample. This means that, for example, bootstrapping on WES data can change the WES profile too much. Also, one would need many more WES samples than WGS samples to have an accurate signature extraction.
+
+If you really want to try to perform a signature extraction using WES data, bear in mind you will need a lot more WES samples than WGS samples to obatin reliable signatures. You may also want to use only WES samples at this point, because of a different trinucleotide frequency in WES and WGS data.
+
+In the case of HRDetect, the parameters of the classifier have been tuned to Whole Genome data, so it would require retraining using WES data. We did that, and while the performance of a WES HRD classifier was not too bad on breast cancer, we simply discourage to use this for other tissue types. It is just bound to be very unreliable, because the classification would be supported mainly by signature 3 exposures and the number of deletions with microhomology. Fitting signature 3 to WES can be very unreliable, expecially in non breast cancer samples, and also the number of indels is usually very low for each WES sample, so one false positive or false negative deletion can make the difference. On top of this, without a standardised data quality control, mutation calling and filtering, there are just too many variables to make this worthwhile, in our opinion. On the other hand, we have plenty of evidence that HRDetect, trained on WGS data using six different mutational signatures, is robust and reliable. 
+
+**Which Structural Variants caller and filters should I use?**
+
+Our team has been using mostly Manta and Brass. For Manta, we tend to tune false positives using the PR column.
+
+https://github.com/Illumina/manta/tree/master/docs/userGuide
+
+After running Manta you will have to convert your output to bedpe using a vcf to bedpe converter. There are a few out there, you can try this one:
+
+https://github.com/arq5x/lumpy-sv/blob/master/scripts/vcfToBedpe
+
+
+
