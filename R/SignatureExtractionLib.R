@@ -56,7 +56,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 blacklist=c(), #list of samples (column names) to ignore
                                 nrepeats=10, #how many runs for each bootstrap (if filterBestOfEachBootstrap=TRUE with default params, only at most 10 runs within 0.1% of best will be considered, so nrepeats should be at least 10)
                                 nboots=20, #how many bootstrapped catalogues to use
-                                clusteringMethod="PAM", #choose among {"HC","PAM","MC"}, hierarchical clustering (HC), partitioning around the medoids (PAM) and  matched clustering (MC)
+                                clusteringMethod="MC", #choose among {"HC","PAM","MC"}, hierarchical clustering (HC), partitioning around the medoids (PAM) and  matched clustering (MC)
                                 completeLinkageFlag=FALSE, #if clusteringMethod="HC", use complete linkage instead of default average linkage
                                 useMaxMatching=TRUE, #if clusteringMethod="MC", use the assignment problem algorithm (match with max similarity) instead of the stable matching algorithm (any stable match)
                                 filterBestOfEachBootstrap=TRUE, #if true only at most filterBest_nmaxtokeep of the nrepeats runs that are within filterBest_RTOL*best from the best are kept
