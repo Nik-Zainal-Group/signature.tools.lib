@@ -11,7 +11,7 @@ tabToIndelsClassification(indel.data, sampleID, genome.v = "hg19")
 
 \item{sampleID}{name of the sample}
 
-\item{genome.v}{version of the genome to be used to look up the context of the indel, either "hg19", "hg38" or "mm10"}
+\item{genome.v}{version of the genome to be used to look up the context of the indel, either "hg19", "hg38", "mm10" or "canFam3"}
 }
 \value{
 the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion

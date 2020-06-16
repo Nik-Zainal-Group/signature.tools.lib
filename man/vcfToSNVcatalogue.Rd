@@ -9,7 +9,7 @@ vcfToSNVcatalogue(vcfFilename, genome.v = "hg19")
 \arguments{
 \item{vcfFilename}{path to input VCF (file must be tabix indexed)}
 
-\item{genome.v}{either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5) or mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10)}
+\item{genome.v}{either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)}
 }
 \value{
 returns the SNV catalogue for the given sample
