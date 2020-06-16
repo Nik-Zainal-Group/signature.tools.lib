@@ -132,7 +132,7 @@ RStudio, type ```?HRDetect_pipeline```.
 
 ## Functions provided by the package
 
-Functions for file conversion/manipulation:
+Functions for file conversion/manipulation
 
 - **```bedpeToRearrCatalogue(...)```**: converts a data frame (loaded
 from a BEDPE file) into a rearrangement catalogue. If the columns
@@ -143,6 +143,16 @@ catalogue.
 - **```tabToSNVcatalogue(...)```**: converts a data frame into a SNV
 catalogue. The data frame should have the following minimal columns:
 chr, position, REF, ALT.
+
+Functions for dinucleotide variants
+
+- **```snvTabToDNVcatalogue(...)```**: a list of single nucleotide variants (SNVs),
+and computes a list of dinucleotide variants (DNVs) finding which SNVs are next to each other.
+It the returns the annotated DNVs and the DNV catalogues. The catalogue channels are in Zou's style.
+- **```convertToAlexandrovChannels(...)```**: Function to convert DNV signatures or catalogues
+from Zou's to Alexandrov's style. 
+- **```plotDNVSignatures(...)```**: plot one or more DNV signatures or catalogues, compatible with both
+Zou's style and Alexandrov's style of channels.
 
 Functions for signature extraction and signature fit
 
@@ -166,6 +176,12 @@ number of signatures to be used is required.
 substitution signatures or catalogues.
 - **```plotRearrSignatures(...)```**: function to plot one or more
 rearrangement signatures or catalogues.
+
+Functions for organ-specific signatures and exposures conversion
+
+- **```getOrganSignatures(...)```**: returns organ-specific signatures of a requested organ and mutation type.
+- **```convertExposuresFromOrganToRefSigs(...)```**: after signature fit using organ-specific signatures,
+use this function to apply the conversion matrix, to convert organ-specific signature exposures into reference signature exposures. 
 
 Functions for HRD indexes
 
@@ -200,8 +216,8 @@ published in Davies et al. 2017.
 samples as rows and features as columns, this function will compute the
 HRDetect BRCAness probability for each sample. The following six
 features should be included in the matrix: 1) proportion of deletions
-with micro-homology, 2) number of mutations of substitution signature 3,
-3) number of mutations of rearrangemet signature 3, 4) number of
+with micro-homology, 2) number of mutations of substitution signature 3, 3)
+number of mutations of rearrangemet signature 3, 4) number of
 mutations of rearrangemet signature 5, 5) HRD LOH index, 6) number of
 mutations of substitution signature 8.
 - **```plot_HRDLOH_HRDetect_Contributions(...)```**: uses the
