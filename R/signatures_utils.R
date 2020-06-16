@@ -397,16 +397,25 @@ computePropTooSimilar <- function(distMatrix,saved_nmf_runs,ns){
 #' Function to plot one or more signatures or catalogues with an arbitrary number of channels. Channel names will not be plotted and all channels will be plotted as bars of the same colour.
 #' 
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
 #' @export
-plotGenericSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",mar=NULL){
+plotGenericSignatures <- function(signature_data_matrix,
+                                  output_file = NULL,
+                                  plot_sum = TRUE,
+                                  overall_title = "",
+                                  mar=NULL){
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)) {
-    jpeg(output_file,width = 3*800,height = nplotrows*400,res = 190)
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 3*800,height = nplotrows*400,res = 190)
+    }else if (plottype=="pdf"){
+      pdf(output_file,width = 3*8,height = nplotrows*4,pointsize = 26)
+    }
     par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
   }
   for (pos in 1:ncol(signature_data_matrix)){
@@ -438,10 +447,23 @@ plotGenericSignatures <- function(signature_data_matrix,output_file = NULL,plot_
   if(!is.null(output_file)) dev.off()
 }
 
-plotGenericSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",mar=NULL){
+plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
+                                             mean_matrix,
+                                             sd_matrix,
+                                             output_file = NULL,
+                                             plot_sum = TRUE,
+                                             overall_title = "",
+                                             mar=NULL){
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ncol(signature_data_matrix)
-  if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*400,res = 190)
+  if(!is.null(output_file)) {
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 2*800,height = nplotrows*400,res = 190)
+    }else if (plottype=="pdf"){
+      pdf(output_file,width = 2*8,height = nplotrows*4,pointsize = 26)
+    }
+  }
   par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
   par(mgp=c(1,1,0))
   if(is.null(mar)){
@@ -494,17 +516,27 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,s
 #' Function to plot one or more substitution signatures or catalogues. 
 #' 
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
 #' @export
-plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
+plotSubsSignatures <- function(signature_data_matrix,
+                               output_file = NULL,
+                               plot_sum = TRUE,
+                               overall_title = "",
+                               add_to_titles = NULL,
+                               mar=NULL){
+  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)) {
-    jpeg(output_file,width = 3*800,height = nplotrows*320,res = 220)
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 3*800,height = nplotrows*320,res = 220)
+    }else if(plottype=="pdf"){
+      pdf(output_file,width = 3*8,height = nplotrows*3.2,pointsize = 26)
+    }
     par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
   }
   for (pos in 1:ncol(signature_data_matrix)){
@@ -554,11 +586,25 @@ plotSubsSignatures <- function(signature_data_matrix,output_file = NULL,plot_sum
   if(!is.null(output_file)) dev.off()
 }
 
-plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
+                                          mean_matrix,
+                                          sd_matrix,
+                                          output_file = NULL,
+                                          plot_sum = TRUE,
+                                          overall_title = "",
+                                          add_to_titles = NULL,
+                                          mar=NULL){
+  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
   nplotrows <- ncol(signature_data_matrix)
-  if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
+  if(!is.null(output_file)) {
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
+    }else if(plottype=="pdf"){
+      pdf(output_file,width = 2*8,height = nplotrows*3.2,pointsize = 26)
+    }
+  }
   par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
   if(is.null(mar)){
     par(mar=c(2,3,2,2))
@@ -646,16 +692,22 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,mean_matrix,sd_m
 #' Function to plot one or more rearrangement signatures or catalogues. 
 #' 
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
 #' @export
-plotRearrSignatures <-function(signature_data_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
+plotRearrSignatures <-function(signature_data_matrix,
+                               output_file = NULL,
+                               plot_sum = TRUE,
+                               overall_title = "",
+                               add_to_titles = NULL,
+                               mar=NULL){
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
@@ -665,7 +717,11 @@ plotRearrSignatures <-function(signature_data_matrix,output_file = NULL,plot_sum
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)){
-    jpeg(output_file,width = 3*800,height = nplotrows*500,res = 220)
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 3*800,height = nplotrows*500,res = 220)
+    }else if(plottype=="pdf"){
+      pdf(output_file,width = 3*8,height = nplotrows*5,pointsize = 26)
+    }
     par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
   }
   sizes <- c("1-10Kb",
@@ -748,11 +804,19 @@ plotRearrSignatures <-function(signature_data_matrix,output_file = NULL,plot_sum
 }
 
 
-plotRearrSignatures_withMeanSd <-function(signature_data_matrix,mean_matrix,sd_matrix,output_file = NULL,plot_sum = TRUE,overall_title = "",add_to_titles = NULL,mar=NULL){
+plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
+                                          mean_matrix,
+                                          sd_matrix,
+                                          output_file = NULL,
+                                          plot_sum = TRUE,
+                                          overall_title = "",
+                                          add_to_titles = NULL,
+                                          mar=NULL){
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
-  colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
@@ -761,7 +825,13 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,mean_matrix,sd_m
   #rearr.colours <- c(rep("darkblue",16),rep("red",16))
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
   nplotrows <- ncol(signature_data_matrix)
-  if(!is.null(output_file)) jpeg(output_file,width = 2*800,height = nplotrows*500,res = 220)
+  if(!is.null(output_file)) {
+    if(plottype=="jpg"){
+      jpeg(output_file,width = 2*800,height = nplotrows*500,res = 220)
+    }else if (plottype=="pdf"){
+      pdf(output_file,width = 2*8,height = nplotrows*5,pointsize = 26)
+    }
+  }
   par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
   sizes <- c("1-10Kb",
              "10-100Kb",
