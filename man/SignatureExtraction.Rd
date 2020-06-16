@@ -6,7 +6,7 @@
 \usage{
 SignatureExtraction(cat, outFilePath, matrix_of_fixed_signatures = NULL,
   blacklist = c(), nrepeats = 10, nboots = 20,
-  clusteringMethod = "PAM", completeLinkageFlag = FALSE,
+  clusteringMethod = "MC", completeLinkageFlag = FALSE,
   useMaxMatching = TRUE, filterBestOfEachBootstrap = TRUE,
   filterBest_RTOL = 0.001, filterBest_nmaxtokeep = 10, nparallel = 1,
   nsig = c(3:15), mut_thr = 0, type_of_extraction = "subs",

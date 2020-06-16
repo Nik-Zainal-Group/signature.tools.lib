@@ -383,6 +383,88 @@ Also in this case, you can compare your output with the expected output
 in the ```Example01``` directory.
 
 
+### Example 02
+
+In this example we illustrate a typical workflow for signature fit
+using organ-specific signatures. This code can be easily adapted to be
+used on your data, provided you have formatted the input data as
+described in the ```?function``` documentation.
+
+This example, along with expected output files, can be found in the
+```examples/Example02/``` directory.
+
+We begin by setting variables containing file names. These should be
+vectors indexed by sample names.
+
+```
+#set directory to this file location
+
+#import the package
+library(signature.tools.lib)
+
+#set sample names
+sample_names <- c("sample1","sample2")
+
+#set the file names. 
+SNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+
+#name the vectors entries with the sample names
+names(SNV_tab_files) <- sample_names
+```
+
+We can now load the SNV tab data and build the SNV mutational
+catalogues.
+
+```
+#load SNV data and convert to SNV mutational catalogues
+SNVcat_list <- list()
+for (i in 1:length(SNV_tab_files)){
+  tmpSNVtab <- read.table(SNV_tab_files[i],sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+  #convert to SNV catalogue, see ?tabToSNVcatalogue or ?vcfToSNVcatalogue for details
+  res <- tabToSNVcatalogue(subs = tmpSNVtab,genome.v = "hg19")
+  colnames(res$catalogue) <- sample_names[i]
+  SNVcat_list[[i]] <- res$catalogue
+}
+#bind the catalogues in one table
+SNV_catalogues <- do.call(cbind,SNVcat_list)
+```
+
+Then we can plot the catalogues, in this case using pdf format.
+
+```
+#the catalogues can be plotted as follows
+plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output_file = "SNV_catalogues.pdf")
+```
+
+Than we can perform signature fit using organ specific signatures, here breast cancer signatures.
+Typing ```?getOrganSignatures``` will show more information, for example which organs are available.
+
+```
+#fit the organ-specific breast cancer signatures using the bootstrap signature fit approach
+sigsToUse <- getOrganSignatures("Breast",typemut = "subs")
+subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
+                                                    cat = SNV_catalogues,
+                                                    signature_data_matrix = sigsToUse,
+                                                    type_of_mutations = "subs",
+                                                    nboot = 100,nparallel = 4)
+
+#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
+snv_exp <- subs_fit_res$E_median_filtered
+```
+
+We can now convert the organ-specific signature exposures into reference signature exposures.
+This allows us to compare results across different organs, and to perform additional analysis
+such as HRDetect, where RefSig 3 and RefSig 8 exposures can be used in place of COSMIC signatures 3 and 8 exposures.
+
+```
+#Convert the organ-spoecific signature exposures into reference siganture exposures
+snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = snv_exp,typemut = "subs")
+
+#write the results
+writeTable(snv_exp,"RefSigSubsExposures.tsv")
+```
+
 
 ## Frequently Asked Questions
 

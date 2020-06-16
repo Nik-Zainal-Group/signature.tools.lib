@@ -1279,3 +1279,54 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
   }
   text(xy$x, xy$y, labels, col=col, ... )
 }
+
+#' getOrganSignatures
+#' 
+#' This function returns the organ-specific signatures for a given organ and mutation type as defined in Degasperi et al. 2020 Nat Cancer paper.
+#' 
+#' @param typemut either subs or rearr
+#' @param organ one of the following: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @return organ-specific signatures matrix
+#' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @export
+getOrganSignatures <- function(organ,typemut="subs"){
+  
+  if(typemut=="subs"){
+    available_organs <- unique(unlist(sapply(colnames(all_organ_sigs_subs),function(x){
+      txtspl <- strsplit(x,split = "_")[[1]]
+      txtspl[1:(length(txtspl)-1)]
+    })))
+    if (!(organ %in% available_organs)) {
+      message("Organ ",organ, " not available for mutation type ",typemut)
+    }
+    sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
+  }else if(typemut=="rearr"){
+    available_organs <- unique(unlist(sapply(colnames(all_organ_sigs_rearr),function(x){
+      txtspl <- strsplit(x,split = "_")[[1]]
+      txtspl[1:(length(txtspl)-1)]
+    })))
+    if (!(organ %in% available_organs)) {
+      message("Organ ",organ, " not available for mutation type ",typemut)
+    }
+    sigs <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_rearr))]]
+  }
+  return(sigs)
+}
+
+#' convertExposuresFromOrganToRefSigs
+#' 
+#' This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures as defined in Degasperi et al. 2020 Nat Cancer paper.
+#' 
+#' @param typemut either subs or rearr
+#' @param expMatrix exposures matrix obatined from fitting organ-specific signatures
+#' @return exposure matrix converted in reference signatures exposures
+#' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @export
+convertExposuresFromOrganToRefSigs <- function(expMatrix,typemut="subs"){
+  if(typemut=="subs"){
+    t(conversion_matrix_subs[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+  }else if(typemut=="rearr"){
+    t(conversion_matrix_rearr[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+  }
+}
+
