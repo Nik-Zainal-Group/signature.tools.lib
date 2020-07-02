@@ -490,6 +490,21 @@ writeTable(snv_exp,"RefSigSubsExposures.tsv")
 
 <a name="faq"/>
 
+**Can I use your package on my Whole Exome Sequenced data?**
+
+Mostly, no. All algorithms included in this package, from signature extraction, to signature fit, to HRDetect, have been developed and tested using only Whole Genome Sequenced data, and are meant to be used only on Whole Genome Sequenced data.
+These are some of the reasons why:
+
+- WES have 100x less mutations per sample than WGS
+- Using our bootstrap based fitting on WES is not ideal, because bootstrapping WES data can change the profile a lot
+- Fitting WGS signatures into WES samples, where the frequency of the trinucleotide contexts are different can also affect the results
+- You can convert the WGS signatures into WES by adjusting for trinucleotide context frequency, but the result is far from ideal. It would be better to have signatures extracted from WES to fit into WES samples
+- If you then plan to extract WES signatures, this may also be challenging possibly avoiding bootstrapping here as well, and most likely requiring a very large number of WES samples, compared to how many WGS samples are needed to extract WGS signatures
+- In the case of HRDetect, the parameters of the classifier have been tuned to Whole Genome data, so it would require retraining using WES data. We did that, and while the performance of a WES HRD classifier was not too bad on breast cancer, we simply discourage to use this for other tissue types. It is just bound to be very unreliable, because the classification would be supported mainly by signature 3 exposures and the number of deletions with microhomology. Fitting signature 3 to WES can be very unreliable, expecially in non breast cancer samples, and also the number of indels is usually very low for each WES sample, so one false positive or false negative deletion can make the difference. On top of this, without a standardised data quality control, mutation calling and filtering, there are just too many variables to make this worthwhile, in our opinion. On the other hand, we have plenty of evidence that HRDetect, trained on WGS data using six different mutational signatures, is robust and reliable. 
+
+This said, you may still achieve something decent if you limit yourself to breast cancer, or other organs where we know fairly well what signatures to expect. And you should be able to spot most MMR samples and other hypermutated samples, simply because they have a much higher number of SNVs and Indels.
+
+
 **In R/HRDetect.R, the function applyHRDetectDavies2017 seems to have mean/sd values hardcoded for each input feature. This results in input data not being standardized to mean=0/sd=1. Is this intentional?
 I'm assuming these values come from the results for the 371 samples in the 2017 paper?**
 
@@ -519,7 +534,7 @@ During the investigation of Signature Extraction methods, we have defined multip
 - **min.Min.WCCS**: minimum of the minimum within cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of each cluster, and for each cluster we report the minimum cosine similarity. Finally we report the minimum of the minimum cosine similarities, which indicates how different the signatures can be in the least homogeneous (most spread) cluster. This value becomes low when at least one cluster is beginning to include very different signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
 - **max.Max.BCCS**: maximum of the maximum between cluster cosine similarity. This is a goodness of clustering metric. We compute the cosine similarity between the members of different clusters, and for each cluster pairs we report the maximum cosine similarity. Finally we report the maximum of the maximum cosine similarities, which indicates how similar the signatures can be when they belong to different clusters. This value becomes high when two clusters are beginning to include very similar signatures, possibly indicating complex solutions (see PCA rings in Extended Data Figure 1, in the Nature Cancer paper).
 
-While it can be interesting to look at all these metrics, we reccommend to mostly use **norm.Error (orig. cat.)** and **Ave.SilWid**, using a suitable number of bootstraps and repeats and with the Clustering with Matching (MC) clustering algorithm, as described in our Nature cancer paper.
+While it can be interesting to look at all these metrics, we recommend to mostly use **norm.Error (orig. cat.)** and **Ave.SilWid**, using a suitable number of bootstraps and repeats and with the Clustering with Matching (MC) clustering algorithm, as described in our Nature cancer paper.
 
 **What parameters should I use for signature extraction?**
 
@@ -534,15 +549,6 @@ activities as a separate procedure, performed holding a given set of a
 priori signatures fixed. This allows for more playing around with the
 signature fit, for example excluding clear false positive signatures from
 the fit.
-
-**Can I use your package on my Whole Exome Sequenced data?**
-
-Mostly, no. All algorithms included in this package, from signature extraction, to signature fit, to HRDetect, have been developed and tested using only Whole Genome Sequenced data, and are meant to be used only on Whole Genome Sequenced data.
-The main problem is that a typical Whole Exome sample has ~100x less mutations than a Whole Genome sample. This means that, for example, bootstrapping on WES data can change the WES profile too much. Also, one would need many more WES samples than WGS samples to have an accurate signature extraction.
-
-If you really want to try to perform a signature extraction using WES data, bear in mind you will need a lot more WES samples than WGS samples to obatin reliable signatures. You may also want to use only WES samples at this point, because of a different trinucleotide frequency in WES and WGS data.
-
-In the case of HRDetect, the parameters of the classifier have been tuned to Whole Genome data, so it would require retraining using WES data. We did that, and while the performance of a WES HRD classifier was not too bad on breast cancer, we simply discourage to use this for other tissue types. It is just bound to be very unreliable, because the classification would be supported mainly by signature 3 exposures and the number of deletions with microhomology. Fitting signature 3 to WES can be very unreliable, expecially in non breast cancer samples, and also the number of indels is usually very low for each WES sample, so one false positive or false negative deletion can make the difference. On top of this, without a standardised data quality control, mutation calling and filtering, there are just too many variables to make this worthwhile, in our opinion. On the other hand, we have plenty of evidence that HRDetect, trained on WGS data using six different mutational signatures, is robust and reliable. 
 
 **Which Structural Variants caller and filters should I use?**
 
