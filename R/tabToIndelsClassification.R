@@ -28,20 +28,23 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   
   # read only chr seqnames from VCF, not contigs
   #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
-  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  if (genome.v=="hg38" || genome.v=="mm10") {
-    GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
-  }
+  # gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
+  # if (genome.v=="hg38" || genome.v=="mm10") {
+  #   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  # }
   vcf_seqnames <- unique(indel.data$chr) 
-  
-  if(tools:::.BioC_version_associated_with_R_version()<3.5){
-    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
-  }else{
-    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  if (genome.v=="hg38" | genome.v=="mm10" | genome.v=="canFam3") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) indel.data$chr <- paste0("chr",indel.data$chr)
   }
+  indel.data <- indel.data[indel.data$chr %in% expected_chroms,]
+  # if(tools:::.BioC_version_associated_with_R_version()<3.5){
+  #   gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+  # }else{
+  #   gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  # }
   
   # convert formats, and find context of the indels
-  indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq,genome.v,expected_chrom)
+  indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq,genome.v)
   
   res <- list()
   res$indels_classified <- mh(indel.df)
@@ -53,7 +56,7 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
 
 ###########################################################
 
-prepare.indel.df_tabversion <- function(indel.data,genomeSeq,genome.v,expected_chrom) {
+prepare.indel.df_tabversion <- function(indel.data,genomeSeq,genome.v) {
   
   if (nrow(indel.data)>0) {
     
@@ -79,9 +82,7 @@ prepare.indel.df_tabversion <- function(indel.data,genomeSeq,genome.v,expected_c
     # if (genomeSeq@provider_version=="mm10"){
     #   indel.chr <- paste('chr',indel.chr,sep='')
     # }
-    if (genome.v=="hg38" || genome.v=="mm10") {
-      if(length(intersect(indel.chr,expected_chroms))==0) indel.chr <- paste0("chr",indel.chr)
-    }
+
     extend5 = min.position-indel.length-25;
     extend3 = max.position + indel.length+25;
     
