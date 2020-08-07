@@ -410,7 +410,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     if (!is.null(Indels_tab_files)){
       incomplete_samples_with_tabIndels <- intersect(incomplete_samples,names(Indels_tab_files))
     }else{
-      #there is no Indels vcf files given, so no incomplete sample has a vcf file
+      #there is no Indels tab files given, so no incomplete sample has a tab file
       incomplete_samples_with_tabIndels <- character(0)
     }
     
@@ -436,7 +436,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following TAB samples: ",paste(incomplete_samples_with_tabIndels,collapse = " "))
       
       mh_list <- foreach::foreach(sample=incomplete_samples_with_tabIndels) %dopar% {
-        res <- tabToIndelsClassification(rear::read_tsv(Indels_vcf_files[sample]),sample,genome.v = genome.v)
+        res <- tabToIndelsClassification(readr::read_tsv(Indels_vcf_files[sample]),sample,genome.v = genome.v)
         res$count_proportion
       }
       #combine in one table and add to data_matrix
