@@ -51,6 +51,7 @@
 #' @param SNV_tab_files list of file names corresponding to SNV TAB files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: chr, position, REF, ALT.
 #' @param SNV_catalogues data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
 #' @param Indels_vcf_files list of file names corresponding to Indels VCF files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.
+#' @param Indels_tab_files list of file names corresponding to Indels TAB files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied. Each File contains indels from a single sample and the following minimal columns: chr, position, REF, ALT.
 #' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
 #' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
@@ -69,6 +70,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               SNV_tab_files=NULL,
                               SNV_catalogues=NULL,
                               Indels_vcf_files=NULL,
+                              Indels_tab_files=NULL,
                               CNV_tab_files=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
@@ -93,6 +95,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                 SNV_tab_files,
                                 SNV_catalogues,
                                 Indels_vcf_files,
+                                Indels_tab_files,
                                 CNV_tab_files,
                                 SV_bedpe_files,
                                 SV_catalogues), function(x) names(x))))
@@ -404,12 +407,36 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       incomplete_samples_with_vcfIndels <- character(0)
     }
     
+    if (!is.null(Indels_tab_files)){
+      incomplete_samples_with_tabIndels <- intersect(incomplete_samples,names(Indels_tab_files))
+    }else{
+      #there is no Indels tab files given, so no incomplete sample has a tab file
+      incomplete_samples_with_tabIndels <- character(0)
+    }
+    
+    #also if a sample has both vcf and tab file, use the vcf file
+    incomplete_samples_with_tabIndels <- setdiff(incomplete_samples_with_tabIndels,incomplete_samples_with_vcfIndels)
+    
     #compute del.mh.prop for the samples with vcf Indels file that do not have del.mh.prop yet
     if(length(incomplete_samples_with_vcfIndels)>0){
-      message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following samples: ",paste(incomplete_samples_with_vcfIndels,collapse = " "))
+      message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following VCF samples: ",paste(incomplete_samples_with_vcfIndels,collapse = " "))
       
       mh_list <- foreach::foreach(sample=incomplete_samples_with_vcfIndels) %dopar% {
         res <- vcfToIndelsClassification(Indels_vcf_files[sample],sample,genome.v = genome.v)
+        res$count_proportion
+      }
+      #combine in one table and add to data_matrix
+      indels_classification_table <- do.call(rbind,mh_list)
+      rownames(indels_classification_table) <- indels_classification_table[,"sample"]
+      data_matrix[rownames(indels_classification_table),MH_cols] <- indels_classification_table[,"del.mh.prop"]
+    }
+    
+    #compute del.mh.prop for the samples with tab Indels file that do not have del.mh.prop yet
+    if(length(incomplete_samples_with_tabIndels)>0){
+      message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following TAB samples: ",paste(incomplete_samples_with_tabIndels,collapse = " "))
+      
+      mh_list <- foreach::foreach(sample=incomplete_samples_with_tabIndels) %dopar% {
+        res <- tabToIndelsClassification(readr::read_tsv(Indels_vcf_files[sample]),sample,genome.v = genome.v)
         res$count_proportion
       }
       #combine in one table and add to data_matrix
