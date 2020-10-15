@@ -20,6 +20,7 @@ test_that("test that SignatureExtraction() works on a random matrix", {
                       mut_thr = 0,
                       type_of_extraction = "rearr",
                       project = "test",
+                      plotCatalogue = TRUE,
                       parallel = TRUE,
                       nmfmethod = "brunet"))
   
@@ -42,11 +43,36 @@ test_that("test that SignatureExtraction() works on a random matrix", {
                       mut_thr = 0,
                       type_of_extraction = "subs",
                       project = "test",
+                      plotCatalogue = TRUE,
                       parallel = TRUE,
                       nmfmethod = "brunet"))
   
   #here goes the test
   expect_true(file.exists("extraction_test_subs/Sigs_OverallMetrics_test_nboots2.jpg"))
+  
+  #test dnv
+  dnv_example <- read.table("test.dnv.expected.tab",sep="\t",header = T,stringsAsFactors = F,check.names = F)
+  mut.order <- rownames(dnv_example)
+  n_row <- length(mut.order)
+  n_col <- 15
+  rnd_matrix <- round(matrix(runif(n_row*n_col,min = 0,max = 50),nrow = n_row,ncol = n_col))
+  colnames(rnd_matrix) <- paste0("C",1:n_col)
+  row.names(rnd_matrix) <- mut.order
+  suppressWarnings(SignatureExtraction(cat = rnd_matrix,
+                                       outFilePath = paste0("extraction_test_dnv/"),
+                                       nrepeats = 10,
+                                       nboots = 2,
+                                       nparallel = 2,
+                                       nsig = 2:3,
+                                       mut_thr = 0,
+                                       type_of_extraction = "dnv",
+                                       project = "test",
+                                       plotCatalogue = TRUE,
+                                       parallel = TRUE,
+                                       nmfmethod = "brunet"))
+  
+  #here goes the test
+  expect_true(file.exists("extraction_test_dnv/Sigs_OverallMetrics_test_nboots2.jpg"))
   
   #test generic
   n_row <- 10
@@ -63,6 +89,7 @@ test_that("test that SignatureExtraction() works on a random matrix", {
                       mut_thr = 0,
                       type_of_extraction = "generic",
                       project = "test",
+                      plotCatalogue = TRUE,
                       parallel = TRUE,
                       nmfmethod = "brunet"))
   
@@ -72,6 +99,7 @@ test_that("test that SignatureExtraction() works on a random matrix", {
   #remove the test directory
   unlink("extraction_test_rearr/", recursive = TRUE)
   unlink("extraction_test_subs/", recursive = TRUE)
+  unlink("extraction_test_dnv/", recursive = TRUE)
   unlink("extraction_test_generic/", recursive = TRUE)
   
   #switch warnings back on

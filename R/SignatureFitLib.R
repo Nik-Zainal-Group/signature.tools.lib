@@ -327,7 +327,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
                                                 cat, #catalogue, patients as columns, channels as rows
                                        signature_data_matrix, #signatures, signatures as columns, channels as rows
                                        nboot = 100, #number of bootstraps to use, more bootstraps more accurate results
-                                       type_of_mutations="subs", #use one of c("subs","rearr","generic")
+                                       type_of_mutations="subs", #use one of c("subs","rearr","generic","dnv")
                                        threshold_percent = 5, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
                                        threshold_p.value = 0.05, #p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
                                        method = "KLD", #KLD or SA, just don't use SA or you will wait forever, expecially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
@@ -770,7 +770,7 @@ unexplainedSamples <- function(fileout=NULL,catalogue,sigs,exposures,pvalue_thre
 #' 
 #' @param outdir output directory for the plot
 #' @param boostrapFit_res output of SignatureFit_withBootstrap
-#' @param type_of_mutations type of mutations: subs, rearr, or generic
+#' @param type_of_mutations type of mutations: subs, rearr, dnv, or generic
 #' @export
 plot_SignatureFit_withBootstrap <- function(outdir,
                                           boostrapFit_res,
@@ -845,6 +845,16 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           #3 difference
           #plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
           plotGenericSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
+        }
+      }else if(type_of_mutations=="dnv"){
+        #1 original
+        plotDNVSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
+        if(sum(res$cat[,i,drop=FALSE])>0){
+          #2 reconstructed
+          plotDNVSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
+          #3 difference
+          #plotDNVSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
+          plotDNVSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }
       if(sum(res$cat[,i,drop=FALSE])>0){

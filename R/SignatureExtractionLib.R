@@ -22,7 +22,7 @@
 #' @param nparallel how many processing units to use
 #' @param nsig list of number of signatures to try
 #' @param mut_thr threshold of mutations to remove empty/almost empty rows and columns
-#' @param type_of_extraction choose among {"subs","rearr","generic"}
+#' @param type_of_extraction choose among {"subs","rearr","generic","dnv"}
 #' @param project give a name to your project
 #' @param parallel set to TRUE to use parallel computation (Recommended)
 #' @param nmfmethod choose among {"brunet","lee","nsNMF"}, this choice will be passed to the NMF::nmf function
@@ -65,7 +65,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 nparallel=1, # how many processing units to use
                                 nsig=c(3:15), # range of number of signatures to try
                                 mut_thr=0, # threshold of mutations to remove empty/almost empty rows and columns
-                                type_of_extraction="subs", #choose among {"subs","rearr","generic"}
+                                type_of_extraction="subs", #choose among {"subs","rearr","generic","dnv"}
                                 project="extraction", # give a name to your project
                                 parallel=FALSE, # set to TRUE to use parallel computation (Recommended)
                                 nmfmethod="brunet", #choose among {"brunet","lee","nsNMF"}
@@ -101,13 +101,15 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
   #Save catalogue used
   nsamples <- ncol(cat)
   if(plotCatalogue){
-    cat_file <- paste0(outFilePath,"CatalogueUsedAfterPreprocessing_plot_",project,".jpg")
+    cat_file <- paste0(outFilePath,"CatalogueUsedAfterPreprocessing_plot_",project,".pdf")
     if (type_of_extraction == "subs"){
       plotSubsSignatures(cat,cat_file,plot_sum = TRUE,overall_title = paste0("Catalogue - ",project," (",nsamples," samples)"))
     }else if (type_of_extraction == "rearr"){
       plotRearrSignatures(cat,cat_file,plot_sum = TRUE,overall_title = paste0("Catalogue - ",project," (",nsamples," samples)"))
     }else if (type_of_extraction == "generic"){
       plotGenericSignatures(cat,cat_file,plot_sum = TRUE,overall_title = paste0("Catalogue - ",project," (",nsamples," samples)"))
+    }else if (type_of_extraction == "dnv"){
+      plotDNVSignatures(cat,cat_file,plot_sum = TRUE,overall_title = paste0("Catalogue - ",project," (",nsamples," samples)"))
     }
   }
   cat_file <- paste0(outFilePath,"CatalogueUsedAfterPreprocessing_plot_",group,".txt")
@@ -732,7 +734,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         if(!is.null(matrix_of_fixed_signatures)){
           signature_data_matrix <- cbind(matrix_of_fixed_signatures,signature_data_matrix)
         }
-        subs_file <- paste0(outNsDir,"Sigs_plot_",group,"_ns",ns,"_nboots",nboots,cl,".jpg")
+        subs_file <- paste0(outNsDir,"Sigs_plot_",group,"_ns",ns,"_nboots",nboots,cl,".pdf")
         if (type_of_extraction == "subs"){
           #plotSubsSignatures(signature_data_matrix,subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
           plotSubsSignatures_withMeanSd(signature_data_matrix,mean_signatures[[cl_tag]],sd_signatures[[cl_tag]],subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
@@ -742,6 +744,9 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         }else if (type_of_extraction == "generic"){
           #plotGenericSignatures(signature_data_matrix,subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
           plotGenericSignatures_withMeanSd(signature_data_matrix,mean_signatures[[cl_tag]],sd_signatures[[cl_tag]],subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
+        }else if (type_of_extraction == "dnv"){
+          #plotGenericSignatures(signature_data_matrix,subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
+          plotDNVSignatures_withMeanSd(signature_data_matrix,mean_signatures[[cl_tag]],sd_signatures[[cl_tag]],subs_file,plot_sum = FALSE,overall_title = paste0("Medoids Signatures when extracting ",ns))
         }
         subs_file <- paste0(outNsDir,"Sigs_plot_",group,"_ns",ns,"_nboots",nboots,cl,".tsv")
         write.table(signature_data_matrix,file = subs_file,
