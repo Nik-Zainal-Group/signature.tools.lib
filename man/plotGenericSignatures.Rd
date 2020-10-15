@@ -5,7 +5,8 @@
 \title{Plot Generic Signatures or Catalogues}
 \usage{
 plotGenericSignatures(signature_data_matrix, output_file = NULL,
-  plot_sum = TRUE, overall_title = "", mar = NULL)
+  plot_sum = TRUE, overall_title = "", add_to_titles = NULL,
+  mar = NULL)
 }
 \arguments{
 \item{signature_data_matrix}{matrix of signatures, signatures as columns and channels as rows}

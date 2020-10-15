@@ -11,7 +11,7 @@ plot_SignatureFit_withBootstrap(outdir, boostrapFit_res, type_of_mutations)
 
 \item{boostrapFit_res}{output of SignatureFit_withBootstrap}
 
-\item{type_of_mutations}{type of mutations: subs, rearr, or generic}
+\item{type_of_mutations}{type of mutations: subs, rearr, dnv, or generic}
 }
 \description{
 Generate plots from the output of SignatureFit_withBootstrap.

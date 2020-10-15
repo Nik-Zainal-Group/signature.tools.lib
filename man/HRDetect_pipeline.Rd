@@ -6,8 +6,8 @@
 \usage{
 HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
   SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
-  Indels_vcf_files = NULL, CNV_tab_files = NULL,
-  SV_bedpe_files = NULL, SV_catalogues = NULL,
+  Indels_vcf_files = NULL, Indels_tab_files = NULL,
+  CNV_tab_files = NULL, SV_bedpe_files = NULL, SV_catalogues = NULL,
   signature_type = "COSMIC", cosmic_siglist = NULL,
   bootstrap_scores = FALSE, nparallel = 1)
 }
@@ -23,6 +23,8 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 \item{SNV_catalogues}{data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
 
 \item{Indels_vcf_files}{list of file names corresponding to Indels VCF files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.}
+
+\item{Indels_tab_files}{list of file names corresponding to Indels TAB files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied. Each File contains indels from a single sample and the following minimal columns: chr, position, REF, ALT.}
 
 \item{CNV_tab_files}{list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
 

@@ -46,7 +46,7 @@ SignatureExtraction(cat, outFilePath, matrix_of_fixed_signatures = NULL,
 
 \item{mut_thr}{threshold of mutations to remove empty/almost empty rows and columns}
 
-\item{type_of_extraction}{choose among {"subs","rearr","generic"}}
+\item{type_of_extraction}{choose among {"subs","rearr","generic","dnv"}}
 
 \item{project}{give a name to your project}
 
