@@ -332,7 +332,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
         if(resncol>1){
           rescolsum <- apply(res,2,sum)
           sampletouse <- which.max(rescolsum)[1]
-          message(paste0("[warning HRDetect_pipeline] BEDPE file for sample ",sample," contained ",resncol," sample names: ",paste(colnames(res),collapse = ", "),". This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangments (",colnames(res)[sampletouse],"). Please double check and rerun if necessary with only one sample for each BEDPE file."))
+          message(paste0("[warning HRDetect_pipeline] BEDPE file for sample ",sample," contained ",resncol," sample names: ",paste(colnames(res),collapse = ", "),". This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangements (",colnames(res)[sampletouse],"). Please double check and rerun if necessary with only one sample for each BEDPE file."))
           res <- res[,sampletouse,drop=F]
         }
         colnames(res) <- sample
