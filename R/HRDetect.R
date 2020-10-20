@@ -327,6 +327,12 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
         reslist <- bedpeToRearrCatalogue(sv_bedpe)
         res <- reslist$rearr_catalogue
+        # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
+        if(ncol(res)>1){
+          rescolsum <- apply(res,2,sum)
+          res <- res[,which.max(rescolsum)[1],drop=F]
+          message(paste0("[warning HRDetect_pipeline] BEDPE file for sample ",sample," contained two sample names. This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangments. Please double check and rerun if necessary with only one sample for each BEDPE file."))
+        }
         colnames(res) <- sample
         res
       }
