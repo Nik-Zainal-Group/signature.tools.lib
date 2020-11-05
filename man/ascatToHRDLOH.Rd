@@ -4,15 +4,17 @@
 \alias{ascatToHRDLOH}
 \title{HRD-LOH index from ASCAT}
 \usage{
-ascatToHRDLOH(ascat.data, SAMPLE.ID)
+ascatToHRDLOH(ascat.data, SAMPLE.ID, return.loc = FALSE)
 }
 \arguments{
 \item{ascat.data}{data frame with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
 
 \item{SAMPLE.ID}{sample name}
+
+\item{return.loc}{if TRUE return the HRD-LOH regions, while if FALSE return the HRD-LOH index (i.e. the count of the regions) instead.}
 }
 \value{
-returns the HRD-LOH index
+returns the HRD-LOH index or regions
 }
 \description{
 Compute the HRD-LOH index starting from a data fram (possibly loaded from an ASCAT output file)

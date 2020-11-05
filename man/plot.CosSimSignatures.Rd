@@ -4,8 +4,8 @@
 \alias{plot.CosSimSignatures}
 \title{plot.CosSimSignatures}
 \usage{
-plot.CosSimSignatures(sig1, sig2, output_file, dpi = 300, xlabel = "",
-  ylabel = "")
+\method{plot}{CosSimSignatures}(sig1, sig2, output_file, dpi = 300,
+  xlabel = "", ylabel = "")
 }
 \arguments{
 \item{sig1}{matrix with signatures as columns}
