@@ -9,6 +9,7 @@
 - [How to use this package](#howtouse)
 - [Package documentation](#docs)
 - [Functions provided by the package](#functions)
+- [Command line scripts](#scripts)
 - [Examples](#examples)
   - [Test examples](#examplestests)
   - [Example 01](#examplese01)
@@ -253,7 +254,7 @@ of JSON files that can be used for web visualisation
 
 We provide a command line script for the HRDetect pipeline, which can
 be used instead of writing your own R code. You can find this in
-the ```scripts''' directory.
+the ```scripts``` directory.
 
 <a name="examples"/>
 
