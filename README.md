@@ -189,6 +189,9 @@ Functions for HRD indexes
 frame formatted similarly to an ASCAT output file. This is a wrapper for
 the function ```calc.hrd```, with a simplified interface, where only a
 data frame is requested.
+- **```plotCopyNumbers(...)```**: Plot the copy numbers across the Chromosomes.
+Optionally, plot also highlight regions at the bottom.
+For example, could be used to highlight HRD-LOH regions..
 - **```calc.hrd(...)```**: compute HRD-LOH (Loss of Heterozygosity),
 written by Nicolai Juul Birkbak
 - **```calc.ai(...)```**: compute HRD-NtAI (Number of telomeric Allelic
@@ -242,6 +245,15 @@ Function for web formats export
 obtained from the ```SignatureFit_withBootstrap``` or
 ```SignatureFit_withBootstrap_Analysis``` function, export it to a set
 of JSON files that can be used for web visualisation
+
+
+<a name="scripts"/>
+
+## Command line scripts
+
+We provide a command line script for the HRDetect pipeline, which can
+be used instead of writing your own R code. You can find this in
+the ```scripts''' directory.
 
 <a name="examples"/>
 

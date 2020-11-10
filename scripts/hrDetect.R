@@ -9,7 +9,7 @@ how_to <- function(){
   message(" ")
   message("hrDetect [-i INPUTTABLE] [-o OUTDIR] [-b] [-s SIGTYPE] [-e GENOMEV] [-n NPARALLEL]")
   message(" ")
-  message("    -i INPUTTABLE    Tab separate input table with the list of files for each sample. Columns should be: sample, SNV_vcf_files, SNV_tab_files, Indels_vcf_files, CNV_tab_files, SV_bedpe_files. Note that only one column of SNV_vcf_files and SNV_tab_files is necessary")
+  message("    -i INPUTTABLE    Tab separate input table with the list of files for each sample. Columns should be: sample, SNV_vcf_files, SNV_tab_files, Indels_vcf_files, Indels_tab_files, CNV_tab_files, SV_bedpe_files. Note that only one column of SNV_vcf_files and SNV_tab_files is necessary")
   message("    -o OUTDIR        Name of the output directory. If omitted a name will be given automatically.")
   message("    -b               Request HRDetect with bootstrap")
   message("    -s SIGTYPE       Either COSMIC or one of the following organs: Biliary, Bladder, Bone_SoftTissue, Breast, Cervix, CNS, Colorectal, Esophagus, Head_neck, Kidney, Liver, Lung, Lymphoid, Ovary, Pancreas, Prostate, Skin, Stomach, Uterus")
@@ -90,6 +90,7 @@ samples <- NULL
 SNV_vcf_files <- NULL
 SNV_tab_files <- NULL
 Indels_vcf_files <- NULL
+Indels_tab_files <- NULL
 CNV_tab_files <- NULL
 SV_bedpe_files <- NULL
 
@@ -109,6 +110,10 @@ if ("Indels_vcf_files" %in% colnames(input_t)) {
   Indels_vcf_files <- input_t$Indels_vcf_files
   names(Indels_vcf_files) <- samples
 }
+if ("Indels_tab_files" %in% colnames(input_t)) {
+  Indels_tab_files <- input_t$Indels_tab_files
+  names(Indels_tab_files) <- samples
+}
 if ("CNV_tab_files" %in% colnames(input_t)) {
   CNV_tab_files <- input_t$CNV_tab_files
   names(CNV_tab_files) <- samples
@@ -123,6 +128,7 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                SNV_vcf_files = SNV_vcf_files,
                                SNV_tab_files = SNV_tab_files,
                                Indels_vcf_files = Indels_vcf_files,
+                               Indels_tab_files = Indels_tab_files,
                                CNV_tab_files = CNV_tab_files,
                                SV_bedpe_files = SV_bedpe_files,
                                bootstrap_scores = bootstrap_scores,
