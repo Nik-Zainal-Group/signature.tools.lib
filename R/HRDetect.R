@@ -444,7 +444,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       message("[info HRDetect_pipeline] Proportion of Indels with MH will be computed for the following TAB samples: ",paste(incomplete_samples_with_tabIndels,collapse = " "))
       
       mh_list <- foreach::foreach(sample=incomplete_samples_with_tabIndels) %dopar% {
-        res <- tabToIndelsClassification(readr::read_tsv(Indels_vcf_files[sample]),sample,genome.v = genome.v)
+        res <- tabToIndelsClassification(readr::read_tsv(Indels_tab_files[sample]),sample,genome.v = genome.v)
         res$count_proportion
       }
       #combine in one table and add to data_matrix
