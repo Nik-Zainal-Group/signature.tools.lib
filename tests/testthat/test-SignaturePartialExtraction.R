@@ -79,9 +79,9 @@ test_that("test that SignatureExtraction() works on a random matrix and using pa
   expect_true(file.exists("extraction_test_generic/Sigs_OverallMetrics_test_nboots2.jpg"))  
   
   #remove the test directory
-  # unlink("extraction_test_rearr/", recursive = TRUE)
-  # unlink("extraction_test_subs/", recursive = TRUE)
-  # unlink("extraction_test_generic/", recursive = TRUE)
+  unlink("extraction_test_rearr/", recursive = TRUE)
+  unlink("extraction_test_subs/", recursive = TRUE)
+  unlink("extraction_test_generic/", recursive = TRUE)
   
   #switch warnings back on
   options(warn=0)
