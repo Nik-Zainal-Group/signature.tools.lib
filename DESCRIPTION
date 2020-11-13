@@ -35,5 +35,6 @@ Imports:
     scales,
     GenomicRanges,
     IRanges,
-    BSgenome
+    BSgenome,
+    readr
 RoxygenNote: 6.1.1

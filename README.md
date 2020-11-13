@@ -92,7 +92,8 @@ This is the full list of R package dependencies:
     scales,
     GenomicRanges,
     IRanges,
-    BSgenome
+    BSgenome, 
+    readr
 ```
 
 <a name="test"/>
