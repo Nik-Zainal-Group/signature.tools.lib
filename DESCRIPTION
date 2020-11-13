@@ -8,6 +8,8 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 biocViews: 
+Remotes:
+    linxihui/NNLM
 Imports: 
     VariantAnnotation,
     BSgenome.Hsapiens.UCSC.hg38,
@@ -26,7 +28,6 @@ Imports:
     methods,
     cluster,
     stats,
-    NNLM,
     nnls,
     GenSA,
     gmp,
@@ -35,5 +36,6 @@ Imports:
     scales,
     GenomicRanges,
     IRanges,
-    BSgenome
+    BSgenome, 
+    readr
 RoxygenNote: 6.1.1

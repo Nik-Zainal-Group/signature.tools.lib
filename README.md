@@ -95,6 +95,10 @@ This is the full list of R package dependencies:
     BSgenome
 ```
 
+We have noticed that the ```NNLM``` package is frequently unavailable to download automatically
+during the R installation, so we have changed the installation process to install ```NNLM``` from
+the github repository [linxihui/NNLM](https://github.com/linxihui/NNLM).
+
 <a name="test"/>
 
 ## Testing the package

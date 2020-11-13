@@ -84,9 +84,8 @@ plotCopyNumbers <- function(sv_df,
   }
   text(x=maxCoord/2,y=-2,labels = "chromosomes",cex = 1)
   par(xpd=FALSE)
-  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c("green","red","purple"),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.2))
+  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c("green","red","purple"),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.3))
   if(!is.null(filename)) dev.off()
-  # return the HRD-LOH regions or NULL
-  return(HRDLOHregions)
+
 }                                                                                                           
                                                                                                              
