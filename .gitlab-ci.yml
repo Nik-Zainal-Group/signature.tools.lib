@@ -1,0 +1,19 @@
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  tags:
+    - signal
+    - docker
+  script:
+    - docker build -t signature-tools-lib_${CI_BUILD_REF_SLUG} .
+
+test:
+  stage: test
+  tags:
+    - signal
+    - docker
+  script:
+    - docker run --rm signature-tools-lib_${CI_BUILD_REF_SLUG} -e 'devtools::test()'
