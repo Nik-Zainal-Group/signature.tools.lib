@@ -2,7 +2,11 @@ FROM rocker/r-apt:bionic
 
 RUN apt-get update && \
     apt-get install -y -qq \
-      curl \
+      libcurl4-openssl-dev \
+      libgmp3-dev \
+      libssl-dev \
+      libsqlite3-dev \
+      libxml2-dev \
     	r-cran-devtools \
       r-cran-nmf \
       r-cran-foreach \
