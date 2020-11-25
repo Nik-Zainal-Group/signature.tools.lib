@@ -2,6 +2,7 @@ FROM rocker/r-apt:bionic
 
 RUN apt-get update && \
     apt-get install -y -qq \
+      curl \
     	r-cran-devtools \
       r-cran-nmf \
       r-cran-foreach \
