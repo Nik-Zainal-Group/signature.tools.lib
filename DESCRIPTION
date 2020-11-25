@@ -28,6 +28,7 @@ Imports:
     methods,
     cluster,
     stats,
+    NNLM,
     nnls,
     GenSA,
     gmp,
