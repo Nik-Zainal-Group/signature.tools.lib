@@ -1,16 +1,21 @@
-FROM r-base:4.0.3
+FROM rocker/r-apt:bionic
 
-RUN apt-get update -qq \ 
-  && apt-get install -t unstable -y --no-install-recommends \
-    libcurl4-openssl-dev \
-    libgmp3-dev \
-    libssl-dev \
-    libsqlite3-dev \
-    libxml2-dev \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/ \
-  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
-RUN Rscript -e 'install.packages("devtools")'
+RUN apt-get update && \
+    apt-get install -y -qq \
+    	r-cran-devtools \
+      r-cran-nmf \
+      r-cran-foreach \
+      r-cran-doparallel \
+      r-cran-domc \
+      r-cran-lpsolve \
+      r-cran-ggplot2 \
+      r-cran-cluster \
+      r-cran-nnls \
+      r-cran-gmp \
+      r-cran-plyr \
+      r-cran-scales \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/
 
 WORKDIR /lib
 COPY DESCRIPTION /lib/DESCRIPTION
