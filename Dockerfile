@@ -3,6 +3,7 @@ FROM r-base:4.0.3
 RUN apt-get update -qq \ 
   && apt-get install -t unstable -y --no-install-recommends \
     libcurl4-openssl-dev \
+    libgmp3-dev \
     libssl-dev \
     libsqlite3-dev \
     libxml2-dev \
