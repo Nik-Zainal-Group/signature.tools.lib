@@ -61,6 +61,15 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
       }
     }
     
+    # remove translocations with length less than 1kb
+    bkdist <- abs(sv_bedpe$start2 - sv_bedpe$start1)
+    sv_bedpe[sv_bedpe$svclass!='translocation',"length"] <- bkdist[sv_bedpe$svclass!='translocation']
+    all_sv_annotated <- sv_bedpe
+    toberemoved <- sv_bedpe$svclass!='translocation' & bkdist<1e3
+    all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
+    all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
+    sv_bedpe <- sv_bedpe[!toberemoved,]
+    
     #now compute the catalogue
     rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
   }else{
@@ -70,7 +79,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
   
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
-  return_list$annotated_bedpe <- sv_bedpe
+  return_list$annotated_bedpe <- all_sv_annotated
   
   return(return_list)
 }

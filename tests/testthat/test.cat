@@ -15,12 +15,12 @@ clustered_inv_100Kb-1Mb	0
 clustered_inv_1Mb-10Mb	0
 clustered_inv_>10Mb	0
 clustered_trans	0
-non-clustered_del_1-10Kb	14
+non-clustered_del_1-10Kb	3
 non-clustered_del_10-100Kb	0
 non-clustered_del_100Kb-1Mb	0
 non-clustered_del_1Mb-10Mb	0
 non-clustered_del_>10Mb	0
-non-clustered_tds_1-10Kb	9
+non-clustered_tds_1-10Kb	8
 non-clustered_tds_10-100Kb	0
 non-clustered_tds_100Kb-1Mb	0
 non-clustered_tds_1Mb-10Mb	0
