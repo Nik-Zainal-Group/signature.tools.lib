@@ -530,8 +530,15 @@ plotSubsSignatures <- function(signature_data_matrix,
                                add_to_titles = NULL,
                                mar=NULL){
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
+  # plotcolours <- c("blue","black","red","gray","green","pink")
+  plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
+                   rgb(0,0,0,maxColorValue = 255),
+                   rgb(230,47,41,maxColorValue = 255),
+                   rgb(208,207,207,maxColorValue = 255),
+                   rgb(169,212,108,maxColorValue = 255),
+                   rgb(238,205,204,maxColorValue = 255))
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
-  rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
+  rearr.colours <- c(rep(plotcolours[1],16),rep(plotcolours[2],16),rep(plotcolours[3],16),rep(plotcolours[4],16),rep(plotcolours[5],16),rep(plotcolours[6],16))
   nplotrows <- ceiling(ncol(signature_data_matrix)/3)
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
@@ -572,12 +579,12 @@ plotSubsSignatures <- function(signature_data_matrix,
     rectbottom <- -0.16
     start1 <- 0.035
     gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0,border = NA)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0,border = NA)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0,border = NA)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0,border = NA)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0,border = NA)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0,border = NA)
+    rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
     textposx <- 0.04+seq(8,88,16)/104
     text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
@@ -597,8 +604,15 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
                                           add_to_titles = NULL,
                                           mar=NULL){
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
+  # plotcolours <- c("blue","black","red","gray","green","pink")
+  plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
+                   rgb(0,0,0,maxColorValue = 255),
+                   rgb(230,47,41,maxColorValue = 255),
+                   rgb(208,207,207,maxColorValue = 255),
+                   rgb(169,212,108,maxColorValue = 255),
+                   rgb(238,205,204,maxColorValue = 255))
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
-  rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
+  rearr.colours <- c(rep(plotcolours[1],16),rep(plotcolours[2],16),rep(plotcolours[3],16),rep(plotcolours[4],16),rep(plotcolours[5],16),rep(plotcolours[6],16))
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
@@ -641,12 +655,12 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     rectbottom <- -0.16
     start1 <- 0.035
     gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0,border = NA)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0,border = NA)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0,border = NA)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0,border = NA)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0,border = NA)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0,border = NA)
+    rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
     textposx <- 0.04+seq(8,88,16)/104
     text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
@@ -674,12 +688,12 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     rectbottom <- -0.16
     start1 <- 0.035
     gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = "blue",lwd = 0)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = "black",lwd = 0)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = "red",lwd = 0)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = "grey",lwd = 0)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = "green",lwd = 0)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = "pink",lwd = 0)
+    rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
+    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
+    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
+    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
+    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
+    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
     textposx <- 0.04+seq(8,88,16)/104
     text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
