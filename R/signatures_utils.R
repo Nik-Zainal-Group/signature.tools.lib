@@ -522,13 +522,17 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
+#' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
+#' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
 #' @export
 plotSubsSignatures <- function(signature_data_matrix,
                                output_file = NULL,
                                plot_sum = TRUE,
                                overall_title = "",
                                add_to_titles = NULL,
-                               mar=NULL){
+                               mar=NULL,
+                               howManyInOnePage=100,
+                               ncolumns=3){
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
   # plotcolours <- c("blue","black","red","gray","green","pink")
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
@@ -539,60 +543,72 @@ plotSubsSignatures <- function(signature_data_matrix,
                    rgb(238,205,204,maxColorValue = 255))
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   rearr.colours <- c(rep(plotcolours[1],16),rep(plotcolours[2],16),rep(plotcolours[3],16),rep(plotcolours[4],16),rep(plotcolours[5],16),rep(plotcolours[6],16))
-  nplotrows <- ceiling(ncol(signature_data_matrix)/3)
-  if(!is.null(output_file)) {
-    if(plottype=="jpg"){
-      jpeg(output_file,width = 3*800,height = nplotrows*320,res = 220)
-    }else if(plottype=="pdf"){
-      pdf(output_file,width = 3*8,height = nplotrows*3.2,pointsize = 26)
+  # multipage <- FALSE
+  # if(ncol(signature_data_matrix)>howManyInOnePage) multipage <- TRUE
+  npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
+  rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
+  for(i in 1:npages){
+    ifrom <- howManyInOnePage*(i-1) + 1
+    ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
+    tmpmatrix <- signature_data_matrix[,ifrom:ito,drop=F]
+    if (!is.null(add_to_titles)) tmpadd <- add_to_titles[ifrom:ito]
+    if(npages>1) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
+    # now plot
+    nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
+    if(!is.null(output_file)) {
+      if(plottype=="jpg"){
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*320,res = 220)
+      }else if(plottype=="pdf"){
+        pdf(output_file,width = ncolumns*8,height = nplotrows*3.2,pointsize = 26)
+      }
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
     }
-    par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
-  }
-  for (pos in 1:ncol(signature_data_matrix)){
-    if(is.null(mar)){
-      par(mar=c(2,3,2,2))
-    }else{
-      par(mar=mar)
+    for (pos in 1:ncol(tmpmatrix)){
+      if(is.null(mar)){
+        par(mar=c(2,3,2,2))
+      }else{
+        par(mar=mar)
+      }
+      title <- colnames(tmpmatrix)[pos]
+      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," substitutions)")
+      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
+      xlabels <- rep("",96)
+      # xlabels[8] <- "C > A"
+      # xlabels[24] <- "C > G"
+      # xlabels[40] <- "C > T"
+      # xlabels[56] <- "T > A"
+      # xlabels[72] <- "T > C"
+      # xlabels[88] <- "T > G"
+      barplot(tmpmatrix[,pos],
+              main = title,
+              #names.arg = row.names(tmpmatrix),
+              names.arg = xlabels,
+              col=rearr.colours,
+              beside = TRUE,
+              las=2,
+              cex.names = 1,border = NA,space = 0.2)
+      par(xpd=TRUE)
+      par(usr = c(0, 1, 0, 1))
+      recttop <- -0.02
+      rectbottom <- -0.16
+      start1 <- 0.035
+      gap <- 0.155
+      rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
+      rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
+      rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
+      rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
+      rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
+      rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
+      textposx <- 0.04+seq(8,88,16)/104
+      text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
+      text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
+      #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
+      par(xpd=FALSE)
     }
-    title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," substitutions)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
-    muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
-    xlabels <- rep("",96)
-    # xlabels[8] <- "C > A"
-    # xlabels[24] <- "C > G"
-    # xlabels[40] <- "C > T"
-    # xlabels[56] <- "T > A"
-    # xlabels[72] <- "T > C"
-    # xlabels[88] <- "T > G"
-    barplot(signature_data_matrix[,pos],
-            main = title,
-            #names.arg = row.names(signature_data_matrix),
-            names.arg = xlabels,
-            col=rearr.colours,
-            beside = TRUE,
-            las=2,
-            cex.names = 1,border = NA,space = 0.2)
-    par(xpd=TRUE)
-    par(usr = c(0, 1, 0, 1))
-    recttop <- -0.02
-    rectbottom <- -0.16
-    start1 <- 0.035
-    gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
-    textposx <- 0.04+seq(8,88,16)/104
-    text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
-    text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
-    #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
-    par(xpd=FALSE)
+    title(main = overall_title,outer = TRUE,cex.main = 2)
+    if(!is.null(output_file)) dev.off()
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
-  if(!is.null(output_file)) dev.off()
 }
 
 plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
