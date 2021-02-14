@@ -89,6 +89,15 @@ computeCorrelation <- function(x){
   return(out)
 }
 
+#' Compute Correlation (parallel)
+#' 
+#' Compute the correlation of a set of signatures/catalogues according to cosine similarity
+#' 
+#' @param x catalogues/signature matrix where each column is a catalogue/signature and each row is a channel.
+#' @param nparallel how many parallel processes to use
+#' @param parallel set to TRUE in order to use parallel
+#' @return correlation matrix
+#' @export
 computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
   if (ncol(x)==1){
     #if there is only one column, correlation matrix is 1
