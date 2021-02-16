@@ -552,16 +552,14 @@ plotSubsSignatures <- function(signature_data_matrix,
                    rgb(238,205,204,maxColorValue = 255))
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   rearr.colours <- c(rep(plotcolours[1],16),rep(plotcolours[2],16),rep(plotcolours[3],16),rep(plotcolours[4],16),rep(plotcolours[5],16),rep(plotcolours[6],16))
-  # multipage <- FALSE
-  # if(ncol(signature_data_matrix)>howManyInOnePage) multipage <- TRUE
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
-  rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
+  if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
   for(i in 1:npages){
     ifrom <- howManyInOnePage*(i-1) + 1
     ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
     tmpmatrix <- signature_data_matrix[,ifrom:ito,drop=F]
     if (!is.null(add_to_titles)) tmpadd <- add_to_titles[ifrom:ito]
-    if(npages>1) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
+    if(npages>1 & !is.null(output_file)) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
     # now plot
     nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
     if(!is.null(output_file)) {
@@ -737,13 +735,17 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
+#' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
+#' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
 #' @export
 plotRearrSignatures <-function(signature_data_matrix,
                                output_file = NULL,
                                plot_sum = TRUE,
                                overall_title = "",
                                add_to_titles = NULL,
-                               mar=NULL){
+                               mar=NULL,
+                               howManyInOnePage=100,
+                               ncolumns=3){
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
@@ -756,92 +758,103 @@ plotRearrSignatures <-function(signature_data_matrix,
   non_clust_col = rgb(240,240,240, maxColorValue =255)
   #rearr.colours <- c(rep("darkblue",16),rep("red",16))
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
-  nplotrows <- ceiling(ncol(signature_data_matrix)/3)
-  if(!is.null(output_file)){
-    if(plottype=="jpg"){
-      jpeg(output_file,width = 3*800,height = nplotrows*500,res = 220)
-    }else if(plottype=="pdf"){
-      pdf(output_file,width = 3*8,height = nplotrows*5,pointsize = 26)
+  npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
+  if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
+  
+  for(i in 1:npages){
+    ifrom <- howManyInOnePage*(i-1) + 1
+    ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
+    tmpmatrix <- signature_data_matrix[,ifrom:ito,drop=F]
+    if (!is.null(add_to_titles)) tmpadd <- add_to_titles[ifrom:ito]
+    if(npages>1 & !is.null(output_file)) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
+    # now plot
+    nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
+    if(!is.null(output_file)){
+      if(plottype=="jpg"){
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
+      }else if(plottype=="pdf"){
+        pdf(output_file,width = ncolumns*8,height = nplotrows*5,pointsize = 26)
+      }
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
     }
-    par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
+    sizes <- c("1-10Kb",
+               "10-100Kb",
+               "100Kb-1Mb",
+               "1Mb-10Mb",
+               ">10Mb")
+    sizes_names <- c(rep(sizes,3),"",rep(sizes,3),"")
+    for (pos in 1:ncol(tmpmatrix)){
+      if(is.null(mar)){
+        par(mar=c(8,3,2,2))
+      }else{
+        par(mar=mar)
+      }
+      title <- colnames(tmpmatrix)[pos]
+      if (plot_sum) title <- paste0(title," (",sum(tmpmatrix[,pos])," rearrangements)")
+      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      pos <- barplot(tmpmatrix[,pos],
+                     main = title,
+                     names.arg = NA,
+                     #names.arg = sizes_names,
+                     col=rearr.colours,
+                     beside = FALSE,
+                     #las=2,
+                     cex.names = 0.8,
+                     #mgp=c(3,2,0),
+                     border = 0,
+                     space = 0.1)
+      axis(1,
+           las=2,
+           #hadj=0.5,
+           at=pos,
+           lab=sizes_names,
+           #mgp=c(3,2,0),
+           col = "transparent",
+           line = 1,
+           cex.axis = 0.8)
+      #save old plot coordinates
+      op <- par("usr")
+      #set new coordinates
+      par(usr = c(0, 1, 0, 1))
+      #add graphics
+      par(xpd=TRUE)
+      start1 <- 0.035
+      xsep = 0.145
+      start1_text <- 0.11
+      tr_size <- 0.03
+      #rect(0.1, 0.1, 0.2, 0.2,col = "blue",lwd = 0)
+      #rect(0.1, 0.1, 0.11, 0.11,col = "red",lwd = 0)
+      stop <- start1
+      for(i in 1:2){
+        start <- stop
+        stop <- start + xsep
+        rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0,border = NA)
+        text(x = start+0.5*xsep,y = -0.08,"del",col = "white")
+        start <- stop
+        stop <- start + xsep
+        rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0,border = NA)
+        text(x = start+0.5*xsep,y = -0.08,"tds",col = "white")
+        start <- stop
+        stop <- start + xsep
+        rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0,border = NA)
+        text(x = start+0.5*xsep,y = -0.08,"inv",col = "white")
+        start <- stop
+        stop <- start + tr_size
+        rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0,border = NA)
+        text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white")
+      }
+      xsep2 <- 3*xsep+tr_size
+      rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)
+      text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
+      rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
+      text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
+      
+      #restore old coordinates
+      par(usr = op)
+    }
+    title(main = overall_title,outer = TRUE,cex.main = 2)
+    if(!is.null(output_file)) dev.off()
   }
-  sizes <- c("1-10Kb",
-             "10-100Kb",
-             "100Kb-1Mb",
-             "1Mb-10Mb",
-             ">10Mb")
-  sizes_names <- c(rep(sizes,3),"",rep(sizes,3),"")
-  for (pos in 1:ncol(signature_data_matrix)){
-    if(is.null(mar)){
-      par(mar=c(8,3,2,2))
-    }else{
-      par(mar=mar)
-    }
-    title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",sum(signature_data_matrix[,pos])," rearrangements)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
-    pos <- barplot(signature_data_matrix[,pos],
-                   main = title,
-                   names.arg = NA,
-                   #names.arg = sizes_names,
-                   col=rearr.colours,
-                   beside = FALSE,
-                   #las=2,
-                   cex.names = 0.8,
-                   #mgp=c(3,2,0),
-                   border = 0,
-                   space = 0.1)
-    axis(1,
-         las=2,
-         #hadj=0.5,
-         at=pos,
-         lab=sizes_names,
-         #mgp=c(3,2,0),
-         col = "transparent",
-         line = 1,
-         cex.axis = 0.8)
-    #save old plot coordinates
-    op <- par("usr")
-    #set new coordinates
-    par(usr = c(0, 1, 0, 1))
-    #add graphics
-    par(xpd=TRUE)
-    start1 <- 0.035
-    xsep = 0.145
-    start1_text <- 0.11
-    tr_size <- 0.03
-    #rect(0.1, 0.1, 0.2, 0.2,col = "blue",lwd = 0)
-    #rect(0.1, 0.1, 0.11, 0.11,col = "red",lwd = 0)
-    stop <- start1
-    for(i in 1:2){
-      start <- stop
-      stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0,border = NA)
-      text(x = start+0.5*xsep,y = -0.08,"del",col = "white")
-      start <- stop
-      stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0,border = NA)
-      text(x = start+0.5*xsep,y = -0.08,"tds",col = "white")
-      start <- stop
-      stop <- start + xsep
-      rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0,border = NA)
-      text(x = start+0.5*xsep,y = -0.08,"inv",col = "white")
-      start <- stop
-      stop <- start + tr_size
-      rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0,border = NA)
-      text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white")
-    }
-    xsep2 <- 3*xsep+tr_size
-    rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)
-    text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
-    rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
-    text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
-    
-    #restore old coordinates
-    par(usr = op)
-  }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
-  if(!is.null(output_file)) dev.off()
 }
 
 
