@@ -6,7 +6,7 @@
 \usage{
 plotDNVSignatures(signature_data_matrix, output_file = NULL,
   plot_sum = TRUE, overall_title = "", add_to_titles = NULL,
-  mar = NULL)
+  mar = NULL, howManyInOnePage = 100, ncolumns = 3)
 }
 \arguments{
 \item{signature_data_matrix}{matrix of signatures or catalogues, signatures as columns and channels as rows. You can use either Zou or Alexandrov Style and the function will recognise the rownames and plot accordingly}
@@ -18,6 +18,10 @@ plotDNVSignatures(signature_data_matrix, output_file = NULL,
 \item{overall_title}{set the overall title of the plot}
 
 \item{mar}{set the margin of the plot}
+
+\item{howManyInOnePage}{how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested}
+
+\item{ncolumns}{how many columns should be used to arrange the signatures/catalogues to plot}
 }
 \description{
 Function to plot one or more DNV signatures or catalogues.

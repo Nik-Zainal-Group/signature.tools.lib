@@ -218,13 +218,17 @@ plot_allsample_Dinucleotides_profile <- function(muttype_catalogue,colnum,h,w,ou
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the margin of the plot
+#' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
+#' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
 #' @export
 plotDNVSignatures <- function(signature_data_matrix,
                               output_file = NULL,
                               plot_sum = TRUE,
                               overall_title = "",
                               add_to_titles = NULL,
-                              mar=NULL){
+                              mar=NULL,
+                              howManyInOnePage=100,
+                              ncolumns=3){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
   
@@ -282,58 +286,67 @@ plotDNVSignatures <- function(signature_data_matrix,
   
   rearr.colours <- c()
   for (i in 1:length(mypalette)) rearr.colours <- c(rearr.colours,rep(mypalette[i],muttypeslength[i]))
-
-  nplotrows <- ceiling(ncol(signature_data_matrix)/3)
-  if(!is.null(output_file)) {
-    if(plottype=="jpg"){
-      jpeg(output_file,width = 3*800,height = nplotrows*320,res = 220)
-    }else if (plottype=="pdf"){
-      pdf(output_file,width = 3*8,height = nplotrows*3.2,pointsize = 26)
+  npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
+  if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
+  for(i in 1:npages){
+    ifrom <- howManyInOnePage*(i-1) + 1
+    ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
+    tmpmatrix <- signature_data_matrix[,ifrom:ito,drop=F]
+    if (!is.null(add_to_titles)) tmpadd <- add_to_titles[ifrom:ito]
+    if(npages>1 & !is.null(output_file)) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
+    # now plot
+    nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
+    if(!is.null(output_file)) {
+      if(plottype=="jpg"){
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*320,res = 220)
+      }else if (plottype=="pdf"){
+        pdf(output_file,width = ncolumns*8,height = nplotrows*3.2,pointsize = 26)
+      }
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
     }
-    par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
+    for (pos in 1:ncol(tmpmatrix)){
+      if(is.null(mar)){
+        par(mar=c(2,3,2,2))
+      }else{
+        par(mar=mar)
+      }
+      title <- colnames(tmpmatrix)[pos]
+      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," DNVs)")
+      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      xlabels <- rep("",nrow(tmpmatrix))
+      xlabels2 <- sapply(rownames(tmpmatrix),function(x){
+        strsplit(x,split = ">")[[1]][2]
+      })
+      
+      b <- barplot(tmpmatrix[,pos],
+              main = title,
+              #names.arg = row.names(tmpmatrix),
+              names.arg = xlabels,
+              col=rearr.colours,
+              beside = TRUE,
+              las=2,
+              cex.names = 1,border = NA,space = 0.2)
+      par(xpd=TRUE)
+      par(usr = c(0, 1, 0, 1))
+      recttop <- -0.092
+      rectbottom <- -0.21
+      start1 <- 0.037
+      endfinal <- 0.963
+      gap <- (endfinal-start1)/nrow(tmpmatrix)
+      xpos2 <- start1 - gap/2 + 1:length(xlabels2)*gap
+      text(x=xpos2,y = -0.04,label = xlabels2,srt=90,cex = 0.3)
+      for (i in 1:length(mypalette)) {
+        end1 <- start1+gap*muttypeslength[i]
+        rect(start1, rectbottom, end1, recttop,col = mypalette[i],lwd = 0,border = NA)
+        text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
+        start1 <- end1
+      }
+      
+      par(xpd=FALSE)
+    }
+    title(main = overall_title,outer = TRUE,cex.main = 2)
+    if(!is.null(output_file)) dev.off()
   }
-  for (pos in 1:ncol(signature_data_matrix)){
-    if(is.null(mar)){
-      par(mar=c(2,3,2,2))
-    }else{
-      par(mar=mar)
-    }
-    title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," DNVs)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
-    xlabels <- rep("",nrow(signature_data_matrix))
-    xlabels2 <- sapply(rownames(signature_data_matrix),function(x){
-      strsplit(x,split = ">")[[1]][2]
-    })
-    
-    b <- barplot(signature_data_matrix[,pos],
-            main = title,
-            #names.arg = row.names(signature_data_matrix),
-            names.arg = xlabels,
-            col=rearr.colours,
-            beside = TRUE,
-            las=2,
-            cex.names = 1,border = NA,space = 0.2)
-    par(xpd=TRUE)
-    par(usr = c(0, 1, 0, 1))
-    recttop <- -0.092
-    rectbottom <- -0.21
-    start1 <- 0.037
-    endfinal <- 0.963
-    gap <- (endfinal-start1)/nrow(signature_data_matrix)
-    xpos2 <- start1 - gap/2 + 1:length(xlabels2)*gap
-    text(x=xpos2,y = -0.04,label = xlabels2,srt=90,cex = 0.3)
-    for (i in 1:length(mypalette)) {
-      end1 <- start1+gap*muttypeslength[i]
-      rect(start1, rectbottom, end1, recttop,col = mypalette[i],lwd = 0,border = NA)
-      text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
-      start1 <- end1
-    }
-    
-    par(xpd=FALSE)
-  }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
-  if(!is.null(output_file)) dev.off()
 }
 
 plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
