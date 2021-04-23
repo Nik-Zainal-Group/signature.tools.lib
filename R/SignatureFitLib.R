@@ -793,6 +793,8 @@ plot_SignatureFit_withBootstrap <- function(outdir,
                                           boostrapFit_res,
                                           type_of_mutations){
   
+  dir.create(outdir,showWarnings = F,recursive = T)
+  
   res <- boostrapFit_res
   
   #function to draw a legend for the heatmap of the correlation matrix
