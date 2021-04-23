@@ -806,6 +806,26 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   }
   
   reconstructed_with_median <- round(as.matrix(res$signature_data_matrix) %*% res$E_median_filtered)
+  
+  
+  #plot and save exposures
+  sums_exp <- apply(res$cat, 2, sum)
+  exposures <- rbind(res$E_median_filtered,res$unassigned_muts)
+  rownames(exposures)[nrow(exposures)] <- "unassigned"
+  denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
+  exposuresProp <- (exposures/denominator*100)
+  # case of empty catalogues
+  exposuresProp[,sums_exp==0] <- 0
+  
+  file_table_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".tsv")
+  file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".jpg")
+  file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.jpg")
+  
+  plot.CosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plot.CosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  write.table(exposures,file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
   #provide a series of plots for each sample
   #plot_nrows <- ncol(cat)
   rows_ordered_from_best <- order(res$KLD_samples)
@@ -918,23 +938,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
     dev.off()
   }
   # res$E_median_filtered[,i,drop=FALSE]
-  
-  #also plot and save exposures
-  sums_exp <- apply(res$cat, 2, sum)
-  exposures <- rbind(res$E_median_filtered,res$unassigned_muts)
-  denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
-  exposuresProp <- (exposures/denominator*100)
-  # case of empty catalogues
-  exposuresProp[,sums_exp==0] <- 0
-  
-  file_table_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".tsv")
-  file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".jpg")
-  file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.jpg")
-  
-  plot.CosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plot.CosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
-  write.table(exposures,file = file_table_exp,
-              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
 }
 
