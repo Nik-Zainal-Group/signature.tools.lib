@@ -198,7 +198,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
                           bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1
                           alpha = -1, #set alpha to -1 to avoid Bleeding Filter
                           verbose=TRUE, #use FALSE to suppress messages
-                          doRound = TRUE, #round the exposures to the closest integer
+                          doRound = FALSE, #round the exposures to the closest integer
                           nparallel=1, #to use parallel specify >1
                           n_sa_iter = 500, #only used if  method = "SA"
                           randomSeed = NULL){ 
@@ -251,24 +251,31 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   KLD_samples <- c()
   
   for(i in 1:ncol(cat)) {
-    boots_perc <- samples_list[[i]]/matrix(apply(samples_list[[i]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[i]]),ncol = ncol(samples_list[[i]]))*100
-    p.values <- apply(boots_perc <= threshold_percent,1,sum)/nboot
-    median_mut <- apply(samples_list[[i]],1,median)
-    E_median_notfiltered[,i] <- median_mut
-    E_p.values[,i] <- p.values
-    
-    median_mut_perc <- median_mut/sum(median_mut)*100
-    # plot(median_mut_perc)
-    # abline(h=5)
-    median_mut_perc[p.values > threshold_p.value] <- 0
-    #below rescaling, not sure whether to use it or not. If not I have something like a residual
-    # median_mut_perc <- median_mut_perc/sum(median_mut_perc)*100
-    median_mut <- median_mut_perc/100*sum(cat[,i])
-    # boxplot(t(samples_list[[1]]))
-    # points(1:10,E[,1],col="red")
-    # points(1:10,median_mut,col="green")
-    E_median_filtered[,i] <- median_mut
-    KLD_samples <- c(KLD_samples,KLD(cat[,i,drop=FALSE],as.matrix(signature_data_matrix) %*% E_median_filtered[,i,drop=FALSE]))
+    if(sum(cat[,i])>0){
+      boots_perc <- samples_list[[i]]/matrix(apply(samples_list[[i]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[i]]),ncol = ncol(samples_list[[i]]))*100
+      p.values <- apply(boots_perc <= threshold_percent,1,sum)/nboot
+      median_mut <- apply(samples_list[[i]],1,median)
+      E_median_notfiltered[,i] <- median_mut
+      E_p.values[,i] <- p.values
+      
+      median_mut_perc <- median_mut/sum(median_mut)*100
+      # plot(median_mut_perc)
+      # abline(h=5)
+      median_mut_perc[p.values > threshold_p.value] <- 0
+      #below rescaling, not sure whether to use it or not. If not I have something like a residual
+      # median_mut_perc <- median_mut_perc/sum(median_mut_perc)*100
+      median_mut <- median_mut_perc/100*sum(cat[,i])
+      # boxplot(t(samples_list[[1]]))
+      # points(1:10,E[,1],col="red")
+      # points(1:10,median_mut,col="green")
+      E_median_filtered[,i] <- median_mut
+      KLD_samples <- c(KLD_samples,KLD(cat[,i,drop=FALSE],as.matrix(signature_data_matrix) %*% E_median_filtered[,i,drop=FALSE]))
+    }else{
+      E_median_notfiltered[,i] <- 0
+      E_p.values[,i] <- NA
+      E_median_filtered[,i] <- 0
+      KLD_samples <- c(KLD_samples,0)
+    }
   }
   names(KLD_samples) <- colnames(cat)
   
