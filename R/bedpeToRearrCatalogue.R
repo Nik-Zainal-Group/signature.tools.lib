@@ -75,6 +75,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe){
   }else{
     #case in which the sv_bedpe table has 0 rows
     rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+    all_sv_annotated <- NULL
   }
   
   return_list <- list()
