@@ -993,7 +993,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
 }
 
 
-plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500){
+plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500,ndigitsafterzero = 2){
   # library("ggplot2")
   
   # Set up the vectors                           
@@ -1003,7 +1003,7 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
   # Create the data frame
   df <- expand.grid(sample.names,signatures.names)
   df$value <- unlist(CosSimMatrix)   
-  df$labels <- sprintf("%.2f", df$value)
+  df$labels <- sprintf(paste0("%.",ndigitsafterzero,"f"), df$value)
   df$labels[df$value==0] <- ""
   
   #Plot the Data (500+150*nsamples)x1200

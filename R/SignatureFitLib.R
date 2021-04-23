@@ -274,7 +274,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   
   #unassigned mutations
   reconstructed_with_median <- round(as.matrix(signature_data_matrix) %*% as.matrix(E_median_filtered))
-  unassigned_muts <- sapply(1:ncol(reconstructed_with_median),function(i) (sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(cat[,i,drop=FALSE])*100)
+  unassigned_muts <- sapply(1:ncol(reconstructed_with_median),function(i) sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))
   names(unassigned_muts) <- colnames(cat)
   
   res <- list()
@@ -823,13 +823,14 @@ plot_SignatureFit_withBootstrap <- function(outdir,
          res = 150)
     par(mfrow=c(plot_nrows,plot_ncol))
     for(i in current_samples){
+      fitIsEmpty <- sum(res$E_median_filtered[,i])==0
       unassigned_mut <- sprintf("%.2f",(sum(res$cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(res$cat[,i,drop=FALSE])*100)
       percentdiff <- sprintf("%.2f",sum(abs(res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE]))/sum(res$cat[,i,drop=FALSE])*100)
       cos_sim <- sprintf("%.2f",cos.sim(res$cat[,i,drop=FALSE],reconstructed_with_median[,i,drop=FALSE]))
       if(type_of_mutations=="subs"){
         #1 original
         plotSubsSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
-        if(sum(res$cat[,i,drop=FALSE])>0){
+        if(!fitIsEmpty){
           #2 reconstructed
           plotSubsSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
@@ -839,7 +840,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       }else if(type_of_mutations=="rearr"){
         #1 original
         plotRearrSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(12,3,5,2))
-        if(sum(res$cat[,i,drop=FALSE])>0){
+        if(!fitIsEmpty){
           #2 reconstructed
           plotRearrSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(12,3,5,2))
           #3 difference
@@ -849,7 +850,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       }else if(type_of_mutations=="generic"){
         #1 original
         plotGenericSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
-        if(sum(res$cat[,i,drop=FALSE])>0){
+        if(!fitIsEmpty){
           #2 reconstructed
           plotGenericSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
@@ -859,7 +860,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       }else if(type_of_mutations=="dnv"){
         #1 original
         plotDNVSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))
-        if(sum(res$cat[,i,drop=FALSE])>0){
+        if(!fitIsEmpty){
           #2 reconstructed
           plotDNVSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
@@ -867,7 +868,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           plotDNVSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }
-      if(sum(res$cat[,i,drop=FALSE])>0){
+      if(!fitIsEmpty){
         #4 bootstraps
         par(mar=c(6,4,5,2))
         boxplot(t(res$samples_list[[i]]),las=3,cex.axes=0.9,
@@ -920,13 +921,18 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   
   #also plot and save exposures
   sums_exp <- apply(res$cat, 2, sum)
-  exposures <- res$E_median_filtered
+  exposures <- rbind(res$E_median_filtered,res$unassigned_muts)
   denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
+  exposuresProp <- (exposures/denominator*100)
+  # case of empty catalogues
+  exposuresProp[,sums_exp==0] <- 0
   
   file_table_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".tsv")
   file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".jpg")
+  file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.jpg")
   
-  plot.CosSimMatrix(as.data.frame((exposures/denominator*100)),output_file = file_plot_exp)
+  plot.CosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plot.CosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
   write.table(exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
