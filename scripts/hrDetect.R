@@ -48,6 +48,7 @@ if ( !is.null(opt$help) ) {
 # set some reasonable defaults for the options that are needed,
 # but were not specified.
 bootstrap_scores <- FALSE
+cosmic_siglist <- NULL
 
 if ( !is.null(opt$bootstrap) ) {
   bootstrap_scores <- TRUE
