@@ -142,7 +142,7 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                bootstrapHRDetectScores = bootstrap_scores,
                                signature_type = signature_type,
                                cosmic_siglist=cosmic_siglist,
-                               nbootFit = nbootFit,
+                               nbootFit = opt$nbootFit,
                                randomSeed = opt$randomSeed,
                                nparallel = nparallel)
 

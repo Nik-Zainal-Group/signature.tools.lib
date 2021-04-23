@@ -38,5 +38,6 @@ Imports:
     GenomicRanges,
     IRanges,
     BSgenome, 
-    readr
+    readr,
+    doRNG
 RoxygenNote: 6.1.1
