@@ -182,6 +182,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' @param nparallel to use parallel specify >1
 #' @param verbose use FALSE to suppress messages
 #' @param n_sa_iter set max Simulated Annealing iterations if method==SA
+#' @param randomSeed set an integer random seed
 #' @return returns the activities/exposures of the signatures in the given sample and other information, such as p-values and exposures of individual bootstrap runs.
 #' @keywords mutational signatures fit
 #' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
@@ -199,12 +200,21 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
                           verbose=TRUE, #use FALSE to suppress messages
                           doRound = TRUE, #round the exposures to the closest integer
                           nparallel=1, #to use parallel specify >1
-                          n_sa_iter = 500){ #only used if  method = "SA"
+                          n_sa_iter = 500, #only used if  method = "SA"
+                          randomSeed = NULL){ 
+  
+  if(!is.null(randomSeed)){
+    set.seed(randomSeed)
+  }
+  
   if (nparallel > 1){
     # library(foreach)
     # library(doParallel)
     # library(doMC)
     doParallel::registerDoParallel(nparallel)
+    if(!is.null(randomSeed)){
+      doRNG::registerDoRNG(randomSeed)
+    }
     boot_list <- foreach::foreach(j=1:nboot) %dopar% {
       bootcat <- generateRandMuts(cat)
       SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter)

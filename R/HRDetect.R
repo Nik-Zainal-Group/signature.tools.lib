@@ -56,10 +56,18 @@
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
 #' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
 #' @param signature_type either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
-#' @param bootstrap_scores perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.
+#' @param cosmic_siglist list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used.
+#' @param methodFit can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
+#' @param threshold_percentFit threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero
+#' @param bootstrapSignatureFit set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised
+#' @param nbootFit number of bootstraps to use, more bootstraps more accurate results
+#' @param threshold_p.valueFit p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
+#' @param bootstrapHRDetectScores perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.
 #' @param nparallel how many parallel threads to use.
+#' @param randomSeed set an integer random seed 
 #' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 #' @export
+#' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, ... H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @references Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 #' @references Nik-Zainal, S., Davies, H., Staaf, J., Ramakrishna, M., Glodzik, D., Zou, X., ... Stratton, M. R. (2016). Landscape of somatic mutations in 560 breast cancer whole-genome sequences. Nature, 534(7605), 1–20. https://doi.org/10.1038/nature17676
 #' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
@@ -76,10 +84,20 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               SV_catalogues=NULL,
                               signature_type="COSMIC",
                               cosmic_siglist=NULL,
-                              bootstrap_scores=FALSE,
-                              nparallel=1){
+                              methodFit = "KLD",
+                              threshold_percentFit = 5,
+                              bootstrapSignatureFit = TRUE,
+                              nbootFit=100,
+                              threshold_p.valueFit = 0.05,
+                              bootstrapHRDetectScores=FALSE,
+                              nparallel=1,
+                              randomSeed=NULL){
   #if multiple parallel cores are used, set it here
   doMC::registerDoMC(nparallel)
+  
+  if(!is.null(randomSeed)){
+    set.seed(randomSeed)
+  }
   
   #check that the matrix has correct features (columns)
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
@@ -231,17 +249,30 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     #run sigfit with bootstrap if there are samples in the SNV_catalogue
     if(length(incomplete_samples_with_catalogueSNV)>0){
       message("[info HRDetect_pipeline] Substitution signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
-      message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      bootstrap_fit_subs <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
-                                        sigstofit_subs,
-                                        nboot = 100,
-                                        threshold_percent = 5,
-                                        threshold_p.value = 0.05,
-                                        verbose = FALSE,
-                                        nparallel = nparallel)
-      #add the resulting exposures to the data_matrix
-      exposures_subs <- bootstrap_fit_subs$E_median_filtered
-      exposures_subs[is.nan(exposures_subs)] <- 0
+      
+      if(bootstrapSignatureFit){
+        message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+        bootstrap_fit_subs <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
+                                          sigstofit_subs,
+                                          nboot = nbootFit,
+                                          method = methodFit,
+                                          threshold_percent = threshold_percentFit,
+                                          threshold_p.value = threshold_p.valueFit,
+                                          verbose = FALSE,
+                                          nparallel = nparallel,
+                                          randomSeed = randomSeed)
+        #add the resulting exposures to the data_matrix
+        exposures_subs <- bootstrap_fit_subs$E_median_filtered
+        exposures_subs[is.nan(exposures_subs)] <- 0
+      }else{
+        message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
+        exposures_subs <- SignatureFit(cat = SNV_catalogues_toFit,
+                                       signature_data_matrix = sigstofit_subs,
+                                       method = methodFit,
+                                       doRound = FALSE,
+                                       verbose = FALSE)
+        exposures_subs[exposures_subs/apply(SNV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
+      }
       
       if(signature_type=="COSMIC"){
         if("Signature.3" %in% rownames(exposures_subs)){
@@ -353,17 +384,30 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     #run sigfit with bootstrap if there are samples in the SV_catalogue
     if(length(incomplete_samples_with_catalogueSV)>0){
       message("[info HRDetect_pipeline] Rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
-      message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-      bootstrap_fit_rearr <- SignatureFit_withBootstrap(SV_catalogues_toFit,
-                                        sigstofit_rearr,
-                                        nboot = 100,
-                                        threshold_percent = 5,
-                                        threshold_p.value = 0.05,
-                                        verbose = FALSE,
-                                        nparallel = nparallel)
-      #add the resulting exposures to the data_matrix
-      exposures_rearr <- bootstrap_fit_rearr$E_median_filtered
-      exposures_rearr[is.nan(exposures_rearr)] <- 0
+      
+      if(bootstrapSignatureFit){  
+        message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+        bootstrap_fit_rearr <- SignatureFit_withBootstrap(SV_catalogues_toFit,
+                                          sigstofit_rearr,
+                                          nboot = nbootFit,
+                                          method = methodFit,
+                                          threshold_percent = threshold_percentFit,
+                                          threshold_p.value = threshold_p.valueFit,
+                                          verbose = FALSE,
+                                          nparallel = nparallel,
+                                          randomSeed = randomSeed)
+        #add the resulting exposures to the data_matrix
+        exposures_rearr <- bootstrap_fit_rearr$E_median_filtered
+        exposures_rearr[is.nan(exposures_rearr)] <- 0
+      }else{
+        message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
+        exposures_rearr <- SignatureFit(cat = SV_catalogues_toFit,
+                                       signature_data_matrix = sigstofit_rearr,
+                                       method = methodFit,
+                                       doRound = FALSE,
+                                       verbose = FALSE)
+        exposures_rearr[exposures_rearr/apply(SV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
+      }
       
       if(signature_type=="COSMIC"){
         data_matrix[colnames(exposures_rearr),SV_cols] <- t(exposures_rearr[c("RS3","RS5"),])
@@ -514,7 +558,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     hrdetect_output <- applyHRDetectDavies2017(hrdetect_input, attachContributions = TRUE)
     
     #attempt to run HRDetect with bootstrap if requested
-    if(bootstrap_scores){
+    if(bootstrapHRDetectScores){
       message("[info HRDetect_pipeline] HRDetect boostrap scores requested!")
       
       #check whether we have all we need and for which samples
@@ -627,7 +671,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
         message("[info HRDetect_pipeline] HRDetect with bootstrap successful!")
         
       }else{
-        message("[info HRDetect_pipeline] Not enough data to run HRDetect boostrap scores.")
+        message("[info HRDetect_pipeline] Not enough data to run HRDetect bootstrap scores.")
+        if(!bootstrapSignatureFit) message("[info HRDetect_pipeline] bootstrapSignatureFit needs to be TRUE to compute HRDetect bootstrap scores.")
       }
     }
     
@@ -641,6 +686,16 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   #--- return results ---
   
   res <- list()
+  res$parameters <- list()
+  res$parameters$signature_type <- signature_type
+  res$parameters$cosmic_siglist <- cosmic_siglist
+  res$parameters$methodFit <- methodFit
+  res$parameters$threshold_percentFit <- threshold_percentFit
+  res$parameters$bootstrapSignatureFit <- bootstrapSignatureFit
+  res$parameters$nbootFit <- nbootFit
+  res$parameters$threshold_p.valueFit <- threshold_p.valueFit
+  res$parameters$bootstrapHRDetectScores <- bootstrapHRDetectScores
+  res$parameters$nparallel <- nparallel
   res$data_matrix <- data_matrix
   res$SV_catalogues <- SV_catalogues
   res$SNV_catalogues <- SNV_catalogues
@@ -865,7 +920,7 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
 #' Overall plot of scores obtained from HRDetect with bootstrap.
 #' 
 #' @param outdir output directory for the plot
-#' @param hrdetect_res output of HRDetect_pipeline, ran with bootstrap_scores=TRUE
+#' @param hrdetect_res output of HRDetect_pipeline, ran with bootstrapHRDetectScores=TRUE
 #' @param main plot title. If not specified: "Distribution of HRDetect scores"
 #' @param mar plot margin. If not specified: c(9,4,3,2)
 #' @param pwidth plot width in pixels. If not specified: max(1000,400+120*number_of_samples)

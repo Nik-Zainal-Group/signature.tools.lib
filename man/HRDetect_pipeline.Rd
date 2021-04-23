@@ -9,7 +9,10 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
   Indels_vcf_files = NULL, Indels_tab_files = NULL,
   CNV_tab_files = NULL, SV_bedpe_files = NULL, SV_catalogues = NULL,
   signature_type = "COSMIC", cosmic_siglist = NULL,
-  bootstrap_scores = FALSE, nparallel = 1)
+  methodFit = "KLD", threshold_percentFit = 5,
+  bootstrapSignatureFit = TRUE, nbootFit = 100,
+  threshold_p.valueFit = 0.05, bootstrapHRDetectScores = FALSE,
+  nparallel = 1, randomSeed = NULL)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}
@@ -34,9 +37,23 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 
 \item{signature_type}{either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
 
-\item{bootstrap_scores}{perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.}
+\item{cosmic_siglist}{list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used.}
+
+\item{methodFit}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
+
+\item{threshold_percentFit}{threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero}
+
+\item{bootstrapSignatureFit}{set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised}
+
+\item{nbootFit}{number of bootstraps to use, more bootstraps more accurate results}
+
+\item{threshold_p.valueFit}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
+
+\item{bootstrapHRDetectScores}{perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.}
 
 \item{nparallel}{how many parallel threads to use.}
+
+\item{randomSeed}{set an integer random seed}
 }
 \value{
 return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
@@ -89,6 +106,8 @@ HRD-LOH index (CNV). The column in data_matrix corresponding to the HRD-LOH inde
 The HRD-LOH index for the samples can be calculated by the pipeline if the user provides copy numbers TAB files.
 }
 \references{
+A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, ... H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+
 Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 
 Nik-Zainal, S., Davies, H., Staaf, J., Ramakrishna, M., Glodzik, D., Zou, X., ... Stratton, M. R. (2016). Landscape of somatic mutations in 560 breast cancer whole-genome sequences. Nature, 534(7605), 1–20. https://doi.org/10.1038/nature17676

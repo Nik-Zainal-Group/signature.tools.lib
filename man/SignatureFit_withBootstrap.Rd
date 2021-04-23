@@ -7,7 +7,7 @@
 SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
   threshold_percent = 5, threshold_p.value = 0.05, method = "KLD",
   bf_method = "CosSim", alpha = -1, verbose = TRUE, doRound = TRUE,
-  nparallel = 1, n_sa_iter = 500)
+  nparallel = 1, n_sa_iter = 500, randomSeed = NULL)
 }
 \arguments{
 \item{cat}{catalogue matrix, patients as columns, channels as rows}
@@ -33,6 +33,8 @@ SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
 \item{nparallel}{to use parallel specify >1}
 
 \item{n_sa_iter}{set max Simulated Annealing iterations if method==SA}
+
+\item{randomSeed}{set an integer random seed}
 }
 \value{
 returns the activities/exposures of the signatures in the given sample and other information, such as p-values and exposures of individual bootstrap runs.

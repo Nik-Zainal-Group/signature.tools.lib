@@ -7,7 +7,7 @@ how_to <- function(){
   message("This script runs the HRDetect pipeline.")
   message("Run this script as follows:")
   message(" ")
-  message("hrDetect [-i INPUTTABLE] [-o OUTDIR] [-b] [-s SIGTYPE] [-e GENOMEV] [-n NPARALLEL]")
+  message("hrDetect [-i INPUTTABLE] [-o OUTDIR] [-b] [-s SIGTYPE] [-e GENOMEV] [-n NPARALLEL] [-f NBOOTFIT] [-r RANDOMSEED]")
   message(" ")
   message("    -i INPUTTABLE    Tab separate input table with the list of files for each sample. Columns should be: sample, SNV_vcf_files, SNV_tab_files, Indels_vcf_files, Indels_tab_files, CNV_tab_files, SV_bedpe_files. Note that only one column of SNV_vcf_files and SNV_tab_files is necessary")
   message("    -o OUTDIR        Name of the output directory. If omitted a name will be given automatically.")
@@ -16,6 +16,8 @@ how_to <- function(){
   message("    -l COSMICLIST    If SIGTYPE is COSMIC, specify a comma separated list of number of cosmic signatures to use, such as: 1,2,5,8,13")
   message("    -e GENOMEV       Indicate the genome version to be used: hg19, hg38 or mm10")
   message("    -n NPARALLEL     Number of parallel CPUs to be used")
+  message("    -f NBOOTFIT      Number of bootstrap to be used in signature fit, default is 100")
+  message("    -r RANDOMSEED    Specify a random seed to obtain alway the same identical results")
   message("    -h               Show this explanation")
   message(" ")
 }
@@ -30,7 +32,9 @@ spec = matrix(c(
   'sigtype',       's', 1, "character",
   'cosmiclist',    'l', 1, "character",
   'nparallel',     'n', 1, "double",
-  'genomev',       'e', 1, "character"
+  'genomev',       'e', 1, "character",
+  'nbootFit',      'f', 1, "double",
+  'randomSeed',    'r', 1, "double"
 ), byrow=TRUE, ncol=4)
 opt = getopt(spec)
 
@@ -65,6 +69,9 @@ if ( !is.null(opt$cosmiclist) ) {
 }
 if ( is.null(opt$nparallel) ) { 
   opt$nparallel = 1   
+}
+if ( is.null(opt$nbootFit) ) { 
+  opt$nbootFit = 100  
 }
 if ( is.null(opt$genomev ) ) { 
   message("\nMissing GENOMEV. Quit.\n")
@@ -130,10 +137,12 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                Indels_vcf_files = Indels_vcf_files,
                                Indels_tab_files = Indels_tab_files,
                                CNV_tab_files = CNV_tab_files,
-                               SV_bedpe_files = SV_bedpe_files,
-                               bootstrap_scores = bootstrap_scores,
+                               SV_bedpe_files = SV_bedpe_files, 
+                               bootstrapHRDetectScores = bootstrap_scores,
                                signature_type = signature_type,
                                cosmic_siglist=cosmic_siglist,
+                               nbootFit = nbootFit,
+                               randomSeed = opt$randomSeed,
                                nparallel = nparallel)
 
 #save object

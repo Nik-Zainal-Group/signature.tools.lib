@@ -11,7 +11,7 @@ plot_HRDetect_BootstrapScores(outdir, hrdetect_res,
 \arguments{
 \item{outdir}{output directory for the plot}
 
-\item{hrdetect_res}{output of HRDetect_pipeline, ran with bootstrap_scores=TRUE}
+\item{hrdetect_res}{output of HRDetect_pipeline, ran with bootstrapHRDetectScores=TRUE}
 
 \item{main}{plot title. If not specified: "Distribution of HRDetect scores"}
 
