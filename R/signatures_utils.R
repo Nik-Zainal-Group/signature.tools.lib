@@ -1338,23 +1338,25 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 #' 
 #' This function returns the organ-specific signatures for a given organ and mutation type as defined in Degasperi et al. 2020 Nat Cancer paper.
 #' 
-#' @param typemut either subs or rearr
+#' @param typemut either subs, DNV or rearr
 #' @param organ one of the following: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param version version "1" includes subs or rearr (ICGC cohort) organ-specific signatures from Degasperi et al. 2020, while version "2" includes the improved subs organ-specific signatures from ICGC as well as Hartwig and GEL, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.
+#' @param cohort for version 1 signatures only ICGC cohort is available, while for version 2 signatures ICGC, Hartwig and GEL cohort can be requested. Use "best" to get the most appropriate cohort for a given organ.
 #' @return organ-specific signatures matrix
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
-getOrganSignatures <- function(organ,typemut="subs"){
-  
-  if(typemut=="subs"){
+getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs"){
+  sigs <- NULL
+  if(typemut=="subs" & version=="1" & (cohort=="best" | cohort=="ICGC")){
     available_organs <- unique(sapply(colnames(all_organ_sigs_subs),function(x){
       txtspl <- strsplit(x,split = "_")[[1]]
       paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
     }))
     if (!(organ %in% available_organs)) {
-      message("Organ ",organ, " not available for mutation type ",typemut)
+      message("Organ ",organ, " not available for mutation type ",typemut," version 1")
     }
     sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
-  }else if(typemut=="rearr"){
+  }else if(typemut=="rearr" & (version=="1" | version=="latest") & (cohort=="best" | cohort=="ICGC")){
     available_organs <- unique(sapply(colnames(all_organ_sigs_rearr),function(x){
       txtspl <- strsplit(x,split = "_")[[1]]
       paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
@@ -1363,24 +1365,42 @@ getOrganSignatures <- function(organ,typemut="subs"){
       message("Organ ",organ, " not available for mutation type ",typemut)
     }
     sigs <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_rearr))]]
+  }else if(typemut=="DNV" & (version=="2" | version=="latest")){
+    if(cohort=="best") cohort <- "GEL"
+    sigs <- organSignaturesDBSv1.01[,grepl(colnames(organSignaturesDBSv1.01),pattern = paste0(cohort,"-",organ)),drop=F]
+  }else if(typemut=="subs" & (version=="2" | version=="latest")){
+    if(cohort=="best") {
+      cohort <- "GEL"
+      if(organ=="Esophagus" | organ=="Head_neck") cohort <- "ICGC"
+    }
+    sigs <- organSignaturesSBSv2.03[,grepl(colnames(organSignaturesSBSv2.03),pattern = paste0(cohort,"-",organ)),drop=F]
   }
   return(sigs)
 }
 
 #' convertExposuresFromOrganToRefSigs
 #' 
-#' This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures as defined in Degasperi et al. 2020 Nat Cancer paper.
+#' This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures.
+#' The function will detect the version of the signatures automatically.
 #' 
-#' @param typemut either subs or rearr
+#' @param typemut either subs, DNV or rearr
 #' @param expMatrix exposures matrix obatined from fitting organ-specific signatures
 #' @return exposure matrix converted in reference signatures exposures
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
 convertExposuresFromOrganToRefSigs <- function(expMatrix,typemut="subs"){
+  exposures <- NULL
   if(typemut=="subs"){
-    t(conversion_matrix_subs[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+    if(all(rownames(expMatrix) %in% rownames(conversion_matrix_subs))){
+      exposures <- t(conversion_matrix_subs[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+    }else if(all(rownames(expMatrix) %in% rownames(conversionMatrixSBSv2.03))){
+      exposures <- t(conversionMatrixSBSv2.03[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+    }
   }else if(typemut=="rearr"){
-    t(conversion_matrix_rearr[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+    exposures <- t(conversion_matrix_rearr[rownames(expMatrix),]) %*% as.matrix(expMatrix)
+  }else if(typemut=="DNV"){
+    exposures <- t(conversionMatrixDBSv1.01[rownames(expMatrix),]) %*% as.matrix(expMatrix)
   }
+  return(exposures)
 }
 
