@@ -7,7 +7,7 @@
 dnvTabToDNVcatalogue(dnvtab)
 }
 \arguments{
-\item{snvtab}{requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2}
+\item{dnvtab}{requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2}
 }
 \value{
 list of annotated DNVs and DNV catalogue

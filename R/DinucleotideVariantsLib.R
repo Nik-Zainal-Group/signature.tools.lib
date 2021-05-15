@@ -9,7 +9,7 @@
 #' 
 #' This function takes as input a list of single nucleotide variants (SNVs),
 #' and computes a list of dinucleotide variants (DNVs) finding which SNVs
-#' are next to each other. It the returns the annotated DNVs and the DNV catalogues.
+#' are next to each other. It then returns the annotated DNVs and the DNV catalogues.
 #' The catalogues are in Zou's style.
 #' 
 #' @param snvtab requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 1
@@ -109,7 +109,7 @@ snvTabToDNVcatalogue <- function(snvtab){
 #' This function takes as input a list of dinucleotide variants (DNVs). It then
 #'annotates the DNVs and computes the DNV catalogues. The catalogues are in Zou's style.
 #' 
-#' @param snvtab requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2
+#' @param dnvtab requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2
 #' @return list of annotated DNVs and DNV catalogue
 #' @references J. E. Kucab, X. Zou, S. Morganella, M. Joel, A. S. Nanda, E. Nagy, C. Gomez, A. Degasperi, R. Harris, S. P. Jackson, V. M. Arlt, D. H. Phillips, S. Nik-Zainal. A Compendium of Mutational Signatures of Environmental Agents. Cell, https://doi.org/10.1016/j.cell.2019.03.001, 2019.
 #' @export

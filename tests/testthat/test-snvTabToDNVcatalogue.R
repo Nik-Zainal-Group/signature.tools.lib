@@ -1,4 +1,4 @@
-context("testing conversion from dataframe of SNV to SNV catalogue")
+context("testing conversion from dataframe of SNV to DNV catalogue")
 
 test_that("test tabToSNVcatalogue() to convert a tab file with SNV into an SNV catalogue.", {
   

@@ -15,7 +15,7 @@ list of DNVs and DNV catalogue
 \description{
 This function takes as input a list of single nucleotide variants (SNVs),
 and computes a list of dinucleotide variants (DNVs) finding which SNVs
-are next to each other. It the returns the annotated DNVs and the DNV catalogues.
+are next to each other. It then returns the annotated DNVs and the DNV catalogues.
 The catalogues are in Zou's style.
 }
 \references{
