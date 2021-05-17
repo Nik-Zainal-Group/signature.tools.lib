@@ -1029,8 +1029,8 @@ plotFit <- function(fitObj,
         dev.off()
         
         #6 some correlation plots
-        cairo_pdf(filename = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_CorrelationExamples.pdf"),width = 2.2*howmanycorrtoplot,height = 2.5)
         howmanycorrtoplot <- min(3,ncol(fitObj$signatures)*(ncol(fitObj$signatures)-1)/2)
+        cairo_pdf(filename = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_CorrelationExamples.pdf"),width = 2.2*howmanycorrtoplot,height = 2.5)
         par(mfrow=c(1,howmanycorrtoplot))
         vals <- res.cor_triangular[order(abs(res.cor_triangular),decreasing = TRUE)]
         for (j in 1:howmanycorrtoplot){

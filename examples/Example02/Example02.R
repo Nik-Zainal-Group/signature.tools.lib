@@ -30,14 +30,15 @@ plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output
 
 #fit the organ-specific breast cancer signatures using the bootstrap signature fit approach
 sigsToUse <- getOrganSignatures("Breast",typemut = "subs")
-subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
-                                                    cat = SNV_catalogues,
-                                                    signature_data_matrix = sigsToUse,
-                                                    type_of_mutations = "subs",
-                                                    nboot = 100,nparallel = 4)
+subs_fit_res <- Fit(catalogues = SNV_catalogues,
+                    signatures = sigsToUse,
+                    useBootstrap = TRUE,
+                    nboot = 100,
+                    nparallel = 4)
+plotFit(subs_fit_res,outdir = "signatureFit/")
 
-#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
-snv_exp <- subs_fit_res$E_median_filtered
+#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?Fit for details
+snv_exp <- subs_fit_res$exposures
 
 #Convert the organ-spoecific signature exposures into reference siganture exposures
 snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = snv_exp,typemut = "subs")

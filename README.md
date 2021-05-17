@@ -137,17 +137,24 @@ RStudio, type ```?HRDetect_pipeline```.
 
 ## Functions provided by the package
 
-Functions for file conversion/manipulation
+Functions for single nucleotide variants
 
-- **```bedpeToRearrCatalogue(...)```**: converts a data frame (loaded
-from a BEDPE file) into a rearrangement catalogue. If the columns
-```is.clustered``` or ```svclass``` are not present, this function will
-attempt to compute them.
 - **```vcfToSNVcatalogue(...)```**: converts a VCF file into a SNV
 catalogue.
 - **```tabToSNVcatalogue(...)```**: converts a data frame into a SNV
 catalogue. The data frame should have the following minimal columns:
 chr, position, REF, ALT.
+- **```plotSubsSignatures(...)```**: function to plot one or more
+substitution signatures or catalogues.
+
+Functions of rearrangements
+
+- **```bedpeToRearrCatalogue(...)```**: converts a data frame (loaded
+from a BEDPE file) into a rearrangement catalogue. If the columns
+```is.clustered``` or ```svclass``` are not present, this function will
+attempt to compute them.
+- **```plotRearrSignatures(...)```**: function to plot one or more
+rearrangement signatures or catalogues.
 
 Functions for dinucleotide variants
 
@@ -161,26 +168,17 @@ Zou's style and Alexandrov's style of channels.
 
 Functions for signature extraction and signature fit
 
-- **```SignatureFit_withBootstrap(...)```**: fit a given set of
-mutational signatures into mutational catalogues to extimate the
-activty/exposure of each of the given signatures in the catalogues.
-Implementation of method similar to Huang 2017, Detecting presence of
-mutational signatures with confidence, which uses a bootstrap apporach
-to calculate the empirical probability of an exposure to be larger or
-equal to a given threshold (i.e. 5% of mutations of a sample). This
-probability can be used to decide which exposures to remove from the
-initial fit, thus increasing the sparsity of the exposures.
-- **```SignatureFit_withBootstrap_Analysis(...)```**: this function is a
-wrapper for the function ```SignatureFit_withBootstrap```, which
-produces several plots for each sample in the catalogues
 - **```SignatureExtraction(...)```**: perform signature extraction, by
 applying NMF to the input matrix. Multiple NMF runs and bootstrapping is
 used for robustness, followed by clustering of the solutions. A range of
 number of signatures to be used is required.
-- **```plotSubsSignatures(...)```**: function to plot one or more
-substitution signatures or catalogues.
-- **```plotRearrSignatures(...)```**: function to plot one or more
-rearrangement signatures or catalogues.
+- **```Fit(...)```**: This is a standard interface for basic signature fit with/without bootstrap.
+The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results.
+- **```FitMS(...)```**: Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. 
+In the first step, only a set of common signatures are fitted into the samples. In the following steps, one or more rare signatures
+are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically 
+by providing the name of an organ, or can be supplied by the user.
+The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results.
 
 Functions for organ-specific signatures and exposures conversion
 
@@ -243,13 +241,6 @@ Function for data visualisation
 somatic variants across the genome, organised in a circle. Variants
 plotted are single nucleotide variations (SNV), small insertions and
 deletions (indels), copy number variations (CNV) and rearrangements.
-
-Function for web formats export
-
-- **```export_SignatureFit_withBootstrap_to_JSON```**: Given a res file
-obtained from the ```SignatureFit_withBootstrap``` or
-```SignatureFit_withBootstrap_Analysis``` function, export it to a set
-of JSON files that can be used for web visualisation
 
 
 <a name="scripts"/>
@@ -345,7 +336,7 @@ with the expected output files in the ```Example01``` directory.
 ```
 #the catalogues can be plotted as follows
 plotSubsSignatures(signature_data_matrix = SNV_catalogues,
-                   plot_sum = TRUE,output_file = "SNV_catalogues.jpg")
+                   plot_sum = TRUE,output_file = "SNV_catalogues.pdf")
 
 ```
 
@@ -357,19 +348,20 @@ signatures identified in breast cancer.
 ```
 #fit the 12 breast cancer signatures using the bootstrap signature fit approach
 sigsToUse <- c(1,2,3,5,6,8,13,17,18,20,26,30)
-subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
-                                    cat = SNV_catalogues,
-                                    signature_data_matrix = COSMIC30_subs_signatures[,sigsToUse],
-                                    type_of_mutations = "subs",
-                                    nboot = 100,nparallel = 4)
+subs_fit_res <- Fit(catalogues = SNV_catalogues,
+                    signatures = COSMIC30_subs_signatures[,sigsToUse],
+                    useBootstrap = TRUE,
+                    nboot = 100,
+                    nparallel = 4)
+plotFit(subs_fit_res,outdir = "signatureFit/")
 
 #The signature exposures can be found here and correspond to the median
 #of the boostrapped runs followed by false positive filters. See
-#?SignatureFit_withBootstrap_Analysis for details
-snv_exp <- subs_fit_res$E_median_filtered
+#?Fit for details
+snv_exp <- subs_fit_res$exposures
 ```
-In this case we used the ```SignatureFit_withBootstrap_Analysis```
-function, which will use the bootstrap fitting method and provide
+In this case we used the ```Fit```
+function with ```useBootstrap=TRUE```, which uses the bootstrap fitting method and provide
 several plots, which can be compared to the expected output plots in the
 ```Example01``` directory.
 
@@ -480,14 +472,15 @@ Typing ```?getOrganSignatures``` will show more information, for example which o
 ```
 #fit the organ-specific breast cancer signatures using the bootstrap signature fit approach
 sigsToUse <- getOrganSignatures("Breast",typemut = "subs")
-subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
-                                                    cat = SNV_catalogues,
-                                                    signature_data_matrix = sigsToUse,
-                                                    type_of_mutations = "subs",
-                                                    nboot = 100,nparallel = 4)
+subs_fit_res <- Fit(catalogues = SNV_catalogues,
+                    signatures = sigsToUse,
+                    useBootstrap = TRUE,
+                    nboot = 100,
+                    nparallel = 4)
+plotFit(subs_fit_res,outdir = "signatureFit/")
 
 #The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
-snv_exp <- subs_fit_res$E_median_filtered
+snv_exp <- subs_fit_res$exposures
 ```
 
 We can now convert the organ-specific signature exposures into reference signature exposures.

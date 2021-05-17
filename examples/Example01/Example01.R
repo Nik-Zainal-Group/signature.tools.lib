@@ -35,18 +35,19 @@ for (i in 1:length(SNV_tab_files)){
 SNV_catalogues <- do.call(cbind,SNVcat_list)
 
 #the catalogues can be plotted as follows
-plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output_file = "SNV_catalogues.jpg")
+plotSubsSignatures(signature_data_matrix = SNV_catalogues,plot_sum = TRUE,output_file = "SNV_catalogues.pdf")
 
 #fit the 12 breast cancer signatures using the bootstrap signature fit approach
 sigsToUse <- c(1,2,3,5,6,8,13,17,18,20,26,30)
-subs_fit_res <- SignatureFit_withBootstrap_Analysis(outdir = "signatureFit/",
-                                                    cat = SNV_catalogues,
-                                                    signature_data_matrix = COSMIC30_subs_signatures[,sigsToUse],
-                                                    type_of_mutations = "subs",
-                                                    nboot = 100,nparallel = 4)
+subs_fit_res <- Fit(catalogues = SNV_catalogues,
+                    signatures = COSMIC30_subs_signatures[,sigsToUse],
+                    useBootstrap = TRUE,
+                    nboot = 100,
+                    nparallel = 4)
+plotFit(subs_fit_res,outdir = "signatureFit/")
 
-#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
-snv_exp <- subs_fit_res$E_median_filtered
+#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?Fit for details
+snv_exp <- subs_fit_res$exposures
 
 #The HRDetect pipeline will compute the HRDetect probability score for the samples to be Homologous Recombination Deficient. HRDetect is a logistic regression classifier that requires 6 features to compute the probability score. These features can be supplied directly in an input matrix, or pipeline can compute these features for you if you supply the file names. It is possible to supply a mix of features and file names.
 
