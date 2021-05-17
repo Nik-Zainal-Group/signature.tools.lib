@@ -481,7 +481,8 @@ subs_fit_res <- Fit(catalogues = SNV_catalogues,
                     nparallel = 4)
 plotFit(subs_fit_res,outdir = "signatureFit/")
 
-#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?SignatureFit_withBootstrap_Analysis for details
+#The signature exposures can be found here and correspond to the median of the boostrapped
+#runs followed by false positive filters. See ?Fit for details
 snv_exp <- subs_fit_res$exposures
 ```
 
@@ -506,7 +507,8 @@ In this example we show how to use the multi-step signature fit function along w
 Similarly to Examples 01 and 02, we construct the mutational catalogues and then we just need to specify the organ of interest:
 
 ```
-#perform signature fit using a multi-step approach where organ-specific common and rare signatures are used
+#perform signature fit using a multi-step approach where organ-specific
+#common and rare signatures are used
 subs_fit_res <- FitMS(catalogues = SNV_catalogues,
                       exposureFilterType = "giniScaledThreshold",
                       useBootstrap = TRUE,
