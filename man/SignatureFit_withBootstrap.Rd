@@ -5,10 +5,11 @@
 \title{Mutational Signatures Fit with Bootstrap}
 \usage{
 SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
+  exposureFilterType = "fixedThreshold", giniThresholdScaling = 10,
   threshold_percent = 5, threshold_p.value = 0.05, method = "KLD",
   bf_method = "CosSim", alpha = -1, verbose = TRUE,
   doRound = FALSE, nparallel = 1, n_sa_iter = 500,
-  randomSeed = NULL)
+  randomSeed = NULL, showDeprecated = TRUE)
 }
 \arguments{
 \item{cat}{catalogue matrix, patients as columns, channels as rows}
@@ -16,6 +17,10 @@ SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
 \item{signature_data_matrix}{signatures, signatures as columns, channels as rows}
 
 \item{nboot}{number of bootstraps to use, more bootstraps more accurate results}
+
+\item{exposureFilterType}{use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling}
+
+\item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature}
 
 \item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered}
 

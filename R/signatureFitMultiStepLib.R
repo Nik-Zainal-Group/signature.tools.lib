@@ -1,0 +1,1009 @@
+# Andrea Degasperi ad923@cam.ac.uk, Serena Nik-Zainal group, University of Cambridge, UK, 2021
+
+#' Multi-Step Mutational Signatures Fit
+#' 
+#' Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. In the first step, only the common signatures are fitted into the samples.
+#' In the following steps, one or more rare signatures are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically by providing 
+#' the name of an organ, or can be supplied by the user.
+#' 
+#' We provide four methods to identify the rare signatures in the samples:
+#' "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease". The methods constrainedFit and partialNMF work in a similar way: 
+#' they identify a residual in each given sample, as the leftover mutations after fitting the common signatures. They will attempt to produce a mostly positive residual.
+#' Each residual is then compared to each rare signature, and a rare signature is considered as a candidate rare signature for a sample if the cosine similarity between the residual 
+#' and the signature is at least minCosSimRareSig. One can also request that the residual is at least minResidualMutations. While constrainedFit will use a constrained least square fit where
+#' the negative part of the residual is at most residualNegativeProp (a proportion of the number of mutations in the sample), partialNMF will instead use a few iterations of a KLD based NMF algorithm 
+#' where the matrix of the signatures contains the common signature and an additional signatures that needs to be estimated (NNLM package). The methods errorReduction and cossimIncrease work
+#' in a similar way: they will fit the common signatures along with one additional rare signature, testing all rare signatures one at a time, and then determine difference in error
+#' (or cosine similarity) between fitting the common signatures only and with the additional rare signatures. If the error reduction is at least minErrorReductionPerc (or the cosine similarity
+#' increase is at least minCosSimIncrease then the rare signature will be considered as a candidate.
+#' 
+#' After any of ghe procedures above, each sample may have multiple candidate rare signatures, so one is chosen according to the highest associated cosine similarity either of 
+#' the residual to the candidate rare signature (constrainedFit and partialNMF methods), or of the catalogue and the reconstructed sample (errorReduction and cossimIncrease methods).
+#' It is then possible to plot all the fits with plotFitMS and even change the choise of the candidate rare signature using the function fitMerge.
+#' 
+#' 
+#' @param catalogues catalogues matrix, samples as columns, channels as rows
+#' @param organ #automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available: 
+#' "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid", 
+#' "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param rareSignatureTier either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures 
+#' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
+#' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
+#' @param commonSignatures signatures, signatures as columns, channels as rows. These are the signatures that are assumed to be present in most samples and will be used in the first step.
+#' Can be set automatically by specifying the organ parameter
+#' @param rareSignatures signatures, signatures as columns, channels as rows. These are the signatures that are assumed to be rarely present in a sample, at most maxRareSigsPerSample rare signatures in each sample.
+#' Can be set automatically by specifying the organ parameter and the rareSignatureTier parameter
+#' @param method KLD or NNLS
+#' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
+#' @param multiStepMode use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease". 
+#' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit 
+#' when using multiStepMode=constrainedFit
+#' @param minResidualMutations minimum number of mutations in a residual when using constrainedFit or partialNMF. Deactivated by default.
+#' @param minCosSimRareSig minimum cosine similarity between a residual and a rare signature for considering the rare signature as a candidate for a sample when using constrainedFit or partialNMF
+#' @param minErrorReductionPerc minimum percentage of error reduction for a signature to be considered as candidate when using the errorReduction method. The error is computed as mean absolute deviation
+#' @param minCosSimIncrease minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method
+#' @param nboot number of bootstraps to use, more bootstraps more accurate results
+#' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
+#' @param maxRareSigsPerSample masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.
+#' @param nparallel to use parallel specify >1
+#' @param randomSeed set an integer random seed
+#' @param verbose use FALSE to suppress messages
+#' @return returns the activities/exposures of the signatures in the given sample and other information
+#' @keywords mutational signatures fit
+#' @export
+#' @examples
+#' res <- FitMS(catalogues,"Breast")
+#' plotFitMS(res,"results/")
+FitMS <- function(catalogues,
+                  organ = NULL, #automatically sets the common and rare signatures
+                  rareSignatureTier = "T2",  #either T1 for observed in organ or T2 for extended
+                  commonSignatures = NULL,
+                  rareSignatures = NULL,
+                  method = "KLD",
+                  exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
+                  threshold_percent = 5,
+                  giniThresholdScaling = 10,
+                  multiStepMode = "constrainedFit", # or "partialNMF", or "errorReduction", or "cossimIncrease"
+                  residualNegativeProp = 0.003,
+                  minResidualMutations = NULL,
+                  minCosSimRareSig = 0.8,
+                  minErrorReductionPerc = 15,
+                  minCosSimIncrease = 0.02,
+                  useBootstrap = FALSE,
+                  nboot = 200,
+                  threshold_p.value = 0.05,
+                  maxRareSigsPerSample = 1,
+                  nparallel = 1,
+                  randomSeed = NULL,
+                  verbose = FALSE){
+  
+  if(!is.null(randomSeed)){
+    doRNG::registerDoRNG(randomSeed)
+  }
+  
+  # check type of mutations
+  typeofmuts <- getTypeOfMutationsFromChannels(catalogues)
+  
+  # check common signatures 
+  if(!is.null(commonSignatures)){
+    if(verbose) message("[signatureFitMultiStep info] Using user provided commonSignatures.")
+  }else{
+    if(is.null(organ)){
+      message("[signatureFitMultiStep error] No organ was specified and no commonSignatures were given. Nothing to do.")
+      return(NULL)
+    }else{
+      if(typeofmuts=="subs"){
+        commonSignatures <- organSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,"common"],split = ",")[[1]],drop=F]
+        if(ncol(commonSignatures)==0) {
+          message("[signatureFitMultiStep error] No common signatures is associated with organ ",organ,". Nothing to do.")
+          return(NULL)
+        }
+      }else{
+        message("[signatureFitMultiStep error] Type of mutations ",typeofmuts," not available, please provide your own commonSignatures. Nothing to do.")
+        return(NULL)
+      }
+    }
+  }
+  
+  # check rare signatures 
+  if(!is.null(rareSignatures)){
+    if(verbose) message("[signatureFitMultiStep info] Using user provided rareSignatures.")
+  }else{
+    if(rareSignatureTier %in% c("T1","T2")){
+      if(is.null(organ)){
+        message("[signatureFitMultiStep error] No organ was specified and no rareSignatures were given. Nothing to do.")
+        return(NULL)
+      }else{
+        if(typeofmuts=="subs"){
+          rareSignatures <- referenceSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",rareSignatureTier)],split = ",")[[1]],drop=F]
+          if(ncol(rareSignatures)==0) {
+            message("[signatureFitMultiStep error] No rare signatures are associated with organ ",organ,". Nothing to do.")
+            return(NULL)
+          }
+        }else{
+          message("[signatureFitMultiStep error] Type of mutations ",typeofmuts," not available, please provide your own rareSignatures. Nothing to do.")
+          return(NULL)
+        }
+      }
+    }else{
+      message("[signatureFitMultiStep error] invalid rareSignatureTier ",rareSignatureTier,". Please provide your own rareSignatures or choose between T1 and T2.")
+      return(NULL)
+    }
+  }
+  
+  # ---- now determine which samples are likely to have rare signatures and how many
+  # after this section, all we need are:
+  # - whichSamplesMayHaveRareSigs
+  # - candidateRareSigs
+  # - candidateRareSigsCosSim
+  
+  whichSamplesMayHaveRareSigs <- c()
+  candidateRareSigs <- list()
+  candidateRareSigsCosSim <- list()
+  
+  # if you set maxRareSigsPerSample to 0, you should get the common sig fits only
+  if(maxRareSigsPerSample > 0){
+    
+    for (depth in 1:maxRareSigsPerSample) {
+      # depth <- 1
+      
+      for(i in 1:ncol(catalogues)){
+        # i <- 1
+        # if this is depth==1 then I am going to test all samples
+        # if this is depth>1 then I am going to test only the samples that have depth-1 rare signatures
+        # i.e. I am just going to search for one additional signature
+        
+        sampleName <- colnames(catalogues)[i]
+        currentCatalogue <- catalogues[,sampleName,drop=F]
+        ncandidatesAtPreviousDepth <- 0
+        candidatesAtPreviousDepth <- NULL
+        if(depth>1) {
+          # check if something was found at previous depth for this sample
+          candidatesAtPreviousDepth <- unlist(sapply(candidateRareSigs[[sampleName]],function(x){
+            if(length(strsplit(x,split = ":")[[1]])==(depth-1)){
+              return(x)
+            }else{
+              return(NULL)
+            }
+          },USE.NAMES = F))
+          if(!is.null(candidatesAtPreviousDepth)) ncandidatesAtPreviousDepth <- length(candidatesAtPreviousDepth)
+        }
+        
+        if((depth==1 | ncandidatesAtPreviousDepth>0) & (ncol(rareSignatures)-depth>=0)){
+          # OK we are now GO for this sample to search for additional signatures
+          # we are searching either only once if depth is 1, or as many times as necessary if depth is >1
+          # also we know we have enough rare signatures to search up to this depth
+          nloop <- 1
+          if(depth>1) nloop <- ncandidatesAtPreviousDepth
+          for(loopi in 1:nloop){
+            # loopi <- 1
+            if(depth==1){
+              currentRareSigs <- NULL
+              commonSigsToUse <- commonSignatures
+              rareSigsToUse <- rareSignatures
+            }else if(depth>1){
+              currentRareSigs <- strsplit(candidatesAtPreviousDepth[loopi],split = ":")[[1]]
+              # add the current rare signatures to the common set and remove them from the rare set
+              commonSigsToUse <- cbind(commonSignatures,rareSignatures[,currentRareSigs,drop=F])
+              rareSigsToUse <- rareSignatures[,setdiff(colnames(rareSignatures),currentRareSigs),drop=F]
+            }
+            
+            # now we search with the various methods
+            if(multiStepMode=="partialNMF" | multiStepMode=="constrainedFit"){
+              # 
+              # compute residuals
+              E <- flexconstr_sigfit_multipleSamples(as.matrix(commonSigsToUse),as.matrix(currentCatalogue),allmut_tolratio = residualNegativeProp)
+              if(multiStepMode=="constrainedFit"){
+                R <- currentCatalogue - as.matrix(commonSigsToUse) %*% as.matrix(E)
+              }else if(multiStepMode=="partialNMF"){
+                R <- partialNMFresidual(currentCatalogue,commonSigsToUse,E,max.iter = 50)
+              }
+              
+              # check for min residual
+              addSig <- TRUE
+              if(!is.null(minResidualMutations)) addSig <- sum(R)>=minResidualMutations
+              
+              # now get which rare signatures are the most similar
+              positiveR <- R
+              positiveR[positiveR<0] <- 0
+              simMatrix <- computeCorrelationOfTwoSetsOfSigs(positiveR,rareSigsToUse)
+              
+              # there may be more than one signature suitable
+              simMatrix <- unlist(simMatrix)
+              pos <- which(simMatrix>=minCosSimRareSig)
+              if(length(pos)!=0 & addSig){
+                if(depth==1){
+                  candidateRareSigs[[colnames(catalogues)[i]]] <- colnames(rareSigsToUse)[pos]
+                  candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- simMatrix[pos]
+                  names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                  whichSamplesMayHaveRareSigs <- c(whichSamplesMayHaveRareSigs,i)
+                }else if(depth>1){
+                  candidateRareSigs[[colnames(catalogues)[i]]] <- c(candidateRareSigs[[colnames(catalogues)[i]]],paste(currentRareSigs,colnames(rareSigsToUse)[pos],sep=":"))
+                  candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- c(candidateRareSigsCosSim[[colnames(catalogues)[i]]],simMatrix[pos])
+                  names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                }
+              }
+              
+            }else if(multiStepMode=="errorReduction" | multiStepMode=="cossimIncrease"){
+              
+              # get first fit with all
+              quickFitCommon <- Fit(catalogues = currentCatalogue,
+                                      signatures = commonSigsToUse,
+                                      nboot = nboot,
+                                      exposureFilterType = "fixedThreshold",
+                                      giniThresholdScaling = giniThresholdScaling,
+                                      threshold_percent = -1,
+                                      threshold_p.value = threshold_p.value,
+                                      method = method,
+                                      useBootstrap = FALSE,
+                                      nparallel = nparallel)
+              
+              quickFit <- list()
+              for(j in 1:ncol(rareSigsToUse)){
+                # j <- 1
+                if(verbose) message("[signatureFitMultiStep info] multiStepMode ",multiStepMode,": depth ",depth,", sample ",i," of ",ncol(catalogues)," fitting rare signature ",j," of ",ncol(rareSigsToUse),"")
+                quickFit[[j]] <- Fit(catalogues = currentCatalogue,
+                                       signatures = cbind(commonSigsToUse,rareSigsToUse[,j,drop=F]),
+                                       nboot = nboot,
+                                       exposureFilterType = "fixedThreshold",
+                                       giniThresholdScaling = giniThresholdScaling,
+                                       threshold_percent = -1,
+                                       threshold_p.value = threshold_p.value,
+                                       method = method,
+                                       useBootstrap = FALSE,
+                                       nparallel = nparallel)
+              }
+              
+              # commonError <- KLD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
+              commonError <- MAD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
+              commonCosSim <- cos_sim(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
+              
+              allError <- sapply(1:length(quickFit), function(j) {
+                MAD(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(quickFit[[j]]$exposures))
+              })
+              allCosSim <- sapply(1:length(quickFit), function(j) {
+                cos_sim(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(quickFit[[j]]$exposures))
+              })
+              # error
+              errorRed <- (commonError-allError)/commonError*100
+              cossimIncr <- allCosSim-commonCosSim
+              if(multiStepMode=="errorReduction"){
+                pos <- which(errorRed>=minErrorReductionPerc)
+              }else if(multiStepMode=="cossimIncrease"){
+                pos <- which(cossimIncr>=minCosSimIncrease)
+              }
+  
+              if(length(pos)!=0){
+                if(depth==1){
+                  candidateRareSigs[[colnames(catalogues)[i]]] <- colnames(rareSigsToUse)[pos]
+                  candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- allCosSim[pos]
+                  names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                  whichSamplesMayHaveRareSigs <- c(whichSamplesMayHaveRareSigs,i)
+                }else if(depth>1){
+                  candidateRareSigs[[colnames(catalogues)[i]]] <- c(candidateRareSigs[[colnames(catalogues)[i]]],paste(currentRareSigs,colnames(rareSigsToUse)[pos],sep=":"))
+                  candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- c(candidateRareSigsCosSim[[colnames(catalogues)[i]]],allCosSim[pos])
+                  names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                }
+              }
+            
+            }
+            
+            # --- done with the methods
+          }
+        }
+        
+      }
+      
+    }
+  }
+  
+  # at this point it would be good to have a remove duplicates step
+  allcomb <- function(x){
+    tmpx <- strsplit(x,split = ":")[[1]]
+    sapply(combinat::permn(tmpx),function(y) paste(y,collapse = ":"))
+  }
+  
+  tmpcandidateRareSigs <- list()
+  tmpcandidateRareSigsCosSim <- list()
+  for (s in names(candidateRareSigs)){
+    # s <- names(candidateRareSigs)[1]
+    for (si in 1:length(candidateRareSigs[[s]])){
+      # si <- 1
+      if(!any(allcomb(candidateRareSigs[[s]][si]) %in% tmpcandidateRareSigs[[s]])){
+        tmpcandidateRareSigs[[s]] <- c(tmpcandidateRareSigs[[s]],candidateRareSigs[[s]][si])
+        tmpcandidateRareSigsCosSim[[s]] <- c(tmpcandidateRareSigsCosSim[[s]],candidateRareSigsCosSim[[s]][si])
+      }
+    }
+  }
+  candidateRareSigs <- tmpcandidateRareSigs
+  candidateRareSigsCosSim <- tmpcandidateRareSigsCosSim
+  
+  samples <- list()
+  
+  for(i in 1:ncol(catalogues)){
+    # i <- 1
+    sampleName <- colnames(catalogues)[i]
+    currentCatalogue <- catalogues[,sampleName,drop=F]
+    samples[[sampleName]] <- list()
+    samples[[sampleName]]$catalogue <- currentCatalogue
+    
+    if(verbose) message("[signatureFitMultiStep info] fitting sample ",i," of ",ncol(catalogues),": ",sampleName)
+    
+    # begin by fitting
+    samples[[sampleName]]$fitCommonOnly <- Fit(catalogues = currentCatalogue,
+                                                 signatures = commonSignatures,
+                                                 nboot = nboot,
+                                                 exposureFilterType = exposureFilterType,
+                                                 giniThresholdScaling = giniThresholdScaling,
+                                                 threshold_percent = threshold_percent,
+                                                 threshold_p.value = threshold_p.value,
+                                                 method = method,
+                                                 useBootstrap = useBootstrap,
+                                                 nparallel = nparallel)
+    
+    # now check if I should try to fit some rare signatures as well
+    if(i %in% whichSamplesMayHaveRareSigs){
+      samples[[sampleName]]$fitWithRare <- list()
+      
+      for (j in 1:length(candidateRareSigs[[sampleName]])){
+        # j <- 1
+        # consider the case in which >1 signatures are possible and separated by :
+        currentRareSigName <- strsplit(candidateRareSigs[[sampleName]][j],split = ":")[[1]]
+        currentRareSig <- rareSignatures[,currentRareSigName,drop=F]
+        samples[[sampleName]]$fitWithRare[[paste(currentRareSigName,collapse = ":")]] <- Fit(catalogues = currentCatalogue,
+                                                                                               signatures = cbind(commonSignatures,currentRareSig),
+                                                                                               nboot = nboot,
+                                                                                               exposureFilterType = exposureFilterType,
+                                                                                               giniThresholdScaling = giniThresholdScaling,
+                                                                                               threshold_percent = threshold_percent,
+                                                                                               threshold_p.value = threshold_p.value,
+                                                                                               method = method,
+                                                                                               useBootstrap = useBootstrap,
+                                                                                               nparallel = nparallel)
+      }
+    }
+  }
+  
+  # collect all info
+  resObj <- list()
+  # add data and options used
+  resObj$catalogues <- catalogues
+  resObj$commonSignatures <- commonSignatures
+  resObj$rareSignatures <- rareSignatures
+  resObj$method <- method
+  resObj$exposureFilterType <- exposureFilterType
+  resObj$multiStepMode <- multiStepMode
+  resObj$giniThresholdScaling <- giniThresholdScaling
+  resObj$minErrorReductionPerc <- minErrorReductionPerc
+  resObj$minCosSimIncrease <-minCosSimIncrease
+  resObj$threshold_percent <- threshold_percent
+  resObj$residualNegativeProp <- residualNegativeProp
+  resObj$minResidualMutations <- minResidualMutations
+  resObj$minCosSimRareSig <- minCosSimRareSig
+  resObj$useBootstrap <- useBootstrap
+  resObj$nboot <- nboot
+  resObj$threshold_p.value <- threshold_p.value
+  resObj$rareSignatureTier <- rareSignatureTier
+  resObj$maxRareSigsPerSample <- maxRareSigsPerSample
+  # add all fit results and info
+  resObj$whichSamplesMayHaveRareSigs <- colnames(catalogues)[whichSamplesMayHaveRareSigs]
+  resObj$candidateRareSigs <- candidateRareSigs
+  resObj$candidateRareSigsCosSim <- candidateRareSigsCosSim
+  resObj$samples <- samples
+  # compute fit merge
+  resObj <- fitMerge(resObj)
+  return(resObj)
+}
+
+
+# new reorganised fit function
+#' @export
+Fit <- function(catalogues,
+                  signatures,
+                  exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
+                  giniThresholdScaling = 10,
+                  threshold_percent = 5,
+                  method = "KLD",
+                  useBootstrap = FALSE,
+                  nboot = 200,
+                  threshold_p.value = 0.05,
+                  nparallel = 1,
+                  randomSeed = NULL,
+                  verbose = FALSE){
+  fitRes <- list()
+  if(useBootstrap){
+    
+    # compute the full results
+    resFitBoot <- SignatureFit_withBootstrap(cat = catalogues,
+                                             signature_data_matrix = signatures,
+                                             nboot = nboot,
+                                             exposureFilterType = exposureFilterType,
+                                             threshold_percent = threshold_percent,
+                                             giniThresholdScaling = giniThresholdScaling,
+                                             threshold_p.value = threshold_p.value,
+                                             method = method,
+                                             verbose = verbose,
+                                             doRound = FALSE,
+                                             nparallel = nparallel,
+                                             randomSeed = randomSeed,
+                                             showDeprecated = F)
+    
+    fitRes$exposures <- resFitBoot$E_median_filtered
+    fitRes$unassigned_muts <- apply(catalogues,2,sum) - apply(fitRes$exposures,2,sum)
+    fitRes$unassigned_muts_perc <- fitRes$unassigned_muts/apply(catalogues,2,sum)*100
+    fitRes$bootstrap_exposures <- resFitBoot$boot_list
+    fitRes$bootstrap_exposures_samples <- resFitBoot$samples_list
+    fitRes$bootstrap_exposures_pvalues <- resFitBoot$E_p.values
+    fitRes$nboot <- nboot
+    fitRes$threshold_p.value <- threshold_p.value
+    
+  }else{
+    resFit <- SignatureFit(cat =catalogues,
+                           signature_data_matrix = signatures,
+                           method = method,
+                           doRound = FALSE,
+                           verbose = verbose)
+    if(exposureFilterType=="giniScaledThreshold"){
+      sigInvGini <- 1 - apply(signatures,2,giniCoeff)
+      giniThresholdPerc <- giniThresholdScaling*sigInvGini
+      # set to zero differently for each signature
+      for(i in 1:length(giniThresholdPerc)) resFit[i,resFit[i,]/apply(catalogues,2,sum)*100<giniThresholdPerc[i]] <- 0
+    }else if(exposureFilterType=="fixedThreshold"){
+      resFit[resFit/apply(catalogues,2,sum)*100<threshold_percent] <- 0
+    }
+    
+    fitRes$exposures <- resFit
+    fitRes$unassigned_muts <- apply(catalogues,2,sum) - apply(fitRes$exposures,2,sum)
+    fitRes$unassigned_muts_perc <- fitRes$unassigned_muts/apply(catalogues,2,sum)*100
+    fitRes$bootstrap_exposures <- NA
+    fitRes$bootstrap_exposures_samples <- NA
+    fitRes$bootstrap_exposures_pvalues <- NA
+    fitRes$nboot <- NA
+    fitRes$threshold_p.value <- NA
+    
+  }
+  
+  fitRes$useBootstrap <- useBootstrap
+  fitRes$exposureFilterType <- exposureFilterType
+  fitRes$giniThresholdScaling <- ifelse(exposureFilterType=="giniScaledThreshold",giniThresholdScaling,NA)
+  fitRes$threshold_percent <- ifelse(exposureFilterType=="fixedThreshold",threshold_percent,NA)
+  fitRes$catalogues <- catalogues
+  fitRes$signatures <- signatures
+  fitRes$method <- method
+  
+  return(fitRes)
+}
+
+fitMerge <- function(resObj,forceRareSigChoice=NULL){
+  # build exposure matrix with all signatures in the columns
+  # will remove the signatures not present at the end
+  rareSigChoice <- list()
+  exposures_merge <- matrix(0,ncol = ncol(resObj$commonSignatures)+ncol(resObj$rareSignatures)+1,nrow = ncol(resObj$catalogues),
+                            dimnames = list(colnames(resObj$catalogues),c(colnames(resObj$commonSignatures),colnames(resObj$rareSignatures),"unassigned")))
+  for (i in 1:ncol(resObj$catalogues)){
+    # i <- 1
+    currentSample <- colnames(resObj$catalogues)[i]
+    
+    # check for attempts to force rare signature choice
+    forceRareSig <- NULL
+    if(!is.null(forceRareSigChoice[[currentSample]])){
+      if(!is.null(resObj$samples[[currentSample]]$fitWithRare[[forceRareSigChoice[[currentSample]]]])){
+        forceRareSig <- forceRareSigChoice[[currentSample]]
+      }else{
+        message("Attempt to force rare sig ",forceRareSigChoice[[currentSample]]," for sample ",currentSample," failed because the rare signature is not in the fitWithRare results for this sample.")
+      }
+    }
+    
+    if(currentSample %in% resObj$whichSamplesMayHaveRareSigs){
+      highestCosSimSig <- resObj$candidateRareSigs[[currentSample]][which.max(resObj$candidateRareSigsCosSim[[currentSample]])]
+      if(!is.null(forceRareSig)) highestCosSimSig <- forceRareSig
+      rareSigChoice[[currentSample]] <- highestCosSimSig
+      selectedExp <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$exposures
+      exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
+      exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$unassigned_muts
+    }else{
+      selectedExp <- resObj$samples[[currentSample]]$fitCommonOnly$exposures
+      exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
+      exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
+    }
+  }
+  
+  resObj$exposures <- exposures_merge[,apply(exposures_merge, 2, sum)>0,drop=F]
+  resObj$rareSigChoice <- rareSigChoice
+  # merge also the bootstraps?
+  
+  return(resObj)
+}
+
+
+flexconstr_sigfit <- function(P,m, mut_tol=0, allmut_tolratio=0.01){
+  G <- -P 
+  H <- -m
+  # test to flexibilise the constraints on the residual part
+  allmut <-sum(m)
+  H<- -m-mut_tol*m-allmut_tolratio*allmut
+  
+  # G<-NULL
+  # H<-NULL
+  
+  # add positivity requirement for exposures e >=0 
+  if (ncol(P)>1){
+    coef_nn_e<-diag(1,ncol(P))
+    rside_nn_e <- rep(0,ncol(P))
+    # summarising both constraints into matrices G and H 
+    G <- rbind(G,coef_nn_e)
+    H <- c(H,rside_nn_e)
+  }else{
+    G <- c(G,1)
+    H <- c(H,0) 
+  }
+  
+  # solving least squares on (Pe-m)^2  with the constraints (-Pe>=-m-mut_tol-allmut_tolratio*) and (e >=0)  => Gx>=h
+  e <- limSolve::lsei(A = P, B= m, G = G,
+                      H = H, E=NULL, F=NULL, Wx = NULL, Wa = NULL, type = 2, tol = sqrt(.Machine$double.eps), 
+                      tolrank = NULL, fulloutput = TRUE, verbose = TRUE)
+  
+  return(e)
+  
+}
+
+flexconstr_sigfit_multipleSamples <- function(P,M, mut_tol=0, allmut_tolratio=0.01){
+  E <- list()
+  for(i in 1:ncol(M)){
+    m <- M[,i,drop=F]
+    e <- flexconstr_sigfit(P,m, mut_tol, allmut_tolratio)
+    E[[colnames(M)[i]]] <- as.matrix(e$X)
+  }
+  E <- do.call(cbind,E)
+  colnames(E) <- colnames(M)
+  return(E)
+}
+
+partialNMFresidual <- function(catalogues,commonSignatures,E,max.iter = 100){
+  Rlist <- list()
+  for (i in 1:ncol(E)){
+    # i <- 1
+    res.nnmf <- NNLM::nnmf(as.matrix(catalogues[,i,drop=F]),
+                           init = list(W0 = as.matrix(commonSignatures),H1 = as.matrix(E[,i,drop=F])),
+                           loss = "mkl",
+                           method = "lee",
+                           k = 1,
+                           max.iter = max.iter,check.k = FALSE,show.warning = F,verbose = F)
+    currentR <- apply(res.nnmf$W[,1,drop=F],2,function(x)x/sum(x))
+    colnames(currentR) <- colnames(catalogues)[i]
+    Rlist[[i]] <- currentR
+  }
+  return(do.call(cbind,Rlist))
+}
+
+#' @export
+giniCoeff <- function(x){
+  meanx <- mean(x)
+  sumxdiff <- 0
+  for (i in x) {
+    for (j in x){
+      sumxdiff <- sumxdiff + abs(i-j)
+    }
+  }
+  return((sumxdiff)/(2*(length(x)^2)*meanx))
+}
+
+
+
+MAD <- function(a,b){
+  mean(abs(a-b))
+}
+
+NMAD <- function(a,b){
+  mean(abs(a-b))/sum(a)
+}
+
+# dataMatrix can be either a catalogue or signature matrix
+getTypeOfMutationsFromChannels <- function(dataMatrix){
+  SBSchannels <- c("A[C>A]A","A[C>A]C","A[C>A]G","A[C>A]T","C[C>A]A","C[C>A]C","C[C>A]G","C[C>A]T","G[C>A]A","G[C>A]C","G[C>A]G","G[C>A]T","T[C>A]A","T[C>A]C","T[C>A]G","T[C>A]T",
+                   "A[C>G]A","A[C>G]C","A[C>G]G","A[C>G]T","C[C>G]A","C[C>G]C","C[C>G]G","C[C>G]T","G[C>G]A","G[C>G]C","G[C>G]G","G[C>G]T","T[C>G]A","T[C>G]C","T[C>G]G","T[C>G]T",
+                   "A[C>T]A","A[C>T]C","A[C>T]G","A[C>T]T","C[C>T]A","C[C>T]C","C[C>T]G","C[C>T]T","G[C>T]A","G[C>T]C","G[C>T]G","G[C>T]T","T[C>T]A","T[C>T]C","T[C>T]G","T[C>T]T",
+                   "A[T>A]A","A[T>A]C","A[T>A]G","A[T>A]T","C[T>A]A","C[T>A]C","C[T>A]G","C[T>A]T","G[T>A]A","G[T>A]C","G[T>A]G","G[T>A]T","T[T>A]A","T[T>A]C","T[T>A]G","T[T>A]T",
+                   "A[T>C]A","A[T>C]C","A[T>C]G","A[T>C]T","C[T>C]A","C[T>C]C","C[T>C]G","C[T>C]T","G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T",
+                   "A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T","G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
+  
+  DBSchannelsZou <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
+                        "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
+                        "AG>CA","AG>CC","AG>CT","AG>GA","AG>GC","AG>GT","AG>TA","AG>TC","AG>TT",
+                        "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
+                        "CA>AC","CA>AG","CA>AT","CA>GC","CA>GG","CA>GT","CA>TC","CA>TG","CA>TT",
+                        "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
+                        "CG>AA","CG>AC","CG>AT","CG>GA","CG>GC","CG>TA",
+                        "GA>AC","GA>AG","GA>AT","GA>CC","GA>CG","GA>CT","GA>TC","GA>TG","GA>TT",
+                        "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
+                        "TA>AC","TA>AG","TA>AT","TA>CC","TA>CG","TA>GC")
+  DBSchannelsAlexandrov <-    c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
+                                  "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
+                                  "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
+                                  "CG>AT","CG>GC","CG>GT","CG>TA","CG>TC","CG>TT",
+                                  "CT>AA","CT>AC","CT>AG","CT>GA","CT>GC","CT>GG","CT>TA","CT>TC","CT>TG",
+                                  "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
+                                  "TA>AT","TA>CG","TA>CT","TA>GC","TA>GG","TA>GT",
+                                  "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
+                                  "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
+                                  "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
+  SVchannels <- c('clustered_del_1-10Kb', 'clustered_del_10-100Kb', 'clustered_del_100Kb-1Mb', 'clustered_del_1Mb-10Mb', 'clustered_del_>10Mb', 
+                  'clustered_tds_1-10Kb', 'clustered_tds_10-100Kb', 'clustered_tds_100Kb-1Mb', 'clustered_tds_1Mb-10Mb', 'clustered_tds_>10Mb', 
+                  'clustered_inv_1-10Kb', 'clustered_inv_10-100Kb', 'clustered_inv_100Kb-1Mb', 'clustered_inv_1Mb-10Mb', 'clustered_inv_>10Mb', 
+                  'clustered_trans', 
+                  'non-clustered_del_1-10Kb', 'non-clustered_del_10-100Kb', 'non-clustered_del_100Kb-1Mb', 'non-clustered_del_1Mb-10Mb', 'non-clustered_del_>10Mb', 
+                  'non-clustered_tds_1-10Kb', 'non-clustered_tds_10-100Kb', 'non-clustered_tds_100Kb-1Mb', 'non-clustered_tds_1Mb-10Mb', 'non-clustered_tds_>10Mb', 
+                  'non-clustered_inv_1-10Kb', 'non-clustered_inv_10-100Kb', 'non-clustered_inv_100Kb-1Mb', 'non-clustered_inv_1Mb-10Mb', 'non-clustered_inv_>10Mb', 
+                  'non-clustered_trans')
+  
+  muttype <- "generic"
+  
+  if(nrow(dataMatrix)==length(SBSchannels)){
+    if(all(rownames(dataMatrix)==SBSchannels)) muttype <- "subs"
+  }else if(nrow(dataMatrix)==length(DBSchannelsZou)){
+    if(all(rownames(dataMatrix)==DBSchannelsZou)) {
+      muttype <- "DNV"
+    }else if(all(rownames(dataMatrix)==DBSchannelsAlexandrov)){
+      muttype <- "DNV"
+    }
+  }else if(nrow(dataMatrix)==length(SVchannels)){
+    if(all(rownames(dataMatrix)==SVchannels)) muttype <- "rearr"
+  }
+  
+  return(muttype)
+}
+
+# plotSignatures wrapper function, it will determine the type of signatures and plot using the appropriate function
+#' @export
+plotSignatures <- function(signature_data_matrix,
+                           output_file = NULL,...){
+  # identify the type of mutations
+  typeofmuts <- getTypeOfMutationsFromChannels(signature_data_matrix)
+  if(typeofmuts=="subs"){
+    plotSubsSignatures(signature_data_matrix = signature_data_matrix,
+                       output_file = output_file,...)
+  }else if(typeofmuts=="rearr"){
+    plotRearrSignatures(signature_data_matrix = signature_data_matrix,
+                        output_file = output_file,...)
+  }else if(typeofmuts=="DNV"){
+    plotDNVSignatures(signature_data_matrix = signature_data_matrix,
+                      output_file = output_file,...)
+  }else{
+    plotGenericSignatures(signature_data_matrix = signature_data_matrix,
+                          output_file = output_file,...)
+  }
+}
+
+drawCircle <- function(radius=1,
+                       position=c(0,0),
+                       col=NA,         #this is a polygon parameter
+                       border=NULL){   #this is a polygon parameter
+  
+  displCoor <- position
+  
+  
+  arcLines <- getArcCoordinates(0,2*pi,radius = radius,nSegmentsForEachRadiant = 20)
+  polygon(displCoor[1]+c(arcLines$x),
+          displCoor[2]+c(arcLines$y),
+          col = col,
+          border = border)
+}
+
+polarToCartesian <- function(angle,
+                             radius=1){
+  c(radius*sin(angle),radius*cos(angle))
+}
+
+getArcCoordinates <- function(fromAngle,
+                              toAngle,
+                              radius=1,
+                              nSegmentsForEachRadiant=100){
+  if(fromAngle>toAngle) toAngle <- toAngle + 2*pi
+  angleToTravel <- toAngle - fromAngle
+  nsegments <- ceiling(angleToTravel*nSegmentsForEachRadiant)
+  angles <- seq(fromAngle,toAngle,length.out = nsegments)
+  resPos <- sapply(angles, function(x){
+    polarToCartesian(x,radius)
+  })
+  resList <- list()
+  resList$x <- resPos[1,]
+  resList$y <- resPos[2,]
+  return(resList)
+}
+
+#' @export
+plotMatrix <- function(CosSimMatrix,
+                                output_file,
+                                thresholdMark = NULL,
+                                ndigitsafterzero = 2,
+                                cex.numbers = 0.7){
+  circlesColBasic <- "#A1CAF1"
+  circlesColHighlight <- "#BE0032"
+  
+  maxncharSigs <- max(sapply(rownames(CosSimMatrix),nchar))
+  maxncharSamples <- max(sapply(colnames(CosSimMatrix),nchar))
+  mar1 <- 0.6*maxncharSigs+1.2
+  mar2 <- 0.6*maxncharSamples+1.2
+  mar3 <- 2
+  mar4 <- 2
+  width <- 0.5 + 0.3*nrow(CosSimMatrix) + 0.125*maxncharSamples
+  height <- 0.5 + 0.3*ncol(CosSimMatrix) + 0.125*maxncharSigs
+  cairo_pdf(filename = output_file,width = width,height = height)
+  par(mfrow=c(1,1))
+  par(mar=c(mar1,mar2,mar3,mar4))
+  
+  plot(1, type="n", xlab="", ylab="", xlim=c(0.5,nrow(CosSimMatrix)+0.5), ylim=c(ncol(CosSimMatrix)+0.5,0.5),
+       xaxt = 'n', yaxt = 'n',bty = 'n',xaxs="i",yaxs="i")
+  abline(h=1:ncol(CosSimMatrix),lty=3,col="lightgrey",lwd=3)
+  abline(v=1:nrow(CosSimMatrix),lty=3,col="lightgrey",lwd=3)
+  axis(1,labels = rownames(CosSimMatrix),at = 1:nrow(CosSimMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
+  axis(2,labels = colnames(CosSimMatrix),at = 1:ncol(CosSimMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
+  
+  toPlot <- CosSimMatrix
+  for(i in 1:ncol(CosSimMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),CosSimMatrix[,i])
+  toPlot[toPlot=="0" | toPlot=="-0"] <- ""
+  
+  circleDim <- CosSimMatrix/max(CosSimMatrix)*5
+  
+  for(i in 1:ncol(circleDim)) {
+    for(j in 1:nrow(circleDim)){
+      usecol <- circlesColBasic
+      if(!is.null(thresholdMark)) {
+        if(thresholdMark <= CosSimMatrix[j,i]) usecol <- circlesColHighlight
+      }
+      drawCircle(radius = circleDim[j,i]/10,position = c(j,i),col = usecol,border = NA)
+    }
+  }
+  for(i in 1:ncol(toPlot)) text(y = rep(i,nrow(toPlot)), x = 1:nrow(toPlot),labels = toPlot[,i],cex = cex.numbers)
+  dev.off()
+}
+
+#' @export
+plotFit <- function(fitObj,
+                      outdir = "",
+                      samplesInSubdir = TRUE){
+  
+  # some checks on outdir
+  if(is.null(outdir)) {
+    message("[plotFit error] please specify outdir")
+    return(NULL)
+  }
+  if(outdir != ""){
+    if(substr(outdir,nchar(outdir),nchar(outdir)) != "/") outdir <- paste0(outdir,"/")
+  }
+  
+  # now let's plot
+  if(outdir != "") dir.create(outdir,showWarnings = F,recursive = T)
+  
+  #function to draw a legend for the heatmap of the correlation matrix
+  draw_legend <- function(col,xl,xr,yb,yt,textx){
+    par(xpd=TRUE)
+    rect(xl,yb,xr,yt)
+    rect(
+      xl,
+      head(seq(yb,yt,(yt-yb)/length(col)),-1),
+      xr,
+      tail(seq(yb,yt,(yt-yb)/length(col)),-1),
+      col=col,border = NA
+    )
+    text(x = textx, y = yt,labels = "1")
+    text(x = textx, y = (yt-yb)/2,labels = "0")
+    text(x = textx, y = yb,labels = "-1")
+    par(xpd=FALSE)
+  }
+  
+  reconstructed <- round(as.matrix(fitObj$signatures) %*% fitObj$exposures)
+  
+  
+  #plot and save exposures
+  sums_exp <- apply(fitObj$catalogues, 2, sum)
+  exposures <- rbind(fitObj$exposures,fitObj$unassigned_muts)
+  rownames(exposures)[nrow(exposures)] <- "unassigned"
+  denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
+  exposuresProp <- (exposures/denominator*100)
+  # case of empty catalogues
+  exposuresProp[,sums_exp==0] <- 0
+  
+  file_table_exp <- paste0(outdir,"exposures.tsv")
+  # change to pdf later
+  file_plot_exp <- paste0(outdir,"exposures.pdf")
+  file_plot_expProp <- paste0(outdir,"exposures_prop.pdf")
+  plotMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  
+  write.table(t(exposures),file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  #provide a series of plots for each sample
+  if(samplesInSubdir){
+    outdir <- paste0(outdir,"samples/")
+    dir.create(outdir,recursive = TRUE,showWarnings = FALSE)
+  }
+  howmanyplots <- ncol(fitObj$catalogues)
+  for(p in 1:howmanyplots){
+    # p <- 1
+    currentSample <- colnames(fitObj$catalogues)[p]
+    fitIsEmpty <- sum(fitObj$exposures[,p])==0
+    unassigned_mut <- sprintf("%.2f",(fitObj$unassigned_muts_perc[p]))
+    cos_sim <- sprintf("%.2f",cos_sim(fitObj$catalogues[,p,drop=FALSE],reconstructed[,p,drop=FALSE]))
+    
+    sigMatrix <- fitObj$catalogues[,p,drop=FALSE]
+    addToTitle <- c("Catalogue")
+    if(!fitIsEmpty){
+      sigMatrix <- cbind(sigMatrix,reconstructed[,p,drop=FALSE])
+      sigMatrix <- cbind(sigMatrix,fitObj$catalogues[,p,drop=FALSE] - reconstructed[,p,drop=FALSE])
+      addToTitle <- c(addToTitle,
+                      paste0("Model (CosSim ",cos_sim,")"),
+                      paste0("Difference (Unassigned ",unassigned_mut,"%)"))
+    }
+    
+    plotSignatures(signature_data_matrix = sigMatrix,add_to_title = addToTitle,
+                   output_file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_pointEstimate.pdf"))
+    
+    if(fitObj$useBootstrap & !fitIsEmpty){
+      #4 bootstraps
+      consensusCol <- "#BE0032"
+      thresholdCol <- "#8DB600"
+      bootsCol <- "#A1CAF1"
+      
+      thresholdText <- ""
+      if(fitObj$exposureFilterType=="fixedThreshold"){
+        thresholdText <- paste0("threshold=",fitObj$threshold_percent,"%")
+      }else if(fitObj$exposureFilterType=="giniScaledThreshold") {
+        thresholdText <- paste0("threshold=(1-Gini)*",fitObj$giniThresholdScaling)
+      }
+      
+      maxnchar <- max(sapply(colnames(fitObj$signatures),nchar))
+      mar1 <- 0.6*maxnchar+1.2
+      mar2 <- 4
+      mar3 <- 5
+      mar4 <- 2
+      width <- max(4.5,0.5*ncol(fitObj$signatures)+1)
+      height <- 3 + 0.125*maxnchar
+      cairo_pdf(filename = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap.pdf"),width = width,height = height)
+      par(mfrow=c(1,1))
+      par(mar=c(mar1,mar2,mar3,mar4))
+      boxplot(t(fitObj$bootstrap_exposures_samples[[p]]),las=3,cex.axes=0.9,
+              ylab="n mutations",
+              ylim=c(0,max(fitObj$bootstrap_exposures_samples[[p]])),cex.main = 0.9,border="#848482",
+              main=paste0("Exposures, of ",colnames(fitObj$exposures)[p],"\n",thresholdText,", p-value=",fitObj$threshold_p.value,", n=",fitObj$nboot))
+      if(fitObj$exposureFilterType=="fixedThreshold"){
+        abline(h=fitObj$threshold_percent/100*sum(fitObj$catalogues[,p,drop=FALSE]),col=thresholdCol,lwd = 2)
+      }else if(fitObj$exposureFilterType=="giniScaledThreshold") {
+        sigInvGini <- 1 - apply(fitObj$signatures,2,giniCoeff)
+        giniThresholdPerc <- fitObj$giniThresholdScaling*sigInvGini
+        giniThreshold <- giniThresholdPerc/100*sum(fitObj$catalogues[,p,drop=FALSE])
+        for(si in 1:length(giniThreshold)) lines(x = c(si-0.5,si+0.5),y = rep(giniThreshold[si],2),col=thresholdCol,lwd = 2)
+      }
+      points(1:length(fitObj$exposures[,p,drop=FALSE]),fitObj$exposures[,p,drop=FALSE],col=consensusCol,pch = 16)
+      legend(x="topleft",legend = c("consensus exposures"),col = consensusCol,pch = 16,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
+      legend(x="topright",legend = c("threshold"),col = thresholdCol,lty = 1,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE,lwd = 2)
+      dev.off()
+      
+      if(ncol(fitObj$signatures)>1){
+        #5 top correlated signatures
+        res.cor <- suppressWarnings(cor(t(fitObj$bootstrap_exposures_samples[[p]]),method = "spearman"))
+        res.cor_triangular <- res.cor
+        res.cor_triangular[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- 0
+        res.cor_triangular_label <- matrix(sprintf("%0.2f",res.cor_triangular),nrow = nrow(res.cor_triangular))
+        res.cor_triangular_label[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- ""
+        
+        mar1 <- 0.6*maxnchar+1.2
+        mar2 <- 0.6*maxnchar+1.2
+        mar3 <- 4
+        mar4 <- 4
+        width <- 1 + 0.3*ncol(fitObj$signatures) + 0.125*maxnchar
+        height <- 1 + 0.3*ncol(fitObj$signatures) + 0.125*maxnchar
+        cairo_pdf(filename = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_Correlation.pdf"),width = width,height = height)
+        par(mfrow=c(1,1))
+        par(mar=c(mar1,mar2,mar3,mar4))
+        par(xpd=FALSE)
+        col<- colorRampPalette(c("blue", "white", "red"))(51)
+        image(res.cor_triangular,col = col,zlim = c(-1,1), axes=F,main="Exposures Correlation\n(spearman)")
+        extrabit <- 1/(ncol(fitObj$signatures)-1)/2
+        abline(h=seq(0-extrabit,1+extrabit,length.out = ncol(fitObj$signatures)+1),col="grey",lty=2)
+        abline(v=seq(0-extrabit,1+extrabit,length.out = ncol(fitObj$signatures)+1),col="grey",lty=2)
+        axis(2,at = seq(0,1,length.out = ncol(fitObj$signatures)),labels = colnames(fitObj$signatures),las=1,cex.lab=0.8)
+        axis(1,at = seq(0,1,length.out = ncol(fitObj$signatures)),labels = colnames(fitObj$signatures),las=2,cex.lab=0.8)
+        # draw_legend(col,1.25,1.3,0,1,1.2)
+        draw_legend(col,1+4*extrabit,1+4.5*extrabit,0,1,1+3*extrabit)
+        dev.off()
+        
+        #6 some correlation plots
+        cairo_pdf(filename = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_CorrelationExamples.pdf"),width = 2.2*howmanycorrtoplot,height = 2.5)
+        howmanycorrtoplot <- min(3,ncol(fitObj$signatures)*(ncol(fitObj$signatures)-1)/2)
+        par(mfrow=c(1,howmanycorrtoplot))
+        vals <- res.cor_triangular[order(abs(res.cor_triangular),decreasing = TRUE)]
+        for (j in 1:howmanycorrtoplot){
+          pos <- which(vals[j]==res.cor_triangular,arr.ind = TRUE)
+          mainpar <- paste0("Exposures across bootstraps, n=",fitObj$nboot,"\nspearman correlation ",sprintf("%.2f",vals[j]))
+          plot(fitObj$bootstrap_exposures_samples[[p]][pos[1],],fitObj$bootstrap_exposures_samples[[p]][pos[2],],
+               xlab = colnames(fitObj$signatures)[pos[1]],
+               ylab = colnames(fitObj$signatures)[pos[2]],
+               main=mainpar,col=bootsCol,pch = 16,cex.main = 0.9)
+          
+        }
+        dev.off()
+      }
+      
+    }
+  }
+  
+}
+
+#' @export
+plotFitMS <- function(fitMSobj,
+                      outdir = ""){
+  # some checks on outdir
+  if(is.null(outdir)) {
+    message("[plotFitMS error] please specify outdir")
+    return(NULL)
+  }
+  if(outdir != ""){
+    if(substr(outdir,nchar(outdir),nchar(outdir)) != "/") outdir <- paste0(outdir,"/")
+  }
+  # now let's plot
+  if(outdir != "") dir.create(outdir,showWarnings = F,recursive = T)
+  
+  # now plot some generic info
+  summaryFits <- NULL
+  rowi <- 1
+  for (i in 1:length(fitMSobj$whichSamplesMayHaveRareSigs)){
+    # i <- 1
+    currentSample <- fitMSobj$whichSamplesMayHaveRareSigs[i]
+    for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
+      summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
+                                                  candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                  cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
+                                                  selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                  stringsAsFactors = F,row.names = rowi))
+      rowi <- rowi+1
+    }
+  }
+  write.table(summaryFits,file = paste0(outdir,"candidateRareSigs.tsv"),
+              sep = "\t",col.names = TRUE,row.names = FALSE,quote = FALSE)
+  
+  #plot and save exposures
+  sums_exp <- apply(fitMSobj$exposures,1,sum)
+  denominator <- matrix(sums_exp,nrow = nrow(fitMSobj$exposures),ncol = ncol(fitMSobj$exposures),byrow = FALSE)
+  exposuresProp <- (fitMSobj$exposures/denominator*100)
+  # case of empty catalogues
+  exposuresProp[sums_exp==0,] <- 0
+  
+  file_plot_exp <- paste0(outdir,"exposures.pdf")
+  file_plot_expProp <- paste0(outdir,"exposures_prop.pdf")
+  file_table_exp <- paste0(outdir,"exposures.tsv")
+  plotMatrix(as.data.frame(t(fitMSobj$exposures)),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(t(exposuresProp)),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  write.table(t(fitMSobj$exposures),file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  # now for each sample plot the chosen solution and the alternative solutions
+  for (s in colnames(fitMSobj$catalogues)){
+    # s <- colnames(fitMSobj$catalogues)[1]
+    if(s %in% fitMSobj$whichSamplesMayHaveRareSigs){
+      currentOutDir <- paste0(outdir,"selectedSolution_",s,"/")
+      selectedSolution <- fitMSobj$rareSigChoice[[s]]
+      otherSolutions <- setdiff(fitMSobj$candidateRareSigs[[s]],selectedSolution)
+      plotFit(fitMSobj$samples[[s]]$fitWithRare[[selectedSolution]],outdir = currentOutDir,samplesInSubdir = F)
+      
+      # plot other candidates
+      currentOutDir <- paste0(outdir,"otherSolutions_",s,"/commonOnly/")
+      plotFit(fitMSobj$samples[[s]]$fitCommonOnly,outdir = currentOutDir,samplesInSubdir = F)
+      
+      if(length(otherSolutions)>0){
+        for (i in 1:length(otherSolutions)){
+          # i <- 1
+          currentOutDir <- paste0(outdir,"otherSolutions_",s,"/rareSigs_",i,"/")
+          plotFit(fitMSobj$samples[[s]]$fitWithRare[[otherSolutions[i]]],outdir = currentOutDir,samplesInSubdir = F)
+        }
+      }
+      
+    }else{
+      currentOutDir <- paste0(outdir,"selectedSolution_",s,"/")
+      plotFit(fitMSobj$samples[[s]]$fitCommonOnly,outdir = currentOutDir,samplesInSubdir = F)
+    }
+  }
+}
