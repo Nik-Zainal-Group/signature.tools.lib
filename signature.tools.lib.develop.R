@@ -97,6 +97,7 @@ devtools::test(pkg = ".",filter = "SignaturePartialExtraction")
 devtools::test(pkg = ".",filter = "SignatureFit")
 devtools::test(pkg = ".",filter = "snvTabToDNVcatalogue")
 devtools::test(pkg = ".",filter = "DNVTNVfunctions")
+devtools::test(pkg = ".",filter = "organSpecificSignatures")
 devtools::test(pkg = ".",filter = "plotCopyNumbers")
 
 
