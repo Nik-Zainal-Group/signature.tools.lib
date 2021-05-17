@@ -361,8 +361,9 @@ plotFit(subs_fit_res,outdir = "signatureFit/")
 snv_exp <- subs_fit_res$exposures
 ```
 In this case we used the ```Fit```
-function with ```useBootstrap=TRUE```, which uses the bootstrap fitting method and provide
-several plots, which can be compared to the expected output plots in the
+function with ```useBootstrap=TRUE```, which uses the bootstrap fitting method,
+and the ```plotFit``` function, which provides
+several plots that can be compared to the expected output plots in the
 ```Example01``` directory.
 
 Finally, we can apply HRDetect on these two samples. Notice that The

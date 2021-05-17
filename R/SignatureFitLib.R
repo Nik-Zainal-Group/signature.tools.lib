@@ -231,13 +231,13 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
     }
     boot_list <- foreach::foreach(j=1:nboot) %dopar% {
       bootcat <- generateRandMuts(cat)
-      SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter)
+      SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter,showDeprecated = F)
     }
   }else{
     boot_list <- list()
     for(i in 1:nboot){
       bootcat <- generateRandMuts(cat)
-      boot_list[[i]] <- SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter)
+      boot_list[[i]] <- SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter,showDeprecated = F)
     }
   }
   

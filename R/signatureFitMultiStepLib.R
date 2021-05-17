@@ -481,7 +481,8 @@ Fit <- function(catalogues,
                            signature_data_matrix = signatures,
                            method = method,
                            doRound = FALSE,
-                           verbose = verbose)
+                           verbose = verbose,
+                           showDeprecated = F)
     if(exposureFilterType=="giniScaledThreshold"){
       sigInvGini <- 1 - apply(signatures,2,giniCoeff)
       giniThresholdPerc <- giniThresholdScaling*sigInvGini
@@ -1074,23 +1075,24 @@ plotFitMS <- function(fitMSobj,
   if(outdir != "") dir.create(outdir,showWarnings = F,recursive = T)
   
   # now plot some generic info
-  summaryFits <- NULL
-  rowi <- 1
-  for (i in 1:length(fitMSobj$whichSamplesMayHaveRareSigs)){
-    # i <- 1
-    currentSample <- fitMSobj$whichSamplesMayHaveRareSigs[i]
-    for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
-      summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
-                                                  candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
-                                                  cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
-                                                  selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
-                                                  stringsAsFactors = F,row.names = rowi))
-      rowi <- rowi+1
+  if(length(fitMSobj$whichSamplesMayHaveRareSigs)>0){
+    summaryFits <- NULL
+    rowi <- 1
+    for (i in 1:length(fitMSobj$whichSamplesMayHaveRareSigs)){
+      # i <- 1
+      currentSample <- fitMSobj$whichSamplesMayHaveRareSigs[i]
+      for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
+        summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
+                                                    candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                    cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
+                                                    selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                    stringsAsFactors = F,row.names = rowi))
+        rowi <- rowi+1
+      }
     }
+    write.table(summaryFits,file = paste0(outdir,"candidateRareSigs.tsv"),
+                sep = "\t",col.names = TRUE,row.names = FALSE,quote = FALSE)
   }
-  write.table(summaryFits,file = paste0(outdir,"candidateRareSigs.tsv"),
-              sep = "\t",col.names = TRUE,row.names = FALSE,quote = FALSE)
-  
   #plot and save exposures
   sums_exp <- apply(fitMSobj$exposures,1,sum)
   denominator <- matrix(sums_exp,nrow = nrow(fitMSobj$exposures),ncol = ncol(fitMSobj$exposures),byrow = FALSE)
