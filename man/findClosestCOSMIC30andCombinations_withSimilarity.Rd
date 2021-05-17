@@ -15,7 +15,7 @@ the list of signatures identified and corresponding similarities
 \description{
 Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
 returns the list of signatures identified and the corresponding similarity. For example,
-list(cosmic = c("C1","C3","C2+C13"),cos.sim = c(0.94,0.85,0.7))
+list(cosmic = c("C1","C3","C2+C13"),cos_sim = c(0.94,0.85,0.7))
 means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
 the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
 }

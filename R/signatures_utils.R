@@ -82,7 +82,7 @@ computeCorrelation <- function(x){
   for(i in 2:ncol(x)){
     for(j in 1:(i-1)){ #up to i-1, diag already set to 1
       #message(i, " ", j)
-      out[i,j] <- cos.sim(as.numeric(x[,i]), as.numeric(x[,j]))
+      out[i,j] <- cos_sim(as.numeric(x[,i]), as.numeric(x[,j]))
       out[j,i] <- out[i,j] #upper triangular is the same
     }
   }
@@ -120,7 +120,7 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
       current_res <- c()
       for(j in 1:(i-1)){ #up to i-1, diag already set to 1
         #message(i, " ", j)
-        current_res <- c(current_res,cos.sim(as.numeric(x[,i]), as.numeric(x[,j])))
+        current_res <- c(current_res,cos_sim(as.numeric(x[,i]), as.numeric(x[,j])))
       }
       current_res
     }
@@ -132,7 +132,7 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
     for(i in 2:ncol(x)){
       for(j in 1:(i-1)){ #up to i-1, diag already set to 1
         #message(i, " ", j)
-        out[i,j] <- cos.sim(as.numeric(x[,i]), as.numeric(x[,j]))
+        out[i,j] <- cos_sim(as.numeric(x[,i]), as.numeric(x[,j]))
         out[j,i] <- out[i,j] #upper triangular is the same
       }
     }
@@ -148,7 +148,7 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
 #' @param b second vector to compare
 #' @return cosine similarity
 #' @export
-cos.sim <- function(a, b){
+cos_sim <- function(a, b){
   return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
 } 
 
@@ -993,7 +993,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
 }
 
 
-plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500,ndigitsafterzero = 2){
+plotCosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500,ndigitsafterzero = 2){
   # library("ggplot2")
   
   # Set up the vectors                           
@@ -1016,7 +1016,7 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
   ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w,limitsize = FALSE)
 }
 
-#' plot.CosSimSignatures
+#' plotCosSimSignatures
 #' 
 #' Plot a matrix of cosine similarities between two sets of signatures.
 #' 
@@ -1027,17 +1027,17 @@ plot.CosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabe
 #' @param xlabel label for x axis
 #' @param ylabel label for y axis
 #' @export
-plot.CosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylabel = ""){
-  cos.sim <- function(a, b){
+plotCosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylabel = ""){
+  cos_sim <- function(a, b){
     return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
   }  
   cos_sim_df <- data.frame()
   for (s in colnames(sig1)){
     for(a in colnames(sig2)){
-      cos_sim_df[s,a] <- cos.sim(sig1[,s],sig2[,a])
+      cos_sim_df[s,a] <- cos_sim(sig1[,s],sig2[,a])
     }
   }
-  plot.CosSimMatrix(cos_sim_df,output_file,dpi=dpi,xlabel = xlabel,ylabel = ylabel)
+  plotCosSimMatrix(cos_sim_df,output_file,dpi=dpi,xlabel = xlabel,ylabel = ylabel)
 }
 
 #' Find closest COSMIC30 signatures
@@ -1059,7 +1059,7 @@ findClosestCOSMIC30 <- function(sigs,threshold){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(cosmic30)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],cosmic30[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],cosmic30[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1099,7 +1099,7 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(cosmic30)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],cosmic30[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],cosmic30[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1115,7 +1115,7 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
 #' 
 #' Compares a set of signatures to the COSMIC30 signatures and 
 #' returns the list of signatures identified and the corresponding similarity. For example,
-#' list(cosmic = c("C1","C3","C13"),cos.sim = c(0.94,0.85,0.7))
+#' list(cosmic = c("C1","C3","C13"),cos_sim = c(0.94,0.85,0.7))
 #' means that Cosmic (C) signatures 1, 3 and 13 were found, while
 #' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
 #' 
@@ -1129,7 +1129,7 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(cosmic30)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],cosmic30[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],cosmic30[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1145,7 +1145,7 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
 #' 
 #' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
 #' returns the list of signatures identified and the corresponding similarity. For example,
-#' list(cosmic = c("C1","C3","C2+C13"),cos.sim = c(0.94,0.85,0.7))
+#' list(cosmic = c("C1","C3","C2+C13"),cos_sim = c(0.94,0.85,0.7))
 #' means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
 #' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
 #' 
@@ -1167,7 +1167,7 @@ findClosestCOSMIC30andCombinations_withSimilarity <- function(sigs){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(cosmic30)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],cosmic30[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],cosmic30[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1191,7 +1191,7 @@ findClosestRearrSigsBreast560 <- function(sigs,threshold){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(RS.Breast560)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],RS.Breast560[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],RS.Breast560[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1214,7 +1214,7 @@ findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
     for(a in colnames(RS.Breast560)){
-      cos_sim_df[s,a] <- cos.sim(sigs[,s],RS.Breast560[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs[,s],RS.Breast560[,a])
     }
   }
   max.sim <- apply(cos_sim_df,1,max)
@@ -1259,7 +1259,7 @@ computeCorrelationOfTwoSetsOfSigs <- function(sigs1,sigs2){
   cos_sim_df <- data.frame()
   for (s in colnames(sigs1)){
     for(a in colnames(sigs2)){
-      cos_sim_df[s,a] <- cos.sim(sigs1[,s],sigs2[,a])
+      cos_sim_df[s,a] <- cos_sim(sigs1[,s],sigs2[,a])
     }
   }
   return(cos_sim_df)

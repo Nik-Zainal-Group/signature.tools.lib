@@ -389,7 +389,7 @@ bleedingFilter <- function(e, sig,  sample, alpha){
   ## Compute the cosine similarity between the current solution and the catalogue
   #sim_smpl <- computeSimSample(e, sample, sig)
   sim_smpl <- as.matrix(sig) %*% e
-  val <- cos.sim(sample, sim_smpl)
+  val <- cos_sim(sample, sim_smpl)
   
   e_orig <- e
   delta <- 0
@@ -413,7 +413,7 @@ bleedingFilter <- function(e, sig,  sample, alpha){
           e2[i] <- 0
           #sim_smpl <- computeSimSample(e2, sample, sig)
           sim_smpl <- as.matrix(sig) %*% e2
-          sim_m[i,j] <- cos.sim(sample, sim_smpl)	
+          sim_m[i,j] <- cos_sim(sample, sim_smpl)	
         }
       }
     }
@@ -523,7 +523,7 @@ objSimAnnelaingFunction <- function(x, xsample, xsignature){
 
 
 #' @export
-plot.exposures <- function(exposures,output_file,dpi=300){
+plotExposures <- function(exposures,output_file,dpi=300){
   # library("ggplot2")
   
   # Set up the vectors                           
@@ -830,8 +830,8 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".jpg")
   file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.jpg")
   
-  plot.CosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plot.CosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  plotCosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plotCosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
   write.table(exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
@@ -855,7 +855,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
       fitIsEmpty <- sum(res$E_median_filtered[,i])==0
       unassigned_mut <- sprintf("%.2f",(sum(res$cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))/sum(res$cat[,i,drop=FALSE])*100)
       percentdiff <- sprintf("%.2f",sum(abs(res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE]))/sum(res$cat[,i,drop=FALSE])*100)
-      cos_sim <- sprintf("%.2f",cos.sim(res$cat[,i,drop=FALSE],reconstructed_with_median[,i,drop=FALSE]))
+      cos_sim <- sprintf("%.2f",cos_sim(res$cat[,i,drop=FALSE],reconstructed_with_median[,i,drop=FALSE]))
       if(type_of_mutations=="subs"){
         #1 original
         plotSubsSignatures(signature_data_matrix = res$cat[,i,drop=FALSE],add_to_titles = "Catalogue",mar=c(6,3,5,2))

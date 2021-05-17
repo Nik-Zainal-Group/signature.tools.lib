@@ -9,13 +9,14 @@ convertExposuresFromOrganToRefSigs(expMatrix, typemut = "subs")
 \arguments{
 \item{expMatrix}{exposures matrix obatined from fitting organ-specific signatures}
 
-\item{typemut}{either subs or rearr}
+\item{typemut}{either subs, DNV or rearr}
 }
 \value{
 exposure matrix converted in reference signatures exposures
 }
 \description{
-This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures as defined in Degasperi et al. 2020 Nat Cancer paper.
+This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures.
+The function will detect the version of the signatures automatically.
 }
 \references{
 A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.

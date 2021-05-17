@@ -4,12 +4,17 @@
 \alias{getOrganSignatures}
 \title{getOrganSignatures}
 \usage{
-getOrganSignatures(organ, typemut = "subs")
+getOrganSignatures(organ, version = "latest", cohort = "best",
+  typemut = "subs")
 }
 \arguments{
 \item{organ}{one of the following: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
 
-\item{typemut}{either subs or rearr}
+\item{version}{version "1" includes subs or rearr (ICGC cohort) organ-specific signatures from Degasperi et al. 2020, while version "2" includes the improved subs organ-specific signatures from ICGC as well as Hartwig and GEL, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.}
+
+\item{cohort}{for version 1 signatures only ICGC cohort is available, while for version 2 signatures ICGC, Hartwig and GEL cohort can be requested. Use "best" to get the most appropriate cohort for a given organ.}
+
+\item{typemut}{either subs, DNV or rearr}
 }
 \value{
 organ-specific signatures matrix
