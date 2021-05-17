@@ -14,6 +14,7 @@
   - [Test examples](#examplestests)
   - [Example 01](#examplese01)
   - [Example 02](#examplese02)
+  - [Example 03](#examplese03)
 - [Frequently Asked Questions](#faq)
 
 <a name="intro"/>
@@ -496,6 +497,28 @@ snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = snv_exp,typemut = "sub
 writeTable(snv_exp,"RefSigSubsExposures.tsv")
 ```
 
+<a name="examplese03"/>
+
+### Example 03
+
+In this example we show how to use the multi-step signature fit function along with the Gini-based exposure filter.
+
+Similarly to Examples 01 and 02, we construct the mutational catalogues and then we just need to specify the organ of interest:
+
+```
+#perform signature fit using a multi-step approach where organ-specific common and rare signatures are used
+subs_fit_res <- FitMS(catalogues = SNV_catalogues,
+                      exposureFilterType = "giniScaledThreshold",
+                      useBootstrap = TRUE,
+                      organ = "Breast")
+plotFitMS(subs_fit_res,outdir = "signatureFit/")
+```
+
+The function FitMS will select automatically the common and rare signatures to use according to the specified organ. As a first step it will fit the common signatures,
+and as a second step it will attempt to determine the presence of the rare signatures.
+
+In this example we have also specified to use bootstrap and to use the giniScaledThreshold exposure filter method.
+Results can be plotted with the ```plotFitMS``` function.
 
 ## Frequently Asked Questions
 
@@ -554,7 +577,7 @@ It depends on how many samples you have, with more samples requiring more repeat
 **Where do I find the activity (exposures) matrix after running the signature extraction?**
 
 We do not report the activity matrix from the extraction, only the
-signatures. We then use a signature fit procedure (described in the Nature Cancer paper, here ```SignatureFit_withBootstrap```)
+signatures. We then use a signature fit procedure (here the function ```Fit``` or ```FitMS```)
 to estimate the activities. We tend to think of the estimation of the
 activities as a separate procedure, performed holding a given set of a
 priori signatures fixed. This allows for more playing around with the
