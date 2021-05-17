@@ -87,6 +87,12 @@ increase is at least minCosSimIncrease then the rare signature will be considere
 After any of ghe procedures above, each sample may have multiple candidate rare signatures, so one is chosen according to the highest associated cosine similarity either of 
 the residual to the candidate rare signature (constrainedFit and partialNMF methods), or of the catalogue and the reconstructed sample (errorReduction and cossimIncrease methods).
 It is then possible to plot all the fits with plotFitMS and even change the choise of the candidate rare signature using the function fitMerge.
+
+A post fit exposure filter will reduce the false positive singature assignments by setting to zero exposure values that
+are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The 
+fixedThreshold method will set to zero exposures that are below a fixed threshold given as a percentage of the mutations
+in a sample (parameter threshold_percent), while the method giniScaledThreshold will use a different threshold for each
+signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.
 }
 \examples{
 res <- FitMS(catalogues,"Breast")

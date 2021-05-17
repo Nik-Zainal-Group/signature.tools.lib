@@ -21,6 +21,11 @@
 #' the residual to the candidate rare signature (constrainedFit and partialNMF methods), or of the catalogue and the reconstructed sample (errorReduction and cossimIncrease methods).
 #' It is then possible to plot all the fits with plotFitMS and even change the choise of the candidate rare signature using the function fitMerge.
 #' 
+#' A post fit exposure filter will reduce the false positive singature assignments by setting to zero exposure values that
+#' are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The 
+#' fixedThreshold method will set to zero exposures that are below a fixed threshold given as a percentage of the mutations
+#' in a sample (parameter threshold_percent), while the method giniScaledThreshold will use a different threshold for each
+#' signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.
 #' 
 #' @param catalogues catalogues matrix, samples as columns, channels as rows
 #' @param organ #automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available: 
@@ -398,20 +403,52 @@ FitMS <- function(catalogues,
 }
 
 
-# new reorganised fit function
+#' Signature Fit
+#' 
+#' This function provides basic signature fit functionalities.
+#' Fit a given set of mutational signatures into mutational catalogues to estimate 
+#' the activty/exposure of each of the given signatures in the catalogues.
+#' 
+#' This is a standard interface to signature fit functions with/without bootstrap. The object returned by this
+#' function can be passed to the plotFit() function for automated plotting of the results.
+#' 
+#' A post fit exposure filter will reduce the false positive singature assignments by setting to zero exposure values that
+#' are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The 
+#' fixedThreshold method will set to zero exposures that are below a fixed threshold given as a percentage of the mutations
+#' in a sample (parameter threshold_percent), while the method giniScaledThreshold will use a different threshold for each
+#' signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.
+#' 
+#' @param catalogues catalogues matrix, samples as columns, channels as rows
+#' @param signatures mutational signatures to bw fitted into the sample catalgues, signatures as columns and channels as rows
+#' @param method KLD or NNLS
+#' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
+#' @param useBootstrap set to TRUE to use the signature fit with bootstrap method
+#' @param nboot number of bootstraps to use, more bootstraps more accurate results (use only when useBootstrap=TRUE)
+#' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. 
+#' In other words, this is the empirical probability that the exposure is lower than the threshold (use only when useBootstrap=TRUE)
+#' @param nparallel to use parallel specify >1
+#' @param randomSeed set an integer random seed (use only when useBootstrap=TRUE)
+#' @param verbose use FALSE to suppress messages
+#' @return returns the activities/exposures of the signatures in the given sample and other information
+#' @keywords mutational signatures fit
 #' @export
+#' @examples
+#' res <- Fit(catalogues,getOrganSignatures("Breast"))
+#' plotFit(res,"results/")
 Fit <- function(catalogues,
-                  signatures,
-                  exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
-                  giniThresholdScaling = 10,
-                  threshold_percent = 5,
-                  method = "KLD",
-                  useBootstrap = FALSE,
-                  nboot = 200,
-                  threshold_p.value = 0.05,
-                  nparallel = 1,
-                  randomSeed = NULL,
-                  verbose = FALSE){
+                signatures,
+                exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
+                giniThresholdScaling = 10,
+                threshold_percent = 5,
+                method = "KLD",
+                useBootstrap = FALSE,
+                nboot = 200,
+                threshold_p.value = 0.05,
+                nparallel = 1,
+                randomSeed = NULL,
+                verbose = FALSE){
   fitRes <- list()
   if(useBootstrap){
     
@@ -476,6 +513,23 @@ Fit <- function(catalogues,
   return(fitRes)
 }
 
+
+#' Selecting and merging signature fit results from Multi-Step signature fit
+#' 
+#' This function is used to select candidate rare signature solutions from a result object obtained
+#' using the multi-step signature fit FitMS function.
+#' 
+#' When running FitMS, some samples may have multiple candidate rare signatures or rare signature combinations that 
+#' fit the sample reasonably well. This function selects the best rare signature for each sample based on cosine similarity and returns 
+#' an updated object with a summary exposures composed by each selected fit solution for each sample.
+#' 
+#' The choise of rare signature can be changed using the parameter forceRareSigChoice.
+#' 
+#' @param resObj result object obtained from the FitMS function
+#' @param forceRareSigChoice if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
+#' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSig"
+#' @return returns the updated resObj object with update exposures and rareSigChoice objects
+#' @export
 fitMerge <- function(resObj,forceRareSigChoice=NULL){
   # build exposure matrix with all signatures in the columns
   # will remove the signatures not present at the end
@@ -656,23 +710,65 @@ getTypeOfMutationsFromChannels <- function(dataMatrix){
 }
 
 # plotSignatures wrapper function, it will determine the type of signatures and plot using the appropriate function
+#' Plot Signatures with automated detection of type of mutations
+#' 
+#' This function checks the channels of the input matrix, determines the type of mutations and plots using the
+#' most appropriate signature plot.
+#' 
+#' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
+#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
+#' @param overall_title set the overall title of the plot
+#' @param mar set the option par(mar=mar)
+#' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
+#' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
 #' @export
 plotSignatures <- function(signature_data_matrix,
-                           output_file = NULL,...){
+                           output_file = NULL,
+                           plot_sum = TRUE,
+                           overall_title = "",
+                           add_to_titles = NULL,
+                           mar=NULL,
+                           howManyInOnePage=100,
+                           ncolumns=3){
   # identify the type of mutations
   typeofmuts <- getTypeOfMutationsFromChannels(signature_data_matrix)
   if(typeofmuts=="subs"){
     plotSubsSignatures(signature_data_matrix = signature_data_matrix,
-                       output_file = output_file,...)
+                       output_file = output_file,
+                       plot_sum = plot_sum,
+                       overall_title = overall_title,
+                       add_to_titles = add_to_titles,
+                       mar = mar,
+                       howManyInOnePage = howManyInOnePage,
+                       ncolumns = ncolumns)
   }else if(typeofmuts=="rearr"){
     plotRearrSignatures(signature_data_matrix = signature_data_matrix,
-                        output_file = output_file,...)
+                        output_file = output_file,
+                        plot_sum = plot_sum,
+                        overall_title = overall_title,
+                        add_to_titles = add_to_titles,
+                        mar = mar,
+                        howManyInOnePage = howManyInOnePage,
+                        ncolumns = ncolumns)
   }else if(typeofmuts=="DNV"){
     plotDNVSignatures(signature_data_matrix = signature_data_matrix,
-                      output_file = output_file,...)
+                      output_file = output_file,
+                      plot_sum = plot_sum,
+                      overall_title = overall_title,
+                      add_to_titles = add_to_titles,
+                      mar = mar,
+                      howManyInOnePage = howManyInOnePage,
+                      ncolumns = ncolumns)
   }else{
     plotGenericSignatures(signature_data_matrix = signature_data_matrix,
-                          output_file = output_file,...)
+                          output_file = output_file,
+                          plot_sum = plot_sum,
+                          overall_title = overall_title,
+                          add_to_titles = add_to_titles,
+                          mar = mar,
+                          howManyInOnePage = howManyInOnePage,
+                          ncolumns = ncolumns)
   }
 }
 
@@ -713,54 +809,75 @@ getArcCoordinates <- function(fromAngle,
   return(resList)
 }
 
+#' Plot Matrix
+#' 
+#' This function plots a matrix of values. Data is visualised as circles scaled with respect to the 
+#' largest value in the matrix, with the actual number shown. If thresholdMark is specified, then a 
+#' different colour is used for entries that are equal or above the threshold.
+#' 
+#' @param dataMatrix a data matrix or data frame
+#' @param output_file if an output file name is given (must be pdf), the matrix will be plotted to file
+#' @param thresholdMark threshold for using a different colour to highlight entries above a threshold
+#' @param ndigitsafterzero specify how many digits after the zero should be used to show the actual numbers
+#' @param cex.numbers scale the text used for the numbers in the matrix
 #' @export
-plotMatrix <- function(CosSimMatrix,
-                                output_file,
-                                thresholdMark = NULL,
-                                ndigitsafterzero = 2,
-                                cex.numbers = 0.7){
+plotMatrix <- function(dataMatrix,
+                       output_file = NULL,
+                       thresholdMark = NULL,
+                       ndigitsafterzero = 2,
+                       cex.numbers = 0.7){
   circlesColBasic <- "#A1CAF1"
   circlesColHighlight <- "#BE0032"
   
-  maxncharSigs <- max(sapply(rownames(CosSimMatrix),nchar))
-  maxncharSamples <- max(sapply(colnames(CosSimMatrix),nchar))
+  maxncharSigs <- max(sapply(rownames(dataMatrix),nchar))
+  maxncharSamples <- max(sapply(colnames(dataMatrix),nchar))
   mar1 <- 0.6*maxncharSigs+1.2
   mar2 <- 0.6*maxncharSamples+1.2
   mar3 <- 2
   mar4 <- 2
-  width <- 0.5 + 0.3*nrow(CosSimMatrix) + 0.125*maxncharSamples
-  height <- 0.5 + 0.3*ncol(CosSimMatrix) + 0.125*maxncharSigs
-  cairo_pdf(filename = output_file,width = width,height = height)
+  width <- 0.5 + 0.3*nrow(dataMatrix) + 0.125*maxncharSamples
+  height <- 0.5 + 0.3*ncol(dataMatrix) + 0.125*maxncharSigs
+  if(!is.null(output_file)) cairo_pdf(filename = output_file,width = width,height = height)
   par(mfrow=c(1,1))
   par(mar=c(mar1,mar2,mar3,mar4))
   
-  plot(1, type="n", xlab="", ylab="", xlim=c(0.5,nrow(CosSimMatrix)+0.5), ylim=c(ncol(CosSimMatrix)+0.5,0.5),
+  plot(1, type="n", xlab="", ylab="", xlim=c(0.5,nrow(dataMatrix)+0.5), ylim=c(ncol(dataMatrix)+0.5,0.5),
        xaxt = 'n', yaxt = 'n',bty = 'n',xaxs="i",yaxs="i")
-  abline(h=1:ncol(CosSimMatrix),lty=3,col="lightgrey",lwd=3)
-  abline(v=1:nrow(CosSimMatrix),lty=3,col="lightgrey",lwd=3)
-  axis(1,labels = rownames(CosSimMatrix),at = 1:nrow(CosSimMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
-  axis(2,labels = colnames(CosSimMatrix),at = 1:ncol(CosSimMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
+  abline(h=1:ncol(dataMatrix),lty=3,col="lightgrey",lwd=3)
+  abline(v=1:nrow(dataMatrix),lty=3,col="lightgrey",lwd=3)
+  axis(1,labels = rownames(dataMatrix),at = 1:nrow(dataMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
+  axis(2,labels = colnames(dataMatrix),at = 1:ncol(dataMatrix),las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
   
-  toPlot <- CosSimMatrix
-  for(i in 1:ncol(CosSimMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),CosSimMatrix[,i])
+  toPlot <- dataMatrix
+  for(i in 1:ncol(dataMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),dataMatrix[,i])
   toPlot[toPlot=="0" | toPlot=="-0"] <- ""
   
-  circleDim <- CosSimMatrix/max(CosSimMatrix)*5
+  circleDim <- dataMatrix/max(dataMatrix)*5
   
   for(i in 1:ncol(circleDim)) {
     for(j in 1:nrow(circleDim)){
       usecol <- circlesColBasic
       if(!is.null(thresholdMark)) {
-        if(thresholdMark <= CosSimMatrix[j,i]) usecol <- circlesColHighlight
+        if(thresholdMark <= dataMatrix[j,i]) usecol <- circlesColHighlight
       }
       drawCircle(radius = circleDim[j,i]/10,position = c(j,i),col = usecol,border = NA)
     }
   }
   for(i in 1:ncol(toPlot)) text(y = rep(i,nrow(toPlot)), x = 1:nrow(toPlot),labels = toPlot[,i],cex = cex.numbers)
-  dev.off()
+  if(!is.null(output_file)) dev.off()
 }
 
+#' Plot the results from the Fit function
+#' 
+#' Plotting of the results obtained with the Fit function. Output adapts based on the options used in the Fit function
+#' 
+#' @param fitObj object obtained from the Fit function
+#' @param outdir output directory where the results should be saved/plotted
+#' @param samplesInSubdir if TRUE, move the sample files to a subdirectory named "samples"
 #' @export
+#' @examples
+#' res <- Fit(catalogues,getOrganSignatures("Breast"))
+#' plotFit(res,"results/")
 plotFit <- function(fitObj,
                       outdir = "",
                       samplesInSubdir = TRUE){
@@ -933,7 +1050,16 @@ plotFit <- function(fitObj,
   
 }
 
+#' Plot the results from the FitMS function
+#' 
+#' Plotting of the results obtained with the FitMS function. Output adapts based on the options used in the FitMS function
+#' 
+#' @param fitObj object obtained from the FitMS function
+#' @param outdir output directory where the results should be saved/plotted
 #' @export
+#' @examples
+#' res <- FitMS(catalogues,"Breast")
+#' plotFitMS(res,"results/")
 plotFitMS <- function(fitMSobj,
                       outdir = ""){
   # some checks on outdir

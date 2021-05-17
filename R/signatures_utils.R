@@ -410,52 +410,58 @@ computePropTooSimilar <- function(distMatrix,saved_nmf_runs,ns){
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
+#' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
+#' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
 #' @export
 plotGenericSignatures <- function(signature_data_matrix,
                                   output_file = NULL,
                                   plot_sum = TRUE,
                                   overall_title = "",
                                   add_to_titles = NULL,
-                                  mar=NULL){
+                                  mar=NULL,
+                                  howManyInOnePage=100,
+                                  ncolumns=3){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
-  # rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
-  nplotrows <- ceiling(ncol(signature_data_matrix)/3)
-  if(!is.null(output_file)) {
-    if(plottype=="jpg"){
-      jpeg(output_file,width = 3*800,height = nplotrows*400,res = 190)
-    }else if (plottype=="pdf"){
-      pdf(output_file,width = 3*8,height = nplotrows*4,pointsize = 26)
+  npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
+  if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
+  for(i in 1:npages){
+    ifrom <- howManyInOnePage*(i-1) + 1
+    ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
+    tmpmatrix <- signature_data_matrix[,ifrom:ito,drop=F]
+    if (!is.null(add_to_titles)) tmpadd <- add_to_titles[ifrom:ito]
+    if(npages>1 & !is.null(output_file)) output_file <- paste0(rootoutput_file,"_",i,"of",npages,".",plottype)
+    # now plot
+    nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
+    if(!is.null(output_file)) {
+      if(plottype=="jpg"){
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*400,res = 190)
+      }else if(plottype=="pdf"){
+        pdf(output_file,width = ncolumns*8,height = nplotrows*4,pointsize = 26)
+      }
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
     }
-    par(mfrow = c(nplotrows, 3),oma=c(0,0,2,0))
-  }
-  for (pos in 1:ncol(signature_data_matrix)){
-    par(mgp=c(1,1,0))
-    if(is.null(mar)){
-      par(mar=c(3,3,2,2))
-    }else{
-      par(mar=mar)
+    for (pos in 1:ncol(tmpmatrix)){
+      par(mgp=c(1,1,0))
+      if(is.null(mar)){
+        par(mar=c(3,3.5,2,2))
+      }else{
+        par(mar=mar)
+      }
+      title <- colnames(tmpmatrix)[pos]
+      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," substitutions)")
+      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+
+      barplot(tmpmatrix[,pos],
+              main = title,
+              names.arg = c(rep("",nrow(tmpmatrix))),
+              col="skyblue",
+              beside = TRUE,
+              xlab = "channels",
+              cex.names = 1)
     }
-    title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," mutations)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
-    # xlabels <- rep("",96)
-    # xlabels[8] <- "C > A"
-    # xlabels[24] <- "C > G"
-    # xlabels[40] <- "C > T"
-    # xlabels[56] <- "T > A"
-    # xlabels[72] <- "T > C"
-    # xlabels[88] <- "T > G"
-    barplot(signature_data_matrix[,pos],
-            main = title,
-            #names.arg = row.names(signature_data_matrix),
-            names.arg = c(rep("",nrow(signature_data_matrix))),
-            col="skyblue",
-            beside = TRUE,
-            xlab = "channels",
-            cex.names = 1)
+    title(main = overall_title,outer = TRUE,cex.main = 2)
+    if(!is.null(output_file)) dev.off()
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
-  if(!is.null(output_file)) dev.off()
 }
 
 plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
@@ -486,16 +492,8 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
     if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," mutations)")
-    # xlabels <- rep("",96)
-    # xlabels[8] <- "C > A"
-    # xlabels[24] <- "C > G"
-    # xlabels[40] <- "C > T"
-    # xlabels[56] <- "T > A"
-    # xlabels[72] <- "T > C"
-    # xlabels[88] <- "T > G"
     barplot(signature_data_matrix[,pos],
             main = title,
-            #names.arg = row.names(signature_data_matrix),
             names.arg = c(rep("",nrow(signature_data_matrix))),
             col="skyblue",
             beside = TRUE,
@@ -504,7 +502,6 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
             cex.names = 1)
     barCenters <- barplot(mean_matrix[,pos],
                           main = "mean and sd of cluster",
-                          #names.arg = row.names(signature_data_matrix),
                           names.arg = c(rep("",nrow(signature_data_matrix))),
                           col="skyblue",
                           beside = TRUE,
@@ -572,7 +569,7 @@ plotSubsSignatures <- function(signature_data_matrix,
     }
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
-        par(mar=c(2,3,2,2))
+        par(mar=c(2,3.5,2,2))
       }else{
         par(mar=mar)
       }
@@ -581,15 +578,8 @@ plotSubsSignatures <- function(signature_data_matrix,
       if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
       muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
       xlabels <- rep("",96)
-      # xlabels[8] <- "C > A"
-      # xlabels[24] <- "C > G"
-      # xlabels[40] <- "C > T"
-      # xlabels[56] <- "T > A"
-      # xlabels[72] <- "T > C"
-      # xlabels[88] <- "T > G"
       barplot(tmpmatrix[,pos],
               main = title,
-              #names.arg = row.names(tmpmatrix),
               names.arg = xlabels,
               col=rearr.colours,
               beside = TRUE,

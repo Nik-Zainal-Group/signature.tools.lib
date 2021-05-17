@@ -2,7 +2,7 @@
 % Please edit documentation in R/SignatureFitLib.R
 \name{SignatureFit_withBootstrap}
 \alias{SignatureFit_withBootstrap}
-\title{Mutational Signatures Fit with Bootstrap}
+\title{Mutational Signatures Fit with Bootstrap (deprecated)}
 \usage{
 SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
   exposureFilterType = "fixedThreshold", giniThresholdScaling = 10,
@@ -41,11 +41,15 @@ SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
 \item{n_sa_iter}{set max Simulated Annealing iterations if method==SA}
 
 \item{randomSeed}{set an integer random seed}
+
+\item{showDeprecated}{set to FALSE to switch off the deprecated warning messsage}
 }
 \value{
 returns the activities/exposures of the signatures in the given sample and other information, such as p-values and exposures of individual bootstrap runs.
 }
 \description{
+This function is deprecated. You can still use it, but we advise to use the function Fit instead, 
+which provides a unified interface for basic signature fit with/without bootstrap.
 Fit a given set of mutational signatures into mutational catalogues to extimate the 
 activty/exposure of each of the given signatures in the catalogues. Implementation 
 of method similar to Huang et al. 2017, Detecting presence of mutational signatures with 

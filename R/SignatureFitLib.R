@@ -1,6 +1,8 @@
 
-#' Mutational Signatures Fit
+#' Mutational Signatures Fit (deprecated)
 #' 
+#' This function is deprecated. You can still use it, but we advise to use the function Fit instead, 
+#' which provides a unified interface for basic signature fit with/without bootstrap.
 #' Fit a given set of mutational signatures into mutational catalogues to extimate the activty/exposure of each of the given signatures in the catalogues.
 #' 
 #' @param cat catalogue matrix, patients as columns, channels as rows
@@ -11,6 +13,7 @@
 #' @param doRound round the exposures to the closest integer
 #' @param verbose use FALSE to suppress messages
 #' @param n_sa_iter set max Simulated Annealing iterations if method==SA
+#' @param showDeprecated set to FALSE to switch off the deprecated warning messsage
 #' @return returns the activities/exposures of the signatures in the given sample
 #' @keywords mutational signatures fit
 #' @export
@@ -23,7 +26,10 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
                          alpha = -1, #set alpha to -1 to avoid Bleeding Filter
                          doRound = TRUE, #round the exposures to the closest integer
                          verbose = TRUE, #use FALSE to suppress messages
-                         n_sa_iter = 500){ 
+                         n_sa_iter = 500,
+                         showDeprecated = TRUE){ 
+  if(showDeprecated) message("[SignatureFit warning] SignatureFit is deprecated, please use Fit instead with useBootstrap=FALSE. You can turn off this warning with showDeprecated=FALSE")
+  
   if(method=="KLD"){
     if(verbose) message("SignatureFit, objective function: KLD")
     
@@ -160,8 +166,10 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 
 
 
-#' Mutational Signatures Fit with Bootstrap
+#' Mutational Signatures Fit with Bootstrap (deprecated)
 #' 
+#' This function is deprecated. You can still use it, but we advise to use the function Fit instead, 
+#' which provides a unified interface for basic signature fit with/without bootstrap.
 #' Fit a given set of mutational signatures into mutational catalogues to extimate the 
 #' activty/exposure of each of the given signatures in the catalogues. Implementation 
 #' of method similar to Huang et al. 2017, Detecting presence of mutational signatures with 
@@ -185,6 +193,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' @param verbose use FALSE to suppress messages
 #' @param n_sa_iter set max Simulated Annealing iterations if method==SA
 #' @param randomSeed set an integer random seed
+#' @param showDeprecated set to FALSE to switch off the deprecated warning messsage
 #' @return returns the activities/exposures of the signatures in the given sample and other information, such as p-values and exposures of individual bootstrap runs.
 #' @keywords mutational signatures fit
 #' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
