@@ -99,6 +99,7 @@ devtools::test(pkg = ".",filter = "snvTabToDNVcatalogue")
 devtools::test(pkg = ".",filter = "DNVTNVfunctions")
 devtools::test(pkg = ".",filter = "organSpecificSignatures")
 devtools::test(pkg = ".",filter = "plotCopyNumbers")
+devtools::test(pkg = ".",filter = "FitAndFitMS")
 
 
 

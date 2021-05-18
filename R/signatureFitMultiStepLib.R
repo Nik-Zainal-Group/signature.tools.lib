@@ -84,10 +84,6 @@ FitMS <- function(catalogues,
                   randomSeed = NULL,
                   verbose = FALSE){
   
-  if(!is.null(randomSeed)){
-    doRNG::registerDoRNG(randomSeed)
-  }
-  
   # check type of mutations
   typeofmuts <- getTypeOfMutationsFromChannels(catalogues)
   
@@ -346,7 +342,8 @@ FitMS <- function(catalogues,
                                                  threshold_p.value = threshold_p.value,
                                                  method = method,
                                                  useBootstrap = useBootstrap,
-                                                 nparallel = nparallel)
+                                                 nparallel = nparallel,
+                                                 randomSeed = randomSeed)
     
     # now check if I should try to fit some rare signatures as well
     if(i %in% whichSamplesMayHaveRareSigs){
@@ -366,7 +363,8 @@ FitMS <- function(catalogues,
                                                                                                threshold_p.value = threshold_p.value,
                                                                                                method = method,
                                                                                                useBootstrap = useBootstrap,
-                                                                                               nparallel = nparallel)
+                                                                                               nparallel = nparallel,
+                                                                                               randomSeed = randomSeed)
       }
     }
   }
