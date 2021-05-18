@@ -648,11 +648,11 @@ giniCoeff <- function(x){
 
 
 MAD <- function(a,b){
-  mean(abs(a-b))
+  mean(abs(as.matrix(a)-as.matrix(b)))
 }
 
 NMAD <- function(a,b){
-  mean(abs(a-b))/sum(a)
+  mean(abs(as.matrix(a)-as.matrix(b)))/sum(as.matrix(a))
 }
 
 # dataMatrix can be either a catalogue or signature matrix
