@@ -17,19 +17,15 @@ This function converts a data frame BEDPE into a rearrangement catalogue,
 you should pass rearrangements of only one sample, and one rearrangement for each paired-end mates.
 The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). 
 In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
+If you specify the "svclass" column, then the "strand1" and "strand2" columns will be ignored. If the "svclass" column is absent, then it will be created
+using the convention of BrassII from the Sanger Institute pipeline: inversion when strand1 and strand2 are different, deletion when strand1 and strand2 are both +,
+tandem-duplication when strand1 and strand2 are both -, and translocation when strand1 and strand2 are on different chromosomes.
 }
 \details{
-The column "svclass" should correspon to (Sanger BRASS convention): (strand1/strand2)
-
-inversion (+/-), if mates on the same chromosome
-
-inversion (-/+), if mates on the same chromosome
-
-deletion (+/+), if mates on the same chromosome
-
-tandem-duplication (-/-), if mates on the same chromosome
-
-translocation, if mates are on different chromosomes
+Please notice that the interpretation of strand1 and strand2 from your rearrangement caller may differ from the BrassII Sanger interpretation.
+Typically, other calles may have the strand2 sign inverted with respect to what is shown by BrassII, so for example a deletion is when strand1 is + and strand2 is -,
+instead of when both are + as in our case. To avoid confusion, double check the convention of your caller, and possibly specify the svclass column yourself to simply ignore 
+the strand1 and strand2 automated interpretation.
 }
 \examples{
 vcf_sv_file.bedpe <- "sample.bedpe"
