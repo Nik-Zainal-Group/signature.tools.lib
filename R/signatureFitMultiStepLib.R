@@ -487,7 +487,7 @@ Fit <- function(catalogues,
       # set to zero differently for each signature
       for(i in 1:length(giniThresholdPerc)) resFit[i,resFit[i,]/apply(catalogues,2,sum)*100<giniThresholdPerc[i]] <- 0
     }else if(exposureFilterType=="fixedThreshold"){
-      resFit[resFit/apply(catalogues,2,sum)*100<threshold_percent] <- 0
+      resFit[resFit/matrix(apply(catalogues,2,sum),ncol = ncol(resFit),nrow = nrow(resFit),byrow = T)*100<threshold_percent] <- 0
     }
     
     fitRes$exposures <- resFit
