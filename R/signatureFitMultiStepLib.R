@@ -70,7 +70,7 @@ FitMS <- function(catalogues,
                   exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                   threshold_percent = 5,
                   giniThresholdScaling = 10,
-                  multiStepMode = "constrainedFit", # or "partialNMF", or "errorReduction", or "cossimIncrease"
+                  multiStepMode = "errorReduction", # or "partialNMF", or "errorReduction", or "cossimIncrease"
                   residualNegativeProp = 0.003,
                   minResidualMutations = NULL,
                   minCosSimRareSig = 0.8,
@@ -526,8 +526,11 @@ Fit <- function(catalogues,
 #' 
 #' @param resObj result object obtained from the FitMS function
 #' @param forceRareSigChoice if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
-#' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSig"
-#' @return returns the updated resObj object with update exposures and rareSigChoice objects
+#' If no rare signature is found, then the solution with only the common signatures is selected.
+#' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSigName".
+#' To select the solution with only the common signatures for a sample use forceRareSigChoice[["sample_name"]] <- "common"
+#' @return returns the updated resObj object with updated exposures and rareSigChoice objects.
+#' If bootstrap was used, bootstraps of selected solutions can be found in the variable bootstrap_exposures_samples
 #' @export
 fitMerge <- function(resObj,forceRareSigChoice=NULL){
   # build exposure matrix with all signatures in the columns
@@ -535,37 +538,49 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
   rareSigChoice <- list()
   exposures_merge <- matrix(0,ncol = ncol(resObj$commonSignatures)+ncol(resObj$rareSignatures)+1,nrow = ncol(resObj$catalogues),
                             dimnames = list(colnames(resObj$catalogues),c(colnames(resObj$commonSignatures),colnames(resObj$rareSignatures),"unassigned")))
+  bootstrap_exposures_samples <- list()
   for (i in 1:ncol(resObj$catalogues)){
     # i <- 1
     currentSample <- colnames(resObj$catalogues)[i]
     
     # check for attempts to force rare signature choice
     forceRareSig <- NULL
+    forceCommon <- FALSE
     if(!is.null(forceRareSigChoice[[currentSample]])){
-      if(!is.null(resObj$samples[[currentSample]]$fitWithRare[[forceRareSigChoice[[currentSample]]]])){
+      if(forceRareSigChoice[[currentSample]]=="common"){
+        forceCommon <- TRUE
+      }else if(!is.null(resObj$samples[[currentSample]]$fitWithRare[[forceRareSigChoice[[currentSample]]]])){
         forceRareSig <- forceRareSigChoice[[currentSample]]
       }else{
         message("Attempt to force rare sig ",forceRareSigChoice[[currentSample]]," for sample ",currentSample," failed because the rare signature is not in the fitWithRare results for this sample.")
       }
     }
     
-    if(currentSample %in% resObj$whichSamplesMayHaveRareSigs){
+    if(currentSample %in% resObj$whichSamplesMayHaveRareSigs & !forceCommon){
       highestCosSimSig <- resObj$candidateRareSigs[[currentSample]][which.max(resObj$candidateRareSigsCosSim[[currentSample]])]
       if(!is.null(forceRareSig)) highestCosSimSig <- forceRareSig
       rareSigChoice[[currentSample]] <- highestCosSimSig
       selectedExp <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$exposures
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$unassigned_muts
+      # collect bootstraps
+      if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$bootstrap_exposures_samples[[1]]
     }else{
       selectedExp <- resObj$samples[[currentSample]]$fitCommonOnly$exposures
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
+      # collect bootstraps
+      if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
     }
   }
   
   resObj$exposures <- exposures_merge[,apply(exposures_merge, 2, sum)>0,drop=F]
   resObj$rareSigChoice <- rareSigChoice
-  # merge also the bootstraps?
+  if(resObj$useBootstrap){
+    resObj$bootstrap_exposures_samples <- bootstrap_exposures_samples
+  }else{
+    resObj$bootstrap_exposures_samples <- NA
+  }
   
   return(resObj)
 }

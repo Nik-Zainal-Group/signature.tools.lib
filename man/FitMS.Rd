@@ -7,7 +7,7 @@
 FitMS(catalogues, organ = NULL, rareSignatureTier = "T2",
   commonSignatures = NULL, rareSignatures = NULL, method = "KLD",
   exposureFilterType = "fixedThreshold", threshold_percent = 5,
-  giniThresholdScaling = 10, multiStepMode = "constrainedFit",
+  giniThresholdScaling = 10, multiStepMode = "errorReduction",
   residualNegativeProp = 0.003, minResidualMutations = NULL,
   minCosSimRareSig = 0.8, minErrorReductionPerc = 15,
   minCosSimIncrease = 0.02, useBootstrap = FALSE, nboot = 200,

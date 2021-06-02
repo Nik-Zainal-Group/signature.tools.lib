@@ -10,10 +10,13 @@ fitMerge(resObj, forceRareSigChoice = NULL)
 \item{resObj}{result object obtained from the FitMS function}
 
 \item{forceRareSigChoice}{if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
-To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSig"}
+If no rare signature is found, then the solution with only the common signatures is selected.
+To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSigName".
+To select the solution with only the common signatures for a sample use forceRareSigChoice[["sample_name"]] <- "common"}
 }
 \value{
-returns the updated resObj object with update exposures and rareSigChoice objects
+returns the updated resObj object with updated exposures and rareSigChoice objects.
+If bootstrap was used, bootstraps of selected solutions can be found in the variable bootstrap_exposures_samples
 }
 \description{
 This function is used to select candidate rare signature solutions from a result object obtained
