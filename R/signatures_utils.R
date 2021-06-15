@@ -1012,22 +1012,22 @@ plotCosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel
 #' 
 #' @param sig1 matrix with signatures as columns
 #' @param sig2 matrix with signatures as columns
-#' @param output_file name of the output file (jpg)
-#' @param dpi dots per inch
-#' @param xlabel label for x axis
-#' @param ylabel label for y axis
+#' @param output_file name of the output file (pdf), optional
+#' @param cex.numbers scale the text used for the numbers in the matrix
+#' @param circlesColBasic colour used for the circles
+#' @param circlesColHighlight colour used for the circles that pass the thresholdMark
 #' @export
-plotCosSimSignatures <- function(sig1,sig2,output_file,dpi=300,xlabel = "",ylabel = ""){
-  cos_sim <- function(a, b){
-    return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
-  }  
-  cos_sim_df <- data.frame()
-  for (s in colnames(sig1)){
-    for(a in colnames(sig2)){
-      cos_sim_df[s,a] <- cos_sim(sig1[,s],sig2[,a])
-    }
-  }
-  plotCosSimMatrix(cos_sim_df,output_file,dpi=dpi,xlabel = xlabel,ylabel = ylabel)
+plotCosSimSignatures <- function(sig1,sig2,output_file = NULL,
+                                 thresholdMark = NULL,
+                                 cex.numbers = 0.7,
+                                 circlesColBasic = "#A1CAF1",
+                                 circlesColHighlight = "#F6A600"){
+  sigcor <- computeCorrelationOfTwoSetsOfSigs(sig1,sig2)
+  plotMatrix(sigcor,output_file = output_file,
+             thresholdMark = thresholdMark,
+             cex.numbers = cex.numbers,
+             circlesColBasic = circlesColBasic,
+             circlesColHighlight = circlesColHighlight)
 }
 
 #' Find closest COSMIC30 signatures

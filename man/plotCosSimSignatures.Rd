@@ -4,21 +4,22 @@
 \alias{plotCosSimSignatures}
 \title{plotCosSimSignatures}
 \usage{
-plotCosSimSignatures(sig1, sig2, output_file, dpi = 300, xlabel = "",
-  ylabel = "")
+plotCosSimSignatures(sig1, sig2, output_file = NULL,
+  thresholdMark = NULL, cex.numbers = 0.7,
+  circlesColBasic = "#A1CAF1", circlesColHighlight = "#F6A600")
 }
 \arguments{
 \item{sig1}{matrix with signatures as columns}
 
 \item{sig2}{matrix with signatures as columns}
 
-\item{output_file}{name of the output file (jpg)}
+\item{output_file}{name of the output file (pdf), optional}
 
-\item{dpi}{dots per inch}
+\item{cex.numbers}{scale the text used for the numbers in the matrix}
 
-\item{xlabel}{label for x axis}
+\item{circlesColBasic}{colour used for the circles}
 
-\item{ylabel}{label for y axis}
+\item{circlesColHighlight}{colour used for the circles that pass the thresholdMark}
 }
 \description{
 Plot a matrix of cosine similarities between two sets of signatures.

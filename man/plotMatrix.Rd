@@ -5,7 +5,8 @@
 \title{Plot Matrix}
 \usage{
 plotMatrix(dataMatrix, output_file = NULL, thresholdMark = NULL,
-  ndigitsafterzero = 2, cex.numbers = 0.7)
+  ndigitsafterzero = 2, cex.numbers = 0.7,
+  circlesColBasic = "#A1CAF1", circlesColHighlight = "#F6A600")
 }
 \arguments{
 \item{dataMatrix}{a data matrix or data frame}
@@ -17,6 +18,10 @@ plotMatrix(dataMatrix, output_file = NULL, thresholdMark = NULL,
 \item{ndigitsafterzero}{specify how many digits after the zero should be used to show the actual numbers}
 
 \item{cex.numbers}{scale the text used for the numbers in the matrix}
+
+\item{circlesColBasic}{colour used for the circles}
+
+\item{circlesColHighlight}{colour used for the circles that pass the thresholdMark}
 }
 \description{
 This function plots a matrix of values. Data is visualised as circles scaled with respect to the 

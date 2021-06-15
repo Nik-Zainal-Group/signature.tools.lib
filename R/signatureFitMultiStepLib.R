@@ -834,14 +834,16 @@ getArcCoordinates <- function(fromAngle,
 #' @param thresholdMark threshold for using a different colour to highlight entries above a threshold
 #' @param ndigitsafterzero specify how many digits after the zero should be used to show the actual numbers
 #' @param cex.numbers scale the text used for the numbers in the matrix
+#' @param circlesColBasic colour used for the circles
+#' @param circlesColHighlight colour used for the circles that pass the thresholdMark
 #' @export
 plotMatrix <- function(dataMatrix,
                        output_file = NULL,
                        thresholdMark = NULL,
                        ndigitsafterzero = 2,
-                       cex.numbers = 0.7){
-  circlesColBasic <- "#A1CAF1"
-  circlesColHighlight <- "#BE0032"
+                       cex.numbers = 0.7,
+                       circlesColBasic = "#A1CAF1",
+                       circlesColHighlight = "#F6A600"){
   
   maxncharSigs <- max(sapply(rownames(dataMatrix),nchar))
   maxncharSamples <- max(sapply(colnames(dataMatrix),nchar))
