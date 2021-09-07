@@ -87,7 +87,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
   
   group <- project
   
-  doMC::registerDoMC(nparallel)
+  doParallel::registerDoParallel(nparallel)
   dir.create(outFilePath,showWarnings = FALSE,recursive = TRUE)
   
   message("\n------------- START COMPUTATION ------------\n")

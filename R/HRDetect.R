@@ -93,7 +93,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               nparallel=1,
                               randomSeed=NULL){
   #if multiple parallel cores are used, set it here
-  doMC::registerDoMC(nparallel)
+  doParallel::registerDoParallel(nparallel)
   
   if(!is.null(randomSeed)){
     set.seed(randomSeed)

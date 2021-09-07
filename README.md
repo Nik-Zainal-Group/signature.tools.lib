@@ -78,7 +78,6 @@ This is the full list of R package dependencies:
     NMF,
     foreach,
     doParallel,
-    doMC,
     lpSolve,
     ggplot2,
     methods,

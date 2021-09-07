@@ -58,7 +58,7 @@ matchedClustering <- function(distMatrix,ns,maxMatch=TRUE,parallel=FALSE,nparall
     # library(foreach)
     # library(doParallel)
     # library(doMC)
-    doMC::registerDoMC(nparallel)
+    doParallel::registerDoParallel(nparallel)
     #run initialisation in parallel!
     res_list <- foreach::foreach(i=1:(nruns-1)) %dopar%{
       jlist <- list()

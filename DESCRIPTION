@@ -22,7 +22,6 @@ Imports:
     NMF,
     foreach,
     doParallel,
-    doMC,
     lpSolve,
     ggplot2,
     methods,

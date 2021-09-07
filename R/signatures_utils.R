@@ -115,7 +115,7 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
     # library(foreach)
     # library(doParallel)
     # library(doMC)
-    doMC::registerDoMC(nparallel)
+    doParallel::registerDoParallel(nparallel)
     par_res <- foreach::foreach(i=2:ncol(x)) %dopar% {
       current_res <- c()
       for(j in 1:(i-1)){ #up to i-1, diag already set to 1
