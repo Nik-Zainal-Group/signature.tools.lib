@@ -1150,3 +1150,144 @@ plotFitMS <- function(fitMSobj,
     }
   }
 }
+
+vectorToJSON <- function(v,
+                         vectorname,
+                         nindent=0){
+  indent <- rep("\t",nindent)
+  cat(indent,"\"",vectorname,"\": ",sep = "")
+  if(!is.null(names(v))){
+    cat(indent,"{\n",sep = "")
+    for (i in 1:length(v)) {
+      cat(indent,"\t\"",names(v)[i],"\": ",sep = "")
+      if(typeof(v[i])=="double"){
+        cat(v[i],sep = "")
+      }else if (typeof(v[i])=="character"){
+        cat("\"",v[i],"\"",sep = "")
+      }
+      if(i<length(v)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"}",sep = "")
+  }else{
+    cat(indent,"[",sep = "")
+    for (i in 1:length(v)) {
+      if(typeof(v[i])=="double"){
+        cat(v[i],sep = "")
+      }else if (typeof(v[i])=="character"){
+        cat("\"",v[i],"\"",sep = "")
+      }
+      if(i<length(v)) cat(", ")
+    }
+    cat("]",sep = "")
+  }
+}
+
+#internal fuction for plotting a table in JSON
+tableToJSON <- function(tab,
+                        tablename,
+                        nindent = 0){
+  indent <- rep("\t",nindent)
+  cat(indent,"\"",tablename,"\": {\n",sep = "")
+  for(i in 1:ncol(tab)){
+    sname <- colnames(tab)[i]
+    cat(indent,"\t\"",sname,"\": {\n",sep = "")
+    
+    for(j in 1:nrow(tab)){
+      rname <- rownames(tab)[j]
+      cat(indent,"\t\t\"",rname,"\": ",tab[j,i],sep = "")
+      if(j<nrow(tab)){
+        cat(",\n")
+      }else{
+        cat("\n")
+      }
+    }
+    
+    cat(indent,"\t}",sep = "")
+    if(i<ncol(tab)){
+      cat(",\n")
+    }else{
+      cat("\n")
+    }
+  }
+  cat(indent,"}",sep = "")
+}
+
+
+#' Export the results from the Fit function to JSON
+#' 
+#' Exports of the results obtained with the Fit function to JSON. Output adapts based on the options used in the Fit function
+#' 
+#' @param fitObj object obtained from the Fit function
+#' @param filename file name where to save the JSON string
+#' @param nindent number of tabs of indentation to be used, default=0. This is useful in case one wants to embed the output in a larger JSON document
+#' @param disableFileWrite if TRUE the JSON lines are simply printed to screen. This option is used when fitToJSON is called from another function like fitMStoJSON, which itself opens a sink() to write to.
+#' @export
+#' @examples
+#' res <- Fit(catalogues,getOrganSignatures("Breast"))
+#' fitToJSON(res,"results/")
+fitToJSON <- function(fitObj,
+                      filename = "export.json",
+                      nindent = 0,
+                      disableFileWrite = FALSE){
+  #plot consensus exposures file with metadata
+  indent <- rep("\t",nindent)
+  if(!disableFileWrite) sink(file = filename)
+  cat(indent,"{\n",sep = "")
+  cat(indent,"\t\"nsamples\": ",ncol(fitObj$exposures),",\n",sep = "")
+  cat(indent,"\t\"nsignatures\": ",nrow(fitObj$exposures),",\n",sep = "")
+  cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
+  cat(indent,"\t\"method\": \"",fitObj$method,"\",\n",sep = "")
+  cat(indent,"\t\"exposureFilterType\": \"",fitObj$exposureFilterType,"\",\n",sep = "")
+  if(!is.na(fitObj$threshold_percent)){
+    cat(indent,"\t\"threshold_percent\": ",fitObj$threshold_percent,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_percent\": \"NULL\",\n",sep = "")
+  }
+  if(!is.na(fitObj$giniThresholdScaling)){
+    cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"giniThresholdScaling\": \"NULL\",\n",sep = "")
+  }
+  cat(indent,"\t\"useBootstrap\": \"",ifelse(fitObj$useBootstrap,"true","false"),"\",\n",sep = "")
+  if(!is.na(fitObj$nboot)){
+    cat(indent,"\t\"nboots\": ",fitObj$nboot,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"nboots\": \"NULL\",\n",sep = "")
+  }
+  if(!is.na(fitObj$threshold_p.value)){
+    cat(indent,"\t\"threshold_p.value\": ",fitObj$threshold_p.value,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_p.value\": \"NULL\",\n",sep = "")
+  }
+  tableToJSON(fitObj$catalogues,tablename = "catalogues",nindent = nindent + 1)
+  cat(",\n")
+  tableToJSON(fitObj$signatures,tablename = "signatures",nindent = nindent + 1)
+  cat(",\n")
+  tableToJSON(fitObj$exposures,tablename = "exposures",nindent = nindent + 1)
+  cat(",\n")
+  vectorToJSON(fitObj$unassigned_muts,"unassigned_muts",nindent = nindent + 1)
+  cat(",\n")
+  vectorToJSON(fitObj$unassigned_muts_perc,"unassigned_muts_perc",nindent = nindent + 1)
+  cat(",\n")
+  if(!is.na(fitObj$bootstrap_exposures_samples)){
+    cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
+    for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
+      tableToJSON(fitObj$bootstrap_exposures_samples[[i]],tablename = colnames(fitObj$exposures)[i],nindent = nindent + 2)
+      if(i<length(fitObj$bootstrap_exposures_samples)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t}",sep = "")
+  }else{
+    cat(indent,"\t\"bootstrap_exposures_samples\": \"NULL\"",sep = "")
+  }
+  cat(",\n")
+  if(!is.na(fitObj$bootstrap_exposures_pvalues)){
+    tableToJSON(fitObj$bootstrap_exposures_pvalues,tablename = "bootstrap_exposures_pvalues",nindent = nindent + 1)
+  }else{
+    cat(indent,"\t\"bootstrap_exposures_pvalues\": \"NULL\"",sep = "")
+  }
+  cat("\n")
+  cat(indent,"}\n",sep = "")
+  if(!disableFileWrite) sink()
+}
