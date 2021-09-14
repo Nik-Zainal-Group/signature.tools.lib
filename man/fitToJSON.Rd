@@ -5,7 +5,7 @@
 \title{Export the results from the Fit function to JSON}
 \usage{
 fitToJSON(fitObj, filename = "export.json", nindent = 0,
-  disableFileWrite = FALSE)
+  disableFileWrite = FALSE, blockname = NULL)
 }
 \arguments{
 \item{fitObj}{object obtained from the Fit function}
@@ -15,11 +15,13 @@ fitToJSON(fitObj, filename = "export.json", nindent = 0,
 \item{nindent}{number of tabs of indentation to be used, default=0. This is useful in case one wants to embed the output in a larger JSON document}
 
 \item{disableFileWrite}{if TRUE the JSON lines are simply printed to screen. This option is used when fitToJSON is called from another function like fitMStoJSON, which itself opens a sink() to write to.}
+
+\item{blockname}{if specified, the first line will show the given name as the block name, which is useful if the output is embedded in a larger JSON file}
 }
 \description{
 Exports of the results obtained with the Fit function to JSON. Output adapts based on the options used in the Fit function
 }
 \examples{
 res <- Fit(catalogues,getOrganSignatures("Breast"))
-fitToJSON(res,"results/")
+fitToJSON(res,"export.json")
 }

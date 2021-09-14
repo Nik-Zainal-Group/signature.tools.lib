@@ -373,6 +373,7 @@ FitMS <- function(catalogues,
   resObj <- list()
   # add data and options used
   resObj$catalogues <- catalogues
+  resObj$organ <- organ
   resObj$commonSignatures <- commonSignatures
   resObj$rareSignatures <- rareSignatures
   resObj$method <- method
@@ -1222,18 +1223,24 @@ tableToJSON <- function(tab,
 #' @param filename file name where to save the JSON string
 #' @param nindent number of tabs of indentation to be used, default=0. This is useful in case one wants to embed the output in a larger JSON document
 #' @param disableFileWrite if TRUE the JSON lines are simply printed to screen. This option is used when fitToJSON is called from another function like fitMStoJSON, which itself opens a sink() to write to.
+#' @param blockname if specified, the first line will show the given name as the block name, which is useful if the output is embedded in a larger JSON file
 #' @export
 #' @examples
 #' res <- Fit(catalogues,getOrganSignatures("Breast"))
-#' fitToJSON(res,"results/")
+#' fitToJSON(res,"export.json")
 fitToJSON <- function(fitObj,
                       filename = "export.json",
                       nindent = 0,
-                      disableFileWrite = FALSE){
+                      disableFileWrite = FALSE,
+                      blockname = NULL){
   #plot consensus exposures file with metadata
   indent <- rep("\t",nindent)
   if(!disableFileWrite) sink(file = filename)
-  cat(indent,"{\n",sep = "")
+  if(is.null(blockname)){
+    cat(indent,"{\n",sep = "")
+  }else{
+    cat(indent,"\"",blockname,"\": {\n",sep = "")
+  }
   cat(indent,"\t\"nsamples\": ",ncol(fitObj$exposures),",\n",sep = "")
   cat(indent,"\t\"nsignatures\": ",nrow(fitObj$exposures),",\n",sep = "")
   cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
@@ -1251,9 +1258,9 @@ fitToJSON <- function(fitObj,
   }
   cat(indent,"\t\"useBootstrap\": \"",ifelse(fitObj$useBootstrap,"true","false"),"\",\n",sep = "")
   if(!is.na(fitObj$nboot)){
-    cat(indent,"\t\"nboots\": ",fitObj$nboot,",\n",sep = "")
+    cat(indent,"\t\"nboot\": ",fitObj$nboot,",\n",sep = "")
   }else{
-    cat(indent,"\t\"nboots\": \"NULL\",\n",sep = "")
+    cat(indent,"\t\"nboot\": \"NULL\",\n",sep = "")
   }
   if(!is.na(fitObj$threshold_p.value)){
     cat(indent,"\t\"threshold_p.value\": ",fitObj$threshold_p.value,",\n",sep = "")
@@ -1270,7 +1277,7 @@ fitToJSON <- function(fitObj,
   cat(",\n")
   vectorToJSON(fitObj$unassigned_muts_perc,"unassigned_muts_perc",nindent = nindent + 1)
   cat(",\n")
-  if(!is.na(fitObj$bootstrap_exposures_samples)){
+  if(all(!is.na(fitObj$bootstrap_exposures_samples))){
     cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
     for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
       tableToJSON(fitObj$bootstrap_exposures_samples[[i]],tablename = colnames(fitObj$exposures)[i],nindent = nindent + 2)
@@ -1282,11 +1289,163 @@ fitToJSON <- function(fitObj,
     cat(indent,"\t\"bootstrap_exposures_samples\": \"NULL\"",sep = "")
   }
   cat(",\n")
-  if(!is.na(fitObj$bootstrap_exposures_pvalues)){
+  if(all(!is.na(fitObj$bootstrap_exposures_pvalues))){
     tableToJSON(fitObj$bootstrap_exposures_pvalues,tablename = "bootstrap_exposures_pvalues",nindent = nindent + 1)
   }else{
     cat(indent,"\t\"bootstrap_exposures_pvalues\": \"NULL\"",sep = "")
   }
+  cat("\n")
+  cat(indent,"}",sep = "")
+  if(!disableFileWrite) {
+    cat("\n")
+    sink()
+  }
+}
+
+
+
+#' Export the results from the FitMS function to JSON
+#' 
+#' Exports of the results obtained with the FitMS function to JSON.
+#' 
+#' @param fitObj object obtained from the FitMS function
+#' @param filename file name where to save the JSON string
+#' @param nindent number of tabs of indentation to be used, default=0. This is useful in case one wants to embed the output in a larger JSON document
+#' @param disableFileWrite if TRUE the JSON lines are simply printed to screen. This option is used when fitToJSON is called from another function
+#' @param blockname if specified, the first line will show the given name as the block name, which is useful if the output is embedded in a larger JSON file
+#' @export
+#' @examples
+#' res <- FitMS(catalogues,"Breast")
+#' fitMStoJSON(res,"export.json")
+fitMStoJSON <- function(fitObj,
+                      filename = "export.json",
+                      nindent = 0,
+                      disableFileWrite = FALSE,
+                      blockname = NULL){
+  #plot consensus exposures file with metadata
+  indent <- rep("\t",nindent)
+  if(!disableFileWrite) sink(file = filename)
+  if(is.null(blockname)){
+    cat(indent,"{\n",sep = "")
+  }else{
+    cat(indent,"\"",blockname,"\": {\n",sep = "")
+  }
+  cat(indent,"\t\"nsamples\": ",ncol(fitObj$exposures),",\n",sep = "")
+  cat(indent,"\t\"nsignatures\": ",nrow(fitObj$exposures),",\n",sep = "")
+  cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
+  cat(indent,"\t\"method\": \"",fitObj$method,"\",\n",sep = "")
+  cat(indent,"\t\"multiStepMode\": \"",fitObj$multiStepMode,"\",\n",sep = "")
+  cat(indent,"\t\"maxRareSigsPerSample\": ",fitObj$maxRareSigsPerSample,",\n",sep = "")
+  if(!is.null(fitObj$organ)){
+    cat(indent,"\t\"organ\": ",fitObj$organ,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"organ\": \"NULL\",\n",sep = "")
+  }
+  cat(indent,"\t\"rareSignatureTier\": \"",fitObj$rareSignatureTier,"\",\n",sep = "")
+  cat(indent,"\t\"minErrorReductionPerc\": ",fitObj$minErrorReductionPerc,",\n",sep = "")
+  cat(indent,"\t\"minCosSimIncrease\": ",fitObj$minCosSimIncrease,",\n",sep = "")
+  cat(indent,"\t\"residualNegativeProp\": ",fitObj$residualNegativeProp,",\n",sep = "")
+  cat(indent,"\t\"minCosSimRareSig\": ",fitObj$minCosSimRareSig,",\n",sep = "")
+  
+  cat(indent,"\t\"exposureFilterType\": \"",fitObj$exposureFilterType,"\",\n",sep = "")
+  if(!is.na(fitObj$threshold_percent)){
+    cat(indent,"\t\"threshold_percent\": ",fitObj$threshold_percent,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_percent\": \"NULL\",\n",sep = "")
+  }
+  if(!is.na(fitObj$giniThresholdScaling)){
+    cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"giniThresholdScaling\": \"NULL\",\n",sep = "")
+  }
+  cat(indent,"\t\"useBootstrap\": \"",ifelse(fitObj$useBootstrap,"true","false"),"\",\n",sep = "")
+  if(!is.na(fitObj$nboot)){
+    cat(indent,"\t\"nboot\": ",fitObj$nboot,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"nboot\": \"NULL\",\n",sep = "")
+  }
+  if(!is.na(fitObj$threshold_p.value)){
+    cat(indent,"\t\"threshold_p.value\": ",fitObj$threshold_p.value,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_p.value\": \"NULL\",\n",sep = "")
+  }
+  vectorToJSON(fitObj$whichSamplesMayHaveRareSigs,"whichSamplesMayHaveRareSigs",nindent = nindent + 1)
+  cat(",\n")
+  if(!is.null(fitObj$rareSigChoice)){
+    cat(indent,"\t\"rareSigChoice\": {\n",sep = "")
+    for (i in 1:length(fitObj$rareSigChoice)){
+      cat(indent,"\t\t\"",names(fitObj$rareSigChoice)[i],"\": \"",fitObj$rareSigChoice[[names(fitObj$rareSigChoice)[i]]],"\"",sep = "")
+      if(i < length(fitObj$rareSigChoice)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t},\n",sep = "")
+  }else{
+    cat(indent,"\t\"rareSigChoice\": \"NULL\",\n",sep = "")
+  }
+  if(!is.null(fitObj$candidateRareSigsCosSim)){
+    cat(indent,"\t\"candidateRareSigsCosSim\": {\n",sep = "")
+    for (i in 1:length(fitObj$candidateRareSigsCosSim)){
+      sampleName <- names(fitObj$candidateRareSigsCosSim)[i]
+      candidates <- fitObj$candidateRareSigsCosSim[[sampleName]]
+      cat(indent,"\t\t\"",sampleName,"\": {\n",sep = "")
+      for (j in 1:length(candidates)) {
+        cat(indent,"\t\t\t\"",names(candidates)[j],"\": ",candidates[j],sep = "")
+        if(j < length(fitObj$candidates)) cat(",")
+        cat("\n")
+      }
+      cat(indent,"\t\t}",sep = "")
+      if(i < length(fitObj$rareSigChoice)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t},\n",sep = "")
+  }else{
+    cat(indent,"\t\"candidateRareSigsCosSim\": \"NULL\",\n",sep = "")
+  }
+  tableToJSON(fitObj$catalogues,tablename = "catalogues",nindent = nindent + 1)
+  cat(",\n")
+  tableToJSON(fitObj$commonSignatures,tablename = "commonSignatures",nindent = nindent + 1)
+  cat(",\n")
+  tableToJSON(fitObj$rareSignatures,tablename = "rareSignatures",nindent = nindent + 1)
+  cat(",\n")
+  tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
+  cat(",\n")
+  if(all(!is.na(fitObj$bootstrap_exposures_samples))){
+    cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
+    for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
+      tableToJSON(fitObj$bootstrap_exposures_samples[[i]],tablename = names(fitObj$bootstrap_exposures_samples)[i],nindent = nindent + 2)
+      if(i<length(fitObj$bootstrap_exposures_samples)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t}",sep = "")
+  }else{
+    cat(indent,"\t\"bootstrap_exposures_samples\": \"NULL\"",sep = "")
+  }
+  cat(",\n")
+  
+  cat(indent,"\t\"all_fits_samples\": {\n",sep = "")
+  for (i in 1:length(fitObj$samples)) {
+    sampleName <- names(fitObj$samples)[i]
+    contentNames <- names(fitObj$samples[[sampleName]])
+    cat(indent,"\t\t\"",sampleName,"\": {\n",sep = "")
+    fitToJSON(fitObj$samples[[sampleName]]$fitCommonOnly,disableFileWrite = T,blockname = "fitCommonOnly",nindent = nindent + 3)
+    if("fitWithRare" %in% contentNames){
+      cat(",\n")
+      rareNames <- names(fitObj$samples[[sampleName]][["fitWithRare"]])
+      cat(indent,"\t\t\t\"fitWithRare\": {\n",sep = "")
+      for(j in 1:length(rareNames)){
+        fitToJSON(fitObj$samples[[sampleName]]$fitWithRare[[rareNames[j]]],disableFileWrite = T,blockname = rareNames[j],nindent = nindent + 4)
+        if(j<length(rareNames)) cat(",")
+        cat("\n")
+      }
+      cat(indent,"\t\t\t}",sep = "")
+    }
+    cat("\n")
+    cat(indent,"\t\t}",sep = "")
+    if(i<length(fitObj$samples)) cat(",")
+    cat("\n")
+  }
+  cat(indent,"\t}",sep = "")
+
   cat("\n")
   cat(indent,"}\n",sep = "")
   if(!disableFileWrite) sink()
