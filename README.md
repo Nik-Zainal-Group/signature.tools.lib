@@ -3,6 +3,7 @@
 ## Table of content
 
 - [Introduction to the package](#intro)
+- [Version](#version)
 - [How to cite us](#cite)
 - [Systems Requirements](#req)
 - [Testing the package](#test)
@@ -33,6 +34,18 @@ latest algorithms for signature fit and extraction, as well as various
 utility functions and the HRDetect pipeline. The list and description of
 these functions is given below.
 
+## Version
+
+<a name="version"/>
+
+Current version: 2.0
+
+- New signature fit multi-step algorithm, FitMS
+- New organ-specific signatures from Genomics England Cancer data
+- Reorganisation of old signature fit functions under the new Fit function
+- Rewrite of plot scripts for displying signature fit results, now available using plotFit and plotFitMS functions
+- Added support for trinucleotide variant catalogues
+- New export functions for converting Fit and FitMS results to JSON
 
 ## How to cite us
 
@@ -173,12 +186,15 @@ applying NMF to the input matrix. Multiple NMF runs and bootstrapping is
 used for robustness, followed by clustering of the solutions. A range of
 number of signatures to be used is required.
 - **```Fit(...)```**: This is a standard interface for basic signature fit with/without bootstrap.
-The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results.
+The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results. Use the function
+```fitToJSON``` to export the results into a JSON file.
 - **```FitMS(...)```**: Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. 
 In the first step, only a set of common signatures are fitted into the samples. In the following steps, one or more rare signatures
 are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically 
 by providing the name of an organ, or can be supplied by the user.
-The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results.
+The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. Use the function
+```fitMStoJSON``` to export the results into a JSON file.
+A manual for FitMS can be found in the ```FitMSmanual``` folder.
 
 Functions for organ-specific signatures and exposures conversion
 
