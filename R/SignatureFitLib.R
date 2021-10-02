@@ -243,13 +243,13 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   
   samples_list <- list()
   for(i in 1:ncol(cat)) {
-    samples_list[[i]] <- matrix(NA,ncol = nboot,nrow = ncol(signature_data_matrix))
-    colnames(samples_list[[i]]) <- 1:nboot
-    row.names(samples_list[[i]]) <- colnames(signature_data_matrix)
+    samples_list[[colnames(cat)[i]]] <- matrix(NA,ncol = nboot,nrow = ncol(signature_data_matrix))
+    colnames(samples_list[[colnames(cat)[i]]]) <- 1:nboot
+    row.names(samples_list[[colnames(cat)[i]]]) <- colnames(signature_data_matrix)
   }
   for(i in 1:nboot){
     for(j in 1:ncol(cat)){
-      samples_list[[j]][,i] <- boot_list[[i]][,j]
+      samples_list[[colnames(cat)[j]]][,i] <- boot_list[[i]][,j]
     }
   }
   E_median_notfiltered <- matrix(NA,nrow = ncol(signature_data_matrix),ncol = ncol(cat))
@@ -266,7 +266,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   
   for(i in 1:ncol(cat)) {
     if(sum(cat[,i])>0){
-      boots_perc <- samples_list[[i]]/matrix(apply(samples_list[[i]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[i]]),ncol = ncol(samples_list[[i]]))*100
+      boots_perc <- samples_list[[colnames(cat)[i]]]/matrix(apply(samples_list[[colnames(cat)[i]]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[colnames(cat)[i]]]),ncol = ncol(samples_list[[colnames(cat)[i]]]))*100
       
       
       if(exposureFilterType=="giniScaledThreshold"){
@@ -281,7 +281,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
       }
       
       
-      median_mut <- apply(samples_list[[i]],1,median)
+      median_mut <- apply(samples_list[[colnames(cat)[i]]],1,median)
       E_median_notfiltered[,i] <- median_mut
       E_p.values[,i] <- p.values
       

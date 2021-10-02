@@ -311,8 +311,8 @@ plotDNVSignatures <- function(signature_data_matrix,
         par(mar=mar)
       }
       title <- colnames(tmpmatrix)[pos]
-      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," DNVs)")
-      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
+      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," DNVs)")
       xlabels <- rep("",nrow(tmpmatrix))
       xlabels2 <- sapply(rownames(tmpmatrix),function(x){
         strsplit(x,split = ">")[[1]][2]
@@ -324,6 +324,7 @@ plotDNVSignatures <- function(signature_data_matrix,
               names.arg = xlabels,
               col=rearr.colours,
               beside = TRUE,
+              cex.main = 0.9,
               las=2,
               cex.names = 1,border = NA,space = 0.2)
       par(xpd=TRUE)

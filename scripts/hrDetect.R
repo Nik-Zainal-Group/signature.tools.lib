@@ -7,13 +7,14 @@ how_to <- function(){
   message("This script runs the HRDetect pipeline.")
   message("Run this script as follows:")
   message(" ")
-  message("hrDetect [-i INPUTTABLE] [-o OUTDIR] [-b] [-s SIGTYPE] [-e GENOMEV] [-n NPARALLEL] [-f NBOOTFIT] [-r RANDOMSEED]")
+  message("hrDetect [-i INPUTTABLE] [-o OUTDIR] [-b] [-s SIGTYPE] [-O organ] [-e GENOMEV] [-n NPARALLEL] [-f NBOOTFIT] [-r RANDOMSEED]")
   message(" ")
   message("    -i INPUTTABLE    Tab separate input table with the list of files for each sample. Columns should be: sample, SNV_vcf_files, SNV_tab_files, Indels_vcf_files, Indels_tab_files, CNV_tab_files, SV_bedpe_files. Note that only one column of SNV_vcf_files and SNV_tab_files is necessary")
   message("    -o OUTDIR        Name of the output directory. If omitted a name will be given automatically.")
   message("    -b               Request HRDetect with bootstrap")
-  message("    -s SIGTYPE       Either COSMIC or one of the following organs: Biliary, Bladder, Bone_SoftTissue, Breast, Cervix, CNS, Colorectal, Esophagus, Head_neck, Kidney, Liver, Lung, Lymphoid, Ovary, Pancreas, Prostate, Skin, Stomach, Uterus")
-  message("    -l COSMICLIST    If SIGTYPE is COSMIC, specify a comma separated list of number of cosmic signatures to use, such as: 1,2,5,8,13")
+  message("    -s SIGTYPE       Either COSMICv2, COSMICv3.2, RefSigv1 or RefSigv2. When selecting RefSigv2, signature fitting for SNVs will be performed with FitMS")
+  message("    -O ORGAN         When using RefSigv1 or RefSigv2 as signature_type you need to specify the organ or your samples, as organ-specific signatures will be used. Use one of the following organs: Biliary, Bladder, Bone_SoftTissue, Breast, Cervix (v1 only), CNS, Colorectal, Esophagus, Head_neck, Kidney, Liver, Lung, Lymphoid, NET (v2 only), Oral_Oropharyngeal (v2 only), Ovary, Pancreas, Prostate, Skin, Stomach, Uterus")
+  message("    -l COSMICLIST    If SIGTYPE is COSMICv2, specify a comma separated list of number of cosmic signatures to use, such as: 1,2,5,8,13. If SIGTYPE is COSMICv3.2, specify the SBS names instead, such as: SBS1,SBS7a,SBS10a,SBS18. If no list is specified, all signatures will be used")
   message("    -e GENOMEV       Indicate the genome version to be used: hg19, hg38 or mm10")
   message("    -n NPARALLEL     Number of parallel CPUs to be used")
   message("    -f NBOOTFIT      Number of bootstrap to be used in signature fit, default is 100")
@@ -30,6 +31,7 @@ spec = matrix(c(
   'bootstrap',     'b', 0, "logical",
   'outdir',        'o', 1, "character",
   'sigtype',       's', 1, "character",
+  'organ',         'O', 1, "character",
   'cosmiclist',    'l', 1, "character",
   'nparallel',     'n', 1, "double",
   'genomev',       'e', 1, "character",
@@ -49,6 +51,7 @@ if ( !is.null(opt$help) ) {
 # but were not specified.
 bootstrap_scores <- FALSE
 cosmic_siglist <- NULL
+organ <- NULL
 
 if ( !is.null(opt$bootstrap) ) {
   bootstrap_scores <- TRUE
@@ -63,10 +66,14 @@ if ( is.null(opt$outdir) ) {
   opt$outdir = "hrDetectResults/"    
 }
 if ( is.null(opt$sigtype) ) { 
-  opt$sigtype = "COSMIC"    
+  opt$sigtype = "COSMICv2"    
 }
 if ( !is.null(opt$cosmiclist) ) {
-  cosmic_siglist <- as.numeric(unlist(strsplit(opt$cosmiclist,split = ",")))
+  if(opt$sigtype == "COSMICv2"){
+    cosmic_siglist <- as.numeric(unlist(strsplit(opt$cosmiclist,split = ",")))
+  }else if (opt$sigtype == "COSMICv3.2"){
+    cosmic_siglist <- unlist(strsplit(opt$cosmiclist,split = ","))
+  }
 }
 if ( is.null(opt$nparallel) ) { 
   opt$nparallel = 1   
@@ -87,6 +94,9 @@ outdir <- opt$outdir
 genomev <- opt$genomev
 signature_type <- opt$sigtype
 nparallel <- opt$nparallel
+organ <- opt$organ
+nboots <- opt$nbootFit
+randomSeed <- opt$randomSeed
 
 dir.create(outdir,showWarnings = FALSE,recursive = TRUE)
 
@@ -141,9 +151,10 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                SV_bedpe_files = SV_bedpe_files, 
                                bootstrapHRDetectScores = bootstrap_scores,
                                signature_type = signature_type,
+                               organ = organ,
                                cosmic_siglist=cosmic_siglist,
-                               nbootFit = opt$nbootFit,
-                               randomSeed = opt$randomSeed,
+                               nbootFit = nboots,
+                               randomSeed = randomSeed,
                                nparallel = nparallel)
 
 #save object
@@ -202,12 +213,12 @@ if (bootstrap_scores) {
 }
 
 message("Plotting Subs and Rearr Signature Fit files...")
-plot_SignatureFit_withBootstrap(outdir = paste0(outdir,"/subsfit/"),
-                                boostrapFit_res = hrdet_res$bootstrap_fit_subs,
-                                type_of_mutations = "subs")
-plot_SignatureFit_withBootstrap(outdir = paste0(outdir,"/rearrfit/"),
-                                boostrapFit_res = hrdet_res$bootstrap_fit_rearr,
-                                type_of_mutations = "rearr")
+if(signature_type=="RefSigv2"){
+  plotFitMS(hrdet_res$fitRes_subs,outdir = paste0(outdir,"/subsfit/"))
+}else{
+  plotFit(hrdet_res$fitRes_subs,outdir = paste0(outdir,"/subsfit/"))
+}
+plotFit(hrdet_res$fitRes_rearr,outdir = paste0(outdir,"/rearrfit/"))
 
 #genomeplots
 dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)

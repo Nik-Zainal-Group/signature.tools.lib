@@ -258,14 +258,14 @@ FitMS <- function(catalogues,
               }
               
               # commonError <- KLD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
-              commonError <- MAD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
-              commonCosSim <- cos_sim(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
+              commonError <- MAD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(t(quickFitCommon$exposures[,1:(ncol(quickFitCommon$exposures)-1),drop=F])))
+              commonCosSim <- cos_sim(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(t(quickFitCommon$exposures[,1:(ncol(quickFitCommon$exposures)-1),drop=F])))
               
               allError <- sapply(1:length(quickFit), function(j) {
-                MAD(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(quickFit[[j]]$exposures))
+                MAD(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(t(quickFit[[j]]$exposures[,1:(ncol(quickFit[[j]]$exposures)-1),drop=F])))
               })
               allCosSim <- sapply(1:length(quickFit), function(j) {
-                cos_sim(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(quickFit[[j]]$exposures))
+                cos_sim(currentCatalogue,as.matrix(cbind(commonSigsToUse,rareSigsToUse[,j,drop=F])) %*% as.matrix(t(quickFit[[j]]$exposures[,1:(ncol(quickFit[[j]]$exposures)-1),drop=F])))
               })
               # error
               errorRed <- (commonError-allError)/commonError*100
@@ -509,6 +509,7 @@ Fit <- function(catalogues,
   fitRes$catalogues <- catalogues
   fitRes$signatures <- signatures
   fitRes$method <- method
+  fitRes$exposures <- t(rbind(fitRes$exposures,unassigned=fitRes$unassigned_muts))
   
   return(fitRes)
 }
@@ -561,15 +562,15 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
       highestCosSimSig <- resObj$candidateRareSigs[[currentSample]][which.max(resObj$candidateRareSigsCosSim[[currentSample]])]
       if(!is.null(forceRareSig)) highestCosSimSig <- forceRareSig
       rareSigChoice[[currentSample]] <- highestCosSimSig
-      selectedExp <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$exposures
+      selectedExp <- t(resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
-      exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$unassigned_muts
+      # exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$unassigned_muts
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$bootstrap_exposures_samples[[1]]
     }else{
-      selectedExp <- resObj$samples[[currentSample]]$fitCommonOnly$exposures
+      selectedExp <- t(resObj$samples[[currentSample]]$fitCommonOnly$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
-      exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
+      # exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
     }
@@ -928,26 +929,32 @@ plotFit <- function(fitObj,
     par(xpd=FALSE)
   }
   
-  reconstructed <- round(as.matrix(fitObj$signatures) %*% fitObj$exposures)
-  
+  reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
   
   #plot and save exposures
-  sums_exp <- apply(fitObj$catalogues, 2, sum)
-  exposures <- rbind(fitObj$exposures,fitObj$unassigned_muts)
-  rownames(exposures)[nrow(exposures)] <- "unassigned"
-  denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
-  exposuresProp <- (exposures/denominator*100)
+  sums_exp <- apply(fitObj$exposures,1,sum)
+  denominator <- matrix(sums_exp,nrow = nrow(fitObj$exposures),ncol = ncol(fitObj$exposures),byrow = FALSE)
+  exposuresProp <- (fitObj$exposures/denominator*100)
   # case of empty catalogues
-  exposuresProp[,sums_exp==0] <- 0
+  exposuresProp[sums_exp==0,] <- 0
+  
+  # #plot and save exposures
+  # sums_exp <- apply(fitObj$catalogues, 2, sum)
+  # exposures <- rbind(fitObj$exposures,fitObj$unassigned_muts)
+  # rownames(exposures)[nrow(exposures)] <- "unassigned"
+  # denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
+  # exposuresProp <- (exposures/denominator*100)
+  # # case of empty catalogues
+  # exposuresProp[,sums_exp==0] <- 0
   
   file_table_exp <- paste0(outdir,"exposures.tsv")
   # change to pdf later
   file_plot_exp <- paste0(outdir,"exposures.pdf")
   file_plot_expProp <- paste0(outdir,"exposures_prop.pdf")
-  plotMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plotMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(t(fitObj$exposures)),output_file = file_plot_exp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(t(exposuresProp)),output_file = file_plot_expProp,ndigitsafterzero = 0)
   
-  write.table(t(exposures),file = file_table_exp,
+  write.table(fitObj$exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
   #provide a series of plots for each sample
@@ -959,7 +966,7 @@ plotFit <- function(fitObj,
   for(p in 1:howmanyplots){
     # p <- 1
     currentSample <- colnames(fitObj$catalogues)[p]
-    fitIsEmpty <- sum(fitObj$exposures[,p])==0
+    fitIsEmpty <- sum(fitObj$exposures[p,])==0
     unassigned_mut <- sprintf("%.2f",(fitObj$unassigned_muts_perc[p]))
     cos_sim <- sprintf("%.2f",cos_sim(fitObj$catalogues[,p,drop=FALSE],reconstructed[,p,drop=FALSE]))
     
@@ -972,8 +979,9 @@ plotFit <- function(fitObj,
                       paste0("Model (CosSim ",cos_sim,")"),
                       paste0("Difference (Unassigned ",unassigned_mut,"%)"))
     }
+    colnames(sigMatrix) <- paste0(colnames(sigMatrix)," ",addToTitle)
     
-    plotSignatures(signature_data_matrix = sigMatrix,add_to_title = addToTitle,
+    plotSignatures(signature_data_matrix = sigMatrix,add_to_title = NULL,
                    output_file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_pointEstimate.pdf"))
     
     if(fitObj$useBootstrap & !fitIsEmpty){
@@ -1002,7 +1010,7 @@ plotFit <- function(fitObj,
       boxplot(t(fitObj$bootstrap_exposures_samples[[p]]),las=3,cex.axes=0.9,
               ylab="n mutations",
               ylim=c(0,max(fitObj$bootstrap_exposures_samples[[p]])),cex.main = 0.9,border="#848482",
-              main=paste0("Exposures, of ",colnames(fitObj$exposures)[p],"\n",thresholdText,", p-value=",fitObj$threshold_p.value,", n=",fitObj$nboot))
+              main=paste0("Exposures, of ",rownames(fitObj$exposures)[p],"\n",thresholdText,", p-value=",fitObj$threshold_p.value,", n=",fitObj$nboot))
       if(fitObj$exposureFilterType=="fixedThreshold"){
         abline(h=fitObj$threshold_percent/100*sum(fitObj$catalogues[,p,drop=FALSE]),col=thresholdCol,lwd = 2)
       }else if(fitObj$exposureFilterType=="giniScaledThreshold") {
@@ -1011,7 +1019,7 @@ plotFit <- function(fitObj,
         giniThreshold <- giniThresholdPerc/100*sum(fitObj$catalogues[,p,drop=FALSE])
         for(si in 1:length(giniThreshold)) lines(x = c(si-0.5,si+0.5),y = rep(giniThreshold[si],2),col=thresholdCol,lwd = 2)
       }
-      points(1:length(fitObj$exposures[,p,drop=FALSE]),fitObj$exposures[,p,drop=FALSE],col=consensusCol,pch = 16)
+      points(1:(length(fitObj$exposures[p,])-1),fitObj$exposures[p,1:(ncol(fitObj$exposures)-1)],col=consensusCol,pch = 16)
       legend(x="topleft",legend = c("consensus exposures"),col = consensusCol,pch = 16,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
       legend(x="topright",legend = c("threshold"),col = thresholdCol,lty = 1,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE,lwd = 2)
       dev.off()
@@ -1121,7 +1129,7 @@ plotFitMS <- function(fitMSobj,
   file_table_exp <- paste0(outdir,"exposures.tsv")
   plotMatrix(as.data.frame(t(fitMSobj$exposures)),output_file = file_plot_exp,ndigitsafterzero = 0)
   plotMatrix(as.data.frame(t(exposuresProp)),output_file = file_plot_expProp,ndigitsafterzero = 0)
-  write.table(t(fitMSobj$exposures),file = file_table_exp,
+  write.table(fitMSobj$exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
   # now for each sample plot the chosen solution and the alternative solutions

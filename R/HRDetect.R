@@ -55,8 +55,9 @@
 #' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
 #' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
-#' @param signature_type either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
-#' @param cosmic_siglist list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used.
+#' @param signature_type either "COSMICv2", "COSMICv3.2", "RefSigv1" or "RefSigv2"
+#' @param organ When using RefSigv1 or RefSigv2 as signature_type you need to specify the organ or your samples, as organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param cosmic_siglist If COSMICv2 is used, use this parameter to provide a list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used. If COSMICv3.2 is used, use this parameter to provide a list of characters with the SBS names, e.g. c("SBS1","SBS5","SBS10a","SBS17b"). If omitted all COSMICv3.2 signatures are used.
 #' @param methodFit can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
 #' @param threshold_percentFit threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero
 #' @param bootstrapSignatureFit set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised
@@ -82,7 +83,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               CNV_tab_files=NULL,
                               SV_bedpe_files=NULL,
                               SV_catalogues=NULL,
-                              signature_type="COSMIC",
+                              signature_type="COSMICv2",
+                              organ=NULL,
                               cosmic_siglist=NULL,
                               methodFit = "KLD",
                               threshold_percentFit = 5,
@@ -130,18 +132,29 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   available_organs <- intersect(unique(sapply(strsplit(colnames(all_organ_sigs_subs),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))),
   unique(sapply(strsplit(colnames(all_organ_sigs_rearr),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))))
   
-  if(!(signature_type %in% c("COSMIC",available_organs))){
+  if(!(signature_type %in% c("COSMICv2","COSMICv3.2","RefSigv1","RefSigv2"))){
     stop(paste0("[error HRDetect_pipeline] invalid signature_type ",signature_type,"."))
   }
   
   #use either COSMIC sigs or tissue-specific sigs
-  if(signature_type=="COSMIC"){
-    if (is.null(cosmic_siglist)) cosmic_siglist <- 1:30
-    sigstofit_subs <- cosmic30[,cosmic_siglist,drop=FALSE]
+  if(signature_type=="COSMICv2"){
+    sigstofit_subs <- COSMIC30_subs_signatures
+    if (!is.null(cosmic_siglist)) sigstofit_subs <- sigstofit_subs[,cosmic_siglist,drop=FALSE]
     sigstofit_rearr <- RS.Breast560
-  }else{
-    sigstofit_subs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",signature_type),colnames(all_organ_sigs_subs))]]
-    sigstofit_rearr <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",signature_type),colnames(all_organ_sigs_rearr))]]
+  }else if(signature_type=="COSMICv3.2"){
+    sigstofit_subs <- COSMIC_v3.2_SBS_GRCh37
+    rownames(sigstofit_subs) <- sigstofit_subs$Type
+    sigstofit_subs <- sigstofit_subs[,-1]
+    sigstofit_subs <- sortCatalogue(sigstofit_subs)
+    if (!is.null(cosmic_siglist)) sigstofit_subs <- sigstofit_subs[,cosmic_siglist,drop=FALSE]
+    sigstofit_rearr <- RS.Breast560
+  }else if(signature_type=="RefSigv1"){
+    sigstofit_subs <- getOrganSignatures(organ = organ,typemut = "subs",version = 1)
+    sigstofit_rearr <- getOrganSignatures(organ = organ,typemut = "rearr",version = 1)
+  }else if(signature_type=="RefSigv2"){
+    # FitMS will take care of the SBS signatures
+    sigstofit_subs <- NULL
+    sigstofit_rearr <- getOrganSignatures(organ = organ,typemut = "rearr",version = 1)
   }
   
   #initialise bootstrap fit variables to NULL
@@ -250,58 +263,104 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     if(length(incomplete_samples_with_catalogueSNV)>0){
       message("[info HRDetect_pipeline] Substitution signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
       
-      if(bootstrapSignatureFit){
-        message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-        bootstrap_fit_subs <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
-                                          sigstofit_subs,
-                                          nboot = nbootFit,
-                                          method = methodFit,
-                                          threshold_percent = threshold_percentFit,
-                                          threshold_p.value = threshold_p.valueFit,
-                                          verbose = FALSE,
-                                          nparallel = nparallel,
-                                          randomSeed = randomSeed)
-        #add the resulting exposures to the data_matrix
-        exposures_subs <- bootstrap_fit_subs$E_median_filtered
-        exposures_subs[is.nan(exposures_subs)] <- 0
-      }else{
-        message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
-        exposures_subs <- SignatureFit(cat = SNV_catalogues_toFit,
-                                       signature_data_matrix = sigstofit_subs,
-                                       method = methodFit,
-                                       doRound = FALSE,
-                                       verbose = FALSE)
-        exposures_subs[exposures_subs/apply(SNV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
+      # if(bootstrapSignatureFit){
+      #   message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+      #   bootstrap_fit_subs <- SignatureFit_withBootstrap(SNV_catalogues_toFit,
+      #                                     sigstofit_subs,
+      #                                     nboot = nbootFit,
+      #                                     method = methodFit,
+      #                                     threshold_percent = threshold_percentFit,
+      #                                     threshold_p.value = threshold_p.valueFit,
+      #                                     verbose = FALSE,
+      #                                     nparallel = nparallel,
+      #                                     randomSeed = randomSeed)
+      #   #add the resulting exposures to the data_matrix
+      #   exposures_subs <- bootstrap_fit_subs$E_median_filtered
+      #   exposures_subs[is.nan(exposures_subs)] <- 0
+      # }else{
+      #   message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
+      #   exposures_subs <- SignatureFit(cat = SNV_catalogues_toFit,
+      #                                  signature_data_matrix = sigstofit_subs,
+      #                                  method = methodFit,
+      #                                  doRound = FALSE,
+      #                                  verbose = FALSE)
+      #   exposures_subs[exposures_subs/apply(SNV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
+      # }
+      if(signature_type %in% c("COSMICv2","COSMICv3.2","RefSigv1")){
+        fitRes_subs <- Fit(catalogues = SNV_catalogues_toFit,
+                           signatures = sigstofit_subs,
+                           method = methodFit,
+                           exposureFilterType = "fixedThreshold",
+                           threshold_percent = threshold_percentFit,
+                           threshold_p.value = threshold_p.valueFit,
+                           useBootstrap = bootstrapSignatureFit,
+                           nboot = nbootFit,
+                           nparallel = nparallel,
+                           randomSeed = randomSeed)
+      }else if(signature_type == "RefSigv2"){
+        fitRes_subs <- FitMS(catalogues = SNV_catalogues_toFit,
+                               organ = organ,
+                               method = methodFit,
+                               exposureFilterType = "fixedThreshold",
+                               threshold_percent = threshold_percentFit,
+                               threshold_p.value = threshold_p.valueFit,
+                               multiStepMode = "errorReduction",
+                               useBootstrap = bootstrapSignatureFit,
+                               nboot = nbootFit,
+                               nparallel = nparallel,
+                               randomSeed = randomSeed)
       }
+      exposures_subs <- t(fitRes_subs$exposures)
+      exposures_subs <- exposures_subs[1:(nrow(exposures_subs)-1),,drop=F]
       
-      if(signature_type=="COSMIC"){
+      # set default value
+      data_matrix[colnames(exposures_subs),"SNV3"] <- 0
+      data_matrix[colnames(exposures_subs),"SNV8"] <- 0
+      
+      if(signature_type=="COSMICv2"){
         if("Signature.3" %in% rownames(exposures_subs)){
           data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Signature.3",]
-        }else{
-          data_matrix[colnames(exposures_subs),"SNV3"] <- 0
         }
         if("Signature.8" %in% rownames(exposures_subs)){
           data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Signature.8",]
-        }else{
-          data_matrix[colnames(exposures_subs),"SNV8"] <- 0
         }
-        # data_matrix[colnames(exposures_subs),SNV_cols] <- t(exposures_subs[c("Signature.3","Signature.8"),])
+      }else if(signature_type=="COSMICv3.2"){
+        if("SBS3" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["SBS3",]
+        }
+        if("SBS8" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["SBS8",]
+        }
       }else{
+        # if RefSigv2 was used, there may be some SBS sigs in the names
+        sbssigs <- rownames(exposures_subs)[grepl(rownames(exposures_subs),pattern = "^SBS")]
+        if(length(sbssigs)>0){
+          exposures_subs_toconvert <- exposures_subs[setdiff(rownames(exposures_subs),sbssigs),,drop=F]
+          exposures_subs_sbs <- exposures_subs[sbssigs,,drop=F]
+          exposures_subs_converted <- convertExposuresFromOrganToRefSigs(exposures_subs_toconvert,typemut = "subs")
+          exposures_subs_converted <- exposures_subs_converted[apply(exposures_subs_converted, 1,sum)>0,,drop=FALSE]
+          exposures_subs <- rbind(exposures_subs_converted,exposures_subs_sbs)
+        }else{
+          exposures_subs <- convertExposuresFromOrganToRefSigs(exposures_subs,typemut = "subs")
+          exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
+        }
         #convert to reference signatures
-        exposures_subs <- t(conversion_matrix_subs[colnames(sigstofit_subs),]) %*% exposures_subs
-        exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
+        # exposures_subs <- t(conversion_matrix_subs[colnames(sigstofit_subs),]) %*% exposures_subs
+        # exposures_subs <- convertExposuresFromOrganToRefSigs(exposures_subs,typemut = "subs")
+        # exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
         #add to data_matrix if present
         if("Ref.Sig.3" %in% rownames(exposures_subs)){
           data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Ref.Sig.3",]
-        }else{
-          data_matrix[colnames(exposures_subs),"SNV3"] <- 0
         }
         if("Ref.Sig.8" %in% rownames(exposures_subs)){
           data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Ref.Sig.8",]
-        }else{
-          data_matrix[colnames(exposures_subs),"SNV8"] <- 0
         }
-        
+        if("SBS3" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["SBS3",]
+        }
+        if("SBS8" %in% rownames(exposures_subs)){
+          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["SBS8",]
+        }
       }
     }
     
@@ -385,46 +444,63 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     if(length(incomplete_samples_with_catalogueSV)>0){
       message("[info HRDetect_pipeline] Rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
       
-      if(bootstrapSignatureFit){  
-        message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
-        bootstrap_fit_rearr <- SignatureFit_withBootstrap(SV_catalogues_toFit,
-                                          sigstofit_rearr,
-                                          nboot = nbootFit,
-                                          method = methodFit,
-                                          threshold_percent = threshold_percentFit,
-                                          threshold_p.value = threshold_p.valueFit,
-                                          verbose = FALSE,
-                                          nparallel = nparallel,
-                                          randomSeed = randomSeed)
-        #add the resulting exposures to the data_matrix
-        exposures_rearr <- bootstrap_fit_rearr$E_median_filtered
-        exposures_rearr[is.nan(exposures_rearr)] <- 0
-      }else{
-        message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
-        exposures_rearr <- SignatureFit(cat = SV_catalogues_toFit,
-                                       signature_data_matrix = sigstofit_rearr,
-                                       method = methodFit,
-                                       doRound = FALSE,
-                                       verbose = FALSE)
-        exposures_rearr[exposures_rearr/apply(SV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
-      }
+      # if(bootstrapSignatureFit){  
+      #   message("[info HRDetect_pipeline] Running Signature fit with 100 bootstraps. Increase sparsity by removing exposures with 5% threshold of total mutations and 0.05 threshold of p-value, i.e. exposure of a signature in a sample is set to zero if the probability of having less than 5% of total mutations assigned to that signature is greather than 0.05.")
+      #   bootstrap_fit_rearr <- SignatureFit_withBootstrap(SV_catalogues_toFit,
+      #                                     sigstofit_rearr,
+      #                                     nboot = nbootFit,
+      #                                     method = methodFit,
+      #                                     threshold_percent = threshold_percentFit,
+      #                                     threshold_p.value = threshold_p.valueFit,
+      #                                     verbose = FALSE,
+      #                                     nparallel = nparallel,
+      #                                     randomSeed = randomSeed)
+      #   #add the resulting exposures to the data_matrix
+      #   exposures_rearr <- bootstrap_fit_rearr$E_median_filtered
+      #   exposures_rearr[is.nan(exposures_rearr)] <- 0
+      # }else{
+      #   message("[info HRDetect_pipeline] Running single Signature fit. Increase sparsity by removing exposures with 5% threshold of total mutations.")
+      #   exposures_rearr <- SignatureFit(cat = SV_catalogues_toFit,
+      #                                  signature_data_matrix = sigstofit_rearr,
+      #                                  method = methodFit,
+      #                                  doRound = FALSE,
+      #                                  verbose = FALSE)
+      #   exposures_rearr[exposures_rearr/apply(SV_catalogues_toFit,2,sum)*100<threshold_percentFit] <- 0
+      # }
+      fitRes_rearr <- Fit(catalogues = SV_catalogues_toFit,
+                         signatures = sigstofit_rearr,
+                         method = methodFit,
+                         exposureFilterType = "fixedThreshold",
+                         threshold_percent = threshold_percentFit,
+                         threshold_p.value = threshold_p.valueFit,
+                         useBootstrap = bootstrapSignatureFit,
+                         nboot = nbootFit,
+                         nparallel = nparallel,
+                         randomSeed = randomSeed)
+      exposures_rearr <- t(fitRes_rearr$exposures)
+      exposures_rearr <- exposures_rearr[1:(nrow(exposures_rearr)-1),,drop=F]
       
-      if(signature_type=="COSMIC"){
-        data_matrix[colnames(exposures_rearr),SV_cols] <- t(exposures_rearr[c("RS3","RS5"),])
+      # set default
+      data_matrix[colnames(exposures_rearr),"SV3"] <- 0
+      data_matrix[colnames(exposures_rearr),"SV5"] <- 0
+      
+      if(signature_type=="COSMICv2" | signature_type=="COSMICv3.2"){
+        if("RS3" %in% rownames(exposures_rearr)){
+          data_matrix[colnames(exposures_rearr),"SV3"] <- exposures_rearr["RS3",]
+        }
+        if("RS5" %in% rownames(exposures_rearr)){
+          data_matrix[colnames(exposures_rearr),"SV5"] <- exposures_rearr["RS5",]
+        }
       }else{
         #convert to reference signatures
-        exposures_rearr <- t(conversion_matrix_rearr[colnames(sigstofit_rearr),]) %*% exposures_rearr
+        exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
         exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
         #add to data_matrix if present
         if("RefSig R3" %in% rownames(exposures_rearr)){
           data_matrix[colnames(exposures_rearr),"SV3"] <- exposures_rearr["RefSig R3",]
-        }else{
-          data_matrix[colnames(exposures_rearr),"SV3"] <- 0
         }
         if("RefSig R5" %in% rownames(exposures_rearr)){
           data_matrix[colnames(exposures_rearr),"SV5"] <- exposures_rearr["RefSig R5",]
-        }else{
-          data_matrix[colnames(exposures_rearr),"SV5"] <- 0
         }
         if("RefSig R9" %in% rownames(exposures_rearr)){
           data_matrix[colnames(exposures_rearr),"SV5"] <- data_matrix[colnames(exposures_rearr),"SV5"] + exposures_rearr["RefSig R9",]
@@ -565,8 +641,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       bootstrap_samples <- c()
       
       #bootstrap exposures are required
-      if(!is.null(bootstrap_fit_subs)) bootstrap_samples <- colnames(bootstrap_fit_subs$E_median_filtered)
-      if(!is.null(bootstrap_fit_rearr)) bootstrap_samples <- intersect(bootstrap_samples,colnames(bootstrap_fit_rearr$E_median_filtered))
+      if(!is.null(fitRes_subs$bootstrap_exposures_samples)) bootstrap_samples <- names(fitRes_subs$bootstrap_exposures_samples)
+      if(!is.null(fitRes_rearr$bootstrap_exposures_samples)) bootstrap_samples <- intersect(bootstrap_samples,names(fitRes_rearr$bootstrap_exposures_samples))
       
       #indels classification tables are required
       if(!is.null(indels_classification_table)) bootstrap_samples <- intersect(bootstrap_samples,rownames(indels_classification_table))
@@ -579,6 +655,12 @@ HRDetect_pipeline <- function(data_matrix=NULL,
         
         #run hrdetect bootstrap scores for the bootstrap_samples
         nboots_hr <- 1000
+        
+        # set up some variables
+        subs_boots <- fitRes_subs$bootstrap_exposures_samples
+        subs_catalogues <- fitRes_subs$catalogues[,bootstrap_samples,drop=F]
+        rearr_boots <- fitRes_rearr$bootstrap_exposures
+        rearr_catalogues <- fitRes_rearr$catalogues[,bootstrap_samples,drop=F]
         
         hrdetect_bootstrap_table <- list()
         for (j in 1:nboots_hr){
@@ -598,69 +680,115 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           tmp_data_matrix[bootstrap_samples,"hrd"] <- rpois(length(bootstrap_samples),data_matrix[bootstrap_samples,"hrd"])
           
           #3) sample subs exposures
-          subs_boots <- bootstrap_fit_subs$boot_list
-          s1 <- sample(length(subs_boots),size = 1)
-          current_subs <- t(subs_boots[[s1]])
-          current_subs[is.na(current_subs)] <- 0
-          #sparsity correction 5%
-          sel <- t(apply(current_subs,1,function(x) x<sum(x)*0.05))
-          current_subs[sel] <- 0
-          if(signature_type=="COSMIC"){
-            if("Signature.3" %in% colnames(current_subs)){
-              tmp_data_matrix[bootstrap_samples,"SNV3"] <- current_subs[bootstrap_samples,"Signature.3"]
-            }else{
-              tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
-            }
-            if("Signature.8" %in% colnames(current_subs)){
-              tmp_data_matrix[bootstrap_samples,"SNV8"] <- current_subs[bootstrap_samples,"Signature.8"]
-            }else{
-              tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
-            }
-          }else{
-            #convert to ref sig
-            exposures_RefSigs <- t(as.matrix(current_subs) %*% as.matrix(conversion_matrix_subs[colnames(current_subs),]))
-            exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
-            if("Ref.Sig.3" %in% rownames(exposures_RefSigs)){
-              tmp_data_matrix[bootstrap_samples,"SNV3"] <- exposures_RefSigs["Ref.Sig.3",bootstrap_samples]
-            }else{
-              tmp_data_matrix[bootstrap_samples,"SNV3"] <- 0
-            }
-            if("Ref.Sig.8" %in% rownames(exposures_RefSigs)){
-              tmp_data_matrix[bootstrap_samples,"SNV8"] <- exposures_RefSigs["Ref.Sig.8",bootstrap_samples]
-            }else{
-              tmp_data_matrix[bootstrap_samples,"SNV8"] <- 0
-            }
+          
+          s1 <- sample(nbootFit,size = 1)
+          # current_subs <- t(subs_boots[[s1]])
+          # current_subs[is.na(current_subs)] <- 0
+          # #sparsity correction 5%
+          # sel <- t(apply(current_subs,1,function(x) x<sum(x)*0.05))
+          # current_subs[sel] <- 0
+          current_sigs <- c()
+          for(sn in bootstrap_samples) current_sigs <- union(current_sigs,rownames(subs_boots[[sn]]))
+          current_subs <- matrix(0,nrow = length(current_sigs),ncol = length(bootstrap_samples),dimnames = list(current_sigs,bootstrap_samples))
+          for(sn in bootstrap_samples) {
+            current_subs[rownames(subs_boots[[sn]]),sn] <- subs_boots[[sn]][,s1]
           }
-          #4) sample rearr exposures
-          rearr_boots <- bootstrap_fit_rearr$boot_list
-          s1 <- sample(length(rearr_boots),size = 1)
-          current_rearr <- t(rearr_boots[[s1]])
-          current_rearr[is.na(current_rearr)] <- 0
-          #sparsity correction 5%
-          sel <- t(apply(current_rearr,1,function(x) x<sum(x)*0.05))
-          current_rearr[sel] <- 0
-          if(signature_type=="COSMIC"){
-            tmp_data_matrix[bootstrap_samples,"SV3"] <- current_rearr[bootstrap_samples,"RS3"]
-            tmp_data_matrix[bootstrap_samples,"SV5"] <- current_rearr[bootstrap_samples,"RS5"]
+          # sparsity correction
+          sums_exp <- apply(subs_catalogues, 2, sum)
+          denominator <- matrix(sums_exp,nrow = nrow(current_subs),ncol = ncol(current_subs),byrow = TRUE)
+          exposuresProp <- (current_subs/denominator*100)
+          # # case of empty catalogues
+          exposuresProp[,sums_exp==0] <- 0
+          current_subs[exposuresProp<threshold_percentFit] <- 0
+          
+          # set default value
+          tmp_data_matrix[colnames(current_subs),"SNV3"] <- 0
+          tmp_data_matrix[colnames(current_subs),"SNV8"] <- 0
+          
+          if(signature_type=="COSMICv2"){
+            if("Signature.3" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["Signature.3",]
+            }
+            if("Signature.8" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["Signature.8",]
+            }
+          }else if(signature_type=="COSMICv3.2"){
+            if("SBS3" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["SBS3",]
+            }
+            if("SBS8" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["SBS8",]
+            }
           }else{
-            #convert to ref sig
-            exposures_RefSigs <- t(as.matrix(current_rearr) %*% as.matrix(conversion_matrix_rearr[colnames(current_rearr),]))
-            exposures_RefSigs <- exposures_RefSigs[apply(exposures_RefSigs, 1,sum)>0,,drop=FALSE]
-            if("RefSig R3" %in% rownames(exposures_RefSigs)){
-              tmp_data_matrix[bootstrap_samples,"SV3"] <- exposures_RefSigs["RefSig R3",bootstrap_samples]
+            # if RefSigv2 was used, there may be some SBS sigs in the names
+            sbssigs <- rownames(current_subs)[grepl(rownames(current_subs),pattern = "^SBS")]
+            if(length(sbssigs)>0){
+              exposures_subs_toconvert <- current_subs[setdiff(rownames(current_subs),sbssigs),,drop=F]
+              exposures_subs_sbs <- current_subs[sbssigs,,drop=F]
+              exposures_subs_converted <- convertExposuresFromOrganToRefSigs(exposures_subs_toconvert,typemut = "subs")
+              exposures_subs_converted <- exposures_subs_converted[apply(exposures_subs_converted, 1,sum)>0,,drop=FALSE]
+              current_subs <- rbind(exposures_subs_converted,exposures_subs_sbs)
             }else{
-              tmp_data_matrix[bootstrap_samples,"SV3"] <- 0
+              current_subs <- convertExposuresFromOrganToRefSigs(current_subs,typemut = "subs")
+              current_subs <- current_subs[apply(current_subs, 1,sum)>0,,drop=FALSE]
             }
-            if("RefSig R5" %in% rownames(exposures_RefSigs)){
-              tmp_data_matrix[bootstrap_samples,"SV5"] <- exposures_RefSigs["RefSig R5",bootstrap_samples]
-            }else{
-              tmp_data_matrix[bootstrap_samples,"SV5"] <- 0
+            if("Ref.Sig.3" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["Ref.Sig.3",]
             }
-            if("RefSig R9" %in% rownames(exposures_RefSigs)){
-              tmp_data_matrix[bootstrap_samples,"SV5"] <- tmp_data_matrix[bootstrap_samples,"SV5"] + exposures_RefSigs["RefSig R9",bootstrap_samples]
+            if("Ref.Sig.8" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["Ref.Sig.8",]
+            }
+            if("SBS3" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["SBS3",]
+            }
+            if("SBS8" %in% rownames(current_subs)){
+              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["SBS8",]
             }
           }
           
+          #4) sample rearr exposures
+          s1 <- sample(length(rearr_boots),size = 1)
+          current_rearr <- rearr_boots[[s1]]
+          current_rearr[is.na(current_rearr)] <- 0
+          #sparsity correction 5%
+          # sel <- t(apply(current_rearr,1,function(x) x<sum(x)*0.05))
+          # current_rearr[sel] <- 0
+          # sparsity correction
+          sums_exp <- apply(rearr_catalogues, 2, sum)
+          denominator <- matrix(sums_exp,nrow = nrow(current_rearr),ncol = ncol(current_rearr),byrow = TRUE)
+          exposuresProp <- (current_rearr/denominator*100)
+          # # case of empty catalogues
+          exposuresProp[,sums_exp==0] <- 0
+          current_rearr[exposuresProp<threshold_percentFit] <- 0
+          
+          # set default
+          tmp_data_matrix[colnames(current_rearr),"SV3"] <- 0
+          tmp_data_matrix[colnames(current_rearr),"SV5"] <- 0
+          
+          if(signature_type=="COSMICv2" | signature_type=="COSMICv3.2"){
+            if("RS3" %in% rownames(current_rearr)){
+              tmp_data_matrix[colnames(current_rearr),"SV3"] <- current_rearr["RS3",]
+            }
+            if("RS5" %in% rownames(current_rearr)){
+              tmp_data_matrix[colnames(current_rearr),"SV5"] <- current_rearr["RS5",]
+            }
+          }else{
+            #convert to reference signatures
+            current_rearr <- convertExposuresFromOrganToRefSigs(current_rearr,typemut = "rearr")
+            current_rearr <- current_rearr[apply(current_rearr, 1,sum)>0,,drop=FALSE]
+            #add to data_matrix if present
+            if("RefSig R3" %in% rownames(current_rearr)){
+              tmp_data_matrix[colnames(current_rearr),"SV3"] <- current_rearr["RefSig R3",]
+            }
+            if("RefSig R5" %in% rownames(current_rearr)){
+              tmp_data_matrix[colnames(current_rearr),"SV5"] <- current_rearr["RefSig R5",]
+            }
+            if("RefSig R9" %in% rownames(current_rearr)){
+              tmp_data_matrix[colnames(current_rearr),"SV5"] <- tmp_data_matrix[colnames(current_rearr),"SV5"] + current_rearr["RefSig R9",]
+            }
+          }
+          
+          # compute score
           hrdetect_bootstrap_table[[j]] <- t(applyHRDetectDavies2017(data_matrix = tmp_data_matrix,attachContributions = FALSE))
         }
         
@@ -688,6 +816,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res <- list()
   res$parameters <- list()
   res$parameters$signature_type <- signature_type
+  res$parameters$organ <- organ
   res$parameters$cosmic_siglist <- cosmic_siglist
   res$parameters$methodFit <- methodFit
   res$parameters$threshold_percentFit <- threshold_percentFit
@@ -702,8 +831,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res$hrdetect_output <- hrdetect_output
   res$exposures_subs <- exposures_subs
   res$exposures_rearr <- exposures_rearr
-  res$bootstrap_fit_subs <- bootstrap_fit_subs
-  res$bootstrap_fit_rearr <- bootstrap_fit_rearr
+  res$fitRes_subs <- fitRes_subs
+  res$fitRes_rearr <- fitRes_rearr
   res$indels_classification_table <- indels_classification_table
   res$hrdetect_bootstrap_table <- hrdetect_bootstrap_table
   res$q_5_50_95 <- q_5_50_95

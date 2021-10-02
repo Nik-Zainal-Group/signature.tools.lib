@@ -448,8 +448,8 @@ plotGenericSignatures <- function(signature_data_matrix,
         par(mar=mar)
       }
       title <- colnames(tmpmatrix)[pos]
-      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," substitutions)")
-      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
+      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," mutations)")
 
       barplot(tmpmatrix[,pos],
               main = title,
@@ -457,6 +457,7 @@ plotGenericSignatures <- function(signature_data_matrix,
               col="skyblue",
               beside = TRUE,
               xlab = "channels",
+              cex.main = 0.9,
               cex.names = 1)
     }
     title(main = overall_title,outer = TRUE,cex.main = 2)
@@ -470,6 +471,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
                                              output_file = NULL,
                                              plot_sum = TRUE,
                                              overall_title = "",
+                                             add_to_titles = NULL,
                                              mar=NULL){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # rearr.colours <- c(rep("blue",16),rep("black",16),rep("red",16),rep("grey",16),rep("green",16),rep("pink",16))
@@ -491,13 +493,15 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," mutations)")
+    if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
+    if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," mutations)")
     barplot(signature_data_matrix[,pos],
             main = title,
             names.arg = c(rep("",nrow(signature_data_matrix))),
             col="skyblue",
             beside = TRUE,
             xlab = "channels",
+            cex.main = 0.9,
             ylim = ylimit,
             cex.names = 1)
     barCenters <- barplot(mean_matrix[,pos],
@@ -506,6 +510,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
                           col="skyblue",
                           beside = TRUE,
                           xlab = "channels",
+                          cex.main = 0.9,
                           ylim = ylimit,
                           cex.names = 1)
     segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
@@ -574,8 +579,8 @@ plotSubsSignatures <- function(signature_data_matrix,
         par(mar=mar)
       }
       title <- colnames(tmpmatrix)[pos]
-      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," substitutions)")
-      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
+      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," substitutions)")
       muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
       xlabels <- rep("",96)
       barplot(tmpmatrix[,pos],
@@ -584,6 +589,7 @@ plotSubsSignatures <- function(signature_data_matrix,
               col=rearr.colours,
               beside = TRUE,
               las=2,
+              cex.main = 0.9,
               cex.names = 1,border = NA,space = 0.2)
       par(xpd=TRUE)
       par(usr = c(0, 1, 0, 1))
@@ -651,8 +657,8 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",round(sum(signature_data_matrix[,pos]))," substitutions)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
+    if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
+    if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," substitutions)")
     barplot(signature_data_matrix[,pos],
             main = title,
             #names.arg = row.names(signature_data_matrix),
@@ -661,6 +667,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
             beside = TRUE,
             ylim = ylimit,
             las=2,
+            cex.main = 0.9,
             cex.names = 1)
     par(xpd=TRUE)
     par(usr = c(0, 1, 0, 1))
@@ -687,6 +694,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
                           beside = TRUE,
                           ylim = ylimit,
                           las=2,
+                          cex.main = 0.9,
                           cex.names = 1,border = NA,space = 0.2)
     # segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
     #          mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
@@ -780,8 +788,8 @@ plotRearrSignatures <-function(signature_data_matrix,
         par(mar=mar)
       }
       title <- colnames(tmpmatrix)[pos]
-      if (plot_sum) title <- paste0(title," (",sum(tmpmatrix[,pos])," rearrangements)")
-      if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
+      if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
+      if (plot_sum) title <- paste0(title,"\n(",sum(tmpmatrix[,pos])," rearrangements)")
       pos <- barplot(tmpmatrix[,pos],
                      main = title,
                      names.arg = NA,
@@ -790,6 +798,7 @@ plotRearrSignatures <-function(signature_data_matrix,
                      beside = FALSE,
                      #las=2,
                      cex.names = 0.8,
+                     cex.main = 0.9,
                      #mgp=c(3,2,0),
                      border = 0,
                      space = 0.1)
@@ -943,8 +952,8 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
       par(mar=mar)
     }
     title <- colnames(signature_data_matrix)[pos]
-    if (plot_sum) title <- paste0(title," (",sum(signature_data_matrix[,pos])," rearrangements)")
-    if (!is.null(add_to_titles)) title <- paste0(title,"\n",add_to_titles[pos])
+    if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
+    if (plot_sum) title <- paste0(title,"\n(",sum(signature_data_matrix[,pos])," rearrangements)")
     barCenters <- barplot(signature_data_matrix[,pos],
                           main = title,
                           names.arg = NA,
@@ -956,6 +965,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
                           #mgp=c(3,2,0),
                           border = 0,
                           ylim = ylimit,
+                          cex.main = 0.9,
                           space = 0.1)
     rearrAxis(barCenters,sizes_names)
     barCenters <- barplot(mean_matrix[,pos],
@@ -966,6 +976,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
                           #border = NA,
                           beside = FALSE,
                           ylim = ylimit,
+                          cex.main = 0.9,
                           las=2,
                           border = 0,
                           space = 0.1)
