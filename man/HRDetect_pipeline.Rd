@@ -8,7 +8,7 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
   SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
   Indels_vcf_files = NULL, Indels_tab_files = NULL,
   CNV_tab_files = NULL, SV_bedpe_files = NULL, SV_catalogues = NULL,
-  signature_type = "COSMIC", cosmic_siglist = NULL,
+  signature_type = "COSMICv2", organ = NULL, cosmic_siglist = NULL,
   methodFit = "KLD", threshold_percentFit = 5,
   bootstrapSignatureFit = TRUE, nbootFit = 100,
   threshold_p.valueFit = 0.05, bootstrapHRDetectScores = FALSE,
@@ -35,9 +35,11 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 
 \item{SV_catalogues}{data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
 
-\item{signature_type}{either "COSMIC" or one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+\item{signature_type}{either "COSMICv2", "COSMICv3.2", "RefSigv1" or "RefSigv2"}
 
-\item{cosmic_siglist}{list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used.}
+\item{organ}{When using RefSigv1 or RefSigv2 as signature_type you need to specify the organ or your samples, as organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+
+\item{cosmic_siglist}{If COSMICv2 is used, use this parameter to provide a list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used. If COSMICv3.2 is used, use this parameter to provide a list of characters with the SBS names, e.g. c("SBS1","SBS5","SBS10a","SBS17b"). If omitted all COSMICv3.2 signatures are used.}
 
 \item{methodFit}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
 
