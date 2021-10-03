@@ -184,6 +184,12 @@ write.table(hrdet_res$SV_catalogues,sep = "\t",
             file = paste0(outdir,"/SV_catalogues.tsv"),
             col.names = TRUE,row.names = TRUE,quote = FALSE)
 
+message("Plotting SNV and SV catalogues...")
+plotSignatures(signature_data_matrix = hrdet_res$SNV_catalogues,
+               output_file = paste0(outdir,"/SNV_catalogues.pdf"))
+plotSignatures(signature_data_matrix = hrdet_res$SV_catalogues,
+               output_file = paste0(outdir,"/SV_catalogues.pdf"))
+
 message("Writing siganture exposure tables...")
 write.table(hrdet_res$exposures_subs,sep = "\t",
             file = paste0(outdir,"/Exposures_subs.tsv"),
@@ -209,7 +215,7 @@ plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
 if (bootstrap_scores) {
   message("Plotting HRDetect with Bootstrap...")
   plot_HRDetect_BootstrapScores(outdir = outdir,
-                                                    hrdetect_res = hrdet_res)
+                                hrdetect_res = hrdet_res)
 }
 
 message("Plotting Subs and Rearr Signature Fit files...")
