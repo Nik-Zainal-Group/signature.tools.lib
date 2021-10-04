@@ -5,8 +5,8 @@
 \title{plot_HRDetect_BootstrapScores}
 \usage{
 plot_HRDetect_BootstrapScores(outdir, hrdetect_res,
-  main = "Distribution of HRDetect scores", mar = c(9, 4, 3, 2),
-  pwidth = NULL, pheight = 1000, pres = 200)
+  main = "Distribution of HRDetect scores", mar = NULL,
+  pwidth = NULL, pheight = NULL, pointsize = 12)
 }
 \arguments{
 \item{outdir}{output directory for the plot}
@@ -15,14 +15,14 @@ plot_HRDetect_BootstrapScores(outdir, hrdetect_res,
 
 \item{main}{plot title. If not specified: "Distribution of HRDetect scores"}
 
-\item{mar}{plot margin. If not specified: c(9,4,3,2)}
+\item{mar}{plot margin. If not specified, this will be dynamically estimated based on sample names length}
 
-\item{pwidth}{plot width in pixels. If not specified: max(1000,400+120*number_of_samples)}
+\item{pwidth}{plot width in pixels. If not specified, this will be dynamically estimated based on the number of samples}
 
-\item{pheight}{plot height in pixels. If not specified: 1000}
+\item{pheight}{plot height in pixels. If not specified, this will be dynamically estimated based on sample names length}
 
-\item{pres}{plot resolution. If not specified: 200}
+\item{pointsize}{plot resolution. If not specified: 12}
 }
 \description{
-Overall plot of scores obtained from HRDetect with bootstrap.
+Overall plot of scores obtained from HRDetect with bootstrap. Plot will be in pdf format.
 }

@@ -1046,32 +1046,44 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
 
 #' plot_HRDetect_BootstrapScores
 #' 
-#' Overall plot of scores obtained from HRDetect with bootstrap.
+#' Overall plot of scores obtained from HRDetect with bootstrap. Plot will be in pdf format.
 #' 
 #' @param outdir output directory for the plot
 #' @param hrdetect_res output of HRDetect_pipeline, ran with bootstrapHRDetectScores=TRUE
 #' @param main plot title. If not specified: "Distribution of HRDetect scores"
-#' @param mar plot margin. If not specified: c(9,4,3,2)
-#' @param pwidth plot width in pixels. If not specified: max(1000,400+120*number_of_samples)
-#' @param pheight plot height in pixels. If not specified: 1000
-#' @param pres plot resolution. If not specified: 200
+#' @param mar plot margin. If not specified, this will be dynamically estimated based on sample names length
+#' @param pwidth plot width in pixels. If not specified, this will be dynamically estimated based on the number of samples
+#' @param pheight plot height in pixels. If not specified, this will be dynamically estimated based on sample names length
+#' @param pointsize plot resolution. If not specified: 12
 #' @export
 plot_HRDetect_BootstrapScores <- function(outdir,
                                           hrdetect_res,
                                           main="Distribution of HRDetect scores",
-                                          mar=c(9,4,3,2),
+                                          mar=NULL,
                                           pwidth=NULL,
-                                          pheight=1000,
-                                          pres=200){
+                                          pheight=NULL,
+                                          pointsize=12){
   
   #boxplot
   bootstrap_samples <- rownames(hrdetect_res$q_5_50_95)
   samples_labels <- bootstrap_samples
   
-  if(is.null(pwidth)) pwidth <- max(1000,400+120*length(bootstrap_samples))
+  # determine plot size and margins
+  maxncharSamples <- max(sapply(bootstrap_samples,nchar))
   
-  o <- order(hrdetect_res$hrdetect_output[bootstrap_samples,"Probability"],decreasing = TRUE)
-  jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)
+  if(is.null(pwidth)) pwidth <- max(5,2+0.60*length(bootstrap_samples))
+  if(is.null(pheight)) pheight <- 4+0.115*maxncharSamples
+  if(is.null(mar)) {
+    mar1 <- 0.65*maxncharSamples+1.2
+    mar2 <- 4
+    mar3 <- 3
+    mar4 <- 2
+    mar=c(mar1,mar2,mar3,mar4)
+  }
+  
+  o <- order(hrdetect_res$hrdetect_output[,"Probability"],decreasing = TRUE)
+  # jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)
+  cairo_pdf(filename = paste0(outdir,"/HRDetect_bootstrap.pdf"),width = pwidth,height = pheight,pointsize = pointsize)
   par(mar=mar)
   boxplot(hrdetect_res$hrdetect_bootstrap_table, xaxt="n", yaxt="n",ylim = c(0,1),border="white")
   grid()
@@ -1085,7 +1097,7 @@ plot_HRDetect_BootstrapScores <- function(outdir,
     points(myjitter, thisvalues[,o[i]], pch=20, col=rgb(0,0,1,.1))
     rect(xleft = i+0.15,ybottom = hrdetect_res$q_5_50_95[o[i],"5%"],xright = i+0.22,ytop = hrdetect_res$q_5_50_95[o[i],"95%"],col = "grey")
   }
-  points(hrdetect_res$hrdetect_output[bootstrap_samples,"Probability"][o],pch=23,col="black",bg="white")
+  points(hrdetect_res$hrdetect_output[,"Probability"][o],pch=23,col="black",bg="white")
   
   title(main = main,line = 1.8)
   legend(x="topleft",legend = c("Davies et al. 2017"),pch = 23,col="black",bg="green",cex = 0.8,bty = "n",inset = c(0,-0.145),xpd = TRUE)
