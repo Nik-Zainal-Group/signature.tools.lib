@@ -41,7 +41,7 @@ plotFit(subs_fit_res,outdir = "signatureFit/")
 snv_exp <- subs_fit_res$exposures
 
 #Convert the organ-spoecific signature exposures into reference siganture exposures
-snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = snv_exp,typemut = "subs")
+snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = t(snv_exp[,1:(ncol(snv_exp)-1)]),typemut = "subs")
 
 #write the results
 writeTable(snv_exp,"RefSigSubsExposures.tsv")

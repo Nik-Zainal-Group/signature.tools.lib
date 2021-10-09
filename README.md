@@ -406,8 +406,8 @@ input_matrix <- matrix(NA,nrow = length(sample_names),
 
 #We have already quantified the amount of SNV signatures in the samples,
 #so we can supply these via the input matrix
-input_matrix[colnames(snv_exp),"SNV3"] <- snv_exp["Signature.3",]
-input_matrix[colnames(snv_exp),"SNV8"] <- snv_exp["Signature.8",]
+input_matrix[rownames(snv_exp),"SNV3"] <- snv_exp[,"Signature.3"]
+input_matrix[rownames(snv_exp),"SNV8"] <- snv_exp[,"Signature.8"]
 
 #run the HRDetect pipeline, for more information see ?HRDetect_pipeline
 res <- HRDetect_pipeline(input_matrix,
@@ -507,7 +507,7 @@ such as HRDetect, where RefSig 3 and RefSig 8 exposures can be used in place of 
 
 ```
 #Convert the organ-spoecific signature exposures into reference siganture exposures
-snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = snv_exp,typemut = "subs")
+snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = t(snv_exp[,1:(ncol(snv_exp)-1)]),typemut = "subs")
 
 #write the results
 writeTable(snv_exp,"RefSigSubsExposures.tsv")
