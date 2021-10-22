@@ -205,7 +205,7 @@ write.table(hrdet_res$indels_classification_table,sep = "\t",
 
 #plotting
 message("Plotting HRDetect contributions...")
-plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.jpg"),
+plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.pdf"),
                                    hrdetect_output = hrdet_res$hrdetect_output)
 
 message("Plotting HRDetect overall plot...")

@@ -1094,7 +1094,7 @@ plot_HRDetect_BootstrapScores <- function(outdir,
   # take the x-axis indices and add a jitter, proportional to the N in each level
   for(i in 1:ncol(thisvalues)){
     myjitter<-jitter(rep(i, length(thisvalues[,o[i]])), amount=0.2)
-    points(myjitter, thisvalues[,o[i]], pch=20, col=rgb(0,0,1,.1))
+    points(myjitter, thisvalues[,o[i]], pch=20, col="#0067A51A")
     rect(xleft = i+0.15,ybottom = hrdetect_res$q_5_50_95[o[i],"5%"],xright = i+0.22,ytop = hrdetect_res$q_5_50_95[o[i],"95%"],col = "grey")
   }
   points(hrdetect_res$hrdetect_output[,"Probability"][o],pch=23,col="black",bg="white")
@@ -1113,7 +1113,7 @@ plot_HRDetect_BootstrapScores <- function(outdir,
 #' 
 #' Function for plotting HRDetect results and contributions to HRDetect score.
 #' 
-#' @param file_name name of the output file (jpg)
+#' @param file_name name of the output file (pdf)
 #' @param par_title title of the plot (optional) 
 #' @param hrdetect_output output of HRDetect, containing contributions of each feature
 #' @export
@@ -1128,46 +1128,75 @@ plot_HRDetect_Contributions <- function(file_name,
   reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
   nsamples <- nrow(hrdetect_output)
   contributions <- hrdetect_output
-  jpeg(filename = file_name,
-       width = max(200+120*nsamples,2400),
-       height = 1200,
-       res = 170)
+  
+  maxncharSamples <- max(sapply(row.names(hrdetect_output),nchar,USE.NAMES = F))
+  
+  cairo_pdf(filename = file_name,
+       width = 5+0.60*nrow(hrdetect_output),
+       height = 6+0.115*maxncharSamples)
   par(mfrow=c(1,1),oma=c(0,0,1,0))
   mat <- matrix(c(1,2),ncol = 1)
-  layout(mat, c(1), c(0.65,1))
+  layout(mat, c(1), c(0.8,0.8+0.04*maxncharSamples))
   
-  par(mar=c(1,6,1,1))
-  barplot(height = hrdetect_output$Probability[reorder],
+  par(mar=c(1,7,3,15))
+  bx <- barplot(height = hrdetect_output$Probability[reorder],
           ylim = c(0,1),ylab = "BRCA1/BRCA2\n def. score",
-          names.arg = "",
+          names.arg = "",border = NA,
           cex.axis = 1.2,
           cex.lab=1.2,
-          cex.names = 1.5)
-  title(main=paste0(par_title), cex.main=1.6)
-  abline(a=0.7,b=0,col="red")
-  text(x = 0.75*nrow(hrdetect_output),y = 0.77,labels = "classification threshold",col = "red",cex = 1.5)
+          cex.names = 1.5,las=2)
+  xpos <- as.vector(bx)
+  if(length(xpos)>1){
+    legendpos <- xpos[length(xpos)]*2 - xpos[length(xpos)-1]
+    gap <- xpos[length(xpos)] - xpos[length(xpos)-1]
+  }else{
+    legendpos <- xpos[length(xpos)]*2
+    gap <- xpos[length(xpos)]/2
+  }
+  
+  legend_colors <- c('F38400', 'A1CAF1','875692','F3C300',   'BE0032', '8DB600')
+  legend_colors <- paste0("#",legend_colors)
+  legend(x=legendpos,y=1,legend = c("classification threshold"),lty = 2,col="red",cex = 1,bty = "n",xpd = TRUE)
+  legend(x=legendpos+0.24,y=0.9,legend = c("deletion with MH",
+                                 "Substitution Sig. 3",
+                                 "Rearrangement Sig. 3",
+                                 "Rearrangement Sig. 5",
+                                 "HRD-LOH score",
+                                 "Substitution Sig. 8"),fill =legend_colors,border = NA,
+         cex = 1,bty = "n",xpd = TRUE)
+  title(main=paste0(par_title), cex.main=1.3)
+  # abline(a=0.7,b=0,col="red",lty = 2)
+  lines(x=c(xpos[1]-gap/2,xpos[length(xpos)]+gap/2),y=c(0.7,0.7),col="red",lty = 2)
+  # text(x = 0.75*nrow(hrdetect_output),y = 0.77,labels = "classification threshold",col = "red",cex = 1.5)
   matrix_to_plot <- t(hrdetect_output[reorder,col_needed])
   
-  par(mar=c(10,6,1,1))
+  mar1 <- 0.65*maxncharSamples+1.2
+  mar2 <- 7
+  mar3 <- 1
+  mar4 <- 15
+  mar=c(mar1,mar2,mar3,mar4)
+  # par(mar=c(10,7,1,15))
+  par(mar=mar)
   barplot(height = matrix_to_plot,
           beside = TRUE,
           #names.arg = row.names(hrdetect_res),
-          names.arg = rownames(hrdetect_output)[reorder],
-          las = 3,
-          legend.text = c("deletion with MH",
-                          "Substitution Sig. 3",
-                          "Rearrangement Sig. 3",
-                          "Rearrangement Sig. 5",
-                          "HRD-LOH score",
-                          "Substitution Sig. 8"),
-          args.legend = list(x ='bottom', bty='n', inset=c(0,-1.0),horiz=TRUE,cex=0.9),
+          names.arg = rownames(hrdetect_output)[reorder],border = NA,
+          las = 2,
+          # legend.text = c("deletion with MH",
+          #                 "Substitution Sig. 3",
+          #                 "Rearrangement Sig. 3",
+          #                 "Rearrangement Sig. 5",
+          #                 "HRD-LOH score",
+          #                 "Substitution Sig. 8"),
+          # args.legend = list(x ='bottom', bty='n', inset=c(0,-1.0),horiz=TRUE,cex=0.9),
           # ylim = c(min(matrix_to_plot)*1.1,max(matrix_to_plot)*1.1),
-          ylim = c(-3.5,4.5),
-          col=c("blue","red","black","green","orange","yellow"),
+          ylim = c(min(-1,min(matrix_to_plot)),max(1,max(matrix_to_plot))),
+          # col=c("blue","red","black","green","orange","yellow"),
+          col=legend_colors,
           ylab = "BRCA1/BRCA2\n def. contribution",
           cex.axis = 1.2,
           cex.lab = 1.2,
-          cex.names = 0.8)
+          cex.names = 1)
   
   dev.off()
 }
