@@ -16,6 +16,6 @@ ordered catalogue
 This function sorts a matrix of 96-channel Substitution Catalogues,
 so that the channels (rows) are in the correct order.
 where each column is a catalogue and each row is a channel.
-rownames should be set as the name of the channel in the format 
+rownames should be set as the name of the channel in the format
 5' base[Normal base>Tumour base]3' base, for example A[C>A]A.
 }

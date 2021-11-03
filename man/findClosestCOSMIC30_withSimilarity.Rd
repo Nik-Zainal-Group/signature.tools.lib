@@ -13,7 +13,7 @@ findClosestCOSMIC30_withSimilarity(sigs)
 the list of signatures identified and corresponding similarities
 }
 \description{
-Compares a set of signatures to the COSMIC30 signatures and 
+Compares a set of signatures to the COSMIC30 signatures and
 returns the list of signatures identified and the corresponding similarity. For example,
 list(cosmic = c("C1","C3","C13"),cos_sim = c(0.94,0.85,0.7))
 means that Cosmic (C) signatures 1, 3 and 13 were found, while

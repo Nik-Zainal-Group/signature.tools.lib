@@ -15,7 +15,7 @@ findClosestCOSMIC30andCombinations(sigs, threshold)
 the list of signatures identified
 }
 \description{
-Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
+Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and
 returns the list of signatures identified. For example,
 c("C1","C3","N1","C2+13","N2") means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
 signatures N1 and N2 are unknown signatures (N for not found), based on a similarity threshold (similarity >=threshold)

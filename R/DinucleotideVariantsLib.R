@@ -6,18 +6,18 @@
 # returns both list of DNVs and DNV catalogues
 
 #' Build a Dinucleotide Variants Catalogue from SNVs
-#' 
+#'
 #' This function takes as input a list of single nucleotide variants (SNVs),
 #' and computes a list of dinucleotide variants (DNVs) finding which SNVs
 #' are next to each other. It then returns the annotated DNVs and the DNV catalogues.
 #' The catalogues are in Zou's style.
-#' 
+#'
 #' @param snvtab requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 1
 #' @return list of DNVs and DNV catalogue
 #' @references J. E. Kucab, X. Zou, S. Morganella, M. Joel, A. S. Nanda, E. Nagy, C. Gomez, A. Degasperi, R. Harris, S. P. Jackson, V. M. Arlt, D. H. Phillips, S. Nik-Zainal. A Compendium of Mutational Signatures of Environmental Agents. Cell, https://doi.org/10.1016/j.cell.2019.03.001, 2019.
 #' @export
 snvTabToDNVcatalogue <- function(snvtab){
-  
+
   mutationTypes <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
          "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
          "AG>CA","AG>CC","AG>CT","AG>GA","AG>GC","AG>GT","AG>TA","AG>TC","AG>TT",
@@ -28,7 +28,7 @@ snvTabToDNVcatalogue <- function(snvtab){
          "GA>AC","GA>AG","GA>AT","GA>CC","GA>CG","GA>CT","GA>TC","GA>TG","GA>TT",
          "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
          "TA>AC","TA>AG","TA>AT","TA>CC","TA>CG","TA>GC")
-  
+
   # Ludmil's channels
   # mutationTypes <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
   #                    "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
@@ -40,7 +40,7 @@ snvTabToDNVcatalogue <- function(snvtab){
   #                    "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
   #                    "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
   #                    "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
-  
+
   sample_list <- unique(snvtab$Sample)
   DNV_catalogue <- data.frame(row.names = mutationTypes,stringsAsFactors = F)
   DNV_table <- NULL
@@ -82,7 +82,7 @@ snvTabToDNVcatalogue <- function(snvtab){
     }
     # add to final DNV table
     DNV_table <- rbind(DNV_table,sample_DNVs)
-    
+
     #  now I have the sample DNVs, build also the catalogue
     if (is.null(sample_DNVs)){
       DNV_catalogue[,s] <- 0
@@ -91,9 +91,9 @@ snvTabToDNVcatalogue <- function(snvtab){
       DNV_catalogue[,s] <- 0
       DNV_catalogue[names(countmuts),s] <- countmuts
     }
-     
+
   }
-  
+
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
@@ -105,16 +105,16 @@ snvTabToDNVcatalogue <- function(snvtab){
 # returns both list of DNVs and DNV catalogues
 
 #' Build a Dinucleotide Variants Catalogue from DNVs list
-#' 
+#'
 #' This function takes as input a list of dinucleotide variants (DNVs). It then
 #'annotates the DNVs and computes the DNV catalogues. The catalogues are in Zou's style.
-#' 
+#'
 #' @param dnvtab requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2
 #' @return list of annotated DNVs and DNV catalogue
 #' @references J. E. Kucab, X. Zou, S. Morganella, M. Joel, A. S. Nanda, E. Nagy, C. Gomez, A. Degasperi, R. Harris, S. P. Jackson, V. M. Arlt, D. H. Phillips, S. Nik-Zainal. A Compendium of Mutational Signatures of Environmental Agents. Cell, https://doi.org/10.1016/j.cell.2019.03.001, 2019.
 #' @export
 dnvTabToDNVcatalogue <- function(dnvtab){
-  
+
   mutationTypes <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
                      "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
                      "AG>CA","AG>CC","AG>CT","AG>GA","AG>GC","AG>GT","AG>TA","AG>TC","AG>TT",
@@ -125,7 +125,7 @@ dnvTabToDNVcatalogue <- function(dnvtab){
                      "GA>AC","GA>AG","GA>AT","GA>CC","GA>CG","GA>CT","GA>TC","GA>TG","GA>TT",
                      "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
                      "TA>AC","TA>AG","TA>AT","TA>CC","TA>CG","TA>GC")
-  
+
   # Ludmil's channels
   # mutationTypes <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
   #                    "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
@@ -137,7 +137,7 @@ dnvTabToDNVcatalogue <- function(dnvtab){
   #                    "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
   #                    "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
   #                    "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
-  
+
   sample_list <- unique(dnvtab$Sample)
   DNV_catalogue <- data.frame(row.names = mutationTypes,stringsAsFactors = F)
   DNV_table <- NULL
@@ -155,10 +155,10 @@ dnvTabToDNVcatalogue <- function(dnvtab){
     sample_DNVs$dinuc_mutation_final <- sapply(1:nrow(sample_DNVs),function(x) {
       ifelse(isInMutTypes[x],sample_DNVs$dinuc_mutation[x],sample_DNVs$dinuc_mutation_rc[x])
     })
-    
+
     # add to final DNV table
     DNV_table <- rbind(DNV_table,sample_DNVs)
-    
+
     #  now I have the sample DNVs, build also the catalogue
     if (is.null(sample_DNVs)){
       DNV_catalogue[,s] <- 0
@@ -167,9 +167,9 @@ dnvTabToDNVcatalogue <- function(dnvtab){
       DNV_catalogue[,s] <- 0
       DNV_catalogue[names(countmuts),s] <- countmuts
     }
-    
+
   }
-  
+
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
@@ -178,13 +178,13 @@ dnvTabToDNVcatalogue <- function(dnvtab){
 
 # Plot the double substitution profiles for all samples
 plot_allsample_Dinucleotides_profile <- function(muttype_catalogue,colnum,h,w,outputname){
-  
+
   muttype_catalogue$MutationType <- rownames(muttype_catalogue)
   muttype_catalogue$Ref <- substr(muttype_catalogue$MutationType,1,2)
-  
+
   muts_basis_melt <- data.table::melt(muttype_catalogue,id=c("MutationType","Ref"))
   names(muts_basis_melt) <- c("MutationType","Ref","sample","count")
-  
+
   mypalette <- c("#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6","#d2f53c","#fabebe")
   library(ggplot2)
   pdf(file=outputname, onefile=TRUE,width=w,height=h)
@@ -210,13 +210,14 @@ plot_allsample_Dinucleotides_profile <- function(muttype_catalogue,colnum,h,w,ou
 
 
 #' Plot Dinucleotide Variant Signatures or Catalogues
-#' 
-#' Function to plot one or more DNV signatures or catalogues. 
-#' 
+#'
+#' Function to plot one or more DNV signatures or catalogues.
+#'
 #' @param signature_data_matrix matrix of signatures or catalogues, signatures as columns and channels as rows. You can use either Zou or Alexandrov Style and the function will recognise the rownames and plot accordingly
 #' @param output_file set output file, should end with ".jpg" of ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
+#' @param add_to_titles text to be added to the titles of each catalogue plot
 #' @param mar set the margin of the plot
 #' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
 #' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
@@ -231,7 +232,7 @@ plotDNVSignatures <- function(signature_data_matrix,
                               ncolumns=3){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
-  
+
   mutationTypesZou <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
                      "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
                      "AG>CA","AG>CC","AG>CT","AG>GA","AG>GC","AG>GT","AG>TA","AG>TC","AG>TT",
@@ -252,7 +253,7 @@ plotDNVSignatures <- function(signature_data_matrix,
                         "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
                         "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
                         "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
-  
+
   if(all(rownames(signature_data_matrix)==mutationTypesZou)){
     catalogueType <- "Zou"
   }else if(all(rownames(signature_data_matrix)==mutationTypesAlexandrov)){
@@ -261,7 +262,7 @@ plotDNVSignatures <- function(signature_data_matrix,
     message("Unknown DNV channels (rownames) style, please use NN>NN rownames in either Zou or Alexandrov style")
     exit(1)
   }
-  
+
   if(catalogueType=="Zou"){
     muttypeslength <- c(9,9,9,6,9,9,6,9,6,6)
     mypalette <- c("#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6","#d2f53c","#fabebe")
@@ -283,7 +284,7 @@ plotDNVSignatures <- function(signature_data_matrix,
     message("Unknown catalogue type.")
     exit(1)
   }
-  
+
   rearr.colours <- c()
   for (i in 1:length(mypalette)) rearr.colours <- c(rearr.colours,rep(mypalette[i],muttypeslength[i]))
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
@@ -317,7 +318,7 @@ plotDNVSignatures <- function(signature_data_matrix,
       xlabels2 <- sapply(rownames(tmpmatrix),function(x){
         strsplit(x,split = ">")[[1]][2]
       })
-      
+
       b <- barplot(tmpmatrix[,pos],
               main = title,
               #names.arg = row.names(tmpmatrix),
@@ -342,7 +343,7 @@ plotDNVSignatures <- function(signature_data_matrix,
         text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
         start1 <- end1
       }
-      
+
       par(xpd=FALSE)
     }
     title(main = overall_title,outer = TRUE,cex.main = 2)
@@ -360,7 +361,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
                                          mar=NULL){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
-  
+
   mutationTypesZou <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
                         "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
                         "AG>CA","AG>CC","AG>CT","AG>GA","AG>GC","AG>GT","AG>TA","AG>TC","AG>TT",
@@ -381,7 +382,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
                                   "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
                                   "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
                                   "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
-  
+
   if(all(rownames(signature_data_matrix)==mutationTypesZou)){
     catalogueType <- "Zou"
   }else if(all(rownames(signature_data_matrix)==mutationTypesAlexandrov)){
@@ -390,7 +391,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     message("Unknown DNV channels (rownames) style, please use NN>NN rownames in either Zou or Alexandrov style")
     exit(1)
   }
-  
+
   if(catalogueType=="Zou"){
     muttypeslength <- c(9,9,9,6,9,9,6,9,6,6)
     mypalette <- c("#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6","#d2f53c","#fabebe")
@@ -412,10 +413,10 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     message("Unknown catalogue type.")
     exit(1)
   }
-  
+
   rearr.colours <- c()
   for (i in 1:length(mypalette)) rearr.colours <- c(rearr.colours,rep(mypalette[i],muttypeslength[i]))
-  
+
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
@@ -439,7 +440,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     xlabels2 <- sapply(rownames(signature_data_matrix),function(x){
       strsplit(x,split = ">")[[1]][2]
     })
-    
+
     b <- barplot(signature_data_matrix[,pos],
                  main = title,
                  #names.arg = row.names(signature_data_matrix),
@@ -463,9 +464,9 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
       text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
       start1 <- end1
     }
-    
+
     par(xpd=FALSE)
-    
+
     barCenters <- barplot(mean_matrix[,pos],
                          main = title,
                          #names.arg = row.names(signature_data_matrix),
@@ -491,18 +492,18 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
       text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
       start1 <- end1
     }
-    
-    par(xpd=FALSE)   
-    
+
+    par(xpd=FALSE)
+
   }
   title(main = overall_title,outer = TRUE,cex.main = 2)
   if(!is.null(output_file)) dev.off()
 }
 
 #' Convert DNV catalogues from Zou's to Alexandrov's style
-#' 
+#'
 #' Function to convert DNV signatures or catalogues from Zou's to Alexandrov's style. This will simply move and rename the channels.
-#' 
+#'
 #' @param dnvCatalogues DNV catalogues in Zou's style
 #' @return DNV Catalogues in Alexandrov style
 #' @export
@@ -518,7 +519,7 @@ convertToAlexandrovChannels <- function(dnvCatalogues){
                         "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
                         "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
                         "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
-  
+
   oldmutationTypes <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
                         "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
                         "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",

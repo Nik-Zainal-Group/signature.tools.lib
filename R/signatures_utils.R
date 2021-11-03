@@ -5,7 +5,7 @@
 
 #' @importFrom foreach %dopar%
 
-## Generate a random replicate of the cataloge 
+## Generate a random replicate of the cataloge
 # This method guarantees the total number of signatures is unchanged
 generateRandMuts <- function(x){
   #consider the following method as a replacement
@@ -28,7 +28,7 @@ generateRandMuts <- function(x){
 ## Remove unused Rows and Columns from the Catalogue
 ## Remove Mutations with small numbers
 preprocessCatalgue <- function(d, mut_thr){
-  
+
   ## Remove Mutations
   nmut <- apply(d, 1, sum)
   nmut <- nmut/sum(nmut)
@@ -40,13 +40,13 @@ preprocessCatalgue <- function(d, mut_thr){
 }
 
 #' Sort 96-channel Substitution Catalogues
-#' 
+#'
 #' This function sorts a matrix of 96-channel Substitution Catalogues,
 #' so that the channels (rows) are in the correct order.
 #' where each column is a catalogue and each row is a channel.
-#' rownames should be set as the name of the channel in the format 
+#' rownames should be set as the name of the channel in the format
 #' 5' base[Normal base>Tumour base]3' base, for example A[C>A]A.
-#' 
+#'
 #' @param cat catalogues matrix where each column is a catalogue and each row is a channel. Rownames should be set as the name of the channel in the format 5' base[Normal base>Tumour base]3' base, for example A[C>A]A.
 #' @return ordered catalogue
 #' @export
@@ -62,7 +62,7 @@ sortCatalogue <- function(cat){
     }
   }
   return(cat[nm,,drop=FALSE])
-  
+
 }
 
 
@@ -70,7 +70,7 @@ sortCatalogue <- function(cat){
 computeCorrelation <- function(x){
   if (ncol(x)==1){
     #if there is only one column, correlation matrix is 1
-    return(matrix(1, 1, 1)) 
+    return(matrix(1, 1, 1))
   }
   out <- matrix(NA, ncol(x), ncol(x))
   #diagonal is 1
@@ -90,9 +90,9 @@ computeCorrelation <- function(x){
 }
 
 #' Compute Correlation (parallel)
-#' 
+#'
 #' Compute the correlation of a set of signatures/catalogues according to cosine similarity
-#' 
+#'
 #' @param x catalogues/signature matrix where each column is a catalogue/signature and each row is a channel.
 #' @param nparallel how many parallel processes to use
 #' @param parallel set to TRUE in order to use parallel
@@ -101,7 +101,7 @@ computeCorrelation <- function(x){
 computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
   if (ncol(x)==1){
     #if there is only one column, correlation matrix is 1
-    return(matrix(1, 1, 1)) 
+    return(matrix(1, 1, 1))
   }
   out <- matrix(NA, ncol(x), ncol(x))
   #diagonal is 1
@@ -141,16 +141,16 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
 }
 
 #' Cosine Similarity
-#' 
+#'
 #' Compute the cosine similarity between two vectors, using the formula sum(a*b)/sqrt(sum(a^2)*sum(b^2)).
-#' 
+#'
 #' @param a first vector to compare
 #' @param b second vector to compare
 #' @return cosine similarity
 #' @export
 cos_sim <- function(a, b){
   return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
-} 
+}
 
 #function to compute the average within cluster cosine similarity,
 #uses as input the distance matrix constructed as 1 - cosSimMatrix
@@ -169,7 +169,7 @@ withinClusterCosSim <- function(clustering,distMatrix,parallel){
         combinations <- nSamples*(nSamples - 1)/2
         #for efficiency, instead of summing lots of (1 - dist)
         #start from 1*combinations and subtract the dists
-        sumCosSim <- combinations 
+        sumCosSim <- combinations
         for(j in 1:(nSamples-1)){
           #for(w in (j+1):(nSamples)){
           sumCosSim <- sumCosSim - sum(distMatrix[samplesInCluster[j],samplesInCluster[1:nSamples > j]])
@@ -187,7 +187,7 @@ withinClusterCosSim <- function(clustering,distMatrix,parallel){
       combinations <- nSamples*(nSamples - 1)/2
       #for efficiency, instead of summing lots of (1 - dist)
       #start from 1*combinations and subtract the dists
-      sumCosSim <- combinations 
+      sumCosSim <- combinations
       for(j in 1:(nSamples-1)){
         #for(w in (j+1):(nSamples)){
         sumCosSim <- sumCosSim - sum(distMatrix[samplesInCluster[j],samplesInCluster[1:nSamples > j]])
@@ -260,7 +260,7 @@ maxBetweenClustersCosSim <- function(clustering,distMatrix,parallel){
       }
       res_table
     }
-    
+
     for (i in 1:length(res_list)){
       currentTable <- res_list[[i]]
       for(j in 1:nrow(currentTable)){
@@ -300,7 +300,7 @@ plotWithinClusterCosSim <- function(cosSimHClust,cosSimPAM,cosSimMC,outFilePath,
   jpeg(output_file,width = 600,height = 500,res = 100)
   boxplot(dists ~ clustermethod, lwd = 2, ylab = 'mean Cosine Similarity',xlab = 'method',
           main = paste0("Within Cluster Cosine Similarity\n",group,", nSig=",ns))
-  stripchart( dists ~ clustermethod, vertical = TRUE, 
+  stripchart( dists ~ clustermethod, vertical = TRUE,
               method = "jitter", add = TRUE, pch = 20, col = 'blue')
   dev.off()
 }
@@ -312,7 +312,7 @@ plotWithinClusterSilWidth <- function(sil_hclust,sil_pam,sil_MC,outFilePath,grou
   jpeg(output_file,width = 600,height = 500,res = 100)
   boxplot(dists ~ clustermethod, lwd = 2, ylab = 'mean Silhouette Width',xlab = 'method',
           main = paste0("Within Cluster Silhouette Width\n",group,", nSig=",ns))
-  stripchart( dists ~ clustermethod, vertical = TRUE, 
+  stripchart( dists ~ clustermethod, vertical = TRUE,
               method = "jitter", add = TRUE, pch = 20, col = 'blue')
   dev.off()
 }
@@ -402,9 +402,9 @@ computePropTooSimilar <- function(distMatrix,saved_nmf_runs,ns){
 
 
 #' Plot Generic Signatures or Catalogues
-#' 
+#'
 #' Function to plot one or more signatures or catalogues with an arbitrary number of channels. Channel names will not be plotted and all channels will be plotted as bars of the same colour.
-#' 
+#'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
 #' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
@@ -515,7 +515,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
                           cex.names = 1)
     segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
              mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
-    
+
     arrows(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
            mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
            code = 3, length = 0.05)
@@ -525,13 +525,14 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
 }
 
 #' Plot Substitution Signatures or Catalogues
-#' 
-#' Function to plot one or more substitution signatures or catalogues. 
-#' 
+#'
+#' Function to plot one or more substitution signatures or catalogues.
+#'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
 #' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
+#' @param add_to_titles text to be added to the titles of each catalogue plot
 #' @param mar set the option par(mar=mar)
 #' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
 #' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
@@ -725,9 +726,9 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
 }
 
 #' Plot Rearrangement Signatures or Catalogues
-#' 
-#' Function to plot one or more rearrangement signatures or catalogues. 
-#' 
+#'
+#' Function to plot one or more rearrangement signatures or catalogues.
+#'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
 #' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
@@ -758,7 +759,7 @@ plotRearrSignatures <-function(signature_data_matrix,
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
   if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
-  
+
   for(i in 1:npages){
     ifrom <- howManyInOnePage*(i-1) + 1
     ito <- min(ncol(signature_data_matrix),howManyInOnePage*i)
@@ -847,7 +848,7 @@ plotRearrSignatures <-function(signature_data_matrix,
       text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
       rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
       text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
-      
+
       #restore old coordinates
       par(usr = op)
     }
@@ -892,7 +893,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
              "1Mb-10Mb",
              ">10Mb")
   sizes_names <- c(rep(sizes,3),"",rep(sizes,3),"")
-  
+
   rearrAxis <- function(barCenters,sizes_names){
     axis(1,
          las=2,
@@ -939,11 +940,11 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
     rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
     text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
-    
+
     #restore old coordinates
     par(usr = op)
   }
-  
+
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     if(is.null(mar)){
@@ -996,17 +997,17 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
 
 plotCosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500,ndigitsafterzero = 2){
   # library("ggplot2")
-  
-  # Set up the vectors                           
+
+  # Set up the vectors
   signatures.names <- colnames(CosSimMatrix)
   sample.names <- row.names(CosSimMatrix)
-  
+
   # Create the data frame
   df <- expand.grid(sample.names,signatures.names)
-  df$value <- unlist(CosSimMatrix)   
+  df$value <- unlist(CosSimMatrix)
   df$labels <- sprintf(paste0("%.",ndigitsafterzero,"f"), df$value)
   df$labels[df$value==0] <- ""
-  
+
   #Plot the Data (500+150*nsamples)x1200
   g <- ggplot2::ggplot(df, ggplot2::aes(Var1, Var2)) + ggplot2::geom_point(ggplot2::aes(size = value, colour = value>thresholdMark)) + ggplot2::theme_bw() + ggplot2::xlab(xlabel) + ggplot2::ylab(ylabel)
   g <- g + ggplot2::scale_size_continuous(range=c(0,10)) + ggplot2::geom_text(ggplot2::aes(label = labels))
@@ -1018,9 +1019,9 @@ plotCosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel
 }
 
 #' plotCosSimSignatures
-#' 
+#'
 #' Plot a matrix of cosine similarities between two sets of signatures.
-#' 
+#'
 #' @param sig1 matrix with signatures as columns
 #' @param sig2 matrix with signatures as columns
 #' @param output_file name of the output file (pdf), optional
@@ -1042,13 +1043,13 @@ plotCosSimSignatures <- function(sig1,sig2,output_file = NULL,
 }
 
 #' Find closest COSMIC30 signatures
-#' 
-#' Compares a set of signatures to the COSMIC30 signatures and 
+#'
+#' Compares a set of signatures to the COSMIC30 signatures and
 #' returns the list of signatures identified. For example,
 #' c("C1","C3","N1","C13","N2") means that Cosmic (C) signatures 1, 3 and 13 were found, while
 #' signatures N1 and N2 are unknown signatures (N for not found), based on a similarity threshold (similarity >=threshold)
 #' comparing to COSMIC30
-#' 
+#'
 #' @param sigs matrix with 96-channel substitution signatures as columns
 #' @param threshold cosine similarity threshold
 #' @return the list of signatures identified
@@ -1074,13 +1075,13 @@ findClosestCOSMIC30 <- function(sigs,threshold){
 #automatically detect similarity with sum of two COSMIC30
 
 #' Find closest COSMIC30 signatures or combination of COSMIC30
-#' 
-#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
+#'
+#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and
 #' returns the list of signatures identified. For example,
 #' c("C1","C3","N1","C2+13","N2") means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
 #' signatures N1 and N2 are unknown signatures (N for not found), based on a similarity threshold (similarity >=threshold)
 #' comparing to COSMIC30 or the sum of two COSMIC30 sigs.
-#' 
+#'
 #' @param sigs matrix with 96-channel substitution signatures as columns
 #' @param threshold cosine similarity threshold
 #' @return the list of signatures identified
@@ -1113,13 +1114,13 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
 
 
 #' Find closest COSMIC30 signatures
-#' 
-#' Compares a set of signatures to the COSMIC30 signatures and 
+#'
+#' Compares a set of signatures to the COSMIC30 signatures and
 #' returns the list of signatures identified and the corresponding similarity. For example,
 #' list(cosmic = c("C1","C3","C13"),cos_sim = c(0.94,0.85,0.7))
 #' means that Cosmic (C) signatures 1, 3 and 13 were found, while
 #' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
-#' 
+#'
 #' @param sigs matrix with 96-channel substitution signatures as columns
 #' @return the list of signatures identified and corresponding similarities
 #' @export
@@ -1143,13 +1144,13 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
 }
 
 #' Find closest COSMIC30 signatures or combination of COSMIC30
-#' 
-#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and 
+#'
+#' Compares a set of signatures to the COSMIC30 signatures or the simple sum of all combinations of two COSMIC signatures and
 #' returns the list of signatures identified and the corresponding similarity. For example,
 #' list(cosmic = c("C1","C3","C2+C13"),cos_sim = c(0.94,0.85,0.7))
 #' means that Cosmic (C) signatures 1, 3 and 2+13 were found, while
 #' the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
-#' 
+#'
 #' @param sigs matrix with 96-channel substitution signatures as columns
 #' @return the list of signatures identified and corresponding similarities
 #' @export
@@ -1228,9 +1229,9 @@ findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
 }
 
 #' KL-divergence
-#' 
+#'
 #' Compute the Kullback-Leibler Divergence between two matrices. In order to compute the divergence, .Machine$double.eps is added to matrices zero entries.
-#' 
+#'
 #' @param m1 original matrix
 #' @param m2 matrix to be used to approximate m1
 #' @return KL-Divergence
@@ -1249,9 +1250,9 @@ KLD <- function(m1,m2){
 #samples/sigantures are ararnged by columns
 
 #' computeCorrelationOfTwoSetsOfSigs
-#' 
+#'
 #' Compute the cosine similarity between two sets of signatures, which results in a cosine similarity matrix.
-#' 
+#'
 #' @param sig1 matrix of signatures, with signatures as columns
 #' @param sig2 matrix of signatures, with signatures as columns
 #' @return cosine similarity matrix
@@ -1287,9 +1288,9 @@ normaliseSamples <- function(cat){
 }
 
 #' RMSE
-#' 
+#'
 #' Function to compute the root mean squared error between two matrices.
-#' 
+#'
 #' @param m1 first matrix to compare
 #' @param m2 second matrix to compare
 #' @return root mean squared error
@@ -1299,9 +1300,9 @@ RMSE <- function(m1,m2){
 }
 
 #' writeTable
-#' 
+#'
 #' Utility function for simple write table with the following parameters: (sep = "\\t",quote = FALSE,row.names = TRUE,col.names = TRUE).
-#' 
+#'
 #' @param t R table or matrix
 #' @param file name of the output plain text file
 #' @export
@@ -1310,9 +1311,9 @@ writeTable <- function(t,file){
 }
 
 #' readTable
-#' 
+#'
 #' Utility function for simple read table with the following parameters: (sep = "\\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE).
-#' 
+#'
 #' @param file name of the plain text file to read
 #' @export
 readTable <- function(file){
@@ -1324,11 +1325,11 @@ readTable <- function(file){
 #author: Greg Snow <538280@gmail.com>
 shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
                        theta= seq(pi/4, 2*pi, length.out=8), r=0.1, ... ) {
-  
+
   xy <- xy.coords(x,y)
   xo <- r*strwidth('A')
   yo <- r*strheight('A')
-  
+
   for (i in theta) {
     text( xy$x + cos(i)*xo, xy$y + sin(i)*yo, labels, col=bg, ... )
   }
@@ -1336,9 +1337,9 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 }
 
 #' getOrganSignatures
-#' 
+#'
 #' This function returns the organ-specific signatures for a given organ and mutation type as defined in Degasperi et al. 2020 Nat Cancer paper.
-#' 
+#'
 #' @param typemut either subs, DNV or rearr
 #' @param organ one of the following: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
 #' @param version version "1" includes subs or rearr (ICGC cohort) organ-specific signatures from Degasperi et al. 2020, while version "2" includes the improved subs organ-specific signatures from ICGC as well as Hartwig and GEL, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.
@@ -1380,10 +1381,10 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
 }
 
 #' convertExposuresFromOrganToRefSigs
-#' 
+#'
 #' This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures.
 #' The function will detect the version of the signatures automatically.
-#' 
+#'
 #' @param typemut either subs, DNV or rearr
 #' @param expMatrix exposures matrix obatined from fitting organ-specific signatures
 #' @return exposure matrix converted in reference signatures exposures
