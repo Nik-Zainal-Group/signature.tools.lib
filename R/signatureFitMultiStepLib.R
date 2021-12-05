@@ -372,6 +372,7 @@ FitMS <- function(catalogues,
   # collect all info
   resObj <- list()
   # add data and options used
+  resObj$fitAlgorithm <- "FitMS"
   resObj$catalogues <- catalogues
   resObj$organ <- organ
   resObj$commonSignatures <- commonSignatures
@@ -448,7 +449,10 @@ Fit <- function(catalogues,
                 nparallel = 1,
                 randomSeed = NULL,
                 verbose = FALSE){
+  # initialise return object
   fitRes <- list()
+  fitRes$fitAlgorithm <- "Fit"
+  
   if(useBootstrap){
     
     # compute the full results
@@ -568,6 +572,7 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$bootstrap_exposures_samples[[1]]
     }else{
+      if(forceCommon) rareSigChoice[[currentSample]] <- "commonOnly"
       selectedExp <- t(resObj$samples[[currentSample]]$fitCommonOnly$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       # exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
@@ -1139,11 +1144,15 @@ plotFitMS <- function(fitMSobj,
       currentOutDir <- paste0(outdir,"selectedSolution_",s,"/")
       selectedSolution <- fitMSobj$rareSigChoice[[s]]
       otherSolutions <- setdiff(fitMSobj$candidateRareSigs[[s]],selectedSolution)
-      plotFit(fitMSobj$samples[[s]]$fitWithRare[[selectedSolution]],outdir = currentOutDir,samplesInSubdir = F)
+      if(selectedSolution=="commonOnly"){
+        plotFit(fitMSobj$samples[[s]]$fitCommonOnly,outdir = currentOutDir,samplesInSubdir = F)
+      }else{
+        plotFit(fitMSobj$samples[[s]]$fitWithRare[[selectedSolution]],outdir = currentOutDir,samplesInSubdir = F)
+      }
       
       # plot other candidates
       currentOutDir <- paste0(outdir,"otherSolutions_",s,"/commonOnly/")
-      plotFit(fitMSobj$samples[[s]]$fitCommonOnly,outdir = currentOutDir,samplesInSubdir = F)
+      if(!selectedSolution=="commonOnly") plotFit(fitMSobj$samples[[s]]$fitCommonOnly,outdir = currentOutDir,samplesInSubdir = F)
       
       if(length(otherSolutions)>0){
         for (i in 1:length(otherSolutions)){
@@ -1249,6 +1258,7 @@ fitToJSON <- function(fitObj,
   }else{
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
+  cat(indent,"\t\"fitAlgorithm\": ",fitObj$fitAlgorithm,",\n",sep = "")
   cat(indent,"\t\"nsamples\": ",nrow(fitObj$exposures),",\n",sep = "")
   cat(indent,"\t\"nsignatures\": ",ncol(fitObj$signatures),",\n",sep = "")
   cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
@@ -1338,6 +1348,7 @@ fitMStoJSON <- function(fitObj,
   }else{
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
+  cat(indent,"\t\"fitAlgorithm\": ",fitObj$fitAlgorithm,",\n",sep = "")
   cat(indent,"\t\"nsamples\": ",ncol(fitObj$catalogues),",\n",sep = "")
   cat(indent,"\t\"ncommonSignatures\": ",ncol(fitObj$commonSignatures),",\n",sep = "")
   cat(indent,"\t\"nrareSignatures\": ",ncol(fitObj$rareSignatures),",\n",sep = "")
@@ -1462,4 +1473,35 @@ fitMStoJSON <- function(fitObj,
   cat("\n")
   cat(indent,"}\n",sep = "")
   if(!disableFileWrite) sink()
+}
+
+#' Save fit object to file
+#' 
+#' This function saves a Fit or FitMS object to an R data file using a standard name
+#' 
+#' @param fitObj object obtained from the Fit of FitMS function
+#' @param filename file name where to save the fit object
+#' @export
+#' @examples
+#' fitObj <- FitMS(catalogues,organ="Breast")
+#' saveFitToFile(fitObj,"fit.rData")
+saveFitToFile <- function(fitObj,filename,verbose=T){
+  if(verbose) message("Saving ",fitObj$fitAlgorithm," object to file ",filename)
+  save(file = filename,fitObj)
+}
+
+#' Load fit object from file
+#' 
+#' This function loads a Fit or FitMS object from an R data file.
+#' In order to work, the file must have been generated using the saveFitToFile function,
+#' which will save the fit object with a standard name.
+#' 
+#' @param filename file name from which to load the fit object
+#' @export
+#' @examples
+#' fitObj <- loadFitFromFile("fit.rData")
+loadFitFromFile <- function(filename,verbose=T){
+  load(file = filename)
+  if(verbose) message("Loaded ",fitObj$fitAlgorithm," object from file ",filename)
+  return(fitObj)
 }
