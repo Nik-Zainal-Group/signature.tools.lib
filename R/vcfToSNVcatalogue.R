@@ -113,8 +113,8 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
                  tumor.freq=rep(NA,length(chroms)), normal.freq=rep(NA,length(chroms)),
                  tumor.reads=rep(NA,length(chroms)), normal.reads=rep(NA,length(chroms)),
                  tumor.depth=rep(NA,length(chroms)), normal.depth=rep(NA,length(chroms)),
-                                                         isSnp =rep(NA,length(chroms))
-                 )
+                                                         isSnp =rep(NA,length(chroms)),
+                 stringsAsFactors = F)
   
   result<- list()
   result$catalogue <- data.frame(catalogue=all.hist,row.names = names(all.hist))

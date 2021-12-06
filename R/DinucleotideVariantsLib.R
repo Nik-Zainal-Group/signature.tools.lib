@@ -100,6 +100,26 @@ snvTabToDNVcatalogue <- function(snvtab){
   return(res)
 }
 
+#' VCF to DNV catalogue
+#' 
+#' Convert a vcf file containing SNV to a DNV catalogue. The VCF file should containt the SNV of a single sample. Two SNVs that are next to each other will be combined into a DNV.
+#' 
+#' @param vcfFilename path to input VCF (file must be tabix indexed)
+#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
+#' @return returns the DNV catalogue for the given sample and mutation list
+#' @keywords vcf DNV
+#' @export
+#' @examples
+#' file_subs <- "subs.vcf"
+#' res <- vcfToSNVcatalogue(file_subs,genome.v = "hg38")
+vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
+  res <- vcfToSNVcatalogue(vcfFilename,genome.v = genome.v)
+  mutations <- res$muts
+  mutations <- cbind(data.frame(Sample=rep("sample",nrow(mutations)),stringsAsFactors = F),mutations)
+  colnames(mutations)[c(2,3,5,6)] <- c("Chrom","Pos","Ref","Alt")
+  res <- snvTabToDNVcatalogue(snvtab = mutations)
+  return(res)
+}
 
 # requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2
 # returns both list of DNVs and DNV catalogues
