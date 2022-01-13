@@ -97,7 +97,7 @@ plotIDSignatures <- function(signature_data_matrix,
       }
       titlei <- colnames(tmpmatrix)[pos]
       if (!is.null(add_to_titles)) titlei <- paste0(titlei," ",tmpadd[pos])
-      if (plot_sum) titlei <- paste0(titlei,"\n(",round(sum(tmpmatrix[,pos]))," substitutions)")
+      if (plot_sum) titlei <- paste0(titlei,"\n(",round(sum(tmpmatrix[,pos]))," Indels)")
       muttypes <- c("1bp C","1bp T","\u22652bp","1bp C","1bp T","\u22652bp","Mh","X")
       muttypesTextCol <- c(rep("black",3),rep("white",5))
       xlabels <- rep("",nrow(tmpmatrix))

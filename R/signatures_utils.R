@@ -581,7 +581,7 @@ plotSubsSignatures <- function(signature_data_matrix,
       }
       title <- colnames(tmpmatrix)[pos]
       if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
-      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," substitutions)")
+      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," SNVs)")
       muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
       xlabels <- rep("",96)
       barplot(tmpmatrix[,pos],
@@ -659,7 +659,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
     if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
-    if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," substitutions)")
+    if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," SNVs)")
     barplot(signature_data_matrix[,pos],
             main = title,
             #names.arg = row.names(signature_data_matrix),
@@ -790,7 +790,7 @@ plotRearrSignatures <-function(signature_data_matrix,
       }
       title <- colnames(tmpmatrix)[pos]
       if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
-      if (plot_sum) title <- paste0(title,"\n(",sum(tmpmatrix[,pos])," rearrangements)")
+      if (plot_sum) title <- paste0(title,"\n(",sum(tmpmatrix[,pos])," SVs)")
       pos <- barplot(tmpmatrix[,pos],
                      main = title,
                      names.arg = NA,
@@ -954,7 +954,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     }
     title <- colnames(signature_data_matrix)[pos]
     if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
-    if (plot_sum) title <- paste0(title,"\n(",sum(signature_data_matrix[,pos])," rearrangements)")
+    if (plot_sum) title <- paste0(title,"\n(",sum(signature_data_matrix[,pos])," SVs)")
     barCenters <- barplot(signature_data_matrix[,pos],
                           main = title,
                           names.arg = NA,

@@ -20,7 +20,7 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
                                cex.title = 1,
                                cex.axistext = 1,
                                howManyInOnePage=100,
-                               ncolumns=3){
+                               ncolumns=1){
 
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
                    rgb(0,0,0,maxColorValue = 255),
@@ -46,7 +46,7 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*6,height = nplotrows*2.8,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,0,0))
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,0,0),cex=0.7)
     }
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
@@ -55,7 +55,7 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
         par(mar=mar)
       }
       title <- colnames(tmpmatrix)[pos]
-      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," substitutions)")
+      if (plot_sum) title <- paste0(title," (",round(sum(tmpmatrix[,pos]))," SNVs)")
       if (!is.null(add_to_titles)) title <- paste0(title,"\n",tmpadd[pos])
       muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
       xlabels <- rep("",96)
@@ -82,7 +82,7 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
       textposx <- 0.04+seq(8,88,16)/104
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -109,7 +109,7 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
                               cex.title = 1,
                               cex.axistext = 1,
                               howManyInOnePage=100,
-                              ncolumns=3){
+                              ncolumns=1){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
 
   mutationTypesZou <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
@@ -182,7 +182,7 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
       }else if (plottype=="pdf"){
         pdf(output_file,width = ncolumns*6,height = nplotrows*2.8,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,0,0))
+      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,0,0),cex=0.7)
     }
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
@@ -222,7 +222,7 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
 
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
