@@ -249,7 +249,7 @@ plotDNVSignatures <- function(signature_data_matrix,
                               add_to_titles = NULL,
                               mar=NULL,
                               howManyInOnePage=100,
-                              ncolumns=3){
+                              ncolumns=1){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
 
@@ -319,15 +319,15 @@ plotDNVSignatures <- function(signature_data_matrix,
     nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
-        jpeg(output_file,width = ncolumns*800,height = nplotrows*320,res = 220)
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
       }else if (plottype=="pdf"){
-        pdf(output_file,width = ncolumns*8,height = nplotrows*3.2,pointsize = 26)
+        pdf(output_file,width = ncolumns*8,height = nplotrows*3+0.5,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
+      par(mfrow = c(nplotrows, ncolumns),omi=c(0,0,0.5,0),cex=0.7)
     }
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
-        par(mar=c(2,3,2,2))
+        par(mar=c(2,3,2,1))
       }else{
         par(mar=mar)
       }
@@ -366,7 +366,7 @@ plotDNVSignatures <- function(signature_data_matrix,
 
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -440,16 +440,16 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
-      jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
+      jpeg(output_file,width = 2*800,height = nplotrows*300,res = 220)
     }else if (plottype=="pdf"){
-      pdf(output_file,width = 2*8,height = nplotrows*3.2,pointsize = 26)
+      pdf(output_file,width = 2*8,height = nplotrows*3+0.5,pointsize = 26)
     }
-    par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
+    par(mfrow = c(nplotrows, 2),omi=c(0,0,0.5,0),cex=0.7)
   }
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     if(is.null(mar)){
-      par(mar=c(2,3,2,2))
+      par(mar=c(2,3,2,1))
     }else{
       par(mar=mar)
     }
@@ -516,7 +516,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     par(xpd=FALSE)
 
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
+  title(main = overall_title,outer = TRUE,cex.main = 1.5)
   if(!is.null(output_file)) dev.off()
 }
 

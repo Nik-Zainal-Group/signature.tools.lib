@@ -420,7 +420,7 @@ plotGenericSignatures <- function(signature_data_matrix,
                                   add_to_titles = NULL,
                                   mar=NULL,
                                   howManyInOnePage=100,
-                                  ncolumns=3){
+                                  ncolumns=1){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
   if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
@@ -436,14 +436,14 @@ plotGenericSignatures <- function(signature_data_matrix,
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*400,res = 190)
       }else if(plottype=="pdf"){
-        pdf(output_file,width = ncolumns*8,height = nplotrows*4,pointsize = 26)
+        pdf(output_file,width = ncolumns*8,height = nplotrows*4+0.5,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
+      par(mfrow = c(nplotrows, ncolumns),omi=c(0,0,0.5,0),cex=0.7)
     }
     for (pos in 1:ncol(tmpmatrix)){
       par(mgp=c(1,1,0))
       if(is.null(mar)){
-        par(mar=c(3,3.5,2,2))
+        par(mar=c(3,3.5,2,1))
       }else{
         par(mar=mar)
       }
@@ -460,7 +460,7 @@ plotGenericSignatures <- function(signature_data_matrix,
               cex.main = 0.9,
               cex.names = 1)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -480,13 +480,13 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
     if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*400,res = 190)
     }else if (plottype=="pdf"){
-      pdf(output_file,width = 2*8,height = nplotrows*4,pointsize = 26)
+      pdf(output_file,width = 2*8,height = nplotrows*4+0.5,pointsize = 26)
     }
   }
-  par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
+  par(mfrow = c(nplotrows, 2),omi=c(0,0,0.5,0))
   par(mgp=c(1,1,0))
   if(is.null(mar)){
-    par(mar=c(3,3,2,2))
+    par(mar=c(3,3,2,1))
   }else{
     par(mar=mar)
   }
@@ -520,7 +520,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
            mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
            code = 3, length = 0.05)
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
+  title(main = overall_title,outer = TRUE,cex.main = 1.5)
   if(!is.null(output_file)) dev.off()
 }
 
@@ -544,7 +544,7 @@ plotSubsSignatures <- function(signature_data_matrix,
                                add_to_titles = NULL,
                                mar=NULL,
                                howManyInOnePage=100,
-                               ncolumns=3){
+                               ncolumns=1){
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
   # plotcolours <- c("blue","black","red","gray","green","pink")
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
@@ -567,15 +567,15 @@ plotSubsSignatures <- function(signature_data_matrix,
     nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
-        jpeg(output_file,width = ncolumns*800,height = nplotrows*320,res = 220)
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
       }else if(plottype=="pdf"){
-        pdf(output_file,width = ncolumns*8,height = nplotrows*3.2,pointsize = 26)
+        pdf(output_file,width = ncolumns*8,height = nplotrows*3+0.5,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
+      par(mfrow = c(nplotrows, ncolumns),omi=c(0,0,0.5,0),cex=0.7)
     }
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
-        par(mar=c(2,3.5,2,2))
+        par(mar=c(2,3.5,2,1))
       }else{
         par(mar=mar)
       }
@@ -610,7 +610,7 @@ plotSubsSignatures <- function(signature_data_matrix,
       #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -636,14 +636,14 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
-      jpeg(output_file,width = 2*800,height = nplotrows*320,res = 220)
+      jpeg(output_file,width = 2*800,height = nplotrows*300,res = 220)
     }else if(plottype=="pdf"){
-      pdf(output_file,width = 2*8,height = nplotrows*3.2,pointsize = 26)
+      pdf(output_file,width = 2*8,height = nplotrows*3+0.5,pointsize = 26)
     }
   }
-  par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
+  par(mfrow = c(nplotrows, 2),omi=c(0,0,0.5,0),cex=0.7)
   if(is.null(mar)){
-    par(mar=c(2,3,2,2))
+    par(mar=c(2,3,2,1))
   }else{
     par(mar=mar)
   }
@@ -721,7 +721,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
     par(xpd=FALSE)
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
+  title(main = overall_title,outer = TRUE,cex.main = 1.5)
   if(!is.null(output_file)) dev.off()
 }
 
@@ -744,7 +744,7 @@ plotRearrSignatures <-function(signature_data_matrix,
                                add_to_titles = NULL,
                                mar=NULL,
                                howManyInOnePage=100,
-                               ncolumns=3){
+                               ncolumns=1){
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
@@ -772,9 +772,9 @@ plotRearrSignatures <-function(signature_data_matrix,
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
       }else if(plottype=="pdf"){
-        pdf(output_file,width = ncolumns*8,height = nplotrows*5,pointsize = 26)
+        pdf(output_file,width = ncolumns*8,height = nplotrows*5+0.5,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
+      par(mfrow = c(nplotrows, ncolumns),omi=c(0,0,0.5,0),cex=0.7)
     }
     sizes <- c("1-10Kb",
                "10-100Kb",
@@ -784,7 +784,7 @@ plotRearrSignatures <-function(signature_data_matrix,
     sizes_names <- c(rep(sizes,3),"",rep(sizes,3),"")
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
-        par(mar=c(8,3,2,2))
+        par(mar=c(8,3,2,1))
       }else{
         par(mar=mar)
       }
@@ -852,7 +852,7 @@ plotRearrSignatures <-function(signature_data_matrix,
       #restore old coordinates
       par(usr = op)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -883,10 +883,10 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*500,res = 220)
     }else if (plottype=="pdf"){
-      pdf(output_file,width = 2*8,height = nplotrows*5,pointsize = 26)
+      pdf(output_file,width = 2*8,height = nplotrows*5+0.5,pointsize = 26)
     }
   }
-  par(mfrow = c(nplotrows, 2),oma=c(0,0,2,0))
+  par(mfrow = c(nplotrows, 2),omi=c(0,0,0.5,0),cex=0.7)
   sizes <- c("1-10Kb",
              "10-100Kb",
              "100Kb-1Mb",
@@ -948,7 +948,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     if(is.null(mar)){
-      par(mar=c(8,3,2,2))
+      par(mar=c(8,3,2,1))
     }else{
       par(mar=mar)
     }
@@ -990,7 +990,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     #        code = 3, length = 0.05)
     rearrAxis(barCenters,sizes_names)
   }
-  title(main = overall_title,outer = TRUE,cex.main = 2)
+  title(main = overall_title,outer = TRUE,cex.main = 1.5)
   if(!is.null(output_file)) dev.off()
 }
 

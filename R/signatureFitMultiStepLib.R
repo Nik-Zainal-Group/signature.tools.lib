@@ -712,6 +712,24 @@ getTypeOfMutationsFromChannels <- function(dataMatrix){
                   'non-clustered_tds_1-10Kb', 'non-clustered_tds_10-100Kb', 'non-clustered_tds_100Kb-1Mb', 'non-clustered_tds_1Mb-10Mb', 'non-clustered_tds_>10Mb', 
                   'non-clustered_inv_1-10Kb', 'non-clustered_inv_10-100Kb', 'non-clustered_inv_100Kb-1Mb', 'non-clustered_inv_1Mb-10Mb', 'non-clustered_inv_>10Mb', 
                   'non-clustered_trans')
+  IDchannels <- c( "A[Ins(C):R0]A"       ,   "A[Ins(C):R0]T"     ,     "Ins(C):R(0,3)"    ,      "Ins(C):R(4,6)"     ,     "Ins(C):R(7,9)"  ,       
+                   "A[Ins(T):R(0,4)]A"   ,   "A[Ins(T):R(0,4)]C"  ,    "A[Ins(T):R(0,4)]G"  ,    "C[Ins(T):R(0,4)]A"  ,    "C[Ins(T):R(0,4)]C" ,    
+                   "C[Ins(T):R(0,4)]G"  ,    "G[Ins(T):R(0,4)]A"  ,    "G[Ins(T):R(0,4)]C"  ,    "G[Ins(T):R(0,4)]G"  ,    "A[Ins(T):R(5,7)]A" ,    
+                   "A[Ins(T):R(5,7)]C"  ,    "A[Ins(T):R(5,7)]G"  ,    "C[Ins(T):R(5,7)]A"  ,    "C[Ins(T):R(5,7)]C"  ,    "C[Ins(T):R(5,7)]G" ,    
+                   "G[Ins(T):R(5,7)]A"  ,    "G[Ins(T):R(5,7)]C"  ,    "G[Ins(T):R(5,7)]G"   ,   "A[Ins(T):R(8,9)]A"   ,   "A[Ins(T):R(8,9)]C" ,    
+                   "A[Ins(T):R(8,9)]G"  ,    "C[Ins(T):R(8,9)]A"  ,    "C[Ins(T):R(8,9)]C"  ,    "C[Ins(T):R(8,9)]G"  ,    "G[Ins(T):R(8,9)]A" ,    
+                   "G[Ins(T):R(8,9)]C"  ,    "G[Ins(T):R(8,9)]G"  ,    "Ins(2,4):R0"       ,     "Ins(5,):R0"      ,       "Ins(2,4):R1"     ,      
+                   "Ins(5,):R1"         ,    "Ins(2,):R(2,4)"   ,      "Ins(2,):R(5,9)"    ,     "[Del(C):R1]A"     ,      "[Del(C):R1]T"    ,      
+                   "[Del(C):R2]A"      ,     "[Del(C):R2]T"       ,    "[Del(C):R3]A"      ,     "[Del(C):R3]T"      ,     "[Del(C):R(4,5)]A" ,     
+                   "[Del(C):R(4,5)]T"   ,    "[Del(C):R(1,5)]G"   ,    "Del(C):R(6,9)"     ,     "A[Del(T):R(1,4)]A"  ,    "A[Del(T):R(1,4)]C" ,    
+                   "A[Del(T):R(1,4)]G"  ,    "C[Del(T):R(1,4)]A"  ,    "C[Del(T):R(1,4)]C"   ,   "C[Del(T):R(1,4)]G"  ,    "G[Del(T):R(1,4)]A"  ,   
+                   "G[Del(T):R(1,4)]C"  ,    "G[Del(T):R(1,4)]G"  ,    "A[Del(T):R(5,7)]A"  ,    "A[Del(T):R(5,7)]C"  ,    "A[Del(T):R(5,7)]G"  ,   
+                   "C[Del(T):R(5,7)]A"  ,    "C[Del(T):R(5,7)]C"  ,    "C[Del(T):R(5,7)]G"  ,    "G[Del(T):R(5,7)]A"  ,    "G[Del(T):R(5,7)]C"  ,   
+                   "G[Del(T):R(5,7)]G" ,     "A[Del(T):R(8,9)]A"  ,    "A[Del(T):R(8,9)]C"  ,    "A[Del(T):R(8,9)]G"   ,   "C[Del(T):R(8,9)]A"  ,   
+                   "C[Del(T):R(8,9)]C"  ,    "C[Del(T):R(8,9)]G"  ,    "G[Del(T):R(8,9)]A"  ,    "G[Del(T):R(8,9)]C"   ,   "G[Del(T):R(8,9)]G"  ,   
+                   "Del(2,4):R1"       ,     "Del(5,):R1"        ,     "Del(2,8):U(1,2):R(2,4)", "Del(2,):U(1,2):R(5,9)",  "Del(3,):U(3,):R2"  ,    
+                   "Del(3,):U(3,):R(3,9)" ,  "Del(2,5):M1"      ,      "Del(3,5):M2"       ,     "Del(4,5):M(3,4)"    ,    "Del(6,):M1"     ,       
+                   "Del(6,):M2"         ,    "Del(6,):M3"      ,       "Del(6,):M(4,)"     ,     "Complex"  )
   
   muttype <- "generic"
   
@@ -725,6 +743,8 @@ getTypeOfMutationsFromChannels <- function(dataMatrix){
     }
   }else if(nrow(dataMatrix)==length(SVchannels)){
     if(all(rownames(dataMatrix)==SVchannels)) muttype <- "rearr"
+  }else if(nrow(dataMatrix)==length(IDchannels)){
+    if(all(rownames(rownames(dataMatrix)) %in% IDchannels)) muttype <- "ID"
   }
   
   return(muttype)
@@ -774,6 +794,15 @@ plotSignatures <- function(signature_data_matrix,
                         ncolumns = ncolumns)
   }else if(typeofmuts=="DNV"){
     plotDNVSignatures(signature_data_matrix = signature_data_matrix,
+                      output_file = output_file,
+                      plot_sum = plot_sum,
+                      overall_title = overall_title,
+                      add_to_titles = add_to_titles,
+                      mar = mar,
+                      howManyInOnePage = howManyInOnePage,
+                      ncolumns = ncolumns)
+  }else if(typeofmuts=="ID"){
+    plotIDSignatures(signature_data_matrix = signature_data_matrix,
                       output_file = output_file,
                       plot_sum = plot_sum,
                       overall_title = overall_title,

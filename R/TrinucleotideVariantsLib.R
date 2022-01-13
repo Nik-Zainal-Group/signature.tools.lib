@@ -218,7 +218,7 @@ plotTNVcatalogues <- function(signature_data_matrix,
                               add_to_titles = NULL,
                               mar = NULL,
                               howManyInOnePage=100,
-                              ncolumns = 3){
+                              ncolumns = 1){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # global parameters
   kelly_colors <- c('F3C300', '875692', 'F38400', 'A1CAF1', 'BE0032', 
@@ -241,17 +241,17 @@ plotTNVcatalogues <- function(signature_data_matrix,
     nplotrows <- ceiling(ncol(tmpmatrix)/ncolumns)
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
-        jpeg(output_file,width = ncolumns*800,height = nplotrows*320,res = 220)
+        jpeg(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
       }else if (plottype=="pdf"){
-        pdf(output_file,width = ncolumns*8,height = nplotrows*3.2,pointsize = 26)
+        pdf(output_file,width = ncolumns*8,height = nplotrows*3+0.5,pointsize = 26)
       }
-      par(mfrow = c(nplotrows, ncolumns),oma=c(0,0,2,0))
+      par(mfrow = c(nplotrows, ncolumns),omi=c(0,0,0.5,0),cex=0.7)
     }
     # keep only channels > 0, share same channels across samples
     if(nrow(tmpmatrix)>0){
       for (pos in 1:ncol(tmpmatrix)){
         if(is.null(mar)){
-          par(mar=c(2,3.5,2,2))
+          par(mar=c(2,3.5,2,1))
         }else{
           par(mar=mar)
         }
@@ -263,7 +263,7 @@ plotTNVcatalogues <- function(signature_data_matrix,
     }else{
       plot.new()
     }
-    title(main = overall_title,outer = TRUE,cex.main = 2)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5)
     if(!is.null(output_file)) dev.off()
   }
 }
