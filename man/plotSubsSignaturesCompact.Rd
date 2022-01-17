@@ -7,7 +7,7 @@
 plotSubsSignaturesCompact(signature_data_matrix, output_file = NULL,
   plot_sum = FALSE, overall_title = "", add_to_titles = NULL,
   mar = NULL, cex.title = 1, cex.axistext = 1,
-  howManyInOnePage = 100, ncolumns = 3)
+  howManyInOnePage = 100, ncolumns = 1)
 }
 \arguments{
 \item{signature_data_matrix}{matrix of signatures, signatures as columns and channels as rows}
