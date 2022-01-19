@@ -1,0 +1,18 @@
+context("testing conversion from dataframe of SNV to DNV catalogue")
+
+test_that("test tabToDNVcatalogue() to convert a tab file with SNV into an DNV catalogue.", {
+  
+  testSNVdf <- read.table(file = "test_DNVs.snv.simple.txt",
+                          sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+  testSNVdf <- testSNVdf[,c("Chrom","Pos","Ref","Alt")]
+  colnames(testSNVdf) <- c("chr","position","REF","ALT")
+  
+  expected_cat <- read.table(file="test.dnv.expected.tab",sep = "\t",header = TRUE,stringsAsFactors = FALSE)
+  
+  res_cat <- tabToDNVcatalogue(testSNVdf)
+  obtained_cat <- res_cat$DNV_catalogue
+  colnames(obtained_cat) <- "sample1"
+  
+  expect_equal(obtained_cat,expected_cat)
+  
+})

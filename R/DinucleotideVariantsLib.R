@@ -1,10 +1,5 @@
 # extended/adapted from Xueqing Zou's code by Andrea Degasperi, 2020
 
-# required packages: Biostrings
-
-# requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 1
-# returns both list of DNVs and DNV catalogues
-
 #' Build a Dinucleotide Variants Catalogue from SNVs
 #'
 #' This function takes as input a list of single nucleotide variants (SNVs),
@@ -28,18 +23,6 @@ snvTabToDNVcatalogue <- function(snvtab){
          "GA>AC","GA>AG","GA>AT","GA>CC","GA>CG","GA>CT","GA>TC","GA>TG","GA>TT",
          "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
          "TA>AC","TA>AG","TA>AT","TA>CC","TA>CG","TA>GC")
-
-  # Ludmil's channels
-  # mutationTypes <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
-  #                    "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
-  #                    "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
-  #                    "CG>AT","CG>GC","CG>GT","CG>TA","CG>TC","CG>TT",
-  #                    "CT>AA","CT>AC","CT>AG","CT>GA","CT>GC","CT>GG","CT>TA","CT>TC","CT>TG",
-  #                    "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
-  #                    "TA>AT","TA>CG","TA>CT","TA>GC","TA>GG","TA>GT",
-  #                    "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
-  #                    "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
-  #                    "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
 
   sample_list <- unique(snvtab$Sample)
   DNV_catalogue <- data.frame(row.names = mutationTypes,stringsAsFactors = F)
@@ -100,26 +83,6 @@ snvTabToDNVcatalogue <- function(snvtab){
   return(res)
 }
 
-#' VCF to DNV catalogue
-#' 
-#' Convert a vcf file containing SNV to a DNV catalogue. The VCF file should containt the SNV of a single sample. Two SNVs that are next to each other will be combined into a DNV.
-#' 
-#' @param vcfFilename path to input VCF (file must be tabix indexed)
-#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
-#' @return returns the DNV catalogue for the given sample and mutation list
-#' @keywords vcf DNV
-#' @export
-#' @examples
-#' file_subs <- "subs.vcf"
-#' res <- vcfToSNVcatalogue(file_subs,genome.v = "hg38")
-vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
-  res <- vcfToSNVcatalogue(vcfFilename,genome.v = genome.v)
-  mutations <- res$muts
-  mutations <- cbind(data.frame(Sample=rep("sample",nrow(mutations)),stringsAsFactors = F),mutations)
-  colnames(mutations)[c(2,3,5,6)] <- c("Chrom","Pos","Ref","Alt")
-  res <- snvTabToDNVcatalogue(snvtab = mutations)
-  return(res)
-}
 
 # requires columns Sample, Chrom, Pos, Ref, Alt, with Ref and Alt of length 2
 # returns both list of DNVs and DNV catalogues
@@ -145,18 +108,6 @@ dnvTabToDNVcatalogue <- function(dnvtab){
                      "GA>AC","GA>AG","GA>AT","GA>CC","GA>CG","GA>CT","GA>TC","GA>TG","GA>TT",
                      "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
                      "TA>AC","TA>AG","TA>AT","TA>CC","TA>CG","TA>GC")
-
-  # Ludmil's channels
-  # mutationTypes <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
-  #                    "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
-  #                    "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
-  #                    "CG>AT","CG>GC","CG>GT","CG>TA","CG>TC","CG>TT",
-  #                    "CT>AA","CT>AC","CT>AG","CT>GA","CT>GC","CT>GG","CT>TA","CT>TC","CT>TG",
-  #                    "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
-  #                    "TA>AT","TA>CG","TA>CT","TA>GC","TA>GG","TA>GT",
-  #                    "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
-  #                    "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
-  #                    "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
 
   sample_list <- unique(dnvtab$Sample)
   DNV_catalogue <- data.frame(row.names = mutationTypes,stringsAsFactors = F)
@@ -190,6 +141,186 @@ dnvTabToDNVcatalogue <- function(dnvtab){
 
   }
 
+  res <- list()
+  res$DNV_catalogue <- DNV_catalogue
+  res$DNV_table <- DNV_table
+  return(res)
+}
+
+
+#' TAB to DNV catalogue
+#' 
+#' Convert a data frame containing SNVs and DNVs to a DNV catalogue. The data frame should containt the SNVs and/or DNVs of a single sample. Two SNVs that are next to each other will be combined into a DNV.
+#' The data frame should have the following columns: chr, position, REF, ALT.
+#' 
+#' @param muttable data frame with the mutations, formatted with the following column names: chr, position, REF, ALT.
+#' @return returns the DNV catalogue for the given sample and mutation list
+#' @keywords DNV catalogue
+#' @export
+#' @examples
+#' muttable <- readTable("mutations.tsv")
+#' res <- tabToSNVcatalogue(muttable)
+tabToDNVcatalogue <- function(muttable) {
+  
+  # setup return variables
+  DNV_catalogue <- NULL
+  DNV_table <- list()
+  
+  # now consider the SNV first
+  snvSelection <- nchar(muttable$REF)==1 & nchar(muttable$ALT)==1
+  if(sum(snvSelection)>0){
+    snv_table <- data.frame(Sample = rep("sample",sum(snvSelection)),
+                            Chrom = muttable$chr[snvSelection],
+                            Pos=muttable$position[snvSelection],
+                            Ref=muttable$REF[snvSelection],
+                            Alt=muttable$ALT[snvSelection],
+                            stringsAsFactors = F)
+    res_snv <- snvTabToDNVcatalogue(snv_table)
+    DNV_catalogue <- res_snv$DNV_catalogue
+    DNV_table[["snv"]] <- res_snv$DNV_table
+  }
+  
+  # now consider the DNV
+  dnvSelection <- nchar(muttable$REF)==2 & nchar(muttable$ALT)==2
+  if(sum(dnvSelection)>0){
+    dnv_table <- data.frame(Sample = rep("sample",sum(dnvSelection)),
+                            Chrom = muttable$chr[dnvSelection],
+                            Pos=muttable$position[dnvSelection],
+                            Ref=muttable$REF[dnvSelection],
+                            Alt=muttable$ALT[dnvSelection],
+                            stringsAsFactors = F)
+    res_dnv <- dnvTabToDNVcatalogue(dnv_table)
+    if(is.null(DNV_catalogue)){
+      DNV_catalogue <- res_dnv$DNV_catalogue
+      DNV_table <- res_dnv$DNV_table
+    }else{
+      DNV_catalogue <- DNV_catalogue + res_dnv$DNV_catalogue
+      DNV_table[["dnv"]]  <- res_dnv$DNV_table
+    }
+  }
+  
+  # 
+  res <- list()
+  res$DNV_catalogue <- DNV_catalogue
+  res$DNV_table <- DNV_table
+  return(res)
+}
+
+#' VCF to DNV catalogue
+#' 
+#' Convert a vcf file containing SNVs and DNVs to a DNV catalogue. The VCF file should containt the SNVs and/or DNVs of a single sample. Two SNVs that are next to each other will be combined into a DNV.
+#' 
+#' @param vcfFilename path to input VCF (file must be tabix indexed)
+#' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
+#' @return returns the DNV catalogue for the given sample and mutation list
+#' @keywords vcf DNV
+#' @export
+#' @examples
+#' file_muts <- "mutations.vcf"
+#' res <- vcfToSNVcatalogue(file_muts,genome.v = "hg38")
+vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
+  
+  # load the vcf and find both SNVs that are next to each other and also check if DNVs are reported directly
+  if(genome.v=="hg19"){
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
+  }else if(genome.v=="hg38"){
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+  }else if(genome.v=="mm10"){
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
+    genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+  }else if(genome.v=="canFam3"){
+    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
+    genomeSeq <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
+  }
+  
+  # read only chr seqnames from VCF, not contigs
+  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
+  
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames 
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
+  }
+  
+  if(tools:::.BioC_version_associated_with_R_version()<3.5){
+    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
+  }else{
+    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  }
+  
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  }
+  
+  # load the vcf file
+  vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v, gr)
+  vcf_data <- VariantAnnotation::expand(vcf_data)
+  
+  #filters failed for each variant
+  rd <- SummarizedExperiment::rowRanges(vcf_data)
+  
+  info.data <- VariantAnnotation::info(vcf_data)
+  
+  rgs <- IRanges::ranges(vcf_data)
+  starts <- BiocGenerics::start(rgs)
+  ends <-  BiocGenerics::end(rgs)
+  
+  #Check chromosomes exist
+  chroms <- as.character(GenomeInfoDb::seqnames(vcf_data))
+  
+  if (length(chroms)==0){ 
+    stop("[error vcfToDNVcatalogue] Input vcf does not contain variants ", vcfFilename)
+  }
+  
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(chroms,expected_chroms))==0) chroms <- paste0("chr",chroms)
+  }
+  
+  fxd <- (VariantAnnotation::fixed(vcf_data))
+  wt <- as.character(rd$REF)
+  mt <- as.character(rd$ALT)
+  
+  
+  # setup return variables
+  DNV_catalogue <- NULL
+  DNV_table <- list()
+  
+  # now consider the SNV first
+  snvSelection <- chroms %in% expected_chroms & nchar(wt)==1 & nchar(mt)==1
+  if(sum(snvSelection)>0){
+    snv_table <- data.frame(Sample = rep(vcfFilename,sum(snvSelection)),
+                            Chrom = chroms[snvSelection],
+                            Pos=starts[snvSelection],
+                            Ref=wt[snvSelection],
+                            Alt=mt[snvSelection],
+                            stringsAsFactors = F)
+    res_snv <- snvTabToDNVcatalogue(snv_table)
+    DNV_catalogue <- res_snv$DNV_catalogue
+    DNV_table[["snv"]] <- res_snv$DNV_table
+  }
+  
+  # now consider the DNV
+  dnvSelection <- chroms %in% expected_chroms & nchar(wt)==2 & nchar(mt)==2
+  if(sum(dnvSelection)>0){
+    dnv_table <- data.frame(Sample = rep(vcfFilename,sum(dnvSelection)),
+                            Chrom = chroms[dnvSelection],
+                            Pos=starts[dnvSelection],
+                            Ref=wt[dnvSelection],
+                            Alt=mt[dnvSelection],
+                            stringsAsFactors = F)
+    res_dnv <- dnvTabToDNVcatalogue(dnv_table)
+    if(is.null(DNV_catalogue)){
+      DNV_catalogue <- res_dnv$DNV_catalogue
+      DNV_table <- res_dnv$DNV_table
+    }else{
+      DNV_catalogue <- DNV_catalogue + res_dnv$DNV_catalogue
+      DNV_table[["dnv"]]  <- res_dnv$DNV_table
+    }
+  }
+  
+  # 
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table

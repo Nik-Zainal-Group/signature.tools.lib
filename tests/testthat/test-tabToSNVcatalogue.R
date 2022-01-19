@@ -11,7 +11,4 @@ test_that("test tabToSNVcatalogue() to convert a tab file with SNV into an SNV c
   
   expect_equal(res_cat$catalogue,expected_cat)
   
-  #expect_error(res <- HRDetect_pipeline(data_matrix))
-  #write.table(res_cat$catalogue,file="test.snv.tab",sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
-  
 })

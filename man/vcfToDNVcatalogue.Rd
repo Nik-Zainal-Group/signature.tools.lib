@@ -15,11 +15,11 @@ vcfToDNVcatalogue(vcfFilename, genome.v = "hg19")
 returns the DNV catalogue for the given sample and mutation list
 }
 \description{
-Convert a vcf file containing SNV to a DNV catalogue. The VCF file should containt the SNV of a single sample. Two SNVs that are next to each other will be combined into a DNV.
+Convert a vcf file containing SNVs and DNVs to a DNV catalogue. The VCF file should containt the SNVs and/or DNVs of a single sample. Two SNVs that are next to each other will be combined into a DNV.
 }
 \examples{
-file_subs <- "subs.vcf"
-res <- vcfToSNVcatalogue(file_subs,genome.v = "hg38")
+file_muts <- "mutations.vcf"
+res <- vcfToSNVcatalogue(file_muts,genome.v = "hg38")
 }
 \keyword{DNV}
 \keyword{vcf}
