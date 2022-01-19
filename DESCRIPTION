@@ -1,6 +1,6 @@
 Package: signature.tools.lib
 Title: Signature Tools
-Version: 2.0
+Version: 2.0.1
 Authors@R: person("Andrea", "Degasperi", email = "ad923@cam.ac.uk", role = c("aut", "cre"))
 Description: R package with useful functions for mutational signatures analysis.
 Depends: R (>= 3.2.1)
