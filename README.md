@@ -3,7 +3,7 @@
 ## Table of content
 
 - [Introduction to the package](#intro)
-- [Version](#version)
+- [Versions](#version)
 - [How to cite us](#cite)
 - [Systems Requirements](#req)
 - [Testing the package](#test)
@@ -34,11 +34,16 @@ latest algorithms for signature fit and extraction, as well as various
 utility functions and the HRDetect pipeline. The list and description of
 these functions is given below.
 
-## Version
+## Versions
 
 <a name="version"/>
 
-Current version: 2.0
+Version: 2.0.1
+
+- Updated HRDetect pipeline to work with FitMS
+- Updated DNV catalogues functions
+
+Version: 2.0
 
 - New signature fit multi-step algorithm, FitMS
 - New organ-specific signatures from Genomics England Cancer data
@@ -46,6 +51,14 @@ Current version: 2.0
 - Rewrite of plot scripts for displying signature fit results, now available using plotFit and plotFitMS functions
 - Added support for trinucleotide variant catalogues
 - New export functions for converting Fit and FitMS results to JSON
+
+Version: 1.0
+
+- Signature analysis functions for signature extraction and fit
+- Mutational signatures available are COSMICv2 and reference signatures from *Degasperi et al. 2020 Nature Cancer*.
+- HRDetect pipeline available as command line script, includes HRDetect with bootstrap as published in *Degasperi et al. 2020 Nature Cancer*
+- Genome plot circos function (fork of Wellcome Sanger Institute genome plot function)
+- HRD indexes functions written by Nicolai Juul Birkbak
 
 ## How to cite us
 
