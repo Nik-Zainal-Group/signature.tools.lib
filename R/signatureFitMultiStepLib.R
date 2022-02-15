@@ -143,6 +143,7 @@ FitMS <- function(catalogues,
   whichSamplesMayHaveRareSigs <- c()
   candidateRareSigs <- list()
   candidateRareSigsCosSim <- list()
+  candidateRareSigsError <- list()
   
   # if you set maxRareSigsPerSample to 0, you should get the common sig fits only
   if(maxRareSigsPerSample > 0){
@@ -280,12 +281,16 @@ FitMS <- function(catalogues,
                 if(depth==1){
                   candidateRareSigs[[colnames(catalogues)[i]]] <- colnames(rareSigsToUse)[pos]
                   candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- allCosSim[pos]
+                  candidateRareSigsError[[colnames(catalogues)[i]]] <- allError[pos]
                   names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                  names(candidateRareSigsError[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
                   whichSamplesMayHaveRareSigs <- c(whichSamplesMayHaveRareSigs,i)
                 }else if(depth>1){
                   candidateRareSigs[[colnames(catalogues)[i]]] <- c(candidateRareSigs[[colnames(catalogues)[i]]],paste(currentRareSigs,colnames(rareSigsToUse)[pos],sep=":"))
                   candidateRareSigsCosSim[[colnames(catalogues)[i]]] <- c(candidateRareSigsCosSim[[colnames(catalogues)[i]]],allCosSim[pos])
+                  candidateRareSigsError[[colnames(catalogues)[i]]] <- c(candidateRareSigsError[[colnames(catalogues)[i]]],allError[pos])
                   names(candidateRareSigsCosSim[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
+                  names(candidateRareSigsError[[colnames(catalogues)[i]]]) <- candidateRareSigs[[colnames(catalogues)[i]]]
                 }
               }
             
@@ -396,6 +401,7 @@ FitMS <- function(catalogues,
   resObj$whichSamplesMayHaveRareSigs <- colnames(catalogues)[whichSamplesMayHaveRareSigs]
   resObj$candidateRareSigs <- candidateRareSigs
   resObj$candidateRareSigsCosSim <- candidateRareSigsCosSim
+  resObj$candidateRareSigsError <- candidateRareSigsError
   resObj$samples <- samples
   # compute fit merge
   resObj <- fitMerge(resObj)
