@@ -34,6 +34,7 @@ test_that("test HRDetect_pipeline() runs correctly on one sample. Multiple optio
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
                            methodFit = "NNLS",
+                           signature_type = "COSMICv2",
                            bootstrapSignatureFit = FALSE,
                            threshold_percentFit = 10,
                            nparallel = 1)
@@ -71,6 +72,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
                            methodFit = "NNLS",
+                           signature_type = "COSMICv2",
                            bootstrapSignatureFit = TRUE,
                            nbootFit = 10,
                            threshold_percentFit = 0,
@@ -83,6 +85,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                             Indels_vcf_files = Indels_vcf_files,
                             CNV_tab_files = CNV_tab_files,
                             methodFit = "NNLS",
+                            signature_type = "COSMICv2",
                             bootstrapSignatureFit = TRUE,
                             nbootFit = 10,
                             threshold_percentFit = 0,
@@ -123,6 +126,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                             Indels_vcf_files = Indels_vcf_files,
                             CNV_tab_files = CNV_tab_files,
                             methodFit = "NNLS",
+                            organ = "Breast",
                             bootstrapSignatureFit = TRUE,
                             nbootFit = 10,
                             threshold_percentFit = 0,
@@ -135,6 +139,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                             Indels_vcf_files = Indels_vcf_files,
                             CNV_tab_files = CNV_tab_files,
                             methodFit = "NNLS",
+                            organ = "Breast",
                             bootstrapSignatureFit = TRUE,
                             nbootFit = 10,
                             threshold_percentFit = 0,
@@ -174,6 +179,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                             Indels_vcf_files = Indels_vcf_files,
                             CNV_tab_files = CNV_tab_files,
                             methodFit = "NNLS",
+                            signature_type = "COSMICv2",
                             bootstrapSignatureFit = TRUE,
                             nbootFit = 10,
                             threshold_percentFit = 0,
@@ -187,6 +193,7 @@ test_that("test HRDetect_pipeline() runs correctly on two sample. Check random i
                             Indels_vcf_files = Indels_vcf_files,
                             CNV_tab_files = CNV_tab_files,
                             methodFit = "NNLS",
+                            signature_type = "COSMICv2",
                             bootstrapSignatureFit = TRUE,
                             nbootFit = 10,
                             threshold_percentFit = 0,
@@ -221,12 +228,13 @@ test_that("test HRDetect_pipeline() runs correctly on two samples.", {
   names(CNV_tab_files) <- sample_names
   
   res <- HRDetect_pipeline(data_matrix,
-                                                genome.v = "hg19",
-                                                SNV_tab_files = SNV_tab_files,
-                                                SV_bedpe_files = SV_bedpe_files,
-                                                Indels_vcf_files = Indels_vcf_files,
-                                                CNV_tab_files = CNV_tab_files,
-                                                nparallel = 2)
+                           genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "COSMICv2",
+                           nparallel = 2)
   #if no error happen this code can be reached
   expect_true(TRUE)
 
@@ -251,12 +259,13 @@ test_that("test HRDetect_pipeline() runs correctly on one sample.", {
   names(CNV_tab_files) <- sample_names
   
   res <- HRDetect_pipeline(data_matrix,
-                                                genome.v = "hg19",
-                                                SNV_tab_files = SNV_tab_files,
-                                                SV_bedpe_files = SV_bedpe_files,
-                                                Indels_vcf_files = Indels_vcf_files,
-                                                CNV_tab_files = CNV_tab_files,
-                                                nparallel = 1)
+                           genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files,
+                           SV_bedpe_files = SV_bedpe_files,
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           signature_type = "COSMICv2",
+                           nparallel = 1)
   #if no error happen this code can be reached
   expect_true(TRUE)
   
@@ -283,7 +292,7 @@ test_that("test HRDetect_pipeline() runs correctly on one sample with Breast sig
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "Breast",
+                           organ = "Breast",
                            nparallel = 1)
   #if no error happen this code can be reached
   expect_true(TRUE)
@@ -316,7 +325,7 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with Breast si
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "Breast",
+                           organ = "Breast",
                            nparallel = 2)
   #if no error happen this code can be reached
   expect_true(TRUE)
@@ -344,7 +353,7 @@ test_that("test HRDetect_pipeline() runs correctly on one sample with Breast sig
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "Breast",
+                           organ = "Breast",
                            bootstrapHRDetectScores = TRUE,
                            nparallel = 1)
   
@@ -378,7 +387,7 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with Breast si
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "Breast",
+                           organ = "Breast",
                            bootstrapHRDetectScores = TRUE,
                            nparallel = 2)
   #if no error happen this code can be reached
@@ -414,7 +423,7 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with subset of
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_vcf_files = Indels_vcf_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "COSMIC",
+                           signature_type = "COSMICv2",
                            cosmic_siglist = c(1,2,3,8,13),
                            nparallel = 2)
   #if no error happen this code can be reached
@@ -450,7 +459,7 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with subset of
                            SV_bedpe_files = SV_bedpe_files,
                            Indels_tab_files = Indels_tab_files,
                            CNV_tab_files = CNV_tab_files,
-                           signature_type = "COSMIC",
+                           signature_type = "COSMICv2",
                            cosmic_siglist = c(1,2,3,8,13),
                            nparallel = 2)
   #if no error happen this code can be reached

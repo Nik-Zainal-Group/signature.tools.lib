@@ -6,8 +6,6 @@
 # 
 # devtools::create("signature.tools.lib")
 
-#setwd("~/sandbox/git/signature.tools.lib")
-
 devtools::use_package("VariantAnnotation")
 devtools::use_package("SummarizedExperiment")
 devtools::use_package("BiocGenerics")
@@ -44,6 +42,9 @@ all_organ_sigs_subs <- read.table("data/2019_01_10_all_PCAWG_sigs_subs.tsv", sep
 all_organ_sigs_rearr <- read.table("data/2019_01_10_all_PCAWG_sigs_rearr.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
 conversion_matrix_subs <- read.table("data/2019_01_10_ConversionMatrix_subs.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
 conversion_matrix_rearr <- read.table("data/2019_01_10_ConversionMatrix_rearr.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+RefSigv1_subs <- read.table("data/RefSigv1_Subs.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+RefSigv1_rearr <- read.table("data/RefSigv1_Rearr.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+
 load("data/chrominfo.RData")
 load("data/chrominfo.snp6.hg19.RData")
 
@@ -60,22 +61,34 @@ organSignaturesDBSv1.01 <- cbind(readTable("data/RefSigDBS_v1.01//OrganSpecificS
 conversionMatrixDBSv1.01 <- readTable("data/RefSigDBS_v1.01/RefSig_DBS_conversionMatrix_v1.01.tsv")
 referenceSignaturesDBSv1.01 <- readTable("data/RefSigDBS_v1.01/RefSig_DBS_v1.01.tsv")
 
+COSMIC_v3.2_SBS_GRCh37 <- readTable("data/COSMIC_v3.2_SBS_GRCh37.tsv")
+rownames(COSMIC_v3.2_SBS_GRCh37) <- COSMIC_v3.2_SBS_GRCh37$Type
+COSMIC_v3.2_SBS_GRCh37 <- sortCatalogue(COSMIC_v3.2_SBS_GRCh37[,-1,drop=F])
+COSMIC_v3.2_DBS_GRCh37 <- readTable("data/COSMIC_v3.2_DBS_GRCh37.tsv")
+rownames(COSMIC_v3.2_DBS_GRCh37) <- COSMIC_v3.2_DBS_GRCh37$Type
+COSMIC_v3.2_DBS_GRCh37 <- COSMIC_v3.2_DBS_GRCh37[,-1,drop=F]
+
 usethis::use_data(RS.Breast560,
-                   cosmic30,
-                   chrominfo,
-                   chrominfo.snp6,
-                   all_organ_sigs_subs,
-                   all_organ_sigs_rearr,
-                   conversion_matrix_subs,
-                   conversion_matrix_rearr,
-                   organSignaturesSBSv2.03,
-                   conversionMatrixSBSv2.03,
-                   referenceSignaturesSBSv2.03,
-                   sigsForFittingSBSv2.03,
-                   organSignaturesDBSv1.01,
-                   conversionMatrixDBSv1.01,
-                   referenceSignaturesDBSv1.01,
-                   internal = TRUE,overwrite = TRUE)
+                  cosmic30,
+                  chrominfo,
+                  chrominfo.snp6,
+                  all_organ_sigs_subs,
+                  all_organ_sigs_rearr,
+                  conversion_matrix_subs,
+                  conversion_matrix_rearr,
+                  organSignaturesSBSv2.03,
+                  conversionMatrixSBSv2.03,
+                  referenceSignaturesSBSv2.03,
+                  sigsForFittingSBSv2.03,
+                  organSignaturesDBSv1.01,
+                  conversionMatrixDBSv1.01,
+                  referenceSignaturesDBSv1.01,
+                  RefSigv1_subs,
+                  RefSigv1_rearr,
+                  COSMIC_v3.2_SBS_GRCh37,
+                  COSMIC_v3.2_DBS_GRCh37,
+                  internal = TRUE,
+                  overwrite = TRUE)
 
 devtools::document()
 devtools::install()
@@ -103,6 +116,7 @@ devtools::test(pkg = ".",filter = "organSpecificSignatures")
 devtools::test(pkg = ".",filter = "plotCopyNumbers")
 devtools::test(pkg = ".",filter = "FitAndFitMS")
 devtools::test(pkg = ".",filter = "JSONexport")
+devtools::test(pkg = ".",filter = "SignatureFit_pipeline")
 
 
 

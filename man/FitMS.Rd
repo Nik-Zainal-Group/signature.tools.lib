@@ -52,6 +52,8 @@ when using multiStepMode=constrainedFit}
 
 \item{minCosSimIncrease}{minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method}
 
+\item{useBootstrap}{set to TRUE to use bootstrap}
+
 \item{nboot}{number of bootstraps to use, more bootstraps more accurate results}
 
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}

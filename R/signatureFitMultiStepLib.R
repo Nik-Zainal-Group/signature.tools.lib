@@ -49,6 +49,7 @@
 #' @param minCosSimRareSig minimum cosine similarity between a residual and a rare signature for considering the rare signature as a candidate for a sample when using constrainedFit or partialNMF
 #' @param minErrorReductionPerc minimum percentage of error reduction for a signature to be considered as candidate when using the errorReduction method. The error is computed as mean absolute deviation
 #' @param minCosSimIncrease minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method
+#' @param useBootstrap set to TRUE to use bootstrap 
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
 #' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
 #' @param maxRareSigsPerSample masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.
@@ -923,6 +924,35 @@ plotMatrix <- function(dataMatrix,
   }
   for(i in 1:ncol(toPlot)) text(y = rep(i,nrow(toPlot)), x = 1:nrow(toPlot),labels = toPlot[,i],cex = cex.numbers)
   if(!is.null(output_file)) dev.off()
+}
+
+#' Plot the results from the Fit or FitMS function
+#' 
+#' Plotting of the results obtained with the Fit or FitMS function. Output adapts based on the options used in during fitting.
+#' You can use this plot function instead of using plotFit or plotFitMS. The function plotFitResults will infer whether Fit or FitMS 
+#' was used and use the appropriate plot function.
+#' 
+#' @param fitObj object obtained from the Fit or FitMS function
+#' @param outdir output directory where the results should be saved/plotted
+#' @export
+#' @examples
+#' res <- Fit(catalogues,getOrganSignatures("Breast"))
+#' plotFitResults(res,"results/")
+plotFitResults <- function(fitObj,
+                           outdir = ""){
+  if(!is.null(fitObj$fitAlgorithm)){
+    if(fitObj$fitAlgorithm=="Fit"){
+      plotFit(fitObj = fitObj,
+              outdir = outdir)
+    }else if(fitObj$fitAlgorithm=="FitMS"){
+      plotFitMS(fitMSobj = fitObj,
+                outdir = outdir)
+    }else{
+      message("[plotFitResults error] unknown fitAlgorithm attribute, expecting Fit or FitMS. Input fitObj not recognised. ")
+    }
+  }else{
+    message("[plotFitResults error] missing fitAlgorithm attribute, fitObj not recognised.")
+  }
 }
 
 #' Plot the results from the Fit function

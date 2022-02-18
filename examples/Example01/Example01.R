@@ -56,12 +56,13 @@ col_hrdetect <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
 input_matrix <- matrix(NA,nrow = length(sample_names),ncol = length(col_hrdetect),dimnames = list(sample_names,col_hrdetect))
 
 #We have already quantified the amount of SNV signatures in the samples, so we can supply these via the input matrix
-input_matrix[rownames(snv_exp),"SNV3"] <- snv_exp[,"Signature.3"]
-input_matrix[rownames(snv_exp),"SNV8"] <- snv_exp[,"Signature.8"]
+input_matrix[rownames(snv_exp),"SNV3"] <- snv_exp[,"Signature3"]
+input_matrix[rownames(snv_exp),"SNV8"] <- snv_exp[,"Signature8"]
 
 #run the HRDetect pipeline, for more information see ?HRDetect_pipeline
 res <- HRDetect_pipeline(input_matrix,
                          genome.v = "hg19",
+                         signature_type = "COSMICv2",
                          SV_bedpe_files = SV_bedpe_files,
                          Indels_vcf_files = Indels_vcf_files,
                          CNV_tab_files = CNV_tab_files,

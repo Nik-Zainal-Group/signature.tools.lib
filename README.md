@@ -207,7 +207,8 @@ are fitted into the samples in addition to the common signatures. Common and rar
 by providing the name of an organ, or can be supplied by the user.
 The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. Use the function
 ```fitMStoJSON``` to export the results into a JSON file.
-A manual for FitMS can be found in the ```FitMSmanual``` folder.
+A manual for FitMS can be found in the ```userManuals``` folder.
+- **```plotFitResults(...)```**: this function can be used to plot results objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
 
 Functions for organ-specific signatures and exposures conversion
 
@@ -419,12 +420,13 @@ input_matrix <- matrix(NA,nrow = length(sample_names),
 
 #We have already quantified the amount of SNV signatures in the samples,
 #so we can supply these via the input matrix
-input_matrix[rownames(snv_exp),"SNV3"] <- snv_exp[,"Signature.3"]
-input_matrix[rownames(snv_exp),"SNV8"] <- snv_exp[,"Signature.8"]
+input_matrix[rownames(snv_exp),"SNV3"] <- snv_exp[,"Signature3"]
+input_matrix[rownames(snv_exp),"SNV8"] <- snv_exp[,"Signature8"]
 
 #run the HRDetect pipeline, for more information see ?HRDetect_pipeline
 res <- HRDetect_pipeline(input_matrix,
                          genome.v = "hg19",
+                         signature_type = "COSMICv2",
                          SV_bedpe_files = SV_bedpe_files,
                          Indels_vcf_files = Indels_vcf_files,
                          CNV_tab_files = CNV_tab_files,
