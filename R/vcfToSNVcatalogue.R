@@ -54,10 +54,19 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   # load the vcf file
   vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v, gr)
   vcf_data <- VariantAnnotation::expand(vcf_data)
+  nmutsloaded <- nrow(vcf_data)
   
   #filters failed for each variant
   rd <- SummarizedExperiment::rowRanges(vcf_data)
+  selectionvcf <- nchar(as.character(rd$REF))==1 & nchar(as.character(rd$ALT))==1
+  vcf_data <- vcf_data[selectionvcf,,drop=F]
+  nmutssnv <- nrow(vcf_data)
   
+  if(nmutsloaded>nmutssnv){
+    message("[vcfToSNVcatalogue warning] the vcf file ",vcfFilename," contains ",nmutsloaded-nmutssnv," indels, which were ignored.")
+  }
+  
+  rd <- SummarizedExperiment::rowRanges(vcf_data)
   info.data <- VariantAnnotation::info(vcf_data)
   
   rgs <- IRanges::ranges(vcf_data)
@@ -68,7 +77,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   chroms <- GenomeInfoDb::seqnames(vcf_data)
 
   if (length(chroms)==0){ 
-     stop("[error vcfToSNVcatalogue] Input vcf does not contain variants ", vcfFilename)
+     stop("[vcfToSNVcatalogue error] Input vcf does not contain variants ", vcfFilename)
   }
   
   if (genome.v=="hg38" || genome.v=="mm10") {

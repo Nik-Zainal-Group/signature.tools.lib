@@ -271,7 +271,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   chroms <- as.character(GenomeInfoDb::seqnames(vcf_data))
   
   if (length(chroms)==0){ 
-    stop("[error vcfToDNVcatalogue] Input vcf does not contain variants ", vcfFilename)
+    stop("[vcfToDNVcatalogue error] Input vcf does not contain variants ", vcfFilename)
   }
   
   if (genome.v=="hg38" || genome.v=="mm10") {

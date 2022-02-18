@@ -31,7 +31,17 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   #check that the required columns are present
   required_cols <- c("chr", "position", "ALT", "REF")
   if(!length(intersect(required_cols,colnames(subs)))==length(required_cols)){
-    stop("[error tabToSNVcatalogue] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
+    stop("[tabToSNVcatalogue error] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
+  }
+  
+  # select only SNVs
+  nmutsloaded <- nrow(subs)
+  selectionmuts <- nchar(as.character(subs$REF))==1 & nchar(as.character(subs$ALT))==1
+  subs <- subs[selectionmuts,,drop=F]
+  nmutstoanalyse <- nrow(subs)
+  
+  if(nmutsloaded>nmutstoanalyse){
+    message("[tabToSNVcatalogue warning] mutations table contains ",nmutsloaded-nmutstoanalyse," indels, which were ignored.")
   }
 
   subs$wt <- subs$REF
