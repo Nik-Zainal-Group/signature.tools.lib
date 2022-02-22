@@ -51,7 +51,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                   SV_bedpe_files=NULL,
                                   signatures=NULL,
                                   rare_signatures=NULL,
-                                  signature_version=NULL,
+                                  signature_version="RefSigv2",
                                   signature_names=NULL,
                                   fit_method="FitMS", # either FitMS or Fit
                                   optimisation_method = "KLD",
@@ -500,6 +500,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
     return(returnObj)
   }
   
+  message("[signatureFit_pipeline info] pipeline completed.")
   
   # now just return the results
   returnObj$fitResults <- fitRes

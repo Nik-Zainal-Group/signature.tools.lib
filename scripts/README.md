@@ -5,6 +5,14 @@
 This folder includes scripts to perform analysis using the R package ```signature.tools.lib```
 in unix command line style, without having to write R code.
 
+## signatureFit
+
+For the help on how to use this script type:
+
+```
+./signatureFit.R -h
+```
+
 ## hrDetect
 
 For the help on how to use this script type:
@@ -34,6 +42,7 @@ You can add the above line to your ```~/.bashrc``` file so you don't have to ret
 Then, you can simply copy the files and even remove the ```.R``` extension:
 
 ```
+cp signatureFit.R ~/bin/signatureFit
 cp hrDetect.R ~/bin/hrDetect
 ```
 

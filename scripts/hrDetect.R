@@ -41,10 +41,10 @@ spec = matrix(c(
 opt = getopt(spec)
 
 # if help was asked for print a friendly message
-# and exit with a non-zero error code
+# and exit with a zero error code
 if ( !is.null(opt$help) ) {
   how_to()
-  q(status=1,save = "no")
+  q(status=0,save = "no")
 }
 
 # set some reasonable defaults for the options that are needed,
