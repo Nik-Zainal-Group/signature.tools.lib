@@ -1,4 +1,4 @@
-# Signature Tools Lib R package
+# signature.tools.lib R package
 
 ## Table of content
 
@@ -22,7 +22,7 @@
 
 ## Introduction to the package
 
-Signature Tools Lib is an R package for mutational signatures analysis.
+```signature.tools.lib``` is an R package for mutational signatures analysis.
 Mutational signatures are patterns of somatic mutations that reveal what
 mutational processes have been active in a cell. Mutational processes
 can be due to exposure to mutagens, such as chemicals present in
@@ -32,18 +32,23 @@ Recombination Repair.
 The package supports hg19 and hg38 as well as mm10. It provides our
 latest algorithms for signature fit and extraction, as well as various
 utility functions and the HRDetect pipeline. The list and description of
-these functions is given below.
+the most important functions is given below.
 
 ## Versions
 
 <a name="version"/>
 
-Version: 2.0.1
+2.1.0
+
+- Added the ```signatureFit_pipeline``` function, which is a flexible interface for signature fit analysis
+- Added the ```signatureFit``` command line script, which is used to access the ```signatureFit_pipeline``` function from command line
+
+2.0.1
 
 - Updated HRDetect pipeline to work with FitMS
 - Updated DNV catalogues functions
 
-Version: 2.0
+2.0
 
 - New signature fit multi-step algorithm, FitMS
 - New organ-specific signatures from Genomics England Cancer data
@@ -52,7 +57,7 @@ Version: 2.0
 - Added support for trinucleotide variant catalogues
 - New export functions for converting Fit and FitMS results to JSON
 
-Version: 1.0
+1.0
 
 - Signature analysis functions for signature extraction and fit
 - Mutational signatures available are COSMICv2 and reference signatures from *Degasperi et al. 2020 Nature Cancer*.
@@ -75,8 +80,11 @@ In this publication you will find a lot of useful information for using this pac
 ## Systems Requirements
 
 No special hardware is required to run this software. This is an R
-package so it will work on any computer with R (>=3.2.1) installed. You
-can install this package by entering the R environment from the main
+package so it will work on any computer with R (>=3.2.1) installed.
+As the time passes, some of the required packages may change their R
+version requirement to more recent versions, making this also a requirement
+for the insallation of ```signature.tools.lib```.
+You can install ```signature.tools.lib``` by entering the R environment from the main
 directory and typing:
 
 ```
@@ -118,7 +126,10 @@ This is the full list of R package dependencies:
     scales,
     GenomicRanges,
     IRanges,
-    BSgenome
+    BSgenome, 
+    readr,
+    doRNG,
+    combinat
 ```
 
 We have noticed that the ```NNLM``` package is frequently unavailable to download automatically
@@ -184,9 +195,10 @@ rearrangement signatures or catalogues.
 
 Functions for dinucleotide variants
 
-- **```snvTabToDNVcatalogue(...)```**: a list of single nucleotide variants (SNVs),
-and computes a list of dinucleotide variants (DNVs) finding which SNVs are next to each other.
-It the returns the annotated DNVs and the DNV catalogues. The catalogue channels are in Zou's style.
+- **```vcfToDNVcatalogue(...)```**: given a vcf file containing a list of single and double nucleotide variants (SNVs and DNVs),
+this function initially attempts to find all possible DNVs by checking adjacent SNVs, and then
+annotates the DNVs and finally generates a DNV catalogue. The catalogue channels are in Zou's style.
+- **```tabToDNVcatalogue(...)```**: same as ```vcfToDNVcatalogue(...)``` but takes a data frame as input.
 - **```convertToAlexandrovChannels(...)```**: Function to convert DNV signatures or catalogues
 from Zou's to Alexandrov's style. 
 - **```plotDNVSignatures(...)```**: plot one or more DNV signatures or catalogues, compatible with both
@@ -208,6 +220,7 @@ by providing the name of an organ, or can be supplied by the user.
 The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. Use the function
 ```fitMStoJSON``` to export the results into a JSON file.
 A manual for FitMS can be found in the ```userManuals``` folder.
+- **```signatureFit_pipeline```**: an interface for the ```Fit``` and ```FitMS``` functions, which aim to automate various signature fit analysis steps, like generating the mutational catalogues and selecting which mutational signatures to fit. This function can be accessed via command line using the ```signatureFit``` script in the ```scripts``` folder.
 - **```plotFitResults(...)```**: this function can be used to plot results objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
 
 Functions for organ-specific signatures and exposures conversion
@@ -271,14 +284,16 @@ Function for data visualisation
 somatic variants across the genome, organised in a circle. Variants
 plotted are single nucleotide variations (SNV), small insertions and
 deletions (indels), copy number variations (CNV) and rearrangements.
-
+- **```plotSignatures(...)```**: this function will plot signatures or
+catalogues trying to identify the appropriate mutation type (SNV, DNV, SV...)
+from the input row names.
 
 <a name="scripts"/>
 
 ## Command line scripts
 
-We provide a command line script for the HRDetect pipeline, which can
-be used instead of writing your own R code. You can find this in
+We provide a command line scripts for the HRDetect and signature fit pipelines, which can
+be used instead of writing your own R code. You can find these scripts in
 the ```scripts``` directory.
 
 <a name="examples"/>
