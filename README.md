@@ -150,7 +150,7 @@ devtools::test()
 <a name="howtouse"/>
 
 ## How to use this package
-## 
+
 **PLEASE NOTE:** project-specific file conversions and filtering should
 be done before and outside the use of this library. This library should
 only report to the user the data format errors and suggest how to
@@ -566,6 +566,8 @@ and as a second step it will attempt to determine the presence of the rare signa
 
 In this example we have also specified to use bootstrap and to use the giniScaledThreshold exposure filter method.
 Results can be plotted with the ```plotFitMS``` function.
+
+A manual for FitMS can be found in the ```userManuals``` folder.
 
 ## Frequently Asked Questions
 
