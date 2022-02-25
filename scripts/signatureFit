@@ -15,6 +15,12 @@ how_to <- function(){
   message("  -o, --outdir=DIR          Name of the output directory. If omitted a name")
   message("                              will be given automatically.")
   message("  -b, --bootstrap           Request signature fit with bootstrap")
+  message("  -c, --cataloguesfile=CFILE")      
+  message("                            CFILE is the name of a file containing mutational")
+  message("                              catalogues. Each sample catalogue is in a column,")
+  message("                              with sample names as column headers and channel")
+  message("                              names as row names in the first column with no")
+  message("                              header. Can be omitted if mutations are provided.")
   message("  -x, --snvvcf=SNVVCF       SNVVCF is a tab separated file containing two")
   message("                              columns. The first column contains the sample")
   message("                              names, while the second column contains the")
@@ -25,6 +31,45 @@ how_to <- function(){
   message("                              corresponding SNV tab file names. Each SNV tab")
   message("                              file should have a header with the following")
   message("                              columns: chr, position, REF, ALT.")
+  message("  -y, --dnvvcf=DNVVCF       DNVVCF is a tab separated file containing two")
+  message("                              columns. The first column contains the sample")
+  message("                              names, while the second column contains the")
+  message("                              corresponding DNV vcf file names. VCF files can")
+  message("                              contain both DNVs and SNVs and if two SNVs are")
+  message("                              adjacent they will be merged into additional DNVs.")
+  message("  -Y, --dnvtab=DNVTAB       DNVTAB is a tab separated file containing two")
+  message("                              columns. The first column contains the sample")
+  message("                              names, while the second column contains the")
+  message("                              corresponding DNV tab file names. Each DNV tab")
+  message("                              file should have a header with the following")
+  message("                              columns: chr, position, REF, ALT. Tab files can")
+  message("                              contain both DNVs and SNVs and if two SNVs are")
+  message("                              adjacent they will be merged into additional DNVs.")
+  message("  -z, --svbedpe=SVBEDPE     SVBEDPE is a tab separated file containing two")
+  message("                              columns. The first column contains the sample")
+  message("                              names, while the second column contains the")
+  message("                              corresponding BEDPE file names. Each BEDPE file")
+  message("                              is a tab separated file with header: chrom1,")
+  message("                              start1, end1, chrom2, start2, end2, and sample. In")
+  message("                              addition, another column with header svclass should")
+  message("                              indicate the type of SV: translocation, inversion,")
+  message("                              deletion, or tandem-duplication.")
+  message("  -w, --signaturesfile=SFILE")
+  message("                            SFILE is the name of a file containing mutational")
+  message("                              signatures. Each signature is in a column, with")
+  message("                              signature names as column hearders and channel")
+  message("                              names as row names in the first column with no")
+  message("                              header. Each column must sum to 1. Use only to")
+  message("                              provide your own signatures. When fitmethod=FitMS,")
+  message("                              these signatures are considered common signatures.")
+  message("  -W, --raresignaturesfile=RSFILE")
+  message("                            RSFILE is the name of a file containing mutational")
+  message("                              signatures. Each signature is in a column, with")
+  message("                              signature names as column hearders and channel")
+  message("                              names as row names in the first column with no")
+  message("                              header. Each column must sum to 1. Use only to")
+  message("                              provide your own signatures. When fitmethod=FitMS,")
+  message("                              these signatures are considered rare signatures.")
   message("  -s, --sigversion=SIGVERSION")
   message("                            Either COSMICv2, COSMICv3.2, RefSigv1 or RefSigv2.")
   message("                              If not specified SIGVERSION=RefSigv2.")
@@ -47,11 +92,81 @@ how_to <- function(){
   message("  -e, --genomev=GENOMEV     Genome version to be used: hg19, hg38 or mm10.")
   message("                              If not specified GENOMEV=hg19.")
   message("  -m, --fitmethod=FITMETHOD Either Fit or FitMS. If not specified FITMETHOD=FitMS")
+  message("  -M, --optmethod=OPTMETHOD Optimisation objective function, either KLD or NNLS.")
+  message("                              If not specified OPTMETHOD=KLD.")
+  message("  -t, --filtertype=FTYPE    FTYPE is either fixedThreshold or giniScaledThreshold.")
+  message("                              When using fixedThreshold, exposures will be removed")
+  message("                              based on a fixed percentage with respect to the")
+  message("                              total number of mutations (THRPERC will be")
+  message("                              used). When using giniScaledThreshold each signature")
+  message("                              will used a different threshold calculated as")
+  message("                              (1-Gini(signature))*GINISCALING. If not specified")
+  message("                              then FTYPE=fixedThreshold")
+  message("  -p, --thresholdperc=THRPERC")
+  message("                            THRPERC is a threshold in percentage of total mutations")
+  message("                              in a sample, only exposures larger than THRPERC are")
+  message("                              considered. If not specified THRPERC=5.")
+  message("  -d, --giniscaling=GINISCALING")
+  message("                            GINISCALING is a scaling factor for the threshold type")
+  message("                              giniScaledThreshold, which is based on the Gini score")
+  message("                              of a signature. If not specified GINISCALING=10.")
+  message("  -u, --thresholdpval=THRPVAL")
+  message("                            THRPVAL is a p-value to determine whether an exposure")
+  message("                              is above the THRPERC or the threshold calculated with")
+  message("                              Gini scaling, when using bootstrap. In other words,")
+  message("                              this is the empirical probability that the exposure") 
+  message("                              is lower than the threshold. If not specified then")
+  message("                              THRPVAL=0.05.")
+  message("  -a, --fitmsmode=FMSMODE   FMSMODE is either constrainedFit, partialNMF,")
+  message("                              errorReduction, or cossimIncrease. If not specified")
+  message("                              FMSMODE=errorReduction.")
+  message("  -T, --raresigtier=RSTIER  RSTIER is either T1 or T2. For each organ we provide") 
+  message("                              two lists of rare signatures that can be used.")
+  message("                              Tier 1 (T1) are rare signatures that were observed")
+  message("                              in the requested organ. The problem with T1 is that")
+  message("                              it may be that a signature is not observed simply") 
+  message("                              because there were not enough samples for a certain")
+  message("                              organ in the particular dataset that was used to")
+  message("                              extract the signatures. So in general we advise to")
+  message("                              use Tier 2 (T2) signatures, which extend the rare")
+  message("                              signature to a wider number of rare signatures.")
+  message("                              If not specified RSTIER=T2.")
+  message("  -i, --residualnegprop=RNP RNP is the maximum proportion of mutations (w.r.t.")
+  message("                              total mutations in a sample) that can be in the")
+  message("                              negative part of a residual when using the")
+  message("                              constrained least squares fit when fitMS mode is")
+  message("                              FMSMODE=constrainedFit. If not specified then")
+  message("                              RNP=0.003.")
+  message("  -R, --minresidualmuts=MINRM")
+  message("                            MINRM is the minimum number of mutations in a residual")
+  message("                              when FMSMODE=constrainedFit or FMSMODE=partialNMF.")
+  message("                              Deactivated by default (MINRM=NULL).")
+  message("  -C, --mincossimraresigs=MINCSRS")
+  message("                            MINCSRS is the minimum cosine similarity between a")
+  message("                              residual and a rare signature for considering the")
+  message("                              rare signature as a candidate in a sample when")
+  message("                              FMSMODE=constrainedFit or FMSMODE=partialNMF.")
+  message("                              If not specified, MINCSRS=0.8.")
+  message("  -E, --minerrorredperc=MINERPERC")
+  message("                            MINERPERC is the minimum percentage of error reduction")
+  message("                              for a rare signature to be considered as candidate")
+  message("                              in a sample when FMSMODE=errorReduction. The error")
+  message("                              is computed as mean absolute deviation. If not")
+  message("                              specified MINERPERC=15.")
+  message("  -I, --mincossimincr=MINCSINCR")
+  message("                            MINCSINCR is the minimum cosine similarity increase")
+  message("                              for a rare signature to be considered as candidate")
+  message("                              in a sample when FMSMODE=cossimIncrease. If not")
+  message("                              specified MINCSINCR=0.02.")
+  message("  -k, --maxraresigs=MAXRS   MAXRS is the maximum number of rare signatures that.")
+  message("                              are allowed to be present in each sample. If not")
+  message("                              specified MAXRS=1.")
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used.")
   message("  -f, --nboot=NBOOT         Number of bootstrap to be used when bootstrap is")
   message("                              requested (-b), if not specified, NBOOT=200.")
   message("  -r, --randomSeed=SEED     Specify a random seed to obtain always the same")
   message("                              identical results.")
+  message("  -v, --verbose             Verbose option for additional output.")
   message("  -h, --help                Show this explanation.")
   message(" ")
 }
@@ -60,19 +175,39 @@ how_to <- function(){
 # get options, using the spec as defined by the enclosed list.
 # we read the options from the default: commandArgs(TRUE).
 spec = matrix(c(
-  'help',          'h', 0, "logical",
-  'bootstrap',     'b', 0, "logical",
-  'outdir',        'o', 1, "character",
-  'snvvcf',        'x', 1, "character",
-  'snvtab',        'X', 1, "character",
-  'sigversion',    's', 1, "character",
-  'organ',         'O', 1, "character",
-  'signames',      'l', 1, "character",
-  'fitmethod',     'm', 1, "character",
-  'nparallel',     'n', 1, "double",
-  'genomev',       'e', 1, "character",
-  'nboot',         'f', 1, "double",
-  'randomSeed',    'r', 1, "double"
+  'help',               'h', 0, "logical",
+  'cataloguesfile',     'c', 1, "character",
+  'bootstrap',          'b', 0, "logical",
+  'outdir',             'o', 1, "character",
+  'snvvcf',             'x', 1, "character",
+  'snvtab',             'X', 1, "character",
+  'dnvvcf',             'y', 1, "character",
+  'dnvtab',             'Y', 1, "character",
+  'svbedpe',            'z', 1, "character",
+  'signaturesfile',     'w', 1, "character",
+  'raresignaturesfile', 'W', 1, "character",
+  'sigversion',         's', 1, "character",
+  'organ',              'O', 1, "character",
+  'signames',           'l', 1, "character",
+  'fitmethod',          'm', 1, "character",
+  'optmethod',          'M', 1, "character",
+  'filtertype',         't', 1, "character",
+  'thresholdperc',      'p', 1, "double",
+  'giniscaling',        'd', 1, "double",
+  'thresholdpval',      'u', 1, "double",
+  'fitmsmode',          'a', 1, "character",
+  'raresigtier',        'T', 1, "character",
+  'residualnegprop',    'i', 1, "double",
+  'minresidualmuts',    'R', 1, "double",
+  'mincossimraresigs',  'C', 1, "double",
+  'minerrorredperc',    'E', 1, "double",
+  'mincossimincr',      'I', 1, "double",
+  'maxraresigs',        'k', 1, "double",
+  'nparallel',          'n', 1, "double",
+  'genomev',            'e', 1, "character",
+  'nboot',              'f', 1, "double",
+  'randomSeed',         'r', 1, "double",
+  'verbose',            'v', 0, "logical"
 ), byrow=TRUE, ncol=4)
 
 # collect the options
@@ -100,6 +235,19 @@ if ( !is.null(opt$outdir) ) {
 }else{
   outdir <- "signatureFitResults/"
 }
+
+# Load the catalogues file
+if(!is.null(opt$cataloguesfile)){
+  if(file.exists(opt$cataloguesfile)){
+    catalogues <- signature.tools.lib::readTable(opt$cataloguesfile)
+  }else{
+    message("catalogues file does not exist: ",opt$cataloguesfile)
+    q(status=1,save = "no")
+  }
+}else{
+  catalogues <- NULL
+}
+
 
 # Load location of SNV vcf files
 if(!is.null(opt$snvvcf)){
@@ -129,6 +277,72 @@ if(!is.null(opt$snvtab)){
   snvtab <- NULL
 }
 
+# Load location of DNV vcf files
+if(!is.null(opt$dnvvcf)){
+  if(file.exists(opt$dnvvcf)){
+    infotable <- read.table(opt$dnvvcf,sep = "\t",stringsAsFactors = FALSE)
+    dnvvcf <- infotable[,2]
+    names(dnvvcf) <- infotable[,1]
+  }else{
+    message("dnvvcf file does not exist: ",opt$dnvvcf)
+    q(status=1,save = "no")
+  }
+}else{
+  dnvvcf <- NULL
+}
+
+# Load location of DNV tab files
+if(!is.null(opt$dnvtab)){
+  if(file.exists(opt$dnvtab)){
+    infotable <- read.table(opt$dnvtab,sep = "\t",stringsAsFactors = FALSE)
+    dnvtab <- infotable[,2]
+    names(dnvtab) <- infotable[,1]
+  }else{
+    message("dnvtab file does not exist: ",opt$dnvtab)
+    q(status=1,save = "no")
+  }
+}else{
+  dnvtab <- NULL
+}
+
+# Load location of BEDPE files
+if(!is.null(opt$svbedpe)){
+  if(file.exists(opt$svbedpe)){
+    infotable <- read.table(opt$svbedpe,sep = "\t",stringsAsFactors = FALSE)
+    svbedpe <- infotable[,2]
+    names(svbedpe) <- infotable[,1]
+  }else{
+    message("svbedpe file does not exist: ",opt$svbedpe)
+    q(status=1,save = "no")
+  }
+}else{
+  svbedpe <- NULL
+}
+
+# Load the signatures file
+if(!is.null(opt$signaturesfile)){
+  if(file.exists(opt$signaturesfile)){
+    signatures <- signature.tools.lib::readTable(opt$signaturesfile)
+  }else{
+    message("signatures file does not exist: ",opt$signaturesfile)
+    q(status=1,save = "no")
+  }
+}else{
+  signatures <- NULL
+}
+
+# Load the rare signatures file
+if(!is.null(opt$raresignaturesfile)){
+  if(file.exists(opt$raresignaturesfile)){
+    raresignatures <- signature.tools.lib::readTable(opt$raresignaturesfile)
+  }else{
+    message("rare signatures file does not exist: ",opt$raresignaturesfile)
+    q(status=1,save = "no")
+  }
+}else{
+  raresignatures <- NULL
+}
+
 if ( !is.null(opt$sigversion) ) {
   sigversion <- opt$sigversion
 }else{
@@ -147,10 +361,88 @@ if ( !is.null(opt$fitmethod) ) {
   fitmethod <- "FitMS"
 }
 
+if ( !is.null(opt$optmethod) ) {
+  optmethod <- opt$optmethod
+}else{
+  optmethod <- "KLD"
+}
+
+if ( !is.null(opt$filtertype) ) {
+  filtertype <- opt$filtertype
+}else{
+  filtertype <- "fixedThreshold"
+}
+
 if ( !is.null(opt$genomev) ) {
   genomev <- opt$genomev
 }else{
   genomev <- "hg19"
+}
+
+if ( !is.null(opt$thresholdperc) ) {
+  thresholdperc <- opt$thresholdperc
+}else{
+  thresholdperc <- 5
+}
+
+if ( !is.null(opt$giniscaling) ) {
+  giniscaling <- opt$giniscaling
+}else{
+  giniscaling <- 10
+}
+
+if ( !is.null(opt$thresholdpval) ) {
+  thresholdpval <- opt$thresholdpval
+}else{
+  thresholdpval <- 0.05
+}
+
+if ( !is.null(opt$fitmsmode) ) {
+  fitmsmode <- opt$fitmsmode
+}else{
+  fitmsmode <- "errorReduction"
+}
+
+if ( !is.null(opt$raresigtier) ) {
+  raresigtier <- opt$raresigtier
+}else{
+  raresigtier <- "T2"
+}
+
+if ( !is.null(opt$residualnegprop) ) {
+  residualnegprop <- opt$residualnegprop
+}else{
+  residualnegprop <- 0.003
+}
+
+if ( !is.null(opt$minresidualmuts) ) {
+  minresidualmuts <- opt$minresidualmuts
+}else{
+  minresidualmuts <- NULL
+}
+
+if ( !is.null(opt$mincossimraresigs) ) {
+  mincossimraresigs <- opt$mincossimraresigs
+}else{
+  mincossimraresigs <- 0.8
+}
+
+if ( !is.null(opt$minerrorredperc) ) {
+  minerrorredperc <- opt$minerrorredperc
+}else{
+  minerrorredperc <- 15
+}
+
+if ( !is.null(opt$mincossimincr) ) {
+  mincossimincr <- opt$mincossimincr
+}else{
+  mincossimincr <- 0.02
+}
+
+if ( !is.null(opt$maxraresigs) ) {
+  maxraresigs <- opt$maxraresigs
+}else{
+  maxraresigs <- 1
 }
 
 if ( !is.null(opt$nparallel) ) {
@@ -165,6 +457,12 @@ if ( !is.null(opt$nboot) ) {
   nboots <- 200
 }
 
+if ( !is.null(opt$verbose) ) {
+  verbose <- TRUE
+}else{
+  verbose <- FALSE
+}
+
 organ <- opt$organ
 randomSeed <- opt$randomSeed
 
@@ -172,37 +470,37 @@ randomSeed <- opt$randomSeed
 dir.create(outdir,showWarnings = F,recursive = T)
 
 # run the pipeline
-pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=NULL,
+pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
                                   genome.v=genomev,
                                   organ=organ,
                                   SNV_vcf_files=snvvcf,
                                   SNV_tab_files=snvtab,
-                                  DNV_vcf_files=NULL,
-                                  DNV_tab_files=NULL,
-                                  SV_bedpe_files=NULL,
-                                  signatures=NULL,
-                                  rare_signatures=NULL,
+                                  DNV_vcf_files=dnvvcf,
+                                  DNV_tab_files=dnvtab,
+                                  SV_bedpe_files=svbedpe,
+                                  signatures=signatures,
+                                  rare_signatures=raresignatures,
                                   signature_version=sigversion,
                                   signature_names=signames,
                                   fit_method=fitmethod, 
-                                  optimisation_method = "KLD",
+                                  optimisation_method = optmethod,
                                   useBootstrap = useBootstrap,
                                   nboot = nboots,
-                                  exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
-                                  threshold_percent = 5,
-                                  giniThresholdScaling = 10,
-                                  multiStepMode = "errorReduction", # or "partialNMF", or "errorReduction", or "cossimIncrease"
-                                  threshold_p.value = 0.05,
-                                  rareSignatureTier = "T2",  #either T1 for observed in organ or T2 for extended
-                                  residualNegativeProp = 0.003,
-                                  minResidualMutations = NULL,
-                                  minCosSimRareSig = 0.8,
-                                  minErrorReductionPerc = 15,
-                                  minCosSimIncrease = 0.02,
-                                  maxRareSigsPerSample = 1,
+                                  exposureFilterType = filtertype,
+                                  threshold_percent = thresholdperc,
+                                  giniThresholdScaling = giniscaling,
+                                  multiStepMode = fitmsmode,
+                                  threshold_p.value = thresholdpval,
+                                  rareSignatureTier = raresigtier,
+                                  residualNegativeProp = residualnegprop,
+                                  minResidualMutations = minresidualmuts,
+                                  minCosSimRareSig = mincossimraresigs,
+                                  minErrorReductionPerc = minerrorredperc,
+                                  minCosSimIncrease = mincossimincr,
+                                  maxRareSigsPerSample = maxraresigs,
                                   nparallel = nparallel,
                                   randomSeed = randomSeed,
-                                  verbose = FALSE)
+                                  verbose = verbose)
 
 if(!is.null(pipelineRes$fitResults)){
   # save fit to file
