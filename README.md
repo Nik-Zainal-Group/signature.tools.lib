@@ -69,11 +69,15 @@ the most important functions is given below.
 
 <a name="cite"/>
 
-If you are using this package please cite:
+These are the research articles associated with ```signature.tools.lib```:
 
-A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies**, *Nature Cancer*, [https://doi.org/10.1038/s43018-020-0027-5], 2020.
+- A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service.** *Science*, 2022.
+- A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies.** *Nature Cancer*, [https://doi.org/10.1038/s43018-020-0027-5], 2020.
 
-In this publication you will find a lot of useful information for using this package.
+More in details, these are the specific signatures and algorithms introduced in each publication:
+
+- Degasperi et al. 2022: RefSig SBS v2, RefSig DBS v1, FitMS
+- Degasperi et al. 2020: RefSig SBS v1, RefSig Rearrangements (SV) v1, Fit with bootstrap, HRDetect with bootstrap.
 
 <a name="req"/>
 
