@@ -91,6 +91,10 @@ returns the fit object with activities/exposures of the signatures in the given 
 \description{
 This function is the main interface for computing signature fit using the signature.tools.lib R package.
 }
+\details{
+The pipeline will produce some feedback in the form or info, warning, and error messages.
+Please check the output to see whether everything worked as planned.
+}
 \examples{
 res <- signatureFit_pipeline(catalogues,"Breast")
 plotFitResults(res$fitResults,"results/")

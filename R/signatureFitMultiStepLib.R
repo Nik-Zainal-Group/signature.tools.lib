@@ -91,20 +91,20 @@ FitMS <- function(catalogues,
   
   # check common signatures 
   if(!is.null(commonSignatures)){
-    if(verbose) message("[signatureFitMultiStep info] Using user provided commonSignatures.")
+    if(verbose) message("[info FitMS] Using user provided commonSignatures.")
   }else{
     if(is.null(organ)){
-      message("[signatureFitMultiStep error] No organ was specified and no commonSignatures were given. Nothing to do.")
+      message("[error FitMS] No organ was specified and no commonSignatures were given. Nothing to do.")
       return(NULL)
     }else{
       if(typeofmuts=="subs"){
         commonSignatures <- organSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,"common"],split = ",")[[1]],drop=F]
         if(ncol(commonSignatures)==0) {
-          message("[signatureFitMultiStep error] No common signatures is associated with organ ",organ,". Nothing to do.")
+          message("[error FitMS] No common signatures is associated with organ ",organ,". Nothing to do.")
           return(NULL)
         }
       }else{
-        message("[signatureFitMultiStep error] Type of mutations ",typeofmuts," not available, please provide your own commonSignatures. Nothing to do.")
+        message("[error FitMS] Type of mutations ",typeofmuts," not available, please provide your own commonSignatures. Nothing to do.")
         return(NULL)
       }
     }
@@ -112,26 +112,26 @@ FitMS <- function(catalogues,
   
   # check rare signatures 
   if(!is.null(rareSignatures)){
-    if(verbose) message("[signatureFitMultiStep info] Using user provided rareSignatures.")
+    if(verbose) message("[info FitMS] Using user provided rareSignatures.")
   }else{
     if(rareSignatureTier %in% c("T1","T2")){
       if(is.null(organ)){
-        message("[signatureFitMultiStep error] No organ was specified and no rareSignatures were given. Nothing to do.")
+        message("[error FitMS] No organ was specified and no rareSignatures were given. Nothing to do.")
         return(NULL)
       }else{
         if(typeofmuts=="subs"){
           rareSignatures <- referenceSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",rareSignatureTier)],split = ",")[[1]],drop=F]
           if(ncol(rareSignatures)==0) {
-            message("[signatureFitMultiStep error] No rare signatures are associated with organ ",organ,". Nothing to do.")
+            message("[error FitMS] No rare signatures are associated with organ ",organ,". Nothing to do.")
             return(NULL)
           }
         }else{
-          message("[signatureFitMultiStep error] Type of mutations ",typeofmuts," not available, please provide your own rareSignatures. Nothing to do.")
+          message("[error FitMS] Type of mutations ",typeofmuts," not available, please provide your own rareSignatures. Nothing to do.")
           return(NULL)
         }
       }
     }else{
-      message("[signatureFitMultiStep error] invalid rareSignatureTier ",rareSignatureTier,". Please provide your own rareSignatures or choose between T1 and T2.")
+      message("[error FitMS] invalid rareSignatureTier ",rareSignatureTier,". Please provide your own rareSignatures or choose between T1 and T2.")
       return(NULL)
     }
   }
@@ -247,7 +247,7 @@ FitMS <- function(catalogues,
               quickFit <- list()
               for(j in 1:ncol(rareSigsToUse)){
                 # j <- 1
-                if(verbose) message("[signatureFitMultiStep info] multiStepMode ",multiStepMode,": depth ",depth,", sample ",i," of ",ncol(catalogues)," fitting rare signature ",j," of ",ncol(rareSigsToUse),"")
+                if(verbose) message("[info FitMS] multiStepMode ",multiStepMode,": depth ",depth,", sample ",i," of ",ncol(catalogues)," fitting rare signature ",j," of ",ncol(rareSigsToUse),"")
                 quickFit[[j]] <- Fit(catalogues = currentCatalogue,
                                        signatures = cbind(commonSigsToUse,rareSigsToUse[,j,drop=F]),
                                        nboot = nboot,
@@ -337,7 +337,7 @@ FitMS <- function(catalogues,
     samples[[sampleName]] <- list()
     samples[[sampleName]]$catalogue <- currentCatalogue
     
-    if(verbose) message("[signatureFitMultiStep info] fitting sample ",i," of ",ncol(catalogues),": ",sampleName)
+    if(verbose) message("[info FitMS] fitting sample ",i," of ",ncol(catalogues),": ",sampleName)
     
     # begin by fitting
     samples[[sampleName]]$fitCommonOnly <- Fit(catalogues = currentCatalogue,
@@ -566,7 +566,7 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
       }else if(!is.null(resObj$samples[[currentSample]]$fitWithRare[[forceRareSigChoice[[currentSample]]]])){
         forceRareSig <- forceRareSigChoice[[currentSample]]
       }else{
-        message("Attempt to force rare sig ",forceRareSigChoice[[currentSample]]," for sample ",currentSample," failed because the rare signature is not in the fitWithRare results for this sample.")
+        message("[warning fitMerge] Attempt to force rare sig ",forceRareSigChoice[[currentSample]]," for sample ",currentSample," failed because the rare signature is not in the fitWithRare results for this sample.")
       }
     }
     
@@ -949,10 +949,10 @@ plotFitResults <- function(fitObj,
       plotFitMS(fitMSobj = fitObj,
                 outdir = outdir)
     }else{
-      message("[plotFitResults error] unknown fitAlgorithm attribute, expecting Fit or FitMS. Input fitObj not recognised. ")
+      message("[error plotFitResults] unknown fitAlgorithm attribute, expecting Fit or FitMS. Input fitObj not recognised. ")
     }
   }else{
-    message("[plotFitResults error] missing fitAlgorithm attribute, fitObj not recognised.")
+    message("[error plotFitResults] missing fitAlgorithm attribute, fitObj not recognised.")
   }
 }
 
@@ -973,7 +973,7 @@ plotFit <- function(fitObj,
   
   # some checks on outdir
   if(is.null(outdir)) {
-    message("[plotFit error] please specify outdir")
+    message("[error plotFit] please specify outdir")
     return(NULL)
   }
   if(outdir != ""){
@@ -1160,7 +1160,7 @@ plotFitMS <- function(fitMSobj,
                       outdir = ""){
   # some checks on outdir
   if(is.null(outdir)) {
-    message("[plotFitMS error] please specify outdir")
+    message("[error plotFitMS] please specify outdir")
     return(NULL)
   }
   if(outdir != ""){
@@ -1552,7 +1552,7 @@ fitMStoJSON <- function(fitObj,
 #' fitObj <- FitMS(catalogues,organ="Breast")
 #' saveFitToFile(fitObj,"fit.rData")
 saveFitToFile <- function(fitObj,filename,verbose=T){
-  if(verbose) message("Saving ",fitObj$fitAlgorithm," object to file ",filename)
+  if(verbose) message("[info saveFitToFile] saving ",fitObj$fitAlgorithm," object to file ",filename)
   save(file = filename,fitObj)
 }
 
@@ -1568,6 +1568,6 @@ saveFitToFile <- function(fitObj,filename,verbose=T){
 #' fitObj <- loadFitFromFile("fit.rData")
 loadFitFromFile <- function(filename,verbose=T){
   load(file = filename)
-  if(verbose) message("Loaded ",fitObj$fitAlgorithm," object from file ",filename)
+  if(verbose) message("[info saveFitToFile] loaded ",fitObj$fitAlgorithm," object from file ",filename)
   return(fitObj)
 }

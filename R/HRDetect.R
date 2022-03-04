@@ -23,21 +23,30 @@
 #' all the samples for which enough data are available to calculate all six necessary features.
 #' Along with the score, the contribution of each feature to the score will be provided. In addition,
 #' an updated data_matrix and other other data that have been calculated during the execution of the pipeline
-#' will be returned as well.
+#' will be returned as well. The input data_matrix can also be omitted, and the required
+#' HRDetect features will be computed from the other input files. Signature fit with bootstrap
+#' and bootstrap HRDetect scores can be requested using the bootstrapSignatureFit and
+#' bootstrapHRDetectScores parameters.
 #' 
 #' Single Nucleotide Variations. Columns in data_matrix relative to SNV are SNV3 and SNV8. Values
 #' corresponding to number of SNV3 and SNV8 mutations in each sample can be provided in the data frame data_matrix.
-#' Alternatively, an SNV_catalogue data frame can be used to provide 96-channel SNV catalogues for the samples
-#' (96-channels as rows and samples as columns). The 30 consensus COSMIC signatures will be fitted to 
-#' the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SNV3 and SNV8 will be added to the data_matrix.
-#' Alternatively, SNV_catalogues can be constructed providing a list of either SNV VCF files or SNV TAB files.
+#' Alternatively, SNV catalogues can be provided for the samples
+#' (96-channels as rows and samples as columns) or can be constructed providing a list of either SNV VCF files or SNV TAB files.
+#' The SNV catalogues will then be used to estimate signature exposures, using either RefSig or
+#' COSMIC signatures. The signature version can be specified using the SNV_signature_version
+#' parameter and a specific subset of signatures can be requested via the SNV_signature_names
+#' parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
+#' If the signature version is RefSigv2 and an organ is specified, signature fit will be performed
+#' using the FitMS algorithm (Degasperi et al. 2022, Science).
 #' 
 #' Structural Variants (Rearrangements). Columns in data_matrix relative to SV are SV3 and SV5. Values
 #' corresponding to number of SV3 and SV5 rearrangements in each sample can be provided in the data frame data_matrix.
-#' Alternatively, an SV_catalogue data frame can be used to provide 32-channel SV catalogues for the samples
-#' (32-channels as rows and samples as columns). The 6 Breast Cancer Rearrangement signatures (Nik-Zainal et al. 2016) will be fitted to 
-#' the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SV3 and SV5 will be added to the data_matrix.
-#' Alternatively, SV_catalogues can be constructed providing a list of SV BEDPE files.
+#' Alternatively, SV catalogues can be provided for the samples
+#' (32-channels as rows and samples as columns) or can be constructed providing a list of SV BEDPE files.
+#' The SV catalogues will then be used to estimate signature exposures, using RefSig signatures.
+#' The signature version can be specified using the SNV_signature_version
+#' parameter and a specific subset of signatures can be requested via the SV_signature_names
+#' parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
 #' 
 #' Deletions at Micro-homology (Indels). The column in data_matrix corresponding to the proportion of deletions at micro-homology is del.mh.prop.
 #' The proportion of deletions at micro-homology for the samples can be calculated by the pipeline if the user provides Indels VCF files.
@@ -45,20 +54,25 @@
 #' HRD-LOH index (CNV). The column in data_matrix corresponding to the HRD-LOH index is hrd.
 #' The HRD-LOH index for the samples can be calculated by the pipeline if the user provides copy numbers TAB files.
 #' 
+#' The pipeline will produce some feedback in the form or info, warning, and error messages.
+#' Please check the output to see whether everything worked as planned.
+#' 
 #' @param data_matrix data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).
 #' @param genome.v genome version to use when constructing the SNV catalogue and classifying indels. Set it to either "hg19" or "hg38".
+#' @param SNV_catalogues data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
+#' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
 #' @param SNV_vcf_files list of file names corresponding to SNV VCF files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied.
 #' @param SNV_tab_files list of file names corresponding to SNV TAB files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: chr, position, REF, ALT.
-#' @param SNV_catalogues data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
 #' @param Indels_vcf_files list of file names corresponding to Indels VCF files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.
 #' @param Indels_tab_files list of file names corresponding to Indels TAB files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied. Each File contains indels from a single sample and the following minimal columns: chr, position, REF, ALT.
 #' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
-#' @param SV_catalogues data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.
-#' @param signature_type either "COSMICv2", "COSMICv3.2", "RefSigv1" or "RefSigv2"
-#' @param organ When using RefSigv1 or RefSigv2 as signature_type you need to specify the organ or your samples, as organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
-#' @param cosmic_siglist If COSMICv2 is used, use this parameter to provide a list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used. If COSMICv3.2 is used, use this parameter to provide a list of characters with the SBS names, e.g. c("SBS1","SBS5","SBS10a","SBS17b"). If omitted all COSMICv3.2 signatures are used.
-#' @param methodFit can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
+#' @param organ when using RefSigv1 or RefSigv2 as SNV_signature_version, organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". If a certain organ is not available for either SNV or Sv signatures, or if the organ parameter is unspecified, then the pipeline will attempt to use the corresponding reference signatures instead, and SNV_signature_names and/or SV_signature_names can be used to specify a subset of signature names.
+#' @param SNV_signature_version version of single base substitution signatures to use, either "COSMICv2", "COSMICv3.2", "RefSigv1" (Degasperi et al. 2020, Nature Cancer) or "RefSigv2" (Degasperi et al. 2022, Science)
+#' @param SV_signature_version version of rearrangement signatures to use, only "RefSigv1" (Degasperi et al. 2020, Nature Cancer) currently available
+#' @param SNV_signature_names when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SNV_signature_version option
+#' @param SV_signature_names when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SV_signature_version option
+#' @param optimisation_method can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
 #' @param threshold_percentFit threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero
 #' @param bootstrapSignatureFit set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised
 #' @param nbootFit number of bootstraps to use, more bootstraps more accurate results
@@ -69,24 +83,27 @@
 #' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 #' @export
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, ... H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @references A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service. Science, 2022.
 #' @references Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 #' @references Nik-Zainal, S., Davies, H., Staaf, J., Ramakrishna, M., Glodzik, D., Zou, X., ... Stratton, M. R. (2016). Landscape of somatic mutations in 560 breast cancer whole-genome sequences. Nature, 534(7605), 1–20. https://doi.org/10.1038/nature17676
 #' @references Huang, X., Wojtowicz, D., & Przytycka, T. M. (2017). Detecting Presence Of Mutational Signatures In Cancer With Confidence. bioRxiv, (October). https://doi.org/10.1101/132597
 #' 
 HRDetect_pipeline <- function(data_matrix=NULL,
                               genome.v="hg19",
+                              SNV_catalogues=NULL,
+                              SV_catalogues=NULL,
                               SNV_vcf_files=NULL,
                               SNV_tab_files=NULL,
-                              SNV_catalogues=NULL,
                               Indels_vcf_files=NULL,
                               Indels_tab_files=NULL,
                               CNV_tab_files=NULL,
                               SV_bedpe_files=NULL,
-                              SV_catalogues=NULL,
-                              signature_type="RefSigv2",
                               organ=NULL,
-                              cosmic_siglist=NULL,
-                              methodFit = "KLD",
+                              SNV_signature_version="RefSigv2",
+                              SV_signature_version="RefSigv1",
+                              SNV_signature_names=NULL,
+                              SV_signature_names=NULL,
+                              optimisation_method = "KLD",
                               threshold_percentFit = 5,
                               bootstrapSignatureFit = TRUE,
                               nbootFit=100,
@@ -103,58 +120,54 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   
   #check that the matrix has correct features (columns)
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
+  # need to check if there are samples that require fit
+  SNV_samples_with_data <- unique(unlist(sapply(list(SNV_vcf_files,
+                                                     SNV_tab_files,
+                                                     SNV_catalogues), function(x) names(x))))
+  SV_samples_with_data <- unique(unlist(sapply(list(SV_bedpe_files,
+                                                    SV_catalogues), function(x) names(x))))
+  samples_with_data <- unique(unlist(sapply(list(SNV_vcf_files,
+                                                    SNV_tab_files,
+                                                    SNV_catalogues,
+                                                    Indels_vcf_files,
+                                                    Indels_tab_files,
+                                                    CNV_tab_files,
+                                                    SV_bedpe_files,
+                                                    SV_catalogues), function(x) names(x))))
+  
+  message("[info HRDetect_pipeline] HRDetect pipeline starting!")
   
   if (!is.null(data_matrix)){
     if (!length(intersect(col_needed,colnames(data_matrix)))==length(col_needed)){
-      stop("[error HRDetect_pipeline] incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
+      message("[error HRDetect_pipeline] incorrect data_matrix columns specified, you need the following columns: \"del.mh.prop\", \"SNV3\", \"SV3\", \"SV5\", \"hrd\", \"SNV8\"")
+      return(NULL)
+    }
+    # check that all samples with data are in the rownames of the data_matrix
+    sample_names_missing <- setdiff(samples_with_data,rownames(data_matrix))
+    if(length(sample_names_missing)>0){
+      message("[warning HRDetect_pipeline] some sample names associated with mutation/catalogue files are missing in the data_matrix provided. These will be added to the data_matrix as additional rows.")
+      data_matrix <- rbind(data_matrix,matrix(NA,ncol = 6,nrow = length(sample_names_missing),dimnames = list(sample_names_missing,col_needed)))
     }
   }else{
     #there is no data_matrix, just build it from files
-    #get the sample names from all the file lists
-    sample_names <- unique(unlist(sapply(list(SNV_vcf_files,
-                                SNV_tab_files,
-                                SNV_catalogues,
-                                Indels_vcf_files,
-                                Indels_tab_files,
-                                CNV_tab_files,
-                                SV_bedpe_files,
-                                SV_catalogues), function(x) names(x))))
-    if(!is.null(sample_names)){
-      data_matrix <- matrix(NA,ncol = 6,nrow = length(sample_names),dimnames = list(sample_names,col_needed))
+    if(!is.null(samples_with_data)){
+      data_matrix <- matrix(NA,ncol = 6,nrow = length(samples_with_data),dimnames = list(samples_with_data,col_needed))
     }else{
-      stop("[error HRDetect_pipeline] no input data provided.")
+      message("[error HRDetect_pipeline] no input data provided.")
+      return(NULL)
     }
   }
   samples_list <- rownames(data_matrix)
   
-  #check that the signature_type option is valid
-  #get available organs
-  available_organs <- intersect(unique(sapply(strsplit(colnames(all_organ_sigs_subs),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))),
-  unique(sapply(strsplit(colnames(all_organ_sigs_rearr),split="_"),function(x) paste(x[1:(length(x)-1)],collapse = "_"))))
-  
-  if(!(signature_type %in% c("COSMICv2","COSMICv3.2","RefSigv1","RefSigv2"))){
-    stop(paste0("[error HRDetect_pipeline] invalid signature_type ",signature_type,"."))
+  #check that the signature version options are valid
+
+  if(!(SNV_signature_version %in% c("COSMICv2","COSMICv3.2","RefSigv1","RefSigv2"))){
+    message(paste0("[error HRDetect_pipeline] invalid SNV_signature_version ",SNV_signature_version,"."))
+    return(NULL)
   }
-  
-  #use either COSMIC sigs or tissue-specific sigs
-  if(signature_type=="COSMICv2"){
-    sigstofit_subs <- cosmic30
-    if (!is.null(cosmic_siglist)) sigstofit_subs <- sigstofit_subs[,cosmic_siglist,drop=FALSE]
-    sigstofit_rearr <- RS.Breast560
-  }else if(signature_type=="COSMICv3.2"){
-    sigstofit_subs <- COSMIC_v3.2_SBS_GRCh37
-    rownames(sigstofit_subs) <- sigstofit_subs$Type
-    sigstofit_subs <- sigstofit_subs[,-1]
-    sigstofit_subs <- sortCatalogue(sigstofit_subs)
-    if (!is.null(cosmic_siglist)) sigstofit_subs <- sigstofit_subs[,cosmic_siglist,drop=FALSE]
-    sigstofit_rearr <- RS.Breast560
-  }else if(signature_type=="RefSigv1"){
-    sigstofit_subs <- getOrganSignatures(organ = organ,typemut = "subs",version = 1)
-    sigstofit_rearr <- getOrganSignatures(organ = organ,typemut = "rearr",version = 1)
-  }else if(signature_type=="RefSigv2"){
-    # FitMS will take care of the SBS signatures
-    sigstofit_subs <- NULL
-    sigstofit_rearr <- getOrganSignatures(organ = organ,typemut = "rearr",version = 1)
+  if(!(SV_signature_version %in% c("RefSigv1"))){
+    message(paste0("[error HRDetect_pipeline] invalid SV_signature_version ",SV_signature_version,"."))
+    return(NULL)
   }
   
   #initialise bootstrap fit variables to NULL
@@ -169,294 +182,187 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   hrdetect_bootstrap_table <- NULL
   q_5_50_95 <- NULL
   
-  #check whether SNV related columns are NA or incomplete and if so check whether the catalogues
-  #are available for sig fit, and if not check whether the vcf (or tab) files are available for building catalogues
+  # first of all, we need to check that signature fit is necessary
+  SNV_cols <- c("SNV3","SNV8")
+  SV_cols <- c("SV3","SV5")
+  SNV3names <- c("SBS3","Signature3","RefSig3")
+  SNV8names <- c("SBS8","Signature8","RefSig8")
+  SV3names <- c("RS3","RefSigR3")
+  SV5names <- c("RS5","RefSigR5","RefSigR9")
   
   message("[info HRDetect_pipeline] Single Nucleotide Variations")
   
-  SNV_cols <- c("SNV3","SNV8")
-  
-  need_to_compute_SNVexposures <- any(is.na(data_matrix[,SNV_cols]))
-  
-  if(need_to_compute_SNVexposures){
+  # select appropriate SNV signatures to use and run signatureFit_pipeline
+  if(!is.null(SNV_samples_with_data)){
     
-    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SNV3 and SNV8, checking if the user supplied SNV catalogues, VCF files or TAB files for those samples.")
+    SNV_fit_method <- "Fit"
     
-    #find out which samples that have no exposures have vcf file or catalogue
-    incomplete_samples_pos <- which(apply(data_matrix[,SNV_cols,drop=FALSE],1,function(x) any(is.na(x))))
-    incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
-    if (!is.null(SNV_catalogues)){
-      incomplete_samples_with_catalogueSNV <- intersect(incomplete_samples,colnames(SNV_catalogues))
+    if(SNV_signature_version=="RefSigv2"){
+      if(!is.null(organ)){
+        # check if the organ is available in FitMS
+        available_organs <- rownames(sigsForFittingSBSv2.03)
+        if(organ %in% available_organs){
+          SNV_fit_method <- "FitMS"
+        }else{
+          message("[warning HRDetect_pipeline] SNV organ-specific signatures not available for ",organ,", version RefSigv2, trying to fix this by switching to use the reference signatures instead. Please use SNV_signature_names to specify a subset of reference signatures to use.")
+          organ <- NULL
+        }
+      }
+    }else if(SNV_signature_version=="RefSigv1"){
+      if(!is.null(organ)){
+        # check if the organ is available 
+        organsigs <- getOrganSignatures(organ = organ,version = "1",typemut = "subs",verbose = FALSE)
+        if(ncol(organsigs)==0){
+          message("[warning HRDetect_pipeline] SNV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SNV_signature_names to specify a subset of reference signatures to use.")
+          organ <- NULL
+        }
+      }
+    }
+    # if SNV_signature_version is COSMICv2 or COSMICv3.2, there is currently nothing to do
+    # the function signatureFit_pipeline will take care of it, and if organ is not NULL
+    # we can add some checks when the organ option is implemented for COSMIC signatures
+    
+    message("[info HRDetect_pipeline] Running SNV signature extraction using the ",SNV_fit_method," method for samples ",paste(SNV_samples_with_data,collapse = ", "),".")
+    # Now I can run the signature fit using signatureFit_pipeline
+    fitPipeline_SNV <- signatureFit_pipeline(catalogues = SNV_catalogues,
+                                             genome.v = genome.v,
+                                             organ = organ,
+                                             SNV_vcf_files = SNV_vcf_files,
+                                             SNV_tab_files = SNV_tab_files,
+                                             signature_version = SNV_signature_version,
+                                             signature_names = SNV_signature_names,
+                                             fit_method = SNV_fit_method,
+                                             optimisation_method = optimisation_method,
+                                             useBootstrap = bootstrapSignatureFit,
+                                             threshold_percent = threshold_percentFit,
+                                             nboot = nbootFit,
+                                             nparallel = nparallel,
+                                             randomSeed = randomSeed)
+    
+    if(is.null(fitPipeline_SNV$fitResults)){
+      message("[error HRDetect_pipeline] SNV signatures fit failed.")
+      return(NULL)
     }else{
-      #there is no SNV catalogue given, so no incomplete sample has a catalogue
-      incomplete_samples_with_catalogueSNV <- character(0)
-    }
-    if (!is.null(SNV_vcf_files)){
-      incomplete_samples_with_vcfSNV <- intersect(incomplete_samples,names(SNV_vcf_files))
-    }else{
-      #there is no SNV vcf files given, so no incomplete sample has a vcf file
-      incomplete_samples_with_vcfSNV <- character(0)
-    }
-    if (!is.null(SNV_tab_files)){
-      incomplete_samples_with_tabSNV <- intersect(incomplete_samples,names(SNV_tab_files))
-    }else{
-      #there is no SNV tab files given, so no incomplete sample has a tab file
-      incomplete_samples_with_tabSNV <- character(0)
-    }
-    #now, check that if a sample has both catalogue and vcf (or tab) file, there is no need to compute the catalogue
-    incomplete_samples_with_vcfSNV <- setdiff(incomplete_samples_with_vcfSNV,incomplete_samples_with_catalogueSNV)
-    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_catalogueSNV)
-    #also if a sample has both vcf and tab file, use the vcf file
-    incomplete_samples_with_tabSNV <- setdiff(incomplete_samples_with_tabSNV,incomplete_samples_with_vcfSNV)
-    
-    #initialise the SNV catalogues data frame if necessary
-    mut.order <- c("A[C>A]A","A[C>A]C","A[C>A]G","A[C>A]T","C[C>A]A","C[C>A]C","C[C>A]G","C[C>A]T","G[C>A]A","G[C>A]C","G[C>A]G","G[C>A]T","T[C>A]A","T[C>A]C","T[C>A]G","T[C>A]T","A[C>G]A","A[C>G]C","A[C>G]G","A[C>G]T","C[C>G]A","C[C>G]C","C[C>G]G","C[C>G]T","G[C>G]A","G[C>G]C","G[C>G]G","G[C>G]T","T[C>G]A","T[C>G]C","T[C>G]G","T[C>G]T","A[C>T]A","A[C>T]C","A[C>T]G","A[C>T]T","C[C>T]A","C[C>T]C","C[C>T]G","C[C>T]T","G[C>T]A","G[C>T]C","G[C>T]G","G[C>T]T","T[C>T]A","T[C>T]C","T[C>T]G","T[C>T]T","A[T>A]A","A[T>A]C","A[T>A]G","A[T>A]T","C[T>A]A","C[T>A]C","C[T>A]G","C[T>A]T","G[T>A]A","G[T>A]C","G[T>A]G","G[T>A]T","T[T>A]A","T[T>A]C","T[T>A]G","T[T>A]T","A[T>C]A","A[T>C]C","A[T>C]G","A[T>C]T","C[T>C]A","C[T>C]C","C[T>C]G","C[T>C]T","G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T","A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T","G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
-    if(is.null(SNV_catalogues)){
-      SNV_catalogues <- data.frame(row.names = mut.order)
-    }else{
-      SNV_catalogues <- SNV_catalogues[mut.order,,drop=FALSE]
-    }
-    
-    #compute the SNV catalogue of samples with VCF files where necessary
-    if (length(incomplete_samples_with_vcfSNV)>0){
-      
-      message("[info HRDetect_pipeline] VCF files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_vcfSNV,collapse = " "))
-      
-      cat_list <- foreach::foreach(sample=incomplete_samples_with_vcfSNV) %dopar% {
-        res <- vcfToSNVcatalogue(SNV_vcf_files[sample],genome.v = genome.v)
-        colnames(res$catalogue) <- sample
-        res$catalogue
-      }
-      #add new SNV catalogues to the catalogues matrix
-      for (i in 1:length(cat_list)){
-        newcat <- cat_list[[i]]
-        SNV_catalogues <- cbind(SNV_catalogues,newcat)
-        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
-      }
-    }
-    
-    #compute the SNV catalogue of samples with TAB files where necessary
-    if (length(incomplete_samples_with_tabSNV)>0){
-      
-      message("[info HRDetect_pipeline] TAB files will be converted to SNV catalogues for the following samples: ",paste(incomplete_samples_with_tabSNV,collapse = " "))
-      
-      cat_list <- foreach::foreach(sample=incomplete_samples_with_tabSNV) %dopar% {
-        subs <- read.table(file = SNV_tab_files[sample],
-                  sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
-        res <- tabToSNVcatalogue(subs,genome.v = genome.v)
-        colnames(res$catalogue) <- sample
-        res$catalogue
-      }
-      #add new SNV catalogues to the catalogues matrix
-      for (i in 1:length(cat_list)){
-        newcat <- cat_list[[i]]
-        SNV_catalogues <- cbind(SNV_catalogues,newcat)
-        incomplete_samples_with_catalogueSNV <- c(incomplete_samples_with_catalogueSNV,colnames(newcat))
-      }
-    }
-    
-    #compute exposures for the samples in the catalogueSNV that do not have exposures yet
-    #consider only the catalogues needed
-    SNV_catalogues_toFit <- SNV_catalogues[,incomplete_samples_with_catalogueSNV,drop=FALSE]
-    
-    #run sigfit with bootstrap if there are samples in the SNV_catalogue
-    if(length(incomplete_samples_with_catalogueSNV)>0){
-      message("[info HRDetect_pipeline] Substitution signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSNV,collapse = " "))
-      
-      if(signature_type %in% c("COSMICv2","COSMICv3.2","RefSigv1")){
-        fitRes_subs <- Fit(catalogues = SNV_catalogues_toFit,
-                           signatures = sigstofit_subs,
-                           method = methodFit,
-                           exposureFilterType = "fixedThreshold",
-                           threshold_percent = threshold_percentFit,
-                           threshold_p.value = threshold_p.valueFit,
-                           useBootstrap = bootstrapSignatureFit,
-                           nboot = nbootFit,
-                           nparallel = nparallel,
-                           randomSeed = randomSeed)
-      }else if(signature_type == "RefSigv2"){
-        fitRes_subs <- FitMS(catalogues = SNV_catalogues_toFit,
-                               organ = organ,
-                               method = methodFit,
-                               exposureFilterType = "fixedThreshold",
-                               threshold_percent = threshold_percentFit,
-                               threshold_p.value = threshold_p.valueFit,
-                               multiStepMode = "errorReduction",
-                               useBootstrap = bootstrapSignatureFit,
-                               nboot = nbootFit,
-                               nparallel = nparallel,
-                               randomSeed = randomSeed)
-      }
+      message("[info HRDetect_pipeline] SNV signatures fit completed.")
+      # save the results
+      fitRes_subs <- fitPipeline_SNV$fitResults
       exposures_subs <- t(fitRes_subs$exposures)
       exposures_subs <- exposures_subs[1:(nrow(exposures_subs)-1),,drop=F]
-      
-      # set default value
-      data_matrix[colnames(exposures_subs),"SNV3"] <- 0
-      data_matrix[colnames(exposures_subs),"SNV8"] <- 0
-      
-      if(signature_type=="COSMICv2"){
-        if("Signature3" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Signature3",]
-        }
-        if("Signature8" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Signature8",]
-        }
-      }else if(signature_type=="COSMICv3.2"){
-        if("SBS3" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["SBS3",]
-        }
-        if("SBS8" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["SBS8",]
-        }
+    }
+    
+  }else{
+    message("[info HRDetect_pipeline] no SNV catalogues or SNV mutations provided, no signature fit performed.")
+  }
+  
+  # if we have new exposures we can add them to the data_matrix
+  if(!is.null(exposures_subs)){
+    
+    # set default value
+    data_matrix[colnames(exposures_subs),"SNV3"] <- 0
+    data_matrix[colnames(exposures_subs),"SNV8"] <- 0
+    
+    # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
+    if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ)){
+      # if RefSigv2 was used, there may be some SBS sigs in the names
+      sbssigs <- rownames(exposures_subs)[grepl(rownames(exposures_subs),pattern = "^SBS")]
+      if(length(sbssigs)>0){
+        exposures_subs_toconvert <- exposures_subs[setdiff(rownames(exposures_subs),sbssigs),,drop=F]
+        exposures_subs_sbs <- exposures_subs[sbssigs,,drop=F]
+        exposures_subs_converted <- convertExposuresFromOrganToRefSigs(exposures_subs_toconvert,typemut = "subs")
+        exposures_subs_converted <- exposures_subs_converted[apply(exposures_subs_converted, 1,sum)>0,,drop=FALSE]
+        exposures_subs <- rbind(exposures_subs_converted,exposures_subs_sbs)
       }else{
-        # if RefSigv2 was used, there may be some SBS sigs in the names
-        sbssigs <- rownames(exposures_subs)[grepl(rownames(exposures_subs),pattern = "^SBS")]
-        if(length(sbssigs)>0){
-          exposures_subs_toconvert <- exposures_subs[setdiff(rownames(exposures_subs),sbssigs),,drop=F]
-          exposures_subs_sbs <- exposures_subs[sbssigs,,drop=F]
-          exposures_subs_converted <- convertExposuresFromOrganToRefSigs(exposures_subs_toconvert,typemut = "subs")
-          exposures_subs_converted <- exposures_subs_converted[apply(exposures_subs_converted, 1,sum)>0,,drop=FALSE]
-          exposures_subs <- rbind(exposures_subs_converted,exposures_subs_sbs)
-        }else{
-          exposures_subs <- convertExposuresFromOrganToRefSigs(exposures_subs,typemut = "subs")
-          exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
-        }
-        #add to data_matrix if present
-        if("Ref.Sig.3" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["Ref.Sig.3",]
-        }
-        if("Ref.Sig.8" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["Ref.Sig.8",]
-        }
-        if("SBS3" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV3"] <- exposures_subs["SBS3",]
-        }
-        if("SBS8" %in% rownames(exposures_subs)){
-          data_matrix[colnames(exposures_subs),"SNV8"] <- exposures_subs["SBS8",]
-        }
+        exposures_subs <- convertExposuresFromOrganToRefSigs(exposures_subs,typemut = "subs")
+        exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
       }
+    }
+    
+    # check for SNV3
+    whichSNV3 <- rownames(exposures_subs) %in% SNV3names
+    if(sum(whichSNV3)>0){
+      data_matrix[colnames(exposures_subs),"SNV3"] <- apply(exposures_subs[whichSNV3,,drop=F],2,sum)
+    }
+    # check for SNV8
+    whichSNV8 <- rownames(exposures_subs) %in% SNV8names
+    if(sum(whichSNV8)>0){
+      data_matrix[colnames(exposures_subs),"SNV8"] <- apply(exposures_subs[whichSNV8,,drop=F],2,sum)
     }
     
   }
   
-  #check whether SV related columns are NA or incomplete and if so check whether the catalogues
-  #are available for sig fit, and if not check whether the BEDPE files are available for building catalogues
   
   message("[info HRDetect_pipeline] Structural Variants (Rearrangements)")
   
-  SV_cols <- c("SV3","SV5")
-  
-  need_to_compute_SVexposures <- any(is.na(data_matrix[,SV_cols]))
-  
-  
-  if(need_to_compute_SVexposures){
+  # select appropriate SV signatures to use
+  if(!is.null(SV_samples_with_data)){
     
-    message("[info HRDetect_pipeline] Some samples in the input data_matrix do not have the exposures for SV3 and SV5, checking if the user supplied SV catalogues or BEDPE files for those samples.")
+    SV_fit_method <- "Fit"
     
-    #find out which samples that have no exposures have BEDPE file or catalogue
-    incomplete_samples_pos <- which(apply(data_matrix[,SV_cols,drop=FALSE],1,function(x) any(is.na(x))))
-    incomplete_samples <- rownames(data_matrix)[incomplete_samples_pos]
-    if (!is.null(SV_catalogues)){
-      incomplete_samples_with_catalogueSV <- intersect(incomplete_samples,colnames(SV_catalogues))
-    }else{
-      #there is no SV catalogue given, so no incomplete sample has a catalogue
-      incomplete_samples_with_catalogueSV <- character(0)
-    }
-    if (!is.null(SV_bedpe_files)){
-      incomplete_samples_with_bedpeSV <- intersect(incomplete_samples,names(SV_bedpe_files))
-    }else{
-      #there is no SV bedpe files given, so no incomplete sample has a bedpe file
-      incomplete_samples_with_bedpeSV <- character(0)
-    }
-    
-    #now, check that if a sample has both catalogue and BEDPE file, there is no need to compute the catalogue
-    incomplete_samples_with_bedpeSV <- setdiff(incomplete_samples_with_bedpeSV,incomplete_samples_with_catalogueSV)
-    
-    #initialise the SV catalogues data frame if necessary
-    catalogue.labels <- c('clustered_del_1-10Kb', 'clustered_del_10-100Kb', 'clustered_del_100Kb-1Mb', 'clustered_del_1Mb-10Mb', 'clustered_del_>10Mb', 'clustered_tds_1-10Kb', 'clustered_tds_10-100Kb', 'clustered_tds_100Kb-1Mb', 'clustered_tds_1Mb-10Mb', 'clustered_tds_>10Mb', 'clustered_inv_1-10Kb', 'clustered_inv_10-100Kb', 'clustered_inv_100Kb-1Mb', 'clustered_inv_1Mb-10Mb', 'clustered_inv_>10Mb', 'clustered_trans', 'non-clustered_del_1-10Kb', 'non-clustered_del_10-100Kb', 'non-clustered_del_100Kb-1Mb', 'non-clustered_del_1Mb-10Mb', 'non-clustered_del_>10Mb', 'non-clustered_tds_1-10Kb', 'non-clustered_tds_10-100Kb', 'non-clustered_tds_100Kb-1Mb', 'non-clustered_tds_1Mb-10Mb', 'non-clustered_tds_>10Mb', 'non-clustered_inv_1-10Kb', 'non-clustered_inv_10-100Kb', 'non-clustered_inv_100Kb-1Mb', 'non-clustered_inv_1Mb-10Mb', 'non-clustered_inv_>10Mb', 'non-clustered_trans')
-    if(is.null(SV_catalogues)){
-      SV_catalogues <- data.frame(row.names = catalogue.labels)
-    }else{
-      SV_catalogues <- SV_catalogues[catalogue.labels,,drop=FALSE]
-    }
-    
-    #compute the SV catalogue of samples with BEDPE files where necessary
-    if (length(incomplete_samples_with_bedpeSV)>0){
-      
-      message("[info HRDetect_pipeline] BEDPE files will be converted to Rearrangement catalogues for the following samples: ",paste(incomplete_samples_with_bedpeSV,collapse = " "))
-      
-      cat_list <- foreach::foreach(sample=incomplete_samples_with_bedpeSV) %dopar% {
-        sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
-                               stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
-        reslist <- bedpeToRearrCatalogue(sv_bedpe)
-        res <- reslist$rearr_catalogue
-        # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
-        resncol <- ncol(res)
-        if(resncol>1){
-          rescolsum <- apply(res,2,sum)
-          sampletouse <- which.max(rescolsum)[1]
-          message(paste0("[warning HRDetect_pipeline] BEDPE file for sample ",sample," contained ",resncol," sample names: ",paste(colnames(res),collapse = ", "),". This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangements (",colnames(res)[sampletouse],"). Please double check and rerun if necessary with only one sample for each BEDPE file."))
-          res <- res[,sampletouse,drop=F]
+    if(SV_signature_version=="RefSigv1"){
+      if(!is.null(organ)){
+        # check if the organ is available 
+        organsigs <- getOrganSignatures(organ = organ,version = "1",typemut = "rearr",verbose = FALSE)
+        if(ncol(organsigs)==0){
+          message("[warning HRDetect_pipeline] SV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SV_signature_names to specify a subset of reference signatures to use.")
+          organ <- NULL
         }
-        colnames(res) <- sample
-        res
-      }
-      #add new SV catalogues to the catalogues matrix
-      for (i in 1:length(cat_list)){
-        newcat <- cat_list[[i]]
-        SV_catalogues <- cbind(SV_catalogues,newcat)
-        incomplete_samples_with_catalogueSV <- c(incomplete_samples_with_catalogueSV,colnames(newcat))
       }
     }
     
-    #compute exposures for the samples in the catalogueSV that do not have exposures yet
-    #consider only the catalogues needed
-    SV_catalogues_toFit <- SV_catalogues[,incomplete_samples_with_catalogueSV,drop=FALSE]
+    message("[info HRDetect_pipeline] Running SV signature extraction using the ",SV_fit_method," method for samples ",paste(SV_samples_with_data,collapse = ", "),".")
+    # Now I can run the signature fit using signatureFit_pipeline
+    fitPipeline_SV <- signatureFit_pipeline(catalogues = SV_catalogues,
+                                            genome.v = genome.v,
+                                            organ = organ,
+                                            SV_bedpe_files = SV_bedpe_files,
+                                            signature_version = SV_signature_version,
+                                            signature_names = SV_signature_names,
+                                            fit_method = SV_fit_method,
+                                            optimisation_method = optimisation_method,
+                                            useBootstrap = bootstrapSignatureFit,
+                                            threshold_percent = threshold_percentFit,
+                                            nboot = nbootFit,
+                                            nparallel = nparallel,
+                                            randomSeed = randomSeed)
     
-    #run sigfit with bootstrap if there are samples in the SV_catalogue
-    if(length(incomplete_samples_with_catalogueSV)>0){
-      message("[info HRDetect_pipeline] Rearrangement signatures exposures will be estiamated for the following samples: ",paste(incomplete_samples_with_catalogueSV,collapse = " "))
-      
-      fitRes_rearr <- Fit(catalogues = SV_catalogues_toFit,
-                         signatures = sigstofit_rearr,
-                         method = methodFit,
-                         exposureFilterType = "fixedThreshold",
-                         threshold_percent = threshold_percentFit,
-                         threshold_p.value = threshold_p.valueFit,
-                         useBootstrap = bootstrapSignatureFit,
-                         nboot = nbootFit,
-                         nparallel = nparallel,
-                         randomSeed = randomSeed)
+    if(is.null(fitPipeline_SV$fitResults)){
+      message("[error HRDetect_pipeline] SV signatures fit failed.")
+      return(NULL)
+    }else{
+      message("[info HRDetect_pipeline] SV signatures fit completed.")
+      # save the results
+      fitRes_rearr <- fitPipeline_SV$fitResults
       exposures_rearr <- t(fitRes_rearr$exposures)
       exposures_rearr <- exposures_rearr[1:(nrow(exposures_rearr)-1),,drop=F]
-      
-      # set default
-      data_matrix[colnames(exposures_rearr),"SV3"] <- 0
-      data_matrix[colnames(exposures_rearr),"SV5"] <- 0
-      
-      if(signature_type=="COSMICv2" | signature_type=="COSMICv3.2"){
-        if("RS3" %in% rownames(exposures_rearr)){
-          data_matrix[colnames(exposures_rearr),"SV3"] <- exposures_rearr["RS3",]
-        }
-        if("RS5" %in% rownames(exposures_rearr)){
-          data_matrix[colnames(exposures_rearr),"SV5"] <- exposures_rearr["RS5",]
-        }
-      }else{
-        #convert to reference signatures
-        exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
-        exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
-        #add to data_matrix if present
-        if("RefSig R3" %in% rownames(exposures_rearr)){
-          data_matrix[colnames(exposures_rearr),"SV3"] <- exposures_rearr["RefSig R3",]
-        }
-        if("RefSig R5" %in% rownames(exposures_rearr)){
-          data_matrix[colnames(exposures_rearr),"SV5"] <- exposures_rearr["RefSig R5",]
-        }
-        if("RefSig R9" %in% rownames(exposures_rearr)){
-          data_matrix[colnames(exposures_rearr),"SV5"] <- data_matrix[colnames(exposures_rearr),"SV5"] + exposures_rearr["RefSig R9",]
-        }
-      }
-      
+    }
+    
+  }else{
+    message("[info HRDetect_pipeline] no SV catalogues or SV mutations provided, no signature fit performed.")
+  }
+  
+  # if we have new exposures we can add them to the data_matrix
+  if(!is.null(exposures_rearr)){
+    
+    # set default
+    data_matrix[colnames(exposures_rearr),"SV3"] <- 0
+    data_matrix[colnames(exposures_rearr),"SV5"] <- 0
+    
+    # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
+    if((SV_signature_version=="RefSigv1") & !is.null(organ)){
+      #convert to reference signatures
+      exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
+      exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
+    }
+    
+    # check for SV3
+    whichSV3 <- rownames(exposures_rearr) %in% SV3names
+    if(sum(whichSV3)>0){
+      data_matrix[colnames(exposures_rearr),"SV3"] <- apply(exposures_rearr[whichSV3,,drop=F],2,sum)
+    }
+    # check for SV5
+    whichSV5 <- rownames(exposures_rearr) %in% SV5names
+    if(sum(whichSV5)>0){
+      data_matrix[colnames(exposures_rearr),"SV5"] <- apply(exposures_rearr[whichSV5,,drop=F],2,sum)
     }
     
   }
@@ -573,7 +479,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   #now, compute HRDetect score for all complete cases, so first notify of incomplete cases if any
   incomplete_cases <- rownames(data_matrix)[!complete.cases(data_matrix)]
   if(length(incomplete_cases)>0){
-    message("[info HRDetect_pipeline] Some samples do not have data necessary to compute the HRDetect score (check output $data_matrix). Will not compute HRDetect score for the following samples: ",paste(incomplete_cases,collapse = " "))
+    message("[info HRDetect_pipeline] Some samples do not have data necessary to compute the HRDetect score (check output $data_matrix). Will NOT compute HRDetect score for the following samples: ",paste(incomplete_cases,collapse = " "))
     hrdetect_input <- data_matrix[complete.cases(data_matrix),,drop=FALSE]
   }else{
     hrdetect_input <- data_matrix
@@ -655,21 +561,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           tmp_data_matrix[colnames(current_subs),"SNV3"] <- 0
           tmp_data_matrix[colnames(current_subs),"SNV8"] <- 0
           
-          if(signature_type=="COSMICv2"){
-            if("Signature3" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["Signature3",]
-            }
-            if("Signature8" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["Signature8",]
-            }
-          }else if(signature_type=="COSMICv3.2"){
-            if("SBS3" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["SBS3",]
-            }
-            if("SBS8" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["SBS8",]
-            }
-          }else{
+          # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
+          if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ)){
             # if RefSigv2 was used, there may be some SBS sigs in the names
             sbssigs <- rownames(current_subs)[grepl(rownames(current_subs),pattern = "^SBS")]
             if(length(sbssigs)>0){
@@ -682,18 +575,17 @@ HRDetect_pipeline <- function(data_matrix=NULL,
               current_subs <- convertExposuresFromOrganToRefSigs(current_subs,typemut = "subs")
               current_subs <- current_subs[apply(current_subs, 1,sum)>0,,drop=FALSE]
             }
-            if("Ref.Sig.3" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["Ref.Sig.3",]
-            }
-            if("Ref.Sig.8" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["Ref.Sig.8",]
-            }
-            if("SBS3" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV3"] <- current_subs["SBS3",]
-            }
-            if("SBS8" %in% rownames(current_subs)){
-              tmp_data_matrix[colnames(current_subs),"SNV8"] <- current_subs["SBS8",]
-            }
+          }
+          
+          # check for SNV3
+          whichSNV3 <- rownames(current_subs) %in% SNV3names
+          if(sum(whichSNV3)>0){
+            tmp_data_matrix[colnames(current_subs),"SNV3"] <- apply(current_subs[whichSNV3,,drop=F],2,sum)
+          }
+          # check for SNV8
+          whichSNV8 <- rownames(current_subs) %in% SNV8names
+          if(sum(whichSNV8)>0){
+            tmp_data_matrix[colnames(current_subs),"SNV8"] <- apply(current_subs[whichSNV8,,drop=F],2,sum)
           }
           
           #4) sample rearr exposures
@@ -715,27 +607,22 @@ HRDetect_pipeline <- function(data_matrix=NULL,
           tmp_data_matrix[colnames(current_rearr),"SV3"] <- 0
           tmp_data_matrix[colnames(current_rearr),"SV5"] <- 0
           
-          if(signature_type=="COSMICv2" | signature_type=="COSMICv3.2"){
-            if("RS3" %in% rownames(current_rearr)){
-              tmp_data_matrix[colnames(current_rearr),"SV3"] <- current_rearr["RS3",]
-            }
-            if("RS5" %in% rownames(current_rearr)){
-              tmp_data_matrix[colnames(current_rearr),"SV5"] <- current_rearr["RS5",]
-            }
-          }else{
+          # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
+          if((SV_signature_version=="RefSigv1") & !is.null(organ)){
             #convert to reference signatures
             current_rearr <- convertExposuresFromOrganToRefSigs(current_rearr,typemut = "rearr")
             current_rearr <- current_rearr[apply(current_rearr, 1,sum)>0,,drop=FALSE]
-            #add to data_matrix if present
-            if("RefSig R3" %in% rownames(current_rearr)){
-              tmp_data_matrix[colnames(current_rearr),"SV3"] <- current_rearr["RefSig R3",]
-            }
-            if("RefSig R5" %in% rownames(current_rearr)){
-              tmp_data_matrix[colnames(current_rearr),"SV5"] <- current_rearr["RefSig R5",]
-            }
-            if("RefSig R9" %in% rownames(current_rearr)){
-              tmp_data_matrix[colnames(current_rearr),"SV5"] <- tmp_data_matrix[colnames(current_rearr),"SV5"] + current_rearr["RefSig R9",]
-            }
+          }
+          
+          # check for SV3
+          whichSV3 <- rownames(current_rearr) %in% SV3names
+          if(sum(whichSV3)>0){
+            tmp_data_matrix[colnames(current_rearr),"SV3"] <- apply(current_rearr[whichSV3,,drop=F],2,sum)
+          }
+          # check for SV5
+          whichSV5 <- rownames(current_rearr) %in% SV5names
+          if(sum(whichSV5)>0){
+            tmp_data_matrix[colnames(current_rearr),"SV5"] <- apply(current_rearr[whichSV5,,drop=F],2,sum)
           }
           
           # compute score
@@ -765,10 +652,12 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   
   res <- list()
   res$parameters <- list()
-  res$parameters$signature_type <- signature_type
+  res$parameters$SNV_signature_version <- SNV_signature_version
+  res$parameters$SV_signature_version <- SV_signature_version
   res$parameters$organ <- organ
-  res$parameters$cosmic_siglist <- cosmic_siglist
-  res$parameters$methodFit <- methodFit
+  res$parameters$SNV_signature_names <- SNV_signature_names
+  res$parameters$SV_signature_names <- SV_signature_names
+  res$parameters$optimisation_method <- optimisation_method
   res$parameters$threshold_percentFit <- threshold_percentFit
   res$parameters$bootstrapSignatureFit <- bootstrapSignatureFit
   res$parameters$nbootFit <- nbootFit

@@ -1347,25 +1347,11 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 #' @return organ-specific signatures matrix
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
-getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs"){
+getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs",verbose = TRUE){
   sigs <- NULL
   if(typemut=="subs" & version=="1" & (cohort=="best" | cohort=="ICGC")){
-    available_organs <- unique(sapply(colnames(all_organ_sigs_subs),function(x){
-      txtspl <- strsplit(x,split = "_")[[1]]
-      paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
-    }))
-    if (!(organ %in% available_organs)) {
-      message("Organ ",organ, " not available for mutation type ",typemut," version 1")
-    }
     sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
   }else if(typemut=="rearr" & (version=="1" | version=="latest") & (cohort=="best" | cohort=="ICGC")){
-    available_organs <- unique(sapply(colnames(all_organ_sigs_rearr),function(x){
-      txtspl <- strsplit(x,split = "_")[[1]]
-      paste(txtspl[1:(length(txtspl)-1)],collapse = "_")
-    }))
-    if (!(organ %in% available_organs)) {
-      message("Organ ",organ, " not available for mutation type ",typemut)
-    }
     sigs <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_rearr))]]
   }else if(typemut=="DNV" & (version=="2" | version=="latest")){
     if(cohort=="best") cohort <- "GEL"
@@ -1377,6 +1363,7 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
     }
     sigs <- organSignaturesSBSv2.03[,grepl(colnames(organSignaturesSBSv2.03),pattern = paste0(cohort,"-",organ)),drop=F]
   }
+  if(ncol(sigs)==0 & verbose) message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
   return(sigs)
 }
 

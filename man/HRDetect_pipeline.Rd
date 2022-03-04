@@ -5,25 +5,29 @@
 \title{HRDetect Pipeline}
 \usage{
 HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
-  SNV_vcf_files = NULL, SNV_tab_files = NULL, SNV_catalogues = NULL,
-  Indels_vcf_files = NULL, Indels_tab_files = NULL,
-  CNV_tab_files = NULL, SV_bedpe_files = NULL, SV_catalogues = NULL,
-  signature_type = "RefSigv2", organ = NULL, cosmic_siglist = NULL,
-  methodFit = "KLD", threshold_percentFit = 5,
-  bootstrapSignatureFit = TRUE, nbootFit = 100,
-  threshold_p.valueFit = 0.05, bootstrapHRDetectScores = FALSE,
-  nparallel = 1, randomSeed = NULL)
+  SNV_catalogues = NULL, SV_catalogues = NULL, SNV_vcf_files = NULL,
+  SNV_tab_files = NULL, Indels_vcf_files = NULL,
+  Indels_tab_files = NULL, CNV_tab_files = NULL,
+  SV_bedpe_files = NULL, organ = NULL,
+  SNV_signature_version = "RefSigv2",
+  SV_signature_version = "RefSigv1", SNV_signature_names = NULL,
+  SV_signature_names = NULL, optimisation_method = "KLD",
+  threshold_percentFit = 5, bootstrapSignatureFit = TRUE,
+  nbootFit = 100, threshold_p.valueFit = 0.05,
+  bootstrapHRDetectScores = FALSE, nparallel = 1, randomSeed = NULL)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}
 
 \item{genome.v}{genome version to use when constructing the SNV catalogue and classifying indels. Set it to either "hg19" or "hg38".}
 
+\item{SNV_catalogues}{data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
+
+\item{SV_catalogues}{data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
+
 \item{SNV_vcf_files}{list of file names corresponding to SNV VCF files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied.}
 
 \item{SNV_tab_files}{list of file names corresponding to SNV TAB files to be used to construct 96-channel substitution catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: chr, position, REF, ALT.}
-
-\item{SNV_catalogues}{data frame containing 96-channel substitution catalogues. A sample for each column and the 96-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.snv.tab) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
 
 \item{Indels_vcf_files}{list of file names corresponding to Indels VCF files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.}
 
@@ -33,15 +37,17 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 
 \item{SV_bedpe_files}{list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..}
 
-\item{SV_catalogues}{data frame containing 32-channel substitution catalogues. A sample for each column and the 32-channels as rows. Row names should have the correct channel names (see for example tests/testthat/test.cat) and the column names should be the sample names so that each catalogue can be matched with the corresponding row in the data_matrix input.}
+\item{organ}{when using RefSigv1 or RefSigv2 as SNV_signature_version, organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". If a certain organ is not available for either SNV or Sv signatures, or if the organ parameter is unspecified, then the pipeline will attempt to use the corresponding reference signatures instead, and SNV_signature_names and/or SV_signature_names can be used to specify a subset of signature names.}
 
-\item{signature_type}{either "COSMICv2", "COSMICv3.2", "RefSigv1" or "RefSigv2"}
+\item{SNV_signature_version}{version of single base substitution signatures to use, either "COSMICv2", "COSMICv3.2", "RefSigv1" (Degasperi et al. 2020, Nature Cancer) or "RefSigv2" (Degasperi et al. 2022, Science)}
 
-\item{organ}{When using RefSigv1 or RefSigv2 as signature_type you need to specify the organ or your samples, as organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+\item{SV_signature_version}{version of rearrangement signatures to use, only "RefSigv1" (Degasperi et al. 2020, Nature Cancer) currently available}
 
-\item{cosmic_siglist}{If COSMICv2 is used, use this parameter to provide a list of integers from 1 to 30 indicating the COSMIC signatures to use. If omitted all 30 COSMICv2 signatures are used. If COSMICv3.2 is used, use this parameter to provide a list of characters with the SBS names, e.g. c("SBS1","SBS5","SBS10a","SBS17b"). If omitted all COSMICv3.2 signatures are used.}
+\item{SNV_signature_names}{when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SNV_signature_version option}
 
-\item{methodFit}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
+\item{SV_signature_names}{when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SV_signature_version option}
+
+\item{optimisation_method}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
 
 \item{threshold_percentFit}{threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero}
 
@@ -84,31 +90,45 @@ files for these samples. The function will return the HRDetect BRCAness probabil
 all the samples for which enough data are available to calculate all six necessary features.
 Along with the score, the contribution of each feature to the score will be provided. In addition,
 an updated data_matrix and other other data that have been calculated during the execution of the pipeline
-will be returned as well.
+will be returned as well. The input data_matrix can also be omitted, and the required
+HRDetect features will be computed from the other input files. Signature fit with bootstrap
+and bootstrap HRDetect scores can be requested using the bootstrapSignatureFit and
+bootstrapHRDetectScores parameters.
 }
 \details{
 Single Nucleotide Variations. Columns in data_matrix relative to SNV are SNV3 and SNV8. Values
 corresponding to number of SNV3 and SNV8 mutations in each sample can be provided in the data frame data_matrix.
-Alternatively, an SNV_catalogue data frame can be used to provide 96-channel SNV catalogues for the samples
-(96-channels as rows and samples as columns). The 30 consensus COSMIC signatures will be fitted to 
-the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SNV3 and SNV8 will be added to the data_matrix.
-Alternatively, SNV_catalogues can be constructed providing a list of either SNV VCF files or SNV TAB files.
+Alternatively, SNV catalogues can be provided for the samples
+(96-channels as rows and samples as columns) or can be constructed providing a list of either SNV VCF files or SNV TAB files.
+The SNV catalogues will then be used to estimate signature exposures, using either RefSig or
+COSMIC signatures. The signature version can be specified using the SNV_signature_version
+parameter and a specific subset of signatures can be requested via the SNV_signature_names
+parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
+If the signature version is RefSigv2 and an organ is specified, signature fit will be performed
+using the FitMS algorithm (Degasperi et al. 2022, Science).
 
 Structural Variants (Rearrangements). Columns in data_matrix relative to SV are SV3 and SV5. Values
 corresponding to number of SV3 and SV5 rearrangements in each sample can be provided in the data frame data_matrix.
-Alternatively, an SV_catalogue data frame can be used to provide 32-channel SV catalogues for the samples
-(32-channels as rows and samples as columns). The 6 Breast Cancer Rearrangement signatures (Nik-Zainal et al. 2016) will be fitted to 
-the catalogues using a bootstrapping approach (Huang et al. 2017) and estimates for SV3 and SV5 will be added to the data_matrix.
-Alternatively, SV_catalogues can be constructed providing a list of SV BEDPE files.
+Alternatively, SV catalogues can be provided for the samples
+(32-channels as rows and samples as columns) or can be constructed providing a list of SV BEDPE files.
+The SV catalogues will then be used to estimate signature exposures, using RefSig signatures.
+The signature version can be specified using the SNV_signature_version
+parameter and a specific subset of signatures can be requested via the SV_signature_names
+parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
 
 Deletions at Micro-homology (Indels). The column in data_matrix corresponding to the proportion of deletions at micro-homology is del.mh.prop.
 The proportion of deletions at micro-homology for the samples can be calculated by the pipeline if the user provides Indels VCF files.
 
 HRD-LOH index (CNV). The column in data_matrix corresponding to the HRD-LOH index is hrd.
 The HRD-LOH index for the samples can be calculated by the pipeline if the user provides copy numbers TAB files.
+
+The pipeline will produce some feedback in the form or info, warning, and error messages.
+Please check the output to see whether everything worked as planned.
 }
 \references{
 A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, ... H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+
+A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service. Science, 2022.
 
 Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 

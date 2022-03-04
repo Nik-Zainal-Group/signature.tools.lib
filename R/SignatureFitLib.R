@@ -28,22 +28,22 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
                          verbose = TRUE, #use FALSE to suppress messages
                          n_sa_iter = 500,
                          showDeprecated = TRUE){ 
-  if(showDeprecated) message("[SignatureFit warning] SignatureFit is deprecated, please use Fit instead with useBootstrap=FALSE. You can turn off this warning with showDeprecated=FALSE")
+  if(showDeprecated) message("[warning SignatureFit] SignatureFit is deprecated, please use Fit instead with useBootstrap=FALSE. You can turn off this warning with showDeprecated=FALSE")
   
   if(method=="KLD"){
-    if(verbose) message("SignatureFit, objective function: KLD")
+    if(verbose) message("[info SignatureFit] SignatureFit, objective function: KLD")
     
     #Fit using the given signatures
     nnlm_res <- NNLM::nnlm(as.matrix(signature_data_matrix),as.matrix(cat),loss = "mkl",method = "lee")
     fit_KLD <- KLD(cat,as.matrix(signature_data_matrix) %*% nnlm_res$coefficients)
     exposures <- nnlm_res$coefficients
-    if(verbose) message("Optimisation terminated, KLD=",fit_KLD)
+    if(verbose) message("[info SignatureFit] Optimisation terminated, KLD=",fit_KLD)
     if(alpha >= 0){ #negative alpha skips Bleeding Filter
       #apply bleeding filter
       if(bf_method=="CosSim"){
-        if(verbose) message("Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
+        if(verbose) message("[info SignatureFit] Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
       }else if (bf_method=="KLD"){
-        if(verbose) message("Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
+        if(verbose) message("[info SignatureFit] Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
       }
       for(i in 1:ncol(nnlm_res$coefficients)){
         if(bf_method=="CosSim"){
@@ -59,7 +59,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
         }
       }
       fit_KLD_afterBF <- KLD(cat,as.matrix(signature_data_matrix) %*% exposures)
-      if(verbose) message("New fit after Bleeding Filter, KLD=",fit_KLD_afterBF," (",sprintf("%.3f",(fit_KLD_afterBF - fit_KLD)/fit_KLD*100),"% increase)")
+      if(verbose) message("[info SignatureFit] New fit after Bleeding Filter, KLD=",fit_KLD_afterBF," (",sprintf("%.3f",(fit_KLD_afterBF - fit_KLD)/fit_KLD*100),"% increase)")
     }
   }else if(method=="SA"){
     # library(GenSA)
@@ -69,7 +69,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
     
     doParallel::registerDoParallel(4)
     
-    if(verbose) message("SignatureFit, objective function: SA")
+    if(verbose) message("[info SignatureFit] SignatureFit, objective function: SA")
     
     sig <- signature_data_matrix
     
@@ -81,7 +81,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
       exp_tmp <- rep(0, ncol(sig))
       names(exp_tmp) <- names(sig)
       if(nmut>0){
-        if(verbose) message("Analyzing " ,  j, " of ", ncol(cat), " sample name ", colnames(cat[j]))
+        if(verbose) message("[info SignatureFit] Analyzing " ,  j, " of ", ncol(cat), " sample name ", colnames(cat[j]))
         
         ## Compute the start solution for the sim. annealing
         ss <- startSolution(sig, curr_cat)
@@ -99,10 +99,10 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
         
         ## Apply the bleeding Filter to remove the 'unnecessary' signatures
         if(bf_method=="CosSim"){
-          if(verbose) message("Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
+          if(verbose) message("[info SignatureFit] Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
           exp_tmp <-  bleedingFilter(exp_tmp, sig, curr_cat, alpha)
         }else if (bf_method=="KLD"){
-          if(verbose) message("Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
+          if(verbose) message("[info SignatureFit] Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
           exp_tmp <-  bleedingFilterKLD(exp_tmp, sig, curr_cat, alpha)
         }
         
@@ -119,7 +119,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 
     
   }else if(method=="NNLS"){
-    if(verbose) message("SignatureFit, method: NNLS")
+    if(verbose) message("[info SignatureFit] SignatureFit, method: NNLS")
     
     exposures <- matrix(NA,ncol = ncol(cat),nrow = ncol(signature_data_matrix))
     colnames(exposures) <- colnames(cat)
@@ -131,14 +131,14 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
     }
     
     fit_KLD <- KLD(cat,as.matrix(signature_data_matrix) %*% exposures)
-    if(verbose) message("Optimisation terminated, KLD=",fit_KLD)
+    if(verbose) message("[info SignatureFit] Optimisation terminated, KLD=",fit_KLD)
     
     if(alpha >= 0){ #negative alpha skips Bleeding Filter
       #apply bleeding filter
       if(bf_method=="CosSim"){
-        if(verbose) message("Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
+        if(verbose) message("[info SignatureFit] Applying Bleeding Filter (Cosine Similarity) with alpha=",alpha*100,"%")
       }else if (bf_method=="KLD"){
-        if(verbose) message("Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
+        if(verbose) message("[info SignatureFit] Applying Bleeding Filter (KLD) with alpha=",alpha*100,"%")
       }
       for (i in 1:ncol(exposures)){
         if(bf_method=="CosSim"){
@@ -155,9 +155,9 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
       }
     }
     fit_KLD_afterBF <- KLD(cat,as.matrix(signature_data_matrix) %*% exposures)
-    if(verbose) message("New fit after Bleeding Filter, KLD=",fit_KLD_afterBF," (",sprintf("%.3f",(fit_KLD_afterBF - fit_KLD)/fit_KLD*100),"% increase)")
+    if(verbose) message("[info SignatureFit] New fit after Bleeding Filter, KLD=",fit_KLD_afterBF," (",sprintf("%.3f",(fit_KLD_afterBF - fit_KLD)/fit_KLD*100),"% increase)")
   }else{
-    stop("SignatureFit error. Unknown method specified.")
+    stop("[error SignatureFit] Unknown method specified.")
   }
   exposures[exposures < .Machine$double.eps] <- 0
   if(doRound) exposures <- round(exposures)
@@ -216,7 +216,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
                                        n_sa_iter = 500, #only used if  method = "SA"
                                        randomSeed = NULL,
                                        showDeprecated = TRUE){ 
-  if(showDeprecated) message("[SignatureFit_withBootstrap warning] SignatureFit_withBootstrap is deprecated, please use Fit instead with useBootstrap=TRUE. You can turn off this warning with showDeprecated=FALSE")
+  if(showDeprecated) message("[warning SignatureFit_withBootstrap] SignatureFit_withBootstrap is deprecated, please use Fit instead with useBootstrap=TRUE. You can turn off this warning with showDeprecated=FALSE")
   if(!is.null(randomSeed)){
     set.seed(randomSeed)
   }
@@ -386,7 +386,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
   file_store <- paste0(outdir,"SigFit_withBootstrap_Summary_m",method,"_bfm",bf_method,"_alpha",alpha,"_tr",threshold_percent,"_p",threshold_p.value,".rData")
   if(file.exists(file_store)){
     load(file_store)
-    message("Bootstrap Signature Fits loaded from file")
+    message("[info SignatureFit_withBootstrap_Analysis] Bootstrap Signature Fits loaded from file")
   }else{
     res <- SignatureFit_withBootstrap(cat = cat,
                                           signature_data_matrix = signature_data_matrix,

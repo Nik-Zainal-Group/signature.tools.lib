@@ -296,9 +296,14 @@ from the input row names.
 
 ## Command line scripts
 
-We provide a command line scripts for the HRDetect and signature fit pipelines, which can
+We provide command line scripts, which can
 be used instead of writing your own R code. You can find these scripts in
 the ```scripts``` directory.
+
+Currently available scripts are:
+
+- signatureFit: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
+- hrDetect: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
 
 <a name="examples"/>
 

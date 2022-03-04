@@ -77,7 +77,7 @@ how_to <- function(){
   message("                              organ-specific signatures will be used.")
   message("                              If SIGVERSION is COSMICv2 or COSMICv3.2, then a")
   message("                              selection of signatures found in the given organ")
-  message("                              will be used. Organ names depend on the selected")
+  message("                              will be used. Available organs depend on the selected")
   message("                              SIGVERSION. For RefSigv1 or RefSigv2: Biliary,")
   message("                              Bladder, Bone_SoftTissue, Breast, Cervix (v1 only),")
   message("                              CNS, Colorectal, Esophagus, Head_neck, Kidney,")

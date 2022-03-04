@@ -1,4 +1,4 @@
-RefSig R2	RefSig R4	RefSig R6a	RefSig R1	RefSig R7	RefSig R5	RefSig R6b	RefSig R8	RefSig R3	RefSig R9	RefSig R10	RefSig R11	RefSig R12	RefSig R13	RefSig R14	RefSig R15	RefSig R16	RefSig R17	RefSig R18	RefSig R19	RefSig R20
+RefSigR2	RefSigR4	RefSigR6a	RefSigR1	RefSigR7	RefSigR5	RefSigR6b	RefSigR8	RefSigR3	RefSigR9	RefSigR10	RefSigR11	RefSigR12	RefSigR13	RefSigR14	RefSigR15	RefSigR16	RefSigR17	RefSigR18	RefSigR19	RefSigR20
 Biliary_A (RefSig R4)	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
 Biliary_B (RefSig R10)	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0
 Biliary_C (RefSig R2+R5)	0.321390301	0	0	0	0	0.678609699	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
