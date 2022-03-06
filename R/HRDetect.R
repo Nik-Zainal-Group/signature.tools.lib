@@ -245,6 +245,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     }else{
       message("[info HRDetect_pipeline] SNV signatures fit completed.")
       # save the results
+      SNV_catalogues <- fitPipeline_SNV$catalogues
       fitRes_subs <- fitPipeline_SNV$fitResults
       exposures_subs <- t(fitRes_subs$exposures)
       exposures_subs <- exposures_subs[1:(nrow(exposures_subs)-1),,drop=F]
@@ -331,6 +332,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     }else{
       message("[info HRDetect_pipeline] SV signatures fit completed.")
       # save the results
+      SV_catalogues <- fitPipeline_SV$catalogues
       fitRes_rearr <- fitPipeline_SV$fitResults
       exposures_rearr <- t(fitRes_rearr$exposures)
       exposures_rearr <- exposures_rearr[1:(nrow(exposures_rearr)-1),,drop=F]

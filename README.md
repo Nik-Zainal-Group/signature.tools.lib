@@ -38,6 +38,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.1.1
+
+- Updated the ```HRDetect_pipeline``` function and the ```hrDetect``` command line script to use the ```signatureFit_pipeline``` function
+
 2.1.0
 
 - Added the ```signatureFit_pipeline``` function, which is a flexible interface for signature fit analysis
@@ -302,8 +306,8 @@ the ```scripts``` directory.
 
 Currently available scripts are:
 
-- signatureFit: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
-- hrDetect: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
+- **signatureFit**: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
+- **hrDetect**: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
 
 <a name="examples"/>
 
