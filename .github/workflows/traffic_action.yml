@@ -19,7 +19,7 @@ jobs:
     
     # Calculates traffic and clones and stores in CSV file
     - name: GitHub traffic 
-      uses: andreadega/repository-traffic-action@c5fd40a174d5a66f53ff2f55ccf3e612db4c797d
+      uses: andreadega/repository-traffic-action@14f9f13ca381da5b4842bba40d6fd0e1f73e2b8c
       env:
         TRAFFIC_ACTION_TOKEN: ${{ secrets.TRAFFIC_ACTION_TOKEN }} 
      
