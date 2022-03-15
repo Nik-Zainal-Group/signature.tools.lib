@@ -5,9 +5,8 @@ test_that("test that matchClustering() works and outputs the same results when u
   ns <- 10
   runs <- 50
   features <- 20
-  run1 <- 1
-  run2 <- 2
   p_boot <- matrix(runif(features*runs*ns),nrow = features)
+  colnames(p_boot) <- paste(rep(paste0("run",1:runs),each=ns),rep(paste0("s",1:ns),runs),sep = "_")
   
   message("building distMatrix...")
   t1 <- Sys.time()

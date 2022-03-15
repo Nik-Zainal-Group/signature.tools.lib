@@ -4,7 +4,7 @@ Version: 2.1.1
 Authors@R: person("Andrea", "Degasperi", email = "ad923@cam.ac.uk", role = c("aut", "cre"))
 Description: R package with useful functions for mutational signatures analysis.
 Depends: R (>= 3.2.1)
-License: What license is it under?
+License: see LICENCE file
 Encoding: UTF-8
 LazyData: true
 biocViews: 
@@ -39,5 +39,6 @@ Imports:
     BSgenome, 
     readr,
     doRNG,
-    combinat
+    combinat,
+    limSolve
 RoxygenNote: 6.1.1

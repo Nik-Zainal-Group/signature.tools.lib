@@ -117,6 +117,7 @@ devtools::test(pkg = ".",filter = "plotCopyNumbers")
 devtools::test(pkg = ".",filter = "FitAndFitMS")
 devtools::test(pkg = ".",filter = "JSONexport")
 devtools::test(pkg = ".",filter = "SignatureFit_pipeline")
+devtools::test(pkg = ".",filter = "matchClustering")
 
 
 
