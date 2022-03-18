@@ -4,9 +4,17 @@
 \alias{calc.ai}
 \title{Number of Telomeric Allelic Imbalances}
 \usage{
-calc.ai(seg, chrominfo = chrominfo, min.size = 0, min.probes = 500,
-  cont = 0, check.names = FALSE, ploidyByChromosome = TRUE,
-  return.loc = FALSE, shrink = TRUE)
+calc.ai(
+  seg,
+  chrominfo = chrominfo,
+  min.size = 0,
+  min.probes = 500,
+  cont = 0,
+  check.names = FALSE,
+  ploidyByChromosome = TRUE,
+  return.loc = FALSE,
+  shrink = TRUE
+)
 }
 \arguments{
 \item{seg}{input data frame. Segmented output in the form of an ASCAT out matrix, which also includes ploidy and contamination. Total CN in column 6, nA in column 7, nB in column 8, ploidy in column 9, and contamination in column 10. Requires the following columns in the given order: "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and    "AberrantCellFraction".}

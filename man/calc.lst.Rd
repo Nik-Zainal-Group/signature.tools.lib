@@ -4,8 +4,14 @@
 \alias{calc.lst}
 \title{Large-scale state transitions}
 \usage{
-calc.lst(seg, chrominfo = chrominfo.snp6, nA = 7,
-  check.names = FALSE, return.loc = FALSE, chr.arm = "no")
+calc.lst(
+  seg,
+  chrominfo = chrominfo.snp6,
+  nA = 7,
+  check.names = FALSE,
+  return.loc = FALSE,
+  chr.arm = "no"
+)
 }
 \arguments{
 \item{seg}{seg must be an ASCAT output object, in DNAcopy format. Requires the following columns in the given order: "SampleID", "Chromosome", "Start", "End", "nProbes", "totalCN", "nA", "nB", "Ploidy" and    "AberrantCellFraction". Column "nProbes" is not used here and can be set to NA.}

@@ -4,9 +4,15 @@
 \alias{plot_HRDetect_BootstrapScores}
 \title{plot_HRDetect_BootstrapScores}
 \usage{
-plot_HRDetect_BootstrapScores(outdir, hrdetect_res,
-  main = "Distribution of HRDetect scores", mar = NULL,
-  pwidth = NULL, pheight = NULL, pointsize = 12)
+plot_HRDetect_BootstrapScores(
+  outdir,
+  hrdetect_res,
+  main = "Distribution of HRDetect scores",
+  mar = NULL,
+  pwidth = NULL,
+  pheight = NULL,
+  pointsize = 12
+)
 }
 \arguments{
 \item{outdir}{output directory for the plot}

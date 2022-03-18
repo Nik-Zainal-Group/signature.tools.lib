@@ -29,7 +29,7 @@ the strand1 and strand2 automated interpretation.
 }
 \examples{
 vcf_sv_file.bedpe <- "sample.bedpe"
-sv_bedpe <- read.table(vcf_sv_file.bedpe,sep = "\\t",header = TRUE,
+sv_bedpe <- read.table(vcf_sv_file.bedpe,sep = "\t",header = TRUE,
                      stringsAsFactors = FALSE,check.names = FALSE)
 #build a catalogue from the bedpe file
 res.cat <- bedpeToRearrCatalogue(sv_bedpe)

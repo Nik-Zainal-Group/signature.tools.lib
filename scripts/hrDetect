@@ -45,6 +45,50 @@ how_to <- function(){
   message("                              depending on the SIGVERSION requested. For example,")
   message("                              for COSMICv3.2 use: SBS1,SBS2,SBS3.")
   message("  -b, --bootstrap           Request HRDetect with bootstrap")
+  message("  -t, --filtertype=FTYPE    FTYPE is either fixedThreshold or giniScaledThreshold.")
+  message("                              When using fixedThreshold, exposures will be removed")
+  message("                              based on a fixed percentage with respect to the")
+  message("                              total number of mutations (THRPERC will be")
+  message("                              used). When using giniScaledThreshold each signature")
+  message("                              will used a different threshold calculated as")
+  message("                              (1-Gini(signature))*GINISCALING. If not specified")
+  message("                              then FTYPE=fixedThreshold")
+  message("  -p, --thresholdperc=THRPERC")
+  message("                            THRPERC is a threshold in percentage of total mutations")
+  message("                              in a sample, only exposures larger than THRPERC are")
+  message("                              considered. If not specified THRPERC=5.")
+  message("  -d, --giniscaling=GINISCALING")
+  message("                            GINISCALING is a scaling factor for the threshold type")
+  message("                              giniScaledThreshold, which is based on the Gini score")
+  message("                              of a signature. If not specified GINISCALING=10.")
+  message("  -x, --snvfitfile=SNVFF    SNVFF is the file name of an rData file containing a Fit")
+  message("                              or FitMS result object. This parameter should be used")
+  message("                              when the user wants to customise the subs fit outside")
+  message("                              the HRDetect pipeline, e.g. using the signatureFit")
+  message("                              command line script. If custom signatures were used,")
+  message("                              values CSNV3 and CSNV8 can be used to specify which")
+  message("                              custom signatures correspond to the HRDetect parameters")
+  message("                              SNV3 and SNV8.")
+  message("  -y, --snv3altname=CSNV3   Custom signature name that will be considered as SNV3")
+  message("                              input for HRDetect. Useful for when snvfitfile is")
+  message("                              provided and custom signatures are used.")
+  message("  -z, --snv8altname=CSNV8   Custom signature name that will be considered as SNV8")
+  message("                              input for HRDetect. Useful for when snvfitfile is")
+  message("                              provided and custom signatures are used.")
+  message("  -X, --svfitfile=SVFF      SVFF is the file name of an rData file containing a Fit")
+  message("                              or FitMS result object. This parameter should be used")
+  message("                              when the user wants to customise the rearr fit outside")
+  message("                              the HRDetect pipeline, e.g. using the signatureFit")
+  message("                              command line script. If custom signatures were used,")
+  message("                              values CSV3 and CSV5 can be used to specify which")
+  message("                              custom signatures correspond to the HRDetect parameters")
+  message("                              SV3 and SV5.")
+  message("  -Y, --sv3altname=CSV3     Custom signature name that will be considered as SV3")
+  message("                              input for HRDetect. Useful for when svfitfile is")
+  message("                              provided and custom signatures are used.")
+  message("  -Z, --sv5altname=CSV5     Custom signature name that will be considered as SV5")
+  message("                              input for HRDetect. Useful for when svfitfile is")
+  message("                              provided and custom signatures are used.")
   message("  -e, --genomev=GENOMEV     Genome version to be used: hg19, hg38 or mm10. If not")
   message("                              specified GENOMEV=hg19.")
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used")
@@ -68,6 +112,15 @@ spec = matrix(c(
   'organ',         'O', 1, "character",
   'snvsignames',   'l', 1, "character",
   'svsignames',    'L', 1, "character",
+  'filtertype',    't', 1, "character",
+  'thresholdperc', 'p', 1, "double",
+  'giniscaling',   'd', 1, "double",
+  'snvfitfile',    'x', 1, "character",
+  'snv3altname',   'y', 1, "character",
+  'snv8altname',   'z', 1, "character",
+  'svfitfile',     'X', 1, "character",
+  'sv3altname',    'Y', 1, "character",
+  'sv5altname',    'Z', 1, "character",
   'nparallel',     'n', 1, "double",
   'genomev',       'e', 1, "character",
   'nbootFit',      'f', 1, "double",
@@ -139,7 +192,49 @@ if ( !is.null(opt$genomev) ) {
   genomev <- "hg19"
 }
 
+if ( !is.null(opt$filtertype) ) {
+  filtertype <- opt$filtertype
+}else{
+  filtertype <- "fixedThreshold"
+}
+
+if ( !is.null(opt$thresholdperc) ) {
+  thresholdperc <- opt$thresholdperc
+}else{
+  thresholdperc <- 5
+}
+
+if ( !is.null(opt$giniscaling) ) {
+  giniscaling <- opt$giniscaling
+}else{
+  giniscaling <- 10
+}
+
 library(signature.tools.lib)
+
+if(!is.null(opt$snvfitfile)){
+  if(file.exists(opt$snvfitfile)){
+    custom_subsFit <- loadFitFromFile(opt$snvfitfile)
+    message("Subs fit file ",opt$snvfitfile," loaded.")
+  }else{
+    message("Subs fit file ",opt$snvfitfile," does not exist.")
+    q(status=1,save = "no")
+  }
+}else{
+  custom_subsFit <- NULL
+}
+
+if(!is.null(opt$svfitfile)){
+  if(file.exists(opt$svfitfile)){
+    custom_rearrFit <- loadFitFromFile(opt$svfitfile)
+    message("Rearr fit file ",opt$svfitfile," loaded.")
+  }else{
+    message("Rearr fit file ",opt$svfitfile," does not exist.")
+    q(status=1,save = "no")
+  }
+}else{
+  custom_rearrFit <- NULL
+}
 
 input_table <- opt$input
 outdir <- opt$outdir
@@ -151,7 +246,12 @@ randomSeed <- opt$randomSeed
 dir.create(outdir,showWarnings = FALSE,recursive = TRUE)
 
 #retrieve samples and file names to be used from the files table
-input_t <- read.table(input_table,sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+if(file.exists(input_table)){
+  input_t <- read.table(input_table,sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+}else{
+  message("Input table ",input_table," does not exist.")
+  q(status=1,save = "no")
+}
 
 #initialise input variables
 samples <- NULL
@@ -204,6 +304,15 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                SNV_signature_names = snvsignames,
                                SV_signature_version = svsigversion,
                                SV_signature_names = svsignames,
+                               exposureFilterTypeFit = filtertype,
+                               threshold_percentFit = thresholdperc,
+                               giniThresholdScalingFit = giniscaling,
+                               subs_fit_obj = custom_subsFit,
+                               rearr_fit_obj = custom_rearrFit,
+                               customNameSNV3 = opt$snv3altname,
+                               customNameSNV8 = opt$snv8altname,
+                               customNameSV3 = opt$sv3altname,
+                               customNameSV5 = opt$sv5altname,
                                organ = organ,
                                nbootFit = nboots,
                                randomSeed = randomSeed,

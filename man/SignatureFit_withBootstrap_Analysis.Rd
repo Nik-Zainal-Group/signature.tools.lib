@@ -4,10 +4,21 @@
 \alias{SignatureFit_withBootstrap_Analysis}
 \title{Mutational Signatures Fit with Bootstrap Analysis}
 \usage{
-SignatureFit_withBootstrap_Analysis(outdir, cat, signature_data_matrix,
-  nboot = 100, type_of_mutations = "subs", threshold_percent = 5,
-  threshold_p.value = 0.05, method = "KLD", bf_method = "CosSim",
-  alpha = -1, doRound = TRUE, nparallel = 1, n_sa_iter = 500)
+SignatureFit_withBootstrap_Analysis(
+  outdir,
+  cat,
+  signature_data_matrix,
+  nboot = 100,
+  type_of_mutations = "subs",
+  threshold_percent = 5,
+  threshold_p.value = 0.05,
+  method = "KLD",
+  bf_method = "CosSim",
+  alpha = -1,
+  doRound = TRUE,
+  nparallel = 1,
+  n_sa_iter = 500
+)
 }
 \arguments{
 \item{outdir}{output directory for the analysis, remember to add '/' at the end}

@@ -4,9 +4,15 @@
 \alias{plotCosSimSignatures}
 \title{plotCosSimSignatures}
 \usage{
-plotCosSimSignatures(sig1, sig2, output_file = NULL,
-  thresholdMark = NULL, cex.numbers = 0.7,
-  circlesColBasic = "#A1CAF1", circlesColHighlight = "#F6A600")
+plotCosSimSignatures(
+  sig1,
+  sig2,
+  output_file = NULL,
+  thresholdMark = NULL,
+  cex.numbers = 0.7,
+  circlesColBasic = "#A1CAF1",
+  circlesColHighlight = "#F6A600"
+)
 }
 \arguments{
 \item{sig1}{matrix with signatures as columns}

@@ -4,9 +4,15 @@
 \alias{plotCopyNumbers}
 \title{plot Copy Numbers from ASCAT-like file}
 \usage{
-plotCopyNumbers(sv_df, sample_name, filename = NULL, mar = NULL,
-  highlightRegions = NULL, highlightText = NULL,
-  highlightColour = "brown")
+plotCopyNumbers(
+  sv_df,
+  sample_name,
+  filename = NULL,
+  mar = NULL,
+  highlightRegions = NULL,
+  highlightText = NULL,
+  highlightColour = "brown"
+)
 }
 \arguments{
 \item{sv_df}{data frame with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}

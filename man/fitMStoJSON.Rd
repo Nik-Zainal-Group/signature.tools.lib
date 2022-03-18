@@ -4,8 +4,13 @@
 \alias{fitMStoJSON}
 \title{Export the results from the FitMS function to JSON}
 \usage{
-fitMStoJSON(fitObj, filename = "export.json", nindent = 0,
-  disableFileWrite = FALSE, blockname = NULL)
+fitMStoJSON(
+  fitObj,
+  filename = "export.json",
+  nindent = 0,
+  disableFileWrite = FALSE,
+  blockname = NULL
+)
 }
 \arguments{
 \item{fitObj}{object obtained from the FitMS function}

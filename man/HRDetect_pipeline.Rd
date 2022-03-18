@@ -4,17 +4,39 @@
 \alias{HRDetect_pipeline}
 \title{HRDetect Pipeline}
 \usage{
-HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
-  SNV_catalogues = NULL, SV_catalogues = NULL, SNV_vcf_files = NULL,
-  SNV_tab_files = NULL, Indels_vcf_files = NULL,
-  Indels_tab_files = NULL, CNV_tab_files = NULL,
-  SV_bedpe_files = NULL, organ = NULL,
+HRDetect_pipeline(
+  data_matrix = NULL,
+  genome.v = "hg19",
+  SNV_catalogues = NULL,
+  SV_catalogues = NULL,
+  SNV_vcf_files = NULL,
+  SNV_tab_files = NULL,
+  Indels_vcf_files = NULL,
+  Indels_tab_files = NULL,
+  CNV_tab_files = NULL,
+  SV_bedpe_files = NULL,
+  organ = NULL,
   SNV_signature_version = "RefSigv2",
-  SV_signature_version = "RefSigv1", SNV_signature_names = NULL,
-  SV_signature_names = NULL, optimisation_method = "KLD",
-  threshold_percentFit = 5, bootstrapSignatureFit = TRUE,
-  nbootFit = 100, threshold_p.valueFit = 0.05,
-  bootstrapHRDetectScores = FALSE, nparallel = 1, randomSeed = NULL)
+  SV_signature_version = "RefSigv1",
+  SNV_signature_names = NULL,
+  SV_signature_names = NULL,
+  subs_fit_obj = NULL,
+  rearr_fit_obj = NULL,
+  customNameSNV3 = NULL,
+  customNameSNV8 = NULL,
+  customNameSV3 = NULL,
+  customNameSV5 = NULL,
+  optimisation_method = "KLD",
+  exposureFilterTypeFit = "fixedThreshold",
+  giniThresholdScalingFit = 10,
+  threshold_percentFit = 5,
+  bootstrapSignatureFit = TRUE,
+  nbootFit = 100,
+  threshold_p.valueFit = 0.05,
+  bootstrapHRDetectScores = FALSE,
+  nparallel = 1,
+  randomSeed = NULL
+)
 }
 \arguments{
 \item{data_matrix}{data frame containing a sample for each row and the six necessary features as columns. Columns should be labelled with the following names: del.mh.prop, SNV3, SV3, SV5, hrd, SNV8. Row names of the data frame should correspond to the sample names. If the values of the features need to be computed, set them to NA and provide additional data (e.g. catalogues, VCF/BEDPE/TAB files as specified in this documentation page).}
@@ -47,9 +69,25 @@ HRDetect_pipeline(data_matrix = NULL, genome.v = "hg19",
 
 \item{SV_signature_names}{when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SV_signature_version option}
 
+\item{subs_fit_obj}{Fit or FitMS result object. This parameter should be used when the user wants to customise the subs fit outside the HRDetect pipeline. If custom signatures were used, parameters customNameSNV3 and customNameSNV8 can be used to specify which custom signatures correspond to the HRDetect parameters SNV3 and SNV8.}
+
+\item{rearr_fit_obj}{Fit or FitMS result object. This parameter should be used when the user wants to customise the rearrangements fit outside the HRDetect pipeline. If custom signatures were used, parameters customNameSV3 and customNameSV5 can be used to specify which custom signatures correspond to the HRDetect parameters SV3 and SV5.}
+
+\item{customNameSNV3}{custom signature name that will be considered as SNV3 input for HRDetect. Useful for when subs_fit_obj is provided and custom signatures are used.}
+
+\item{customNameSNV8}{custom signature name that will be considered as SNV8 input for HRDetect. Useful for when subs_fit_obj is provided and custom signatures are used.}
+
+\item{customNameSV3}{custom signature name that will be considered as SV3 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.}
+
+\item{customNameSV5}{custom signature name that will be considered as SV5 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.}
+
 \item{optimisation_method}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
 
-\item{threshold_percentFit}{threshold in percentage of total mutations in a sample, only exposures larger than or equal to the threshold are considered, the others are set to zero}
+\item{exposureFilterTypeFit}{use either fixedThreshold or giniScaledThreshold as exposure filter in signature fit. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percentFit will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScalingFit}
+
+\item{giniThresholdScalingFit}{scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature}
+
+\item{threshold_percentFit}{threshold in percentage of total mutations in a sample for when exposureFilterTypeFit="fixedThreshold". Only exposures larger than or equal to the threshold are considered, the others are set to zero}
 
 \item{bootstrapSignatureFit}{set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised}
 

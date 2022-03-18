@@ -4,9 +4,15 @@
 \alias{plotMatrix}
 \title{Plot Matrix}
 \usage{
-plotMatrix(dataMatrix, output_file = NULL, thresholdMark = NULL,
-  ndigitsafterzero = 2, cex.numbers = 0.7,
-  circlesColBasic = "#A1CAF1", circlesColHighlight = "#F6A600")
+plotMatrix(
+  dataMatrix,
+  output_file = NULL,
+  thresholdMark = NULL,
+  ndigitsafterzero = 2,
+  cex.numbers = 0.7,
+  circlesColBasic = "#A1CAF1",
+  circlesColHighlight = "#F6A600"
+)
 }
 \arguments{
 \item{dataMatrix}{a data matrix or data frame}

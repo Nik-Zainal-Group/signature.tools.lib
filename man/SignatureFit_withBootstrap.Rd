@@ -4,12 +4,24 @@
 \alias{SignatureFit_withBootstrap}
 \title{Mutational Signatures Fit with Bootstrap (deprecated)}
 \usage{
-SignatureFit_withBootstrap(cat, signature_data_matrix, nboot = 100,
-  exposureFilterType = "fixedThreshold", giniThresholdScaling = 10,
-  threshold_percent = 5, threshold_p.value = 0.05, method = "KLD",
-  bf_method = "CosSim", alpha = -1, verbose = TRUE,
-  doRound = FALSE, nparallel = 1, n_sa_iter = 500,
-  randomSeed = NULL, showDeprecated = TRUE)
+SignatureFit_withBootstrap(
+  cat,
+  signature_data_matrix,
+  nboot = 100,
+  exposureFilterType = "fixedThreshold",
+  giniThresholdScaling = 10,
+  threshold_percent = 5,
+  threshold_p.value = 0.05,
+  method = "KLD",
+  bf_method = "CosSim",
+  alpha = -1,
+  verbose = TRUE,
+  doRound = FALSE,
+  nparallel = 1,
+  n_sa_iter = 500,
+  randomSeed = NULL,
+  showDeprecated = TRUE
+)
 }
 \arguments{
 \item{cat}{catalogue matrix, patients as columns, channels as rows}

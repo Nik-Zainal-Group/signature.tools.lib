@@ -4,8 +4,13 @@
 \alias{getOrganSignatures}
 \title{getOrganSignatures}
 \usage{
-getOrganSignatures(organ, version = "latest", cohort = "best",
-  typemut = "subs", verbose = TRUE)
+getOrganSignatures(
+  organ,
+  version = "latest",
+  cohort = "best",
+  typemut = "subs",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{organ}{one of the following: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}

@@ -4,8 +4,13 @@
 \alias{unexplainedSamples}
 \title{Estimate samples not fully explained by signature fit}
 \usage{
-unexplainedSamples(fileout = NULL, catalogue, sigs, exposures,
-  pvalue_threshold = 0.01)
+unexplainedSamples(
+  fileout = NULL,
+  catalogue,
+  sigs,
+  exposures,
+  pvalue_threshold = 0.01
+)
 }
 \arguments{
 \item{fileout}{if specified, generate a plot, otherwise no plot is generated}

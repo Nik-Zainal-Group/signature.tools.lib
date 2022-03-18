@@ -514,3 +514,99 @@ test_that("test HRDetect_pipeline() runs correctly on two samples with subset of
   expect_true(TRUE)
   
 })
+
+test_that("test HRDetect_pipeline() runs providing signature fit objects from signatureFit_pipeline.", {
+  
+  sample_names <- c("test_hrdetect_1","test_hrdetect_2")
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                        "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  fitPipeline_subs <- signatureFit_pipeline(organ = "Breast",
+                                            SNV_tab_files = SNV_tab_files,
+                                            useBootstrap = TRUE,
+                                            nboot = 100)
+  fitPipeline_rearr <- signatureFit_pipeline(organ = "Breast",
+                                             SV_bedpe_files = SV_bedpe_files,
+                                             useBootstrap = TRUE,
+                                             fit_method = "Fit",
+                                             nboot = 100)
+  
+  res <- HRDetect_pipeline(genome.v = "hg19",
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           subs_fit_obj = fitPipeline_subs$fitResults,
+                           customNameSNV3 = "GEL-Breast_common_SBS3",
+                           customNameSNV8 = "GEL-Breast_common_SBS8",
+                           rearr_fit_obj = fitPipeline_rearr$fitResults,
+                           customNameSV3 = "Breast_G (RefSig R3)",
+                           customNameSV5 = "Breast_D (RefSig R5)",
+                           organ = "Breast",
+                           bootstrapHRDetectScores = TRUE,
+                           nparallel = 2)
+  #if no error happen this code can be reached
+  expect_true(nrow(res$q_5_50_95)==2)
+  
+})
+
+test_that("test HRDetect_pipeline() runs providing signature fit objects from signatureFit_pipeline and also direct mutations.", {
+  
+  sample_names <- c("test_hrdetect_1","test_hrdetect_2")
+  
+  SNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                     "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(SNV_tab_files) <- sample_names
+  
+  SV_bedpe_files <- c("test_hrdetect_1/test_hrdetect_1.sv.bedpe",
+                      "test_hrdetect_2/test_hrdetect_2.sv.bedpe")
+  names(SV_bedpe_files) <- sample_names
+  
+  Indels_vcf_files <- c("test_hrdetect_1/test_hrdetect_1.indel.vcf.gz",
+                        "test_hrdetect_2/test_hrdetect_2.indel.vcf.gz")
+  names(Indels_vcf_files) <- sample_names
+  
+  CNV_tab_files <- c("test_hrdetect_1/test_hrdetect_1.cna.txt",
+                     "test_hrdetect_2/test_hrdetect_2.cna.txt")
+  names(CNV_tab_files) <- sample_names
+  
+  fitPipeline_subs <- signatureFit_pipeline(organ = "Breast",
+                                            SNV_tab_files = SNV_tab_files[1],
+                                            useBootstrap = TRUE,
+                                            nboot = 100)
+  fitPipeline_rearr <- signatureFit_pipeline(organ = "Breast",
+                                             SV_bedpe_files = SV_bedpe_files[1],
+                                             useBootstrap = TRUE,
+                                             fit_method = "Fit",
+                                             nboot = 100)
+  
+  res <- HRDetect_pipeline(genome.v = "hg19",
+                           SNV_tab_files = SNV_tab_files[2],
+                           SV_bedpe_files = SV_bedpe_files[2],
+                           Indels_vcf_files = Indels_vcf_files,
+                           CNV_tab_files = CNV_tab_files,
+                           subs_fit_obj = fitPipeline_subs$fitResults,
+                           customNameSNV3 = "GEL-Breast_common_SBS3",
+                           customNameSNV8 = "GEL-Breast_common_SBS8",
+                           rearr_fit_obj = fitPipeline_rearr$fitResults,
+                           customNameSV3 = "Breast_G (RefSig R3)",
+                           customNameSV5 = "Breast_D (RefSig R5)",
+                           organ = "Breast",
+                           bootstrapHRDetectScores = TRUE,
+                           nparallel = 2)
+  #if no error happen this code can be reached
+  expect_true(nrow(res$q_5_50_95)==2)
+  
+})

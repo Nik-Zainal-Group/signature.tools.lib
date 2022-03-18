@@ -4,10 +4,20 @@
 \alias{Fit}
 \title{Signature Fit}
 \usage{
-Fit(catalogues, signatures, exposureFilterType = "fixedThreshold",
-  giniThresholdScaling = 10, threshold_percent = 5, method = "KLD",
-  useBootstrap = FALSE, nboot = 200, threshold_p.value = 0.05,
-  nparallel = 1, randomSeed = NULL, verbose = FALSE)
+Fit(
+  catalogues,
+  signatures,
+  exposureFilterType = "fixedThreshold",
+  giniThresholdScaling = 10,
+  threshold_percent = 5,
+  method = "KLD",
+  useBootstrap = FALSE,
+  nboot = 200,
+  threshold_p.value = 0.05,
+  nparallel = 1,
+  randomSeed = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{catalogues}{catalogues matrix, samples as columns, channels as rows}

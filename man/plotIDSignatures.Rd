@@ -4,9 +4,16 @@
 \alias{plotIDSignatures}
 \title{Plot Indels Signatures or Catalogues}
 \usage{
-plotIDSignatures(signature_data_matrix, output_file = NULL,
-  plot_sum = TRUE, overall_title = "", add_to_titles = NULL,
-  mar = NULL, howManyInOnePage = 100, ncolumns = 1)
+plotIDSignatures(
+  signature_data_matrix,
+  output_file = NULL,
+  plot_sum = TRUE,
+  overall_title = "",
+  add_to_titles = NULL,
+  mar = NULL,
+  howManyInOnePage = 100,
+  ncolumns = 1
+)
 }
 \arguments{
 \item{signature_data_matrix}{matrix of signatures or catalogues, signatures as columns and channels as rows}

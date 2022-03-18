@@ -4,8 +4,13 @@
 \alias{fitToJSON}
 \title{Export the results from the Fit function to JSON}
 \usage{
-fitToJSON(fitObj, filename = "export.json", nindent = 0,
-  disableFileWrite = FALSE, blockname = NULL)
+fitToJSON(
+  fitObj,
+  filename = "export.json",
+  nindent = 0,
+  disableFileWrite = FALSE,
+  blockname = NULL
+)
 }
 \arguments{
 \item{fitObj}{object obtained from the Fit function}

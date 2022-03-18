@@ -4,16 +4,32 @@
 \alias{SignatureExtraction}
 \title{Mutational Signatures Extraction}
 \usage{
-SignatureExtraction(cat, outFilePath, matrix_of_fixed_signatures = NULL,
-  blacklist = c(), nrepeats = 10, nboots = 20,
-  clusteringMethod = "MC", completeLinkageFlag = FALSE,
-  useMaxMatching = TRUE, filterBestOfEachBootstrap = TRUE,
-  filterBest_RTOL = 0.001, filterBest_nmaxtokeep = 10, nparallel = 1,
-  nsig = c(3:15), mut_thr = 0, type_of_extraction = "subs",
-  project = "extraction", parallel = FALSE, nmfmethod = "brunet",
+SignatureExtraction(
+  cat,
+  outFilePath,
+  matrix_of_fixed_signatures = NULL,
+  blacklist = c(),
+  nrepeats = 10,
+  nboots = 20,
+  clusteringMethod = "MC",
+  completeLinkageFlag = FALSE,
+  useMaxMatching = TRUE,
+  filterBestOfEachBootstrap = TRUE,
+  filterBest_RTOL = 0.001,
+  filterBest_nmaxtokeep = 10,
+  nparallel = 1,
+  nsig = c(3:15),
+  mut_thr = 0,
+  type_of_extraction = "subs",
+  project = "extraction",
+  parallel = FALSE,
+  nmfmethod = "brunet",
   removeDuplicatesInCatalogue = FALSE,
-  removeDuplicatesThreshold = 0.98, normaliseCatalogue = FALSE,
-  plotCatalogue = FALSE, plotResultsFromAllClusteringMethods = TRUE)
+  removeDuplicatesThreshold = 0.98,
+  normaliseCatalogue = FALSE,
+  plotCatalogue = FALSE,
+  plotResultsFromAllClusteringMethods = TRUE
+)
 }
 \arguments{
 \item{cat}{matrix with samples as columns and channels as rows}

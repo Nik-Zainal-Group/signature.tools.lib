@@ -4,8 +4,13 @@
 \alias{matchedClustering}
 \title{Clustering with Matches}
 \usage{
-matchedClustering(distMatrix, ns, maxMatch = TRUE, parallel = FALSE,
-  nparallel = 1)
+matchedClustering(
+  distMatrix,
+  ns,
+  maxMatch = TRUE,
+  parallel = FALSE,
+  nparallel = 1
+)
 }
 \arguments{
 \item{distMatrix}{squared distance matrix}

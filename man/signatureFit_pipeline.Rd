@@ -4,20 +4,39 @@
 \alias{signatureFit_pipeline}
 \title{Signature fit pipeline}
 \usage{
-signatureFit_pipeline(catalogues = NULL, genome.v = "hg19",
-  organ = NULL, SNV_vcf_files = NULL, SNV_tab_files = NULL,
-  DNV_vcf_files = NULL, DNV_tab_files = NULL, SV_bedpe_files = NULL,
-  signatures = NULL, rare_signatures = NULL,
-  signature_version = "RefSigv2", signature_names = NULL,
-  fit_method = "FitMS", optimisation_method = "KLD",
-  useBootstrap = FALSE, nboot = 200,
-  exposureFilterType = "fixedThreshold", threshold_percent = 5,
-  giniThresholdScaling = 10, multiStepMode = "errorReduction",
-  threshold_p.value = 0.05, rareSignatureTier = "T2",
-  residualNegativeProp = 0.003, minResidualMutations = NULL,
-  minCosSimRareSig = 0.8, minErrorReductionPerc = 15,
-  minCosSimIncrease = 0.02, maxRareSigsPerSample = 1, nparallel = 1,
-  randomSeed = NULL, verbose = FALSE)
+signatureFit_pipeline(
+  catalogues = NULL,
+  genome.v = "hg19",
+  organ = NULL,
+  SNV_vcf_files = NULL,
+  SNV_tab_files = NULL,
+  DNV_vcf_files = NULL,
+  DNV_tab_files = NULL,
+  SV_bedpe_files = NULL,
+  signatures = NULL,
+  rare_signatures = NULL,
+  signature_version = "RefSigv2",
+  signature_names = NULL,
+  fit_method = "FitMS",
+  optimisation_method = "KLD",
+  useBootstrap = FALSE,
+  nboot = 200,
+  exposureFilterType = "fixedThreshold",
+  threshold_percent = 5,
+  giniThresholdScaling = 10,
+  multiStepMode = "errorReduction",
+  threshold_p.value = 0.05,
+  rareSignatureTier = "T2",
+  residualNegativeProp = 0.003,
+  minResidualMutations = NULL,
+  minCosSimRareSig = 0.8,
+  minErrorReductionPerc = 15,
+  minCosSimIncrease = 0.02,
+  maxRareSigsPerSample = 1,
+  nparallel = 1,
+  randomSeed = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{catalogues}{catalogues matrix, samples as columns, channels as rows. The mutation type of the catalogue will be inferred automatically by checking the rownames.}

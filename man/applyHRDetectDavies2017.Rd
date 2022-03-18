@@ -4,8 +4,11 @@
 \alias{applyHRDetectDavies2017}
 \title{Apply HRDetect (Davies et al. 2017)}
 \usage{
-applyHRDetectDavies2017(data_matrix, features_names = c("del.mh.prop",
-  "SNV3", "SV3", "SV5", "hrd", "SNV8"), attachContributions = FALSE)
+applyHRDetectDavies2017(
+  data_matrix,
+  features_names = c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8"),
+  attachContributions = FALSE
+)
 }
 \arguments{
 \item{data_matrix}{data frame containing a row for each sample and at least the columns specified in the features_names parameter}

@@ -4,8 +4,7 @@
 \alias{plot_HRDLOH_HRDetect_Contributions}
 \title{plot_HRDLOH_HRDetect_Contributions}
 \usage{
-plot_HRDLOH_HRDetect_Contributions(file_name, HRDLOH_index,
-  hrdetect_output)
+plot_HRDLOH_HRDetect_Contributions(file_name, HRDLOH_index, hrdetect_output)
 }
 \arguments{
 \item{file_name}{name of the output file (jpg)}

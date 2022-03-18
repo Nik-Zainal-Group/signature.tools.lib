@@ -18,7 +18,7 @@ returns the SNV catalogue for the given sample
 Convert a data frame containing SNV, possibly loaded from a tab seperated text file, to SNV 96 channel trinuclotide context catalogue. The data frame should containt the SNV of a single sample, and the following minimal columns: chr, position, REF, ALT.
 }
 \examples{
-subs <- read.table("subs.tab",sep="\\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+subs <- read.table("subs.tab",sep="\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
 res <- tabToSNVcatalogue(subs,genome.v = "hg19")
 }
 \keyword{SNV}

@@ -4,15 +4,30 @@
 \alias{FitMS}
 \title{Multi-Step Mutational Signatures Fit}
 \usage{
-FitMS(catalogues, organ = NULL, rareSignatureTier = "T2",
-  commonSignatures = NULL, rareSignatures = NULL, method = "KLD",
-  exposureFilterType = "fixedThreshold", threshold_percent = 5,
-  giniThresholdScaling = 10, multiStepMode = "errorReduction",
-  residualNegativeProp = 0.003, minResidualMutations = NULL,
-  minCosSimRareSig = 0.8, minErrorReductionPerc = 15,
-  minCosSimIncrease = 0.02, useBootstrap = FALSE, nboot = 200,
-  threshold_p.value = 0.05, maxRareSigsPerSample = 1, nparallel = 1,
-  randomSeed = NULL, verbose = FALSE)
+FitMS(
+  catalogues,
+  organ = NULL,
+  rareSignatureTier = "T2",
+  commonSignatures = NULL,
+  rareSignatures = NULL,
+  method = "KLD",
+  exposureFilterType = "fixedThreshold",
+  threshold_percent = 5,
+  giniThresholdScaling = 10,
+  multiStepMode = "errorReduction",
+  residualNegativeProp = 0.003,
+  minResidualMutations = NULL,
+  minCosSimRareSig = 0.8,
+  minErrorReductionPerc = 15,
+  minCosSimIncrease = 0.02,
+  useBootstrap = FALSE,
+  nboot = 200,
+  threshold_p.value = 0.05,
+  maxRareSigsPerSample = 1,
+  nparallel = 1,
+  randomSeed = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{catalogues}{catalogues matrix, samples as columns, channels as rows}

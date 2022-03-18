@@ -238,6 +238,12 @@ signatureFit_pipeline <- function(catalogues=NULL,
       # we already have a catalogue
       # let's check it is the same mutation type as the catalogue provided
       if(mtype_catalogues==mtype_mutations){
+        # check for overlapping sample names and give precedence to the catalogue provided
+        conflict_samples <- intersect(colnames(catalogues),colnames(catalogues_mutations))
+        if(length(conflict_samples)>0){
+          message("[warning signatureFit_pipeline] sample names conflict. The same sample names have been found in the catalogue provided and in the list of mutation files provided. Catalogues already provided will be used and mutations will be ignored for samples: ",paste(conflict_samples,collapse = ","),".")
+          catalogues_mutations <- catalogues_mutations[,setdiff(colnames(catalogues_mutations),conflict_samples),drop=F]
+        }
         # combine the catalogues:
         catalogues <- cbind(catalogues,catalogues_mutations)
         sampleNames <- colnames(catalogues)
@@ -469,6 +475,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
   # Now, if fitMS was requested, and signature_type==NULL, then I think I can just call FitMS,
   # FitMS itself will take care of whether some of the parameters are invalid
   if(fit_method=="Fit"){
+    message("[info signatureFit_pipeline] all set, running Fit.")
     fitRes <- Fit(catalogues = catalogues,
                   signatures = signatures,
                   exposureFilterType = exposureFilterType,
@@ -482,6 +489,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                   randomSeed = randomSeed,
                   verbose = verbose)
   }else if(fit_method=="FitMS"){
+    message("[info signatureFit_pipeline] all set, running FitMS.")
     fitRes <- FitMS(catalogues = catalogues,
                     organ = organ,
                     rareSignatureTier = rareSignatureTier,

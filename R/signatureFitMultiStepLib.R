@@ -592,9 +592,24 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
   resObj$exposures <- exposures_merge[,apply(exposures_merge, 2, sum)>0,drop=F]
   resObj$rareSigChoice <- rareSigChoice
   if(resObj$useBootstrap){
+    # save the bootstraps organised by samples
     resObj$bootstrap_exposures_samples <- bootstrap_exposures_samples
+    # also save the bootstraps organised by bootstrap
+    nboots <- ncol(bootstrap_exposures_samples[[1]])
+    sample_names <- names(bootstrap_exposures_samples)
+    sigslist <- c()
+    for(sn in sample_names) sigslist <- union(sigslist,rownames(bootstrap_exposures_samples[[sn]]))
+    bootstrap_exposures <- list()
+    for(i in 1:nboots){
+      current_subs <- matrix(0,nrow = length(sigslist),ncol = length(sample_names),dimnames = list(sigslist,sample_names))
+      for(sn in sample_names) {
+        current_subs[rownames(bootstrap_exposures_samples[[sn]]),sn] <- bootstrap_exposures_samples[[sn]][,i]
+      }
+      bootstrap_exposures[[i]] <- current_subs
+    }
+    resObj$bootstrap_exposures <- bootstrap_exposures
   }else{
-    resObj$bootstrap_exposures_samples <- NA
+    resObj$bootstrap_exposures_samples <- NULL
   }
   
   return(resObj)
