@@ -241,7 +241,7 @@ if(!is.null(opt$cataloguesfile)){
   if(file.exists(opt$cataloguesfile)){
     catalogues <- signature.tools.lib::readTable(opt$cataloguesfile)
   }else{
-    message("catalogues file does not exist: ",opt$cataloguesfile)
+    message("[error signatureFit script] catalogues file does not exist: ",opt$cataloguesfile)
     q(status=1,save = "no")
   }
 }else{
@@ -256,7 +256,7 @@ if(!is.null(opt$snvvcf)){
     snvvcf <- infotable[,2]
     names(snvvcf) <- infotable[,1]
   }else{
-    message("snvvcf file does not exist: ",opt$snvvcf)
+    message("[error signatureFit script] snvvcf file does not exist: ",opt$snvvcf)
     q(status=1,save = "no")
   }
 }else{
@@ -270,7 +270,7 @@ if(!is.null(opt$snvtab)){
     snvtab <- infotable[,2]
     names(snvtab) <- infotable[,1]
   }else{
-    message("snvtab file does not exist: ",opt$snvtab)
+    message("[error signatureFit script] snvtab file does not exist: ",opt$snvtab)
     q(status=1,save = "no")
   }
 }else{
@@ -284,7 +284,7 @@ if(!is.null(opt$dnvvcf)){
     dnvvcf <- infotable[,2]
     names(dnvvcf) <- infotable[,1]
   }else{
-    message("dnvvcf file does not exist: ",opt$dnvvcf)
+    message("[error signatureFit script] dnvvcf file does not exist: ",opt$dnvvcf)
     q(status=1,save = "no")
   }
 }else{
@@ -298,7 +298,7 @@ if(!is.null(opt$dnvtab)){
     dnvtab <- infotable[,2]
     names(dnvtab) <- infotable[,1]
   }else{
-    message("dnvtab file does not exist: ",opt$dnvtab)
+    message("[error signatureFit script] dnvtab file does not exist: ",opt$dnvtab)
     q(status=1,save = "no")
   }
 }else{
@@ -312,7 +312,7 @@ if(!is.null(opt$svbedpe)){
     svbedpe <- infotable[,2]
     names(svbedpe) <- infotable[,1]
   }else{
-    message("svbedpe file does not exist: ",opt$svbedpe)
+    message("[error signatureFit script] svbedpe file does not exist: ",opt$svbedpe)
     q(status=1,save = "no")
   }
 }else{
@@ -324,7 +324,7 @@ if(!is.null(opt$signaturesfile)){
   if(file.exists(opt$signaturesfile)){
     signatures <- signature.tools.lib::readTable(opt$signaturesfile)
   }else{
-    message("signatures file does not exist: ",opt$signaturesfile)
+    message("[error signatureFit script] signatures file does not exist: ",opt$signaturesfile)
     q(status=1,save = "no")
   }
 }else{
@@ -336,7 +336,7 @@ if(!is.null(opt$raresignaturesfile)){
   if(file.exists(opt$raresignaturesfile)){
     raresignatures <- signature.tools.lib::readTable(opt$raresignaturesfile)
   }else{
-    message("rare signatures file does not exist: ",opt$raresignaturesfile)
+    message("[error signatureFit script] rare signatures file does not exist: ",opt$raresignaturesfile)
     q(status=1,save = "no")
   }
 }else{
@@ -469,6 +469,8 @@ randomSeed <- opt$randomSeed
 # create output directory
 dir.create(outdir,showWarnings = F,recursive = T)
 
+message("[info signatureFit script] running signatureFit_pipeline...")
+
 # run the pipeline
 pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
                                   genome.v=genomev,
@@ -503,13 +505,16 @@ pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
                                   verbose = verbose)
 
 if(!is.null(pipelineRes$fitResults)){
+  message("[info signatureFit script] saving fit to file...")
   # save fit to file
   signature.tools.lib::saveFitToFile(fitObj = pipelineRes$fitResults,
                                      filename = paste0(outdir,"fitData.rData"))
+  message("[info signatureFit script] plotting fit...")
   # plot fit results
   signature.tools.lib::plotFitResults(fitObj = pipelineRes$fitResults,
                                       outdir = outdir)
 }
 
+message("[info signatureFit script] done!")
 
 q(status = 0,save = "no")

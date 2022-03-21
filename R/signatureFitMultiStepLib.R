@@ -1583,6 +1583,6 @@ saveFitToFile <- function(fitObj,filename,verbose=T){
 #' fitObj <- loadFitFromFile("fit.rData")
 loadFitFromFile <- function(filename,verbose=T){
   load(file = filename)
-  if(verbose) message("[info saveFitToFile] loaded ",fitObj$fitAlgorithm," object from file ",filename)
+  if(verbose) message("[info loadFitToFile] loaded ",fitObj$fitAlgorithm," object from file ",filename)
   return(fitObj)
 }

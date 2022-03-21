@@ -146,7 +146,7 @@ if ( !is.null(opt$bootstrap) ) {
 }
 
 if ( is.null(opt$input ) ) { 
-  message("\nMissing INPUTTABLE. Quit.\n")
+  message("[error hrDetect script] Missing INPUTTABLE. Quit.\n")
   how_to()
   q(status=1,save = "no")
 }
@@ -215,9 +215,9 @@ library(signature.tools.lib)
 if(!is.null(opt$snvfitfile)){
   if(file.exists(opt$snvfitfile)){
     custom_subsFit <- loadFitFromFile(opt$snvfitfile)
-    message("Subs fit file ",opt$snvfitfile," loaded.")
+    message("[info hrDetect script] subs fit file ",opt$snvfitfile," loaded.")
   }else{
-    message("Subs fit file ",opt$snvfitfile," does not exist.")
+    message("[error hrDetect script] subs fit file ",opt$snvfitfile," does not exist.")
     q(status=1,save = "no")
   }
 }else{
@@ -227,9 +227,9 @@ if(!is.null(opt$snvfitfile)){
 if(!is.null(opt$svfitfile)){
   if(file.exists(opt$svfitfile)){
     custom_rearrFit <- loadFitFromFile(opt$svfitfile)
-    message("Rearr fit file ",opt$svfitfile," loaded.")
+    message("[info hrDetect script] rearr fit file ",opt$svfitfile," loaded.")
   }else{
-    message("Rearr fit file ",opt$svfitfile," does not exist.")
+    message("[error hrDetect script] rearr fit file ",opt$svfitfile," does not exist.")
     q(status=1,save = "no")
   }
 }else{
@@ -249,7 +249,7 @@ dir.create(outdir,showWarnings = FALSE,recursive = TRUE)
 if(file.exists(input_table)){
   input_t <- read.table(input_table,sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
 }else{
-  message("Input table ",input_table," does not exist.")
+  message("[error hrDetect script] input table ",input_table," does not exist.")
   q(status=1,save = "no")
 }
 
@@ -318,93 +318,103 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                randomSeed = randomSeed,
                                nparallel = nparallel)
 
-#save object
-save(hrdet_res,file = paste0(outdir,"/hrdet_res.rData"))
+if(!is.null(hrdet_res)){
 
-#saving tables
-message("Writing table data_matrix...")
-write.table(hrdet_res$data_matrix,sep = "\t",
-            file = paste0(outdir,"/data_matrix.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-message("Writing table hrdetect_output...")
-write.table(hrdet_res$hrdetect_output,sep = "\t",
-            file = paste0(outdir,"/hrdetect_output.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-if (bootstrap_scores) {
-  message("Writing table hrdetect_output_confidence...")
-  write.table(hrdet_res$q_5_50_95,sep = "\t",
-                                  file = paste0(outdir,"/hrdetect_output_confidence.tsv"),
-                                  col.names = TRUE,row.names = TRUE,quote = FALSE)
-}
-
-message("Writing SNV and SV catalogues tables...")
-write.table(hrdet_res$SNV_catalogues,sep = "\t",
-            file = paste0(outdir,"/SNV_catalogues.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-write.table(hrdet_res$SV_catalogues,sep = "\t",
-            file = paste0(outdir,"/SV_catalogues.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-
-message("Plotting SNV and SV catalogues...")
-plotSignatures(signature_data_matrix = hrdet_res$SNV_catalogues,
-               output_file = paste0(outdir,"/SNV_catalogues.pdf"))
-plotSignatures(signature_data_matrix = hrdet_res$SV_catalogues,
-               output_file = paste0(outdir,"/SV_catalogues.pdf"))
-
-message("Writing siganture exposure tables...")
-write.table(hrdet_res$exposures_subs,sep = "\t",
-            file = paste0(outdir,"/Exposures_subs.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-write.table(hrdet_res$exposures_rearr,sep = "\t",
-            file = paste0(outdir,"/Exposures_rearr.tsv"),
-            col.names = TRUE,row.names = TRUE,quote = FALSE)
-
-message("Writing table indels_classification_table...")
-write.table(hrdet_res$indels_classification_table,sep = "\t",
-            file = paste0(outdir,"/indels_classification_table.tsv"),
-            col.names = TRUE,row.names = FALSE,quote = FALSE)
-
-#plotting
-message("Plotting HRDetect contributions...")
-plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.pdf"),
-                                   hrdetect_output = hrdet_res$hrdetect_output)
-
-message("Plotting HRDetect overall plot...")
-plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
-                      hrdetect_output = hrdet_res$hrdetect_output)
-
-if (bootstrap_scores) {
-  message("Plotting HRDetect with Bootstrap...")
-  plot_HRDetect_BootstrapScores(outdir = outdir,
-                                hrdetect_res = hrdet_res)
-}
-
-message("Plotting Subs and Rearr Signature Fit files...")
-plotFitResults(hrdet_res$fitRes_subs,outdir = paste0(outdir,"/subsfit/"))
-plotFitResults(hrdet_res$fitRes_rearr,outdir = paste0(outdir,"/rearrfit/"))
-
-#genomeplots
-dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)
-for (s in samples) {
-  SNV_vcf_file <- SNV_vcf_files[s]
-  if(!is.null(SNV_vcf_file)){
-    if(is.na(SNV_vcf_files[s])) SNV_vcf_file <- NULL
-  }
-  if(!is.null(SNV_vcf_file)){
-    message("Generating genomeplot for ",s,"...")
-    genomePlot(subsVcf.file = SNV_vcf_file,
-               indelsVcf.file = Indels_vcf_files[s],
-               cnvsTab.file = CNV_tab_files[s],
-               rearrBedpe.file = SV_bedpe_files[s],
-               sampleID = s,
-               genome.v = genomev,
-               out_path = paste0(outdir,"/genomeplots/"))
+  #save object
+  save(hrdet_res,file = paste0(outdir,"/hrdet_res.rData"))
+  
+  #saving tables
+  message("[info hrDetect script] writing table data_matrix...")
+  write.table(hrdet_res$data_matrix,sep = "\t",
+              file = paste0(outdir,"/data_matrix.tsv"),
+              col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  if(!is.null(hrdet_res$hrdetect_output)){
+    message("[info hrDetect script] writing table hrdetect_output...")
+    write.table(hrdet_res$hrdetect_output,sep = "\t",
+                file = paste0(outdir,"/hrdetect_output.tsv"),
+                col.names = TRUE,row.names = TRUE,quote = FALSE)
+    
+    if(!is.null(hrdet_res$SNV_catalogues)){
+      message("[info hrDetect script] writing SNV catalogues and exposures...")
+      write.table(hrdet_res$SNV_catalogues,sep = "\t",
+                  file = paste0(outdir,"/SNV_catalogues.tsv"),
+                  col.names = TRUE,row.names = TRUE,quote = FALSE)
+      plotSignatures(signature_data_matrix = hrdet_res$SNV_catalogues,
+                     output_file = paste0(outdir,"/SNV_catalogues.pdf"))
+      write.table(hrdet_res$exposures_subs,sep = "\t",
+                  file = paste0(outdir,"/Exposures_subs.tsv"),
+                  col.names = TRUE,row.names = TRUE,quote = FALSE)
+      plotFitResults(hrdet_res$fitRes_subs,outdir = paste0(outdir,"/subsfit/"))
+    }
+    if(!is.null(hrdet_res$SV_catalogues)){
+      message("[info hrDetect script] writing SV catalogues and exposures...")
+      write.table(hrdet_res$SV_catalogues,sep = "\t",
+                  file = paste0(outdir,"/SV_catalogues.tsv"),
+                  col.names = TRUE,row.names = TRUE,quote = FALSE)
+      plotSignatures(signature_data_matrix = hrdet_res$SV_catalogues,
+                     output_file = paste0(outdir,"/SV_catalogues.pdf"))
+      write.table(hrdet_res$exposures_rearr,sep = "\t",
+                  file = paste0(outdir,"/Exposures_rearr.tsv"),
+                  col.names = TRUE,row.names = TRUE,quote = FALSE)
+      plotFitResults(hrdet_res$fitRes_rearr,outdir = paste0(outdir,"/rearrfit/"))
+    }
+    
+    if(!is.null(hrdet_res$indels_classification_table)){
+      message("[info hrDetect script] writing table indels_classification_table...")
+      write.table(hrdet_res$indels_classification_table,sep = "\t",
+                  file = paste0(outdir,"/indels_classification_table.tsv"),
+                  col.names = TRUE,row.names = FALSE,quote = FALSE)
+    }
+    
+    #plotting
+    message("[info hrDetect script] plotting HRDetect contributions...")
+    plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.pdf"),
+                                       hrdetect_output = hrdet_res$hrdetect_output)
+    
+    message("[info hrDetect script] plotting HRDetect overall plot...")
+    plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
+                          hrdetect_output = hrdet_res$hrdetect_output)
+    
+    if (!is.null(hrdet_res$q_5_50_95)) {
+      message("[info hrDetect script] writing table hrdetect_output_confidence...")
+      write.table(hrdet_res$q_5_50_95,sep = "\t",
+                  file = paste0(outdir,"/hrdetect_output_confidence.tsv"),
+                  col.names = TRUE,row.names = TRUE,quote = FALSE)
+      message("[info hrDetect script] plotting HRDetect with Bootstrap...")
+      plot_HRDetect_BootstrapScores(outdir = outdir,
+                                    hrdetect_res = hrdet_res)
+    }
+    
+    #genomeplots
+    if(!is.null(SNV_vcf_files)){
+      dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)
+      for (s in samples) {
+        SNV_vcf_file <- SNV_vcf_files[s]
+        if(!is.null(SNV_vcf_file)){
+          if(is.na(SNV_vcf_files[s])) SNV_vcf_file <- NULL
+        }
+        if(!is.null(SNV_vcf_file)){
+          message("[info hrDetect script] generating genomeplot for ",s,"...")
+          genomePlot(subsVcf.file = SNV_vcf_file,
+                     indelsVcf.file = Indels_vcf_files[s],
+                     cnvsTab.file = CNV_tab_files[s],
+                     rearrBedpe.file = SV_bedpe_files[s],
+                     sampleID = s,
+                     genome.v = genomev,
+                     out_path = paste0(outdir,"/genomeplots/"))
+        }else{
+          message("[warning hrDetect script] skipping genomeplot for ",s," because of missing SNV VCF file.")
+        }
+      }
+    }
+    message("[info hrDetect script] done!")
   }else{
-    message("Skipping genomeplot for ",s," because of missing SNV VCF file.")
+    message("[warning hrDetect script] HRDetect_pipeline did not return HRDetect scores.")
   }
+}else{
+  message("[warning hrDetect script] HRDetect_pipeline returned NULL.")
 }
-message(" ")
-message("Done!")
-message(" ")
+
 
 q(status = 0,save = "no")

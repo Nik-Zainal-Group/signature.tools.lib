@@ -222,9 +222,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         reslist
       }
       catalogues_mutations <- data.frame(row.names = rownames(cat_list[[1]]$rearr_catalogue),stringsAsFactors = F)
+      bedpecolumns <- c("chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample","svclass","id", "is.clustered", "length")
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$rearr_catalogue)
-        annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe)
+        annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
       }
     }
     
