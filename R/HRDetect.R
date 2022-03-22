@@ -35,7 +35,7 @@
 #' The SNV catalogues will then be used to estimate signature exposures, using either RefSig or
 #' COSMIC signatures. The signature version can be specified using the SNV_signature_version
 #' parameter and a specific subset of signatures can be requested via the SNV_signature_names
-#' parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
+#' parameter. If an organ is specified, the pipeline will attempt to use organ specific signatures.
 #' If the signature version is RefSigv2 and an organ is specified, signature fit will be performed
 #' using the FitMS algorithm (Degasperi et al. 2022, Science).
 #' 
@@ -46,7 +46,20 @@
 #' The SV catalogues will then be used to estimate signature exposures, using RefSig signatures.
 #' The signature version can be specified using the SNV_signature_version
 #' parameter and a specific subset of signatures can be requested via the SV_signature_names
-#' parameter. If an organ is specified, the pipeline will attempt to use orgran specific signatures.
+#' parameter. If an organ is specified, the pipeline will attempt to use organ specific signatures.
+#' 
+#' If signature fit for SNV or SV has already been performed using the Fit or FitMS functions,
+#' the resulting objects can be passed directly using the subs_fit_obj and rearr_fit_obj
+#' parameters. If the objects contain bootstrap fits, these will be used when the
+#' bootstrap HRDetect score is requested. The HRDetect_pipeline function will attempt to extract
+#' values for SNV3, SNV8, SV3, SV5, using the following signature names:
+#' SNV3 = "SBS3", "Signature3", "RefSig3";
+#' SNV8 = "SBS8", "Signature8", "RefSig8";
+#' SV3 = "RS3","RefSigR3";
+#' SV5 = "RS5", "RefSigR5", "RefSigR9".
+#' If custom signature names have been used in the subs_fit_obj and rearr_fit_obj fits,
+#' then the custom names can be provided using the parameters customNameSNV3, customNameSNV8,
+#' customNameSV3 and customNameSV5.
 #' 
 #' Deletions at Micro-homology (Indels). The column in data_matrix corresponding to the proportion of deletions at micro-homology is del.mh.prop.
 #' The proportion of deletions at micro-homology for the samples can be calculated by the pipeline if the user provides Indels VCF files.

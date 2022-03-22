@@ -315,6 +315,7 @@ FitMS <- function(catalogues,
   
   tmpcandidateRareSigs <- list()
   tmpcandidateRareSigsCosSim <- list()
+  tmpcandidateRareSigsError <- list()
   for (s in names(candidateRareSigs)){
     # s <- names(candidateRareSigs)[1]
     for (si in 1:length(candidateRareSigs[[s]])){
@@ -322,11 +323,13 @@ FitMS <- function(catalogues,
       if(!any(allcomb(candidateRareSigs[[s]][si]) %in% tmpcandidateRareSigs[[s]])){
         tmpcandidateRareSigs[[s]] <- c(tmpcandidateRareSigs[[s]],candidateRareSigs[[s]][si])
         tmpcandidateRareSigsCosSim[[s]] <- c(tmpcandidateRareSigsCosSim[[s]],candidateRareSigsCosSim[[s]][si])
+        tmpcandidateRareSigsError[[s]] <- c(tmpcandidateRareSigsError[[s]],candidateRareSigsError[[s]][si])
       }
     }
   }
   candidateRareSigs <- tmpcandidateRareSigs
   candidateRareSigsCosSim <- tmpcandidateRareSigsCosSim
+  candidateRareSigsError <- tmpcandidateRareSigsError
   
   samples <- list()
   

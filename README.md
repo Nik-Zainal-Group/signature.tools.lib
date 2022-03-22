@@ -38,6 +38,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.1.2
+
+- Signature fit rData file can be passed to the ```HRDetect_pipeline``` function or the ```hrDetect``` command line script so that custom signature fit results can be used in the HRDetect pipeline
+
 2.1.1
 
 - Updated the ```HRDetect_pipeline``` function and the ```hrDetect``` command line script to use the ```signatureFit_pipeline``` function
