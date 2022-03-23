@@ -25,9 +25,9 @@
 ```signature.tools.lib``` is an R package for mutational signatures analysis.
 Mutational signatures are patterns of somatic mutations that reveal what
 mutational processes have been active in a cell. Mutational processes
-can be due to exposure to mutagens, such as chemicals present in
-cigarettes, or defects in DNA repair pathways, such as Homologous
-Recombination Repair.
+can be caused by exposure to mutagens, such as chemicals present in
+cigarettes, or defects in DNA repair pathways, such as homologous
+recombination repair.
 
 The package supports hg19 and hg38 as well as mm10. It provides our
 latest algorithms for signature fit and extraction, as well as various
@@ -40,16 +40,16 @@ the most important functions is given below.
 
 2.1.2
 
-- Signature fit rData file can be passed to the ```HRDetect_pipeline``` function or the ```hrDetect``` command line script so that custom signature fit results can be used in the HRDetect pipeline
+- Signature fit objects obtained from Fit or FitMS can be passed to the HRDetect pipeline
 
 2.1.1
 
-- Updated the ```HRDetect_pipeline``` function and the ```hrDetect``` command line script to use the ```signatureFit_pipeline``` function
+- Updated the ```HRDetect_pipeline``` function to use the ```signatureFit_pipeline``` function
 
 2.1.0
 
 - Added the ```signatureFit_pipeline``` function, which is a flexible interface for signature fit analysis
-- Added the ```signatureFit``` command line script, which is used to access the ```signatureFit_pipeline``` function from command line
+- Added the ```signatureFit``` command line script, which is a wrapper for the ```signatureFit_pipeline``` function
 
 2.0.1
 
@@ -92,10 +92,10 @@ More in details, these are the specific signatures and algorithms introduced in 
 ## Systems Requirements
 
 No special hardware is required to run this software. This is an R
-package so it will work on any computer with R (>=3.2.1) installed.
-As the time passes, some of the required packages may change their R
-version requirement to more recent versions, making this also a requirement
-for the insallation of ```signature.tools.lib```.
+package so it will work on any computer with R installed. We recommend to
+use the latest version of R, as some of the R dependencies constantly increase
+the minimum version of R required for installation.
+
 You can install ```signature.tools.lib``` by entering the R environment from the main
 directory and typing:
 
@@ -186,7 +186,7 @@ RStudio, type ```?HRDetect_pipeline```.
 
 ## Functions provided by the package
 
-Functions for single nucleotide variants
+Functions for single nucleotide variants:
 
 - **```vcfToSNVcatalogue(...)```**: converts a VCF file into a SNV
 catalogue.
@@ -196,7 +196,7 @@ chr, position, REF, ALT.
 - **```plotSubsSignatures(...)```**: function to plot one or more
 substitution signatures or catalogues.
 
-Functions of rearrangements
+Functions for rearrangements:
 
 - **```bedpeToRearrCatalogue(...)```**: converts a data frame (loaded
 from a BEDPE file) into a rearrangement catalogue. If the columns
@@ -205,7 +205,7 @@ attempt to compute them.
 - **```plotRearrSignatures(...)```**: function to plot one or more
 rearrangement signatures or catalogues.
 
-Functions for dinucleotide variants
+Functions for dinucleotide variants:
 
 - **```vcfToDNVcatalogue(...)```**: given a vcf file containing a list of single and double nucleotide variants (SNVs and DNVs),
 this function initially attempts to find all possible DNVs by checking adjacent SNVs, and then
@@ -216,7 +216,7 @@ from Zou's to Alexandrov's style.
 - **```plotDNVSignatures(...)```**: plot one or more DNV signatures or catalogues, compatible with both
 Zou's style and Alexandrov's style of channels.
 
-Functions for signature extraction and signature fit
+Functions for signature extraction and signature fit:
 
 - **```SignatureExtraction(...)```**: perform signature extraction, by
 applying NMF to the input matrix. Multiple NMF runs and bootstrapping is
@@ -235,13 +235,13 @@ A manual for FitMS can be found in the ```userManuals``` folder.
 - **```signatureFit_pipeline```**: an interface for the ```Fit``` and ```FitMS``` functions, which aim to automate various signature fit analysis steps, like generating the mutational catalogues and selecting which mutational signatures to fit. This function can be accessed via command line using the ```signatureFit``` script in the ```scripts``` folder.
 - **```plotFitResults(...)```**: this function can be used to plot results objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
 
-Functions for organ-specific signatures and exposures conversion
+Functions for organ-specific signatures and exposures conversion:
 
 - **```getOrganSignatures(...)```**: returns organ-specific signatures of a requested organ and mutation type.
 - **```convertExposuresFromOrganToRefSigs(...)```**: after signature fit using organ-specific signatures,
 use this function to apply the conversion matrix, to convert organ-specific signature exposures into reference signature exposures. 
 
-Functions for HRD indexes
+Functions for HRD indexes:
 
 - **```ascatToHRDLOH(...)```**: compute the HRD-LOH index from a data
 frame formatted similarly to an ASCAT output file. This is a wrapper for
@@ -257,7 +257,7 @@ Imbalances), written by Nicolai Juul Birkbak
 - **```calc.lst(...)```**: compute HRD-LST (Large-scale state
 transitions), written by Nicolai Juul Birkbak
 
-Functions for Indels Classification
+Functions for indels classification:
 
 - **```vcfToIndelsClassification(...)```**: converts a VCF file
 containing indels into a data frame where the indels are classified.
@@ -268,7 +268,7 @@ containing indels into a data frame where the indels are classified.
 Also returns a summary of count and proportion of the various classes of
 indels.
 
-Functions for HRDetect
+Functions for HRDetect:
 
 - **```HRDetect_pipeline(...)```**: this is a flexible interface to the
 HRDetect pipeline to compute the HRDetect BRCAness probability score, as
@@ -289,8 +289,11 @@ to the HRDetect BRCAness probability score.
 - **```plot_HRDetect_overall```**: uses the ```HRDetect_pipeline```
 output to generate an overall plot of the HRDetect BRCAness probability
 score.
+- **```plot_HRDetect_BootstrapScores```**: overall plot of scores obtained
+from the ```HRDetect_pipeline``` output when HRDetect with bootstrap is
+enabled.
 
-Function for data visualisation
+Function for data visualisation:
 
 - **```genomePlot(...)```**: generates a plot for the visualisation of
 somatic variants across the genome, organised in a circle. Variants
@@ -312,6 +315,9 @@ Currently available scripts are:
 
 - **signatureFit**: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
 - **hrDetect**: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
+
+You can find user manuals for these command line scripts with detailed
+expanation of parameters and examples in the ```userManuals``` folder.
 
 <a name="examples"/>
 
