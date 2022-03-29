@@ -15,7 +15,7 @@ how_to <- function(){
   message("  -o, --outdir=DIR          Name of the output directory. If omitted a name")
   message("                              will be given automatically.")
   message("  -b, --bootstrap           Request signature fit with bootstrap")
-  message("  -c, --cataloguesfile=CFILE")      
+  message("  -c, --cataloguesfile=CFILE")
   message("                            CFILE is the name of a file containing mutational")
   message("                              catalogues. Each sample catalogue is in a column,")
   message("                              with sample names as column headers and channel")
@@ -114,17 +114,17 @@ how_to <- function(){
   message("                            THRPVAL is a p-value to determine whether an exposure")
   message("                              is above the THRPERC or the threshold calculated with")
   message("                              Gini scaling, when using bootstrap. In other words,")
-  message("                              this is the empirical probability that the exposure") 
+  message("                              this is the empirical probability that the exposure")
   message("                              is lower than the threshold. If not specified then")
   message("                              THRPVAL=0.05.")
   message("  -a, --fitmsmode=FMSMODE   FMSMODE is either constrainedFit, partialNMF,")
   message("                              errorReduction, or cossimIncrease. If not specified")
   message("                              FMSMODE=errorReduction.")
-  message("  -T, --raresigtier=RSTIER  RSTIER is either T1 or T2. For each organ we provide") 
+  message("  -T, --raresigtier=RSTIER  RSTIER is either T1 or T2. For each organ we provide")
   message("                              two lists of rare signatures that can be used.")
   message("                              Tier 1 (T1) are rare signatures that were observed")
   message("                              in the requested organ. The problem with T1 is that")
-  message("                              it may be that a signature is not observed simply") 
+  message("                              it may be that a signature is not observed simply")
   message("                              because there were not enough samples for a certain")
   message("                              organ in the particular dataset that was used to")
   message("                              extract the signatures. So in general we advise to")
@@ -484,7 +484,7 @@ pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
                                   rare_signatures=raresignatures,
                                   signature_version=sigversion,
                                   signature_names=signames,
-                                  fit_method=fitmethod, 
+                                  fit_method=fitmethod,
                                   optimisation_method = optmethod,
                                   useBootstrap = useBootstrap,
                                   nboot = nboots,
@@ -513,6 +513,12 @@ if(!is.null(pipelineRes$fitResults)){
   # plot fit results
   signature.tools.lib::plotFitResults(fitObj = pipelineRes$fitResults,
                                       outdir = outdir)
+}
+
+if(!is.null(pipelineRes$annotated_mutations)){
+  message("[info signatureFit script] writing annotated mutations...")
+  writeTable(t = pipelineRes$annotated_mutations,
+             file = paste0(outdir,"annotated_mutations.tsv"))
 }
 
 message("[info signatureFit script] done!")

@@ -145,14 +145,14 @@ if ( !is.null(opt$bootstrap) ) {
   bootstrap_scores <- FALSE
 }
 
-if ( is.null(opt$input ) ) { 
+if ( is.null(opt$input ) ) {
   message("[error hrDetect script] Missing INPUTTABLE. Quit.\n")
   how_to()
   q(status=1,save = "no")
 }
 
-if ( is.null(opt$outdir) ) { 
-  opt$outdir = "hrDetectResults/"    
+if ( is.null(opt$outdir) ) {
+  opt$outdir = "hrDetectResults/"
 }
 
 if ( !is.null(opt$snvsigversion) ) {
@@ -179,11 +179,11 @@ if ( !is.null(opt$svsignames) ) {
   svsignames <- NULL
 }
 
-if ( is.null(opt$nparallel) ) { 
-  opt$nparallel <- 1   
+if ( is.null(opt$nparallel) ) {
+  opt$nparallel <- 1
 }
-if ( is.null(opt$nbootFit) ) { 
-  opt$nbootFit <- 100  
+if ( is.null(opt$nbootFit) ) {
+  opt$nbootFit <- 100
 }
 
 if ( !is.null(opt$genomev) ) {
@@ -298,7 +298,7 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                Indels_vcf_files = Indels_vcf_files,
                                Indels_tab_files = Indels_tab_files,
                                CNV_tab_files = CNV_tab_files,
-                               SV_bedpe_files = SV_bedpe_files, 
+                               SV_bedpe_files = SV_bedpe_files,
                                bootstrapHRDetectScores = bootstrap_scores,
                                SNV_signature_version = snvsigversion,
                                SNV_signature_names = snvsignames,
@@ -322,19 +322,33 @@ if(!is.null(hrdet_res)){
 
   #save object
   save(hrdet_res,file = paste0(outdir,"/hrdet_res.rData"))
-  
+
   #saving tables
   message("[info hrDetect script] writing table data_matrix...")
   write.table(hrdet_res$data_matrix,sep = "\t",
               file = paste0(outdir,"/data_matrix.tsv"),
               col.names = TRUE,row.names = TRUE,quote = FALSE)
-  
+
+  # saving annotated mutations
+  if(!is.null(hrdet_res$annotated_mutations_subs)){
+    message("[info hrDetect script] writing annotated subs...")
+    write.table(hrdet_res$annotated_mutations_subs,sep = "\t",
+                file = paste0(outdir,"/annotated_mutations_subs.tsv"),
+                col.names = TRUE,row.names = FALSE,quote = FALSE)
+  }
+  if(!is.null(hrdet_res$annotated_mutations_rearr)){
+    message("[info hrDetect script] writing annotated rearr...")
+    write.table(hrdet_res$annotated_mutations_rearr,sep = "\t",
+                file = paste0(outdir,"/annotated_mutations_rearr.tsv"),
+                col.names = TRUE,row.names = FALSE,quote = FALSE)
+  }
+
   if(!is.null(hrdet_res$hrdetect_output)){
     message("[info hrDetect script] writing table hrdetect_output...")
     write.table(hrdet_res$hrdetect_output,sep = "\t",
                 file = paste0(outdir,"/hrdetect_output.tsv"),
                 col.names = TRUE,row.names = TRUE,quote = FALSE)
-    
+
     if(!is.null(hrdet_res$SNV_catalogues)){
       message("[info hrDetect script] writing SNV catalogues and exposures...")
       write.table(hrdet_res$SNV_catalogues,sep = "\t",
@@ -359,23 +373,23 @@ if(!is.null(hrdet_res)){
                   col.names = TRUE,row.names = TRUE,quote = FALSE)
       plotFitResults(hrdet_res$fitRes_rearr,outdir = paste0(outdir,"/rearrfit/"))
     }
-    
+
     if(!is.null(hrdet_res$indels_classification_table)){
       message("[info hrDetect script] writing table indels_classification_table...")
       write.table(hrdet_res$indels_classification_table,sep = "\t",
                   file = paste0(outdir,"/indels_classification_table.tsv"),
                   col.names = TRUE,row.names = FALSE,quote = FALSE)
     }
-    
+
     #plotting
     message("[info hrDetect script] plotting HRDetect contributions...")
     plot_HRDetect_Contributions(file_name = paste0(outdir,"/HRDetect_contributions.pdf"),
                                        hrdetect_output = hrdet_res$hrdetect_output)
-    
+
     message("[info hrDetect script] plotting HRDetect overall plot...")
     plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
                           hrdetect_output = hrdet_res$hrdetect_output)
-    
+
     if (!is.null(hrdet_res$q_5_50_95)) {
       message("[info hrDetect script] writing table hrdetect_output_confidence...")
       write.table(hrdet_res$q_5_50_95,sep = "\t",
@@ -385,7 +399,7 @@ if(!is.null(hrdet_res)){
       plot_HRDetect_BootstrapScores(outdir = outdir,
                                     hrdetect_res = hrdet_res)
     }
-    
+
     #genomeplots
     if(!is.null(SNV_vcf_files)){
       dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)
