@@ -105,14 +105,14 @@ HRDetect_pipeline(
 return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
 }
 \description{
-Run the HRDetect pipeline. This function allows for flexible input 
-specification to the HRDetect pipeline that computes the HRDetect 
+Run the HRDetect pipeline. This function allows for flexible input
+specification to the HRDetect pipeline that computes the HRDetect
 BRCAness probability score as published in Davies et al. 2017.
 It requires an input data frame "data_matrix", which contains a sample
-in each row and one of six necessary features in each column. 
+in each row and one of six necessary features in each column.
 The six features can be computed by the pipeline if the necessary input files are provided.
 The six features are:
-1) proportion of deletions at microhomology (del.mh.prop), 
+1) proportion of deletions at microhomology (del.mh.prop),
 2) number of mutations of substitution signature 3 (SNV3),
 3) number of mutations of rearrangemet signature 3 (SV3),
 4) number of mutations of rearrangemet signature 5 (SV5),
@@ -123,7 +123,7 @@ added to the input data_matrix, or if the SNV catalogues have already been calcu
 these can be supplied using the SNV_catalogues parameter while setting SNV3 and SNV8 columns
 as "NA". Also, it is possible to provide different data for different samples. For example,
 one can provide SNV3 and SNV8 number of mutations for some samples in data_matrix, while setting
-SNV3 and SNV8 to NA for other samples, and providing either SNV catalogues and/or SNV VCF 
+SNV3 and SNV8 to NA for other samples, and providing either SNV catalogues and/or SNV VCF
 files for these samples. The function will return the HRDetect BRCAness probability score for
 all the samples for which enough data are available to calculate all six necessary features.
 Along with the score, the contribution of each feature to the score will be provided. In addition,
