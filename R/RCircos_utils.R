@@ -112,9 +112,9 @@ RCircos.Chromosome.Ideogram.Plot.my <- function (chrTextColor = 'grey', gridLine
         text(RCircos.Pos[mid, 1] * RCircos.Par$chr.name.pos,
             RCircos.Pos[mid, 2] * RCircos.Par$chr.name.pos, label = chr.name,
 #            srt = RCircos.Pos$degree[mid], col='grey', cex=0.6)
-            srt = RCircos.Pos$degree[mid], col=gridLineColor, cex=textSize)
+            srt = RCircos.Pos$degree[mid], col=chr.color, cex=textSize)
         lines(RCircos.Pos[start:end, ] * RCircos.Par$highlight.pos,
-            col = chr.color, lwd = 0.5)
+            col = gridLineColor, lwd = 0.5)
     }
     for (a.band in 1:nrow(RCircos.Cyto)) {
         a.color <- RCircos.Cyto$BandColor[a.band]
@@ -136,7 +136,7 @@ RCircos.Chromosome.Ideogram.Plot.my <- function (chrTextColor = 'grey', gridLine
 }
 
 
-RCircos.Gene.Connector.Plot.my <- function (genomic.data, track.num, side, in.pos = 1.32) 
+RCircos.Gene.Connector.Plot.my <- function (genomic.data, track.num, side, in.pos = 1.32)
 {
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
@@ -145,12 +145,12 @@ RCircos.Gene.Connector.Plot.my <- function (genomic.data, track.num, side, in.po
     connect.data <- data.frame(label.data$Location, label.data$Label.Position)
     locations <- RCircos.Track.Positions(side, track.num)
 
-    out.pos <- locations[1] # 
+    out.pos <- locations[1] #
 
 
     line.colors <- RCircos.Get.Plot.Colors(label.data, RCircos.Par$text.color)
-    
-    
+
+
     genomic.col <- ncol(connect.data) - 1
     label.col <- ncol(connect.data)
     chroms <- unique(connect.data[, 1])
@@ -160,18 +160,18 @@ RCircos.Gene.Connector.Plot.my <- function (genomic.data, track.num, side, in.po
         for (a.point in 1:total) {
             top.loc <- out.pos
             bot.loc <- RCircos.Par$track.in.start  - sum(RCircos.Par$track.heights[1:length(RCircos.Par$track.heights)]) - sum(RCircos.Par$track.padding[1:length(RCircos.Par$track.padding)] ) - 0.02
-  
-            
+
+
             p1 <- connect.data[chr.row[a.point], genomic.col]
             p2 <- connect.data[chr.row[a.point], genomic.col] # p2 <- connect.data[chr.row[a.point], label.col]
 
             # lines(c(RCircos.Pos[p1, 1] * out.pos, RCircos.Pos[p1,1] * top.loc),
             #       c(RCircos.Pos[p1, 2] * out.pos, RCircos.Pos[p1, 2] * top.loc), col = 'red')
-            
+
             # lines(c(RCircos.Pos[p2, 1] * bot.loc, RCircos.Pos[p2, 1] * in.pos),
             #       c(RCircos.Pos[p2, 2] * bot.loc, RCircos.Pos[p2, 2] * in.pos), col = 'green')
 
-            
+
             lines(c(RCircos.Pos[p1, 1] * top.loc, RCircos.Pos[p2, 1] * bot.loc), # xs
                   c(RCircos.Pos[p1, 2] * top.loc, RCircos.Pos[p2, 2] * bot.loc), col =  alpha('black', 0.1), lwd=0.5) # ys
         }
@@ -179,7 +179,7 @@ RCircos.Gene.Connector.Plot.my <- function (genomic.data, track.num, side, in.po
 }
 
 
-RCircos.Gene.Name.Plot.my <- function (gene.data, name.col, track.num, side, colors) 
+RCircos.Gene.Name.Plot.my <- function (gene.data, name.col, track.num, side, colors)
 {
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
@@ -216,15 +216,15 @@ RCircos.Gene.Name.Plot.my <- function (gene.data, name.col, track.num, side, col
             }
         }
 
-         text(RCircos.Pos[the.point, 1] * label.pos, RCircos.Pos[the.point, 
-            2] * label.pos, label = gene.name, pos = text.side, 
-            cex = RCircos.Par$text.size, srt = rotation, offset = 0, 
+         text(RCircos.Pos[the.point, 1] * label.pos, RCircos.Pos[the.point,
+            2] * label.pos, label = gene.name, pos = text.side,
+            cex = RCircos.Par$text.size, srt = rotation, offset = 0,
             col = as.character(gene.data$color[a.text]))
     }
 }
 
 
-RCircos.Get.Plot.Data.nosort <- function (genomic.data, plot.type, validate=TRUE) 
+RCircos.Get.Plot.Data.nosort <- function (genomic.data, plot.type, validate=TRUE)
 {
 
     if (validate) {
@@ -235,7 +235,7 @@ RCircos.Get.Plot.Data.nosort <- function (genomic.data, plot.type, validate=TRUE
             cat(paste(a.row,sep=''))
         }
         chromosome <- as.character(genomic.data[a.row, 1])
-        location <- round((genomic.data[a.row, 2] + genomic.data[a.row, 
+        location <- round((genomic.data[a.row, 2] + genomic.data[a.row,
             3])/2, digits = 0)
         data.points[a.row] <- RCircos.Data.Point(chromosome, location)
     }
@@ -245,12 +245,12 @@ RCircos.Get.Plot.Data.nosort <- function (genomic.data, plot.type, validate=TRUE
 }
 
 
-RCircos.Get.Plot.Data.segment <- function (genomic.data, plot.type) 
+RCircos.Get.Plot.Data.segment <- function (genomic.data, plot.type)
 {
     genomic.data <- RCircos.Validate.Genomic.Data.my(genomic.data, 'plot')
     data.points.start <- rep(0, nrow(genomic.data))
     data.points.end <- rep(0, nrow(genomic.data))
-    
+
     for (a.row in 1:nrow(genomic.data)) {
         chromosome <- as.character(genomic.data[a.row, 1])
         data.points.start[a.row] <- RCircos.Data.Point(chromosome, genomic.data[a.row, 2])
@@ -291,7 +291,7 @@ RCircos.Heatmap.Plot.my <- function (heatmap.data, data.col, track.num, side, pl
 
     if ((length(heatmap.color)==1) && (is.na(heatmap.color))) {
         ColorRamp <- RCircos.Get.Heatmap.ColorScales(RCircos.Par$heatmap.color)
-    } 
+    }
 
     columns <- 5:(ncol(heatmap.data) - 1)
     min.value <- min(as.matrix(heatmap.data[, columns]))
@@ -361,16 +361,16 @@ RCircos.Heatmap.Plot.my <- function (heatmap.data, data.col, track.num, side, pl
 }
 
 
-RCircos.Line.Plot.cn <- function (line.data, data.col, track.num, side, lineCol, lineType) 
+RCircos.Line.Plot.cn <- function (line.data, data.col, track.num, side, lineCol, lineType)
 {
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
 
-  
+
     line.data1 <- RCircos.Get.Plot.Data.nosort(data.frame(chromosome=line.data$chromosome, start=line.data$start, end=line.data$start), "plot") # add a last column with integer locations
     line.data2 <- RCircos.Get.Plot.Data.nosort(data.frame(chromosome=line.data$chromosome, start=line.data$end, end=line.data$end), "plot")
     locations <- RCircos.Track.Positions.my(side, track.num)
-    
+
     out.pos <- locations[1] # posiitons of the track
     in.pos <- locations[2] # position of the track
 
@@ -414,7 +414,7 @@ RCircos.Line.Plot.cn <- function (line.data, data.col, track.num, side, lineCol,
         else {
             value.two <- line.data[a.point, data.col]
         }
-        
+
         height.one <- point.bottom + value.one/data.ceiling * sub.height # scale the y values
         height.two <- point.bottom + value.two/data.ceiling * sub.height # scale the y values
 
@@ -422,14 +422,14 @@ RCircos.Line.Plot.cn <- function (line.data, data.col, track.num, side, lineCol,
         # lines(RCircos.Pos[start:end, 1] * height, RCircos.Pos[start:end, 2] * height, col = RCircos.Par$grid.line.color, lwd=0.3)
 
         lines(c(RCircos.Pos[point.one:point.two, 1] * height.one), # xs
-              c(RCircos.Pos[point.one:point.two, 2] * height.one), # ys, RCircos.Pos[point.one, *] is always 1 anyway 
+              c(RCircos.Pos[point.one:point.two, 2] * height.one), # ys, RCircos.Pos[point.one, *] is always 1 anyway
               col = lineCol[a.point], lty=lineType, lwd=0.7)
- 
+
     }
 }
 
 
-RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol, lineType) 
+RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol, lineType)
 {
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
@@ -438,14 +438,14 @@ RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol,
     line.data2 <- RCircos.Get.Plot.Data.nosort(data.frame(chromosome=line.data$chromosome, start=line.data$end, end=line.data$end), "plot")
     # get locations of the tracks
     locations <- RCircos.Track.Positions.my(side, track.num)
-    
+
     out.pos <- locations[1] # posiitons of the track
     in.pos <- locations[2] # position of the track
 
-    
+
     if (min(as.numeric(line.data[, data.col])) >= 0) {
         point.bottom <- in.pos
-        
+
         data.ceiling <- max(line.data[, data.col]) # data between 0 and 5
     }
     else {
@@ -461,7 +461,7 @@ RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol,
         point.one <- line.data1[a.point, ncol(line.data1)] # integer location of point  1
         point.two <- line.data2[a.point, ncol(line.data2)] # integer location of point 2
 
-        
+
         # cut the values if needed
         # if (line.data[a.point, 1] != line.data[a.point + 1, 1]) {
         #     next
@@ -485,7 +485,7 @@ RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol,
         else {
             value.two <- line.data[a.point, data.col]
         }
-        
+
         height.one <- point.bottom + value.one/data.ceiling * sub.height # scale the y values
         height.two <- point.bottom + value.two/data.ceiling * sub.height # scale the y values
 
@@ -493,9 +493,9 @@ RCircos.Line.Plot.my <- function (line.data, data.col, track.num, side, lineCol,
         # lines(RCircos.Pos[start:end, 1] * height, RCircos.Pos[start:end, 2] * height, col = RCircos.Par$grid.line.color, lwd=0.3)
 
         lines(c(RCircos.Pos[point.one:point.two, 1] * height.one), # xs
-              c(RCircos.Pos[point.one:point.two, 2] * height.one), # ys, RCircos.Pos[point.one, *] is always 1 anyway 
+              c(RCircos.Pos[point.one:point.two, 2] * height.one), # ys, RCircos.Pos[point.one, *] is always 1 anyway
               col = lineCol[a.point], lty=lineType, lwd=1.5)
- 
+
     }
 }
 
@@ -544,18 +544,18 @@ RCircos.Link.Plot.my <- function (link.data, track.num, by.chromosome = FALSE, l
 }
 
 
-RCircos.Scatter.Plot.cn <- function (scatter.data, track.num, side, by.fold = 0,  theColor, plotTrack=TRUE) 
+RCircos.Scatter.Plot.cn <- function (scatter.data, track.num, side, by.fold = 0,  theColor, plotTrack=TRUE)
 {
 
     no.points <- length(scatter.data)
-  
-    
+
+
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
 
     # scatter.data <- RCircos.Get.Plot.Data.nosort(scatter.data, "plot")
 
-    
+
     locations <- RCircos.Track.Positions.my(side, track.num)
     out.pos <- locations[1]
     in.pos <- locations[2]
@@ -585,14 +585,14 @@ RCircos.Scatter.Plot.cn <- function (scatter.data, track.num, side, by.fold = 0,
         }
 
         height <- point.bottom + the.value/data.ceiling * sub.height
-        points(RCircos.Pos[the.point, 1] * height, RCircos.Pos[the.point, 
-            2] * height, col = theColor, pch = RCircos.Par$point.type, 
+        points(RCircos.Pos[the.point, 1] * height, RCircos.Pos[the.point,
+            2] * height, col = theColor, pch = RCircos.Par$point.type,
             cex = RCircos.Par$point.size)
     }
 }
 
 
-RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side, by.fold = 0,  scatter.colors, draw.bg =TRUE, draw.scale=FALSE, no.sort=FALSE, data.ceiling=NA) 
+RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side, by.fold = 0,  scatter.colors, draw.bg =TRUE, draw.scale=FALSE, no.sort=FALSE, data.ceiling=NA)
 {
 
     # scatter.data.original <- scatter.data
@@ -603,7 +603,7 @@ RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side,
     # scatter.data.original.small[new.order.small, ]
     # scatter.data.original.small$rate[scatter.data.original.small$col=='grey']
 
-    # scatter.data <- scatter.data.original 
+    # scatter.data <- scatter.data.original
 
     no.points <- nrow(scatter.data)
     if (no.sort) {
@@ -615,12 +615,12 @@ RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side,
     # apply new ordering
     scatter.data <- scatter.data[new.order,]
     scatter.colors <- scatter.colors[new.order]
-     
+
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
     scatter.data <- RCircos.Get.Plot.Data.nosort(scatter.data, "plot")
 
-    
+
     locations <- RCircos.Track.Positions.my(side, track.num, track.heights = 4)
     out.pos <- locations[1]
     in.pos <- locations[2]
@@ -644,8 +644,8 @@ RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side,
         text(RCircos.Pos[1, 1] * locations[1], RCircos.Pos[1, 2] * locations[1], round(data.ceiling), cex=0.5)
         text(RCircos.Pos[1, 1] * locations[2], RCircos.Pos[1, 2] * locations[2], '0', cex=0.5)
     }
-    
-    
+
+
     for (a.point in 1:nrow(scatter.data)) {
         the.point <- scatter.data[a.point, ncol(scatter.data)]
         color <- scatter.colors[a.point]
@@ -674,33 +674,33 @@ RCircos.Scatter.Plot.color <- function (scatter.data, data.col, track.num, side,
         points(RCircos.Pos[the.point, 1] * height,
                RCircos.Pos[the.point, 2] * height,
                col = color,
-               pch = RCircos.Par$point.type, 
+               pch = RCircos.Par$point.type,
                cex = RCircos.Par$point.size)
     }
 }
 
 
-RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fold = 0,  theColor, maxvalue=NA, plot.bg=TRUE, p.pch=NA, p.cex=NA, is.lines=TRUE) 
+RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fold = 0,  theColor, maxvalue=NA, plot.bg=TRUE, p.pch=NA, p.cex=NA, is.lines=TRUE)
 {
 
     no.points <- length(scatter.data)
     new.order <- sample(1:no.points, no.points)
     scatter.data <- scatter.data[new.order]
     mids <- mids[new.order]
-    
+
     if (length(theColor)==1) {
         theColor <- rep(theColor, no.points)
     }
 
     theColor <- theColor[ new.order]
-    
-    
+
+
     RCircos.Pos <- RCircos.Get.Plot.Positions()
     RCircos.Par <- RCircos.Get.Plot.Parameters()
 
     # scatter.data <- RCircos.Get.Plot.Data.nosort(scatter.data, "plot")
 
-    
+
     locations <- RCircos.Track.Positions.my(side, track.num)
     out.pos <- locations[1]
     in.pos <- locations[2]
@@ -720,7 +720,7 @@ RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fol
 
     if (plot.bg) {
         RCircos.Track.Outline.my(out.pos, in.pos, RCircos.Par$sub.tracks)
-        
+
     }
     if (is.na(p.pch)) {
         p.pch <- RCircos.Par$point.type
@@ -728,7 +728,7 @@ RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fol
     if (is.na(p.cex)) {
         p.cex <-  RCircos.Par$point.size
     }
-    
+
     for (a.point in 1:length(scatter.data)) {
         the.point <- mids[a.point]
         if (scatter.data[a.point] > data.ceiling) {
@@ -743,8 +743,8 @@ RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fol
 
         heightUp <- point.bottom + the.value/data.ceiling * sub.height
         heightDown <- point.bottom
- 
-        
+
+
         if (is.lines) {
         lines(RCircos.Pos[the.point, 1] * c(heightDown,heightUp),
                RCircos.Pos[the.point, 2] * c(heightDown,heightUp), col = theColor[a.point], lwd=0.8) }
@@ -765,12 +765,12 @@ RCircos.Scatter.Plot.ra <- function (scatter.data, mids, track.num, side, by.fol
         height <- point.bottom + sub.height
         text(RCircos.Pos[the.point, 1] * height,
              RCircos.Pos[the.point, 2] * height,
-             format(maxvalue,  digits=2), cex=1, pos=2)       
+             format(maxvalue,  digits=2), cex=1, pos=2)
     }
 }
 
 
-RCircos.Track.Outline.my <- function (out.pos, in.pos, num.layers = 1) 
+RCircos.Track.Outline.my <- function (out.pos, in.pos, num.layers = 1)
 {
     RCircos.Cyto <- RCircos.Get.Plot.Ideogram()
     RCircos.Pos <- RCircos.Get.Plot.Positions()
@@ -783,12 +783,12 @@ RCircos.Track.Outline.my <- function (out.pos, in.pos, num.layers = 1)
         #end <- the.chr$Location[nrow(the.chr)]
         start <- the.chr$StartPoint[1]
         end <- the.chr$EndPoint[nrow(the.chr)]
-        polygon.x <- c(RCircos.Pos[start:end, 1] * out.pos, RCircos.Pos[end:start, 
+        polygon.x <- c(RCircos.Pos[start:end, 1] * out.pos, RCircos.Pos[end:start,
             1] * in.pos)
-        polygon.y <- c(RCircos.Pos[start:end, 2] * out.pos, RCircos.Pos[end:start, 
+        polygon.y <- c(RCircos.Pos[start:end, 2] * out.pos, RCircos.Pos[end:start,
             2] * in.pos)
         polygon(polygon.x, polygon.y, col = NULL, lwd=0.3, border=RCircos.Par$grid.line.color)
-        
+
         for (a.line in 1:(num.layers - 1)) {
             height <- out.pos - a.line * subtrack.height
             lines(RCircos.Pos[start:end, 1] * height, RCircos.Pos[start:end, 2] * height, col = RCircos.Par$grid.line.color, lwd=0.3)
@@ -797,24 +797,24 @@ RCircos.Track.Outline.my <- function (out.pos, in.pos, num.layers = 1)
 }
 
 
-RCircos.Track.Positions.my <- function (side, track.num, track.heights = 1) 
+RCircos.Track.Positions.my <- function (side, track.num, track.heights = 1)
 {
     RCircos.Par <- RCircos.Get.Plot.Parameters()
     one.track <- RCircos.Par$track.height + RCircos.Par$track.padding
     side <- tolower(side)
     if (side == "in") {
-        out.pos <- RCircos.Par$track.in.start - (track.num - 
+        out.pos <- RCircos.Par$track.in.start - (track.num -
             1) * one.track
-        in.pos <- out.pos - RCircos.Par$track.height - 
+        in.pos <- out.pos - RCircos.Par$track.height -
             one.track * ( track.heights - 1)
-        #out.pos <- RCircos.Par$track.in.start 
+        #out.pos <- RCircos.Par$track.in.start
         #=if (track.num>1) {
-        #    out.pos <- RCircos.Par$track.in.start - sum( RCircos.Par$track.heights[1:(track.num-1)]) -          
+        #    out.pos <- RCircos.Par$track.in.start - sum( RCircos.Par$track.heights[1:(track.num-1)]) -
         #         sum(RCircos.Par$track.padding[1:(track.num - 1)])
         #}
-        #in.pos <- out.pos - RCircos.Par $track.heights[track.num]       
+        #in.pos <- out.pos - RCircos.Par $track.heights[track.num]
     } else if (side == "out") {
-        in.pos <- RCircos.Par$track.out.start + (track.num - 
+        in.pos <- RCircos.Par$track.out.start + (track.num -
             1) * one.track
         out.pos <- in.pos + RCircos.Par$track.height
     } else {
@@ -824,7 +824,7 @@ RCircos.Track.Positions.my <- function (side, track.num, track.heights = 1)
 }
 
 
-RCircos.Validate.Genomic.Data.my <- function (genomic.data, plot.type = c("plot", "link")) 
+RCircos.Validate.Genomic.Data.my <- function (genomic.data, plot.type = c("plot", "link"))
 {
     RCircos.Cyto <- RCircos.Get.Plot.Ideogram()
     plot.type <- tolower(plot.type)
@@ -839,19 +839,19 @@ RCircos.Validate.Genomic.Data.my <- function (genomic.data, plot.type = c("plot"
     }
     for (a.col in 1:length(chrom.col)) {
         the.col <- chrom.col[a.col]
-        genomic.data[, the.col] <- as.character(genomic.data[, 
+        genomic.data[, the.col] <- as.character(genomic.data[,
             the.col])
         for (a.row in 1:nrow(genomic.data)) {
-            if (length(grep("chr", genomic.data[a.row, the.col])) == 
+            if (length(grep("chr", genomic.data[a.row, the.col])) ==
                 0) {
-                genomic.data[a.row, the.col] <- paste("chr", 
+                genomic.data[a.row, the.col] <- paste("chr",
                   genomic.data[a.row, the.col], sep = "")
             }
         }
         cyto.chroms <- unique(as.character(RCircos.Cyto$Chromosome))
         data.chroms <- unique(as.character(genomic.data[, the.col]))
         if (sum(data.chroms %in% cyto.chroms) < length(data.chroms)) {
-            cat(paste("Some chromosomes are in genomic data only", 
+            cat(paste("Some chromosomes are in genomic data only",
                 "and have been removed.\n\n"))
             all.chroms <- as.character(genomic.data[, the.col])
             genomic.data <- genomic.data[all.chroms %in% cyto.chroms, ]
@@ -866,7 +866,7 @@ RCircos.Validate.Genomic.Data.my <- function (genomic.data, plot.type = c("plot"
         for (a.chr in 1:length(data.chroms)) {
             the.chr <- data.chroms[a.chr]
             in.data <- genomic.data[genomic.data[, the.col] == the.chr, ]
-            cyto.data <- RCircos.Cyto[grep(the.chr, RCircos.Cyto$Chromosome), 
+            cyto.data <- RCircos.Cyto[grep(the.chr, RCircos.Cyto$Chromosome),
                 ]
 
             bad.rows <- in.data[, the.col + 1] > max(cyto.data[, 3])
@@ -874,18 +874,18 @@ RCircos.Validate.Genomic.Data.my <- function (genomic.data, plot.type = c("plot"
             bad.rows <- in.data[, the.col + 2] > max(cyto.data[, 3])
             in.data[bad.rows, the.col + 2] <- max(cyto.data[, 3])
 
-            genomic.data[genomic.data[, the.col] == the.chr, ] <- in.data 
-            
+            genomic.data[genomic.data[, the.col] == the.chr, ] <- in.data
+
             if (max(in.data[, the.col + 1]) > max(cyto.data[, 3]) | max(in.data[, the.col + 2]) > max(cyto.data[, 3])) {
                 cat(paste(the.chr, max(in.data[, 2]), max(in.data[, 3]), "\n"))
                 stop("Error! Location is outside of chromosome length.")
             }
         }
         for (a.row in 1:nrow(genomic.data)) {
-            if (genomic.data[a.row, the.col + 1] > genomic.data[a.row, 
+            if (genomic.data[a.row, the.col + 1] > genomic.data[a.row,
                 the.col + 2]) {
                 cat("chromStart greater than chromEnd.\n")
-                stop(paste("Row:", a.row, genomic.data[a.row, 
+                stop(paste("Row:", a.row, genomic.data[a.row,
                   2], genomic.data[a.row, 3]))
             }
         }

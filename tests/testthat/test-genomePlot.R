@@ -16,14 +16,14 @@ test_that("test genomePlot() using subs/indels vcfs, comma-separated without hea
 })
 
 test_that("test genomePlot() using subs/indels vcfs, tab separated with header copy number, and rearrangment bedpe input file formats and compare with the expected", {
-  
+
   output_png <- genomePlot(subsVcf.file = "test.sub.vcf.gz","test.indel.vcf.gz",
                            "test_hrdetect_1/test_hrdetect_1.cna.txt",
                            "test_hrdetect_1/test_hrdetect_1.sv.bedpe","test")
-  
+
   file.remove("test.genomePlot.png")
-  
+
   #if no error happen this code can be reached
   expect_true(TRUE)
-  
+
 })

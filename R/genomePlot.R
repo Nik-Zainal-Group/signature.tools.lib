@@ -3,11 +3,11 @@ set.plot.params <- function(colour.scheme = "ascat"){
 
   # circos parameters
   params.my <- list()
-  
+
   #use these two params to adjust circle size
   params.my$plot.radius <- 2.15
   params.my$genomeplot.margin <- 0.25
-  
+
   params.my$track.background <- 'white'
   params.my$highlight.width <- 0.2
   params.my$point.size <- 0.3
@@ -106,11 +106,11 @@ set.plot.params <- function(colour.scheme = "ascat"){
 # main plotting function
 
 #' Genome Plot
-#' 
+#'
 #' Generates a plot for the visualisation of somatic variants across the genome, organised in a circle.
 #' Variants plotted are single nucleotide variations (SNV), small insertions and deletions (indels),
 #' copy number variations (CNV) and rearrangements.
-#' 
+#'
 #' @param subsVcf.file SNV VCF file. The file should only contain SNV and should already be filtered according to the user preference, as all SNV in the file will be used and no filter will be applied.
 #' @param indelsVcf.file Indels VCF file to be used to classify Indels and compute the proportion of indels at micro-homology. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied.
 #' @param cnvsTab.file CNV TAB file (similar to ASCAT format). The file should be tab separated and contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
@@ -129,12 +129,12 @@ set.plot.params <- function(colour.scheme = "ascat"){
 #' @param base.per.unit set RCircos base.per.unit parameter. Useful for whole exome data.
 #' @return return the generated plot file name.
 #' @export
-genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file, 
-                       sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL, 
-                       no_copynumber = FALSE, no_rearrangements = FALSE, no_indels = FALSE, 
-                       no_subs_legend = FALSE, out_format = "png", out_path = ".", 
+genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.file,
+                       sampleID, genome.v="hg19", ..., file.ideogram = NULL, plot_title = NULL,
+                       no_copynumber = FALSE, no_rearrangements = FALSE, no_indels = FALSE,
+                       no_subs_legend = FALSE, out_format = "png", out_path = ".",
                        rearr_only_assembled = FALSE, base.per.unit = NULL) {
-  
+
   library(RCircos);
   library(scales)
 
@@ -165,7 +165,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   }
 
   params.my <- set.plot.params()
-  
+
   # rearrangement links colors
   inv.col <- alpha('dodgerblue2', 1)
   del.col <- alpha('coral2', 1) # originally .5
@@ -197,21 +197,21 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
       dels <- indels[which(indels$indel.type=='D' | indels$indel.type=='DI'),]
       ins$end <- ins$pos + ins$indel.length
       dels$end <- dels$pos + dels$indel.length
-      ins.formatted <- ins[,c('chr', 'pos', 'end')]; 
+      ins.formatted <- ins[,c('chr', 'pos', 'end')];
       names(ins.formatted) <- c('Chromosome','chromStart','chromEnd')
-      dels.formatted <- dels[,c('chr', 'pos', 'end')]; 
-      names(dels.formatted) <- c('Chromosome','chromStart','chromEnd')      
-      if (nrow(ins.formatted)>0 && (genome.v=="hg19" || genome.v=="mm10")) { 
+      dels.formatted <- dels[,c('chr', 'pos', 'end')];
+      names(dels.formatted) <- c('Chromosome','chromStart','chromEnd')
+      if (nrow(ins.formatted)>0 && (genome.v=="hg19" || genome.v=="mm10")) {
         ins.formatted$Chromosome <- paste('chr',ins.formatted$Chromosome ,sep='')
       }
-      if (nrow(dels.formatted)>0 && (genome.v=="hg19"|| genome.v=="mm10")) { 
+      if (nrow(dels.formatted)>0 && (genome.v=="hg19"|| genome.v=="mm10")) {
         dels.formatted$Chromosome <- paste('chr',dels.formatted$Chromosome ,sep='')
       }
       tile.cols <- vector()
       tile.cols[dels$classification=='Microhomology-mediated'] <- params.my$indel.mhomology #'firebrick4'
       tile.cols[dels$classification=='Repeat-mediated'] <- params.my$indel.repeatmediated #'firebrick1'
       tile.cols[dels$classification=='None'] <- params.my$indel.other #'firebrick3'
-  } 
+  }
 
   cat(paste(dim(indels)[1], ' indels \n'))
 
@@ -241,7 +241,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
                  "G[T>C]A","G[T>C]C","G[T>C]G","G[T>C]T","T[T>C]A","T[T>C]C","T[T>C]G","T[T>C]T",
                  "A[T>G]A","A[T>G]C","A[T>G]G","A[T>G]T","C[T>G]A","C[T>G]C","C[T>G]G","C[T>G]T",
                  "G[T>G]A","G[T>G]C","G[T>G]G","G[T>G]T","T[T>G]A","T[T>G]C","T[T>G]G","T[T>G]T")
-  
+
   # substitutions
   subs.data <- getMutTables(subsVcf.file, onlyPASSED=FALSE, genome.v=genome.v, genomeSeq=genome.bsgenome,mut.order=mut.order)
   #subs.data <- getMutTablesTab(subsTab.file, onlyPASSED=FALSE, genomeSeq=get(genome.bsgenome))
@@ -297,10 +297,10 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   #RCircos doesn't allow resetting certain parameters
   #see implementation of RCircos.Reset.Plot.Parameters
   #params[which(names(params) %in% c("radius.len","plot.radius","chr.ideo.pos"))] <- NULL
-  
+
   #toReset<-setdiff(names(params.my),c("radius.len","plot.radius","chr.ideo.pos","highlight.pos","chr.name.pos"))
   #params[toReset] <- params.my[toReset]
-  
+
   #params$sub.tracks <- 1
   params$point.type <- params.my$point.type
   params$point.size <- params.my$point.size
@@ -323,9 +323,9 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
   plot.new()
   plot.window(c(-params.my$plot.radius,params.my$plot.radius), c(-params.my$plot.radius, params.my$plot.radius))
   RCircos.Chromosome.Ideogram.Plot.my(params.my$chr.text.color, params.my$grid.line.color, params.my$text.size);
-  
+
   title(main = sampleID)
-  
+
   if (!is.null(plot_title)) {
     title(paste(plot_title, sep=''), line=-1);
   }
@@ -379,7 +379,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     heatmap.color.minor <-params.my$heatmap.color.loh
     heatmap.data.col.minor <-params.my$heatmap.data.col.loh
     RCircos.Heatmap.Plot.my(heatmap.data=cv.data, data.col=heatmap.data.col.minor, track.num=8, side="in", heatmap.ranges=heatmap.ranges.minor , heatmap.color=heatmap.color.minor ); # minor copy number
-    
+
   }
 
   cat('copy number plotted \n')
@@ -401,7 +401,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     }
   }
 
-  op <- par(lwd = 0.1)     
+  op <- par(lwd = 0.1)
   # square plotting region,
   # independent of device size
   ## At end of plotting, reset to previous settings:
@@ -428,7 +428,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
          col=c("royalblue", "black", "red", "grey", "green2", "hotpink"), pch=19, pt.cex=0.6,  horiz=FALSE, bty='n', )
   }
 
-  par(fig=c(cPanelWidth+0.8*(1-cPanelWidth),cPanelWidth+.98*(1-cPanelWidth),0.46, 0.64), new=TRUE) 
+  par(fig=c(cPanelWidth+0.8*(1-cPanelWidth),cPanelWidth+.98*(1-cPanelWidth),0.46, 0.64), new=TRUE)
 
   # indels
   if (exists("indels") && !is.null(indels)) {
@@ -444,7 +444,7 @@ genomePlot <- function(subsVcf.file, indelsVcf.file, cnvsTab.file, rearrBedpe.fi
     axis(2, at = mp, las=2,  labels = indel.lbs, col='grey', tick=FALSE, cex=0.5)
     axis(1, las=2, col='grey')
   }
-  
+
   # copy number
   if (exists('cv.data') && (nrow(cv.data)>0)) {
     par(fig=c(cPanelWidth+0.73*(1-cPanelWidth),cPanelWidth+0.99*(1-cPanelWidth),0.32,0.42), new=TRUE) # copy number legend
