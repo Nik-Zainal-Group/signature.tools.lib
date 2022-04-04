@@ -32,11 +32,11 @@ FitMS(
 \arguments{
 \item{catalogues}{catalogues matrix, samples as columns, channels as rows}
 
-\item{organ}{#automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available: 
-"Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid", 
+\item{organ}{#automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available:
+"Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid",
 "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
 
-\item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures 
+\item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.}
 
@@ -56,7 +56,7 @@ Can be set automatically by specifying the organ parameter and the rareSignature
 
 \item{multiStepMode}{use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".}
 
-\item{residualNegativeProp}{maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit 
+\item{residualNegativeProp}{maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 when using multiStepMode=constrainedFit}
 
 \item{minResidualMutations}{minimum number of mutations in a residual when using constrainedFit or partialNMF. Deactivated by default.}
@@ -86,27 +86,27 @@ returns the activities/exposures of the signatures in the given sample and other
 }
 \description{
 Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. In the first step, only the common signatures are fitted into the samples.
-In the following steps, one or more rare signatures are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically by providing 
+In the following steps, one or more rare signatures are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically by providing
 the name of an organ, or can be supplied by the user.
 }
 \details{
 We provide four methods to identify the rare signatures in the samples:
-"constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease". The methods constrainedFit and partialNMF work in a similar way: 
+"constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease". The methods constrainedFit and partialNMF work in a similar way:
 they identify a residual in each given sample, as the leftover mutations after fitting the common signatures. They will attempt to produce a mostly positive residual.
-Each residual is then compared to each rare signature, and a rare signature is considered as a candidate rare signature for a sample if the cosine similarity between the residual 
+Each residual is then compared to each rare signature, and a rare signature is considered as a candidate rare signature for a sample if the cosine similarity between the residual
 and the signature is at least minCosSimRareSig. One can also request that the residual is at least minResidualMutations. While constrainedFit will use a constrained least square fit where
-the negative part of the residual is at most residualNegativeProp (a proportion of the number of mutations in the sample), partialNMF will instead use a few iterations of a KLD based NMF algorithm 
+the negative part of the residual is at most residualNegativeProp (a proportion of the number of mutations in the sample), partialNMF will instead use a few iterations of a KLD based NMF algorithm
 where the matrix of the signatures contains the common signature and an additional signatures that needs to be estimated (NNLM package). The methods errorReduction and cossimIncrease work
 in a similar way: they will fit the common signatures along with one additional rare signature, testing all rare signatures one at a time, and then determine difference in error
 (or cosine similarity) between fitting the common signatures only and with the additional rare signatures. If the error reduction is at least minErrorReductionPerc (or the cosine similarity
 increase is at least minCosSimIncrease then the rare signature will be considered as a candidate.
 
-After any of ghe procedures above, each sample may have multiple candidate rare signatures, so one is chosen according to the highest associated cosine similarity either of 
+After any of ghe procedures above, each sample may have multiple candidate rare signatures, so one is chosen according to the highest associated cosine similarity either of
 the residual to the candidate rare signature (constrainedFit and partialNMF methods), or of the catalogue and the reconstructed sample (errorReduction and cossimIncrease methods).
 It is then possible to plot all the fits with plotFitMS and even change the choise of the candidate rare signature using the function fitMerge.
 
 A post fit exposure filter will reduce the false positive singature assignments by setting to zero exposure values that
-are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The 
+are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The
 fixedThreshold method will set to zero exposures that are below a fixed threshold given as a percentage of the mutations
 in a sample (parameter threshold_percent), while the method giniScaledThreshold will use a different threshold for each
 signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.

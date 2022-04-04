@@ -23,8 +23,8 @@ This function is used to select candidate rare signature solutions from a result
 using the multi-step signature fit FitMS function.
 }
 \details{
-When running FitMS, some samples may have multiple candidate rare signatures or rare signature combinations that 
-fit the sample reasonably well. This function selects the best rare signature for each sample based on cosine similarity and returns 
+When running FitMS, some samples may have multiple candidate rare signatures or rare signature combinations that
+fit the sample reasonably well. This function selects the best rare signature for each sample based on cosine similarity and returns
 an updated object with a summary exposures composed by each selected fit solution for each sample.
 
 The choise of rare signature can be changed using the parameter forceRareSigChoice.

@@ -30,7 +30,7 @@ plotMatrix(
 \item{circlesColHighlight}{colour used for the circles that pass the thresholdMark}
 }
 \description{
-This function plots a matrix of values. Data is visualised as circles scaled with respect to the 
-largest value in the matrix, with the actual number shown. If thresholdMark is specified, then a 
+This function plots a matrix of values. Data is visualised as circles scaled with respect to the
+largest value in the matrix, with the actual number shown. If thresholdMark is specified, then a
 different colour is used for entries that are equal or above the threshold.
 }

@@ -13,7 +13,7 @@ plotFitResults(fitObj, outdir = "")
 }
 \description{
 Plotting of the results obtained with the Fit or FitMS function. Output adapts based on the options used in during fitting.
-You can use this plot function instead of using plotFit or plotFitMS. The function plotFitResults will infer whether Fit or FitMS 
+You can use this plot function instead of using plotFit or plotFitMS. The function plotFitResults will infer whether Fit or FitMS
 was used and use the appropriate plot function.
 }
 \examples{

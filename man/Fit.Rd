@@ -36,7 +36,7 @@ Fit(
 
 \item{nboot}{number of bootstraps to use, more bootstraps more accurate results (use only when useBootstrap=TRUE)}
 
-\item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. 
+\item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent.
 In other words, this is the empirical probability that the exposure is lower than the threshold (use only when useBootstrap=TRUE)}
 
 \item{nparallel}{to use parallel specify >1}
@@ -50,7 +50,7 @@ returns the activities/exposures of the signatures in the given sample and other
 }
 \description{
 This function provides basic signature fit functionalities.
-Fit a given set of mutational signatures into mutational catalogues to estimate 
+Fit a given set of mutational signatures into mutational catalogues to estimate
 the activty/exposure of each of the given signatures in the catalogues.
 }
 \details{
@@ -58,7 +58,7 @@ This is a standard interface to signature fit functions with/without bootstrap. 
 function can be passed to the plotFit() function for automated plotting of the results.
 
 A post fit exposure filter will reduce the false positive singature assignments by setting to zero exposure values that
-are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The 
+are below a certain threshold. We provide two exposureFilterType methods: fixedThreshold and giniScaledThreshold. The
 fixedThreshold method will set to zero exposures that are below a fixed threshold given as a percentage of the mutations
 in a sample (parameter threshold_percent), while the method giniScaledThreshold will use a different threshold for each
 signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.
