@@ -16,6 +16,7 @@
   - [Example 01](#examplese01)
   - [Example 02](#examplese02)
   - [Example 03](#examplese03)
+  - [Example 04](#examplese04)
 - [Frequently Asked Questions](#faq)
 
 <a name="intro"/>
@@ -591,6 +592,53 @@ In this example we have also specified to use bootstrap and to use the giniScale
 Results can be plotted with the ```plotFitMS``` function.
 
 A manual for FitMS can be found in the ```userManuals``` folder.
+
+<a name="examplese04"/>
+
+### Example 04
+
+Here we provide an example of using the ```signatureFit_pipeline``` function introduced in v2.1.0. This function is meant to automated
+some recurrent tasks in signature analysis, such as catalogues generation and selections of signatures to fit.
+
+Similarly to the examples above, we store the location of the files containing the single nucleotide variants into the ```SNV_tab_files``` variable:
+
+```
+#set sample names
+sample_names <- c("sample1","sample2")
+#set the file names.
+SNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                   "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+#name the vectors entries with the sample names
+names(SNV_tab_files) <- sample_names
+```
+
+Then, we simply call the ```signatureFit_pipeline``` function:
+
+```
+pipeline_subs_res <- signatureFit_pipeline(SNV_tab_files = SNV_tab_files,
+                                           organ = "Breast",genome.v = "hg19",
+                                           fit_method = "FitMS",nparallel = 2)
+```
+
+In one function call, the SNV catalogues have been generated, and FitMS has been applied. We can now save the
+catalogues, as well as saving the annotated mutations and plotting the results from FitMS:
+
+```
+#save catalogues plots
+plotSignatures(pipeline_subs_res$catalogues,
+               output_file = "SNV_catalogues.pdf",
+               ncolumns = 2)
+#write annotated SNVs to file
+writeTable(pipeline_subs_res$annotated_mutations,"annotated_SNVs.tsv")
+#plot the FitMS results
+plotFitResults(pipeline_subs_res$fitResults,outdir = "signatureFit/")
+```
+
+The function ```plotSignatures``` will infer the type of mutations and select the correct signatures plot function.
+In this case, ```plotSignatures``` will notice that these are SNV catalogues and use the ```plotSubsSignatures```
+function. Moreover, the function ```plotFitResults``` will infer the fit method (Fit or FitMS) and use the
+appropriate plot function, in this case ```plotFitMS```.
+
 
 ## Frequently Asked Questions
 
