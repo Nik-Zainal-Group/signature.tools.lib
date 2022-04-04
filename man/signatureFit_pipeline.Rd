@@ -33,6 +33,7 @@ signatureFit_pipeline(
   minErrorReductionPerc = 15,
   minCosSimIncrease = 0.02,
   maxRareSigsPerSample = 1,
+  noFit = FALSE,
   nparallel = 1,
   randomSeed = NULL,
   verbose = FALSE
@@ -81,11 +82,11 @@ signatureFit_pipeline(
 
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
 
-\item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures 
+\item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.}
 
-\item{residualNegativeProp}{maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit 
+\item{residualNegativeProp}{maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 when using multiStepMode=constrainedFit}
 
 \item{minResidualMutations}{minimum number of mutations in a residual when using constrainedFit or partialNMF. Deactivated by default.}
@@ -97,6 +98,8 @@ when using multiStepMode=constrainedFit}
 \item{minCosSimIncrease}{minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method}
 
 \item{maxRareSigsPerSample}{masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.}
+
+\item{noFit}{if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.}
 
 \item{nparallel}{to use parallel specify >1}
 

@@ -1,12 +1,12 @@
 # Andrea Degasperi ad923@cam.ac.uk, Serena Nik-Zainal group, University of Cambridge, UK, 2022
 
 #' Signature fit pipeline
-#' 
-#' This function is the main interface for computing signature fit using the signature.tools.lib R package. 
-#' 
+#'
+#' This function is the main interface for computing signature fit using the signature.tools.lib R package.
+#'
 #' The pipeline will produce some feedback in the form or info, warning, and error messages.
 #' Please check the output to see whether everything worked as planned.
-#' 
+#'
 #' @param catalogues catalogues matrix, samples as columns, channels as rows. The mutation type of the catalogue will be inferred automatically by checking the rownames.
 #' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
 #' @param organ If signatures is not specified, then use this paramenter to provide an organ name to automatically select appropriate signatures. Organ names and signature selection depends on the signature_version provided. When using RefSigv1 or RefSigv2 as signature_version organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". If COSMICv2 or COSMICv3.2 are used, signatures are selected if the were found in the given organ/dataset. The mutation type is automatically inferred from the catalogue.
@@ -21,24 +21,25 @@
 #' @param signature_names if no signatures have been provided using the signatures and rare_signatures parameters, and if no organ is specified, then signature_names can be used to specify a list of signature names, which should match the corresponding mutation type (inferred automatically) and reference signatures requested using the signature_version parameter.
 #' @param fit_method either Fit or FitMS. Notice that automatic selection of signatures in FitMS is currrently available only for SNV mutations or catalogues, signature_version=RefSigv2 and specifying an organ. Alternatively, FitMS can be used by specifying both signatures (which will be considered common signatures) and rare_signatures parameters.
 #' @param optimisation_method KLD or NNLS
-#' @param useBootstrap set to TRUE to use bootstrap 
+#' @param useBootstrap set to TRUE to use bootstrap
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
 #' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
 #' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
-#' @param multiStepMode use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease". 
-#' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit 
+#' @param multiStepMode use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".
+#' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 #' when using multiStepMode=constrainedFit
 #' @param minResidualMutations minimum number of mutations in a residual when using constrainedFit or partialNMF. Deactivated by default.
 #' @param minCosSimRareSig minimum cosine similarity between a residual and a rare signature for considering the rare signature as a candidate for a sample when using constrainedFit or partialNMF
 #' @param minErrorReductionPerc minimum percentage of error reduction for a signature to be considered as candidate when using the errorReduction method. The error is computed as mean absolute deviation
 #' @param minCosSimIncrease minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method
 #' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
-#' @param rareSignatureTier either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures 
+#' @param rareSignatureTier either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 #' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 #' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
 #' @param maxRareSigsPerSample masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.
 #' @param nparallel to use parallel specify >1
+#' @param noFit if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.
 #' @param randomSeed set an integer random seed
 #' @param verbose use FALSE to suppress messages
 #' @return returns the fit object with activities/exposures of the signatures in the given sample and other information
@@ -75,19 +76,20 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                   minErrorReductionPerc = 15,
                                   minCosSimIncrease = 0.02,
                                   maxRareSigsPerSample = 1,
+                                  noFit = FALSE,
                                   nparallel = 1,
                                   randomSeed = NULL,
                                   verbose = FALSE){
-  
+
   message("[info signatureFit_pipeline] signatureFit pipeline starting!")
-  
+
   #if multiple parallel cores are used, set it here
   doParallel::registerDoParallel(nparallel)
-  
+
   if(!is.null(randomSeed)){
     set.seed(randomSeed)
   }
-  
+
   # let's see if a catalogue was provided and whether we can infer the mutation type.
   mtype_catalogues <- NULL
   sampleNames <- NULL
@@ -95,7 +97,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
     mtype_catalogues <- getTypeOfMutationsFromChannels(catalogues)
     sampleNames <- colnames(catalogues)
   }
-  
+
   # now check whether we need to build some catalogues
   specified_files <- ! c(is.null(SNV_vcf_files),
                          is.null(SNV_tab_files),
@@ -111,7 +113,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
   annotated_mutations <- NULL
   mtype_mutations <- NULL
   catalogues_mutations <- NULL
-  
+
   if(sum(specified_files)>1){
     # too many mutation file types passed
     message("[error signatureFit_pipeline] too many mutation file types specified: ",paste(names(specified_files)[specified_files],collapse = ","),". Please specify only one.")
@@ -126,7 +128,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
     # now here we have exaclty one mutation file to use, so build the catalogue accordingly
     if(!is.null(SNV_vcf_files)){
       message("[info signatureFit_pipeline] reading ",length(SNV_vcf_files)," SNV vcf mutation files and building catalogues.")
-      
+
       cat_list <- foreach::foreach(i=1:length(SNV_vcf_files)) %dopar% {
         sample <- names(SNV_vcf_files)[i]
         res <- vcfToSNVcatalogue(SNV_vcf_files[sample],genome.v = genome.v)
@@ -139,10 +141,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$catalogue)
         annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$muts)
       }
-      
+
     }else if(!is.null(SNV_tab_files)){
       message("[info signatureFit_pipeline] reading ",length(SNV_tab_files)," SNV tab mutation files and building catalogues.")
-      
+
       cat_list <- foreach::foreach(i=1:length(SNV_tab_files)) %dopar% {
         sample <- names(SNV_tab_files)[i]
         subs <- read.table(file = SNV_tab_files[sample],
@@ -157,10 +159,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$catalogue)
         annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$muts)
       }
-      
+
     }else if(!is.null(DNV_vcf_files)){
       message("[info signatureFit_pipeline] reading ",length(DNV_vcf_files)," DNV vcf mutation files and building catalogues.")
-      
+
       cat_list <- foreach::foreach(i=1:length(DNV_vcf_files)) %dopar% {
         sample <- names(DNV_vcf_files)[i]
         res <- vcfToDNVcatalogue(DNV_vcf_files[sample],genome.v = genome.v)
@@ -177,10 +179,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(!is.null(cat_list[[i]]$DNV_table[["snv"]])) annotated_mutations[["snv"]] <- rbind(annotated_mutations[["snv"]],cat_list[[i]]$DNV_table[["snv"]])
         if(!is.null(cat_list[[i]]$DNV_table[["dnv"]])) annotated_mutations[["dnv"]] <- rbind(annotated_mutations[["dnv"]],cat_list[[i]]$DNV_table[["dnv"]])
       }
-      
+
     }else if(!is.null(DNV_tab_files)){
       message("[info signatureFit_pipeline] reading ",length(DNV_tab_files)," DNV tab mutation files and building catalogues.")
-      
+
       cat_list <- foreach::foreach(i=1:length(DNV_tab_files)) %dopar% {
         sample <- names(DNV_tab_files)[i]
         muts <- read.table(file = DNV_tab_files[sample],
@@ -199,10 +201,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(!is.null(cat_list[[i]]$DNV_table[["snv"]])) annotated_mutations[["snv"]] <- rbind(annotated_mutations[["snv"]],cat_list[[i]]$DNV_table[["snv"]])
         if(!is.null(cat_list[[i]]$DNV_table[["dnv"]])) annotated_mutations[["dnv"]] <- rbind(annotated_mutations[["dnv"]],cat_list[[i]]$DNV_table[["dnv"]])
       }
-      
+
     }else if(!is.null(SV_bedpe_files)){
       message("[info signatureFit_pipeline] reading ",length(SV_bedpe_files)," SV bedpe mutation files and building catalogues.")
-      
+
       cat_list <- foreach::foreach(i=1:length(SV_bedpe_files)) %dopar% {
         sample <- names(SV_bedpe_files)[i]
         sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
@@ -228,7 +230,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
       }
     }
-    
+
     # now we have built a catalogue table from the mutations
     mtype_mutations <- getTypeOfMutationsFromChannels(catalogues_mutations)
     if(is.null(catalogues)){
@@ -256,16 +258,23 @@ signatureFit_pipeline <- function(catalogues=NULL,
       }
     }
   }
-  
+
   # now we have the catalogues to fit and the annotated mutations ready
   # we should save these now in the return obj
   returnObj <- list()
   returnObj$catalogues <- catalogues
   returnObj$mtype_catalogues <- mtype_catalogues
   returnObj$annotated_mutations <- annotated_mutations
-  
+
+  # if no signature fit was requested then finish early and return catalogue and annotated mutations
+  if(noFit){
+    message("[info signatureFit_pipeline] Finishing pipeline early as no signature fit requested (noFit=TRUE). ",
+            "Check the returned object for generated catalogues.")
+    return(returnObj)
+  }
+
   # find out what signatures you need, start from checking whether signatures were provided
-  
+
   if(!is.null(signatures)){
     # check that the tumour type is the same as the catalogues'
     mtype_signatures <- getTypeOfMutationsFromChannels(signatures)
@@ -276,7 +285,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       return(returnObj)
     }
   }
-  
+
   if(!is.null(rare_signatures)){
     # check that the tumour type is the same as the catalogues'
     mtype_rare_signatures <- getTypeOfMutationsFromChannels(rare_signatures)
@@ -287,7 +296,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       return(returnObj)
     }
   }
-  
+
   # now, let's consider the following order/priorities:
   # 1. If the user provided signatures, then use those and ignore all other options
   #    If the user chose FitMS but did not provide rare signatures, then we should ask the user to provide the rare too
@@ -300,7 +309,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
   # 3. If no signatures are provided and no organ is specified, then use the COSMIC or RefSigs reference signatures.
   #    If a list of signatures is provided with signature_names, then use only the signatures in the list,
   #    while if signature_names is NULL then use all the signatures at once
-  
+
   if(!is.null(signatures)){
     if(is.null(rare_signatures) & fit_method=="FitMS"){
       message("[error signatureFit_pipeline] user selected FitMS and provided a signatures file, which will be used for the common signatures. ",
@@ -315,14 +324,14 @@ signatureFit_pipeline <- function(catalogues=NULL,
     }
   }else{
     # user has not provided signatures using file names, so let's see what was requested
-    
+
     # let's check whether a specific signature_version was requested, and if not set to the latest
     if(is.null(signature_version)){
       message("[warning signatureFit_pipeline] signature_version parameter unspecified, using latest RefSigv2.")
       signature_version <- "RefSigv2"
     }
-    
-    # if FitMS was requested, but signature_version is not RefSigv2 or mtype_catalogues is not subs 
+
+    # if FitMS was requested, but signature_version is not RefSigv2 or mtype_catalogues is not subs
     # or no organ is specified, then I can't use it, so revert to Fit
     if(fit_method=="FitMS"){
       if(signature_version!="RefSigv2" | mtype_catalogues!="subs" | is.null(organ)){
@@ -334,7 +343,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         return(returnObj)
       }
     }
-    
+
     if(signature_version=="RefSigv2"){
       if(!is.null(organ)){
         # an organ was requested. If FitMS and subs were requested, then leave it to FitMS to get the appropriate signatures
@@ -376,7 +385,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       }
     }else if(signature_version=="RefSigv1"){
       if(!is.null(organ)){
-        # an organ was requested. 
+        # an organ was requested.
         if(fit_method=="Fit"){
           if(mtype_catalogues %in% c("subs","rearr")){
             signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
@@ -419,7 +428,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         message("[error signatureFit_pipeline] organ signatures selection for COSMICv2 signatures not implemented yet. ",
                 "Leave organ=NULL and select signatures manually with the signature_names parameter.")
         return(returnObj)
-        
+
       }else{
         if(mtype_catalogues == c("subs")){
           signatures <- cosmic30
@@ -428,7 +437,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                   "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
           return(returnObj)
         }
-        
+
       }
     }else if(signature_version=="COSMICv3.2"){
       if(!is.null(organ)){
@@ -436,7 +445,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         message("[error signatureFit_pipeline] organ signatures selection for COSMICv3.2 signatures not implemented yet. ",
                 "Leave organ=NULL and select signatures manually with the signature_names parameter.")
         return(returnObj)
-        
+
       }else{
         if(mtype_catalogues == c("subs")){
           signatures <- COSMIC_v3.2_SBS_GRCh37
@@ -451,8 +460,8 @@ signatureFit_pipeline <- function(catalogues=NULL,
       return(returnObj)
     }
   }
-  
-  
+
+
   # signature selection using signature_names
   sigsToUseNames <- colnames(signatures)
   if(!is.null(signature_names)){
@@ -469,10 +478,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
     }else if(fit_method=="FitMS"){
       message("[warning signatureFit_pipeline] using FitMS, parameter signature_names will be ignored.")
     }
-    
+
   }
-  
-  
+
+
   # Now, if fitMS was requested, and signature_type==NULL, then I think I can just call FitMS,
   # FitMS itself will take care of whether some of the parameters are invalid
   if(fit_method=="Fit"){
@@ -516,12 +525,12 @@ signatureFit_pipeline <- function(catalogues=NULL,
     message("[error signatureFit_pipeline] unknown fit_method ",fit_method,".")
     return(returnObj)
   }
-  
+
   message("[info signatureFit_pipeline] signatureFit pipeline completed!")
-  
+
   # now just return the results
   returnObj$fitResults <- fitRes
   return(returnObj)
-  
+
 }
 
