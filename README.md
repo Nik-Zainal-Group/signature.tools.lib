@@ -597,8 +597,8 @@ A manual for FitMS can be found in the ```userManuals``` folder.
 
 ### Example 04
 
-Here we provide an example of using the ```signatureFit_pipeline``` function introduced in v2.1.0. This function is meant to automated
-some recurrent tasks in signature analysis, such as catalogues generation and selections of signatures to fit.
+Here we provide an example of using the ```signatureFit_pipeline``` function introduced in v2.1.0. This function is meant to automate
+some recurrent tasks in signature analysis, such as catalogues generation and selection of signatures to fit.
 
 Similarly to the examples above, we store the location of the files containing the single nucleotide variants into the ```SNV_tab_files``` variable:
 
@@ -638,6 +638,9 @@ The function ```plotSignatures``` will infer the type of mutations and select th
 In this case, ```plotSignatures``` will notice that these are SNV catalogues and use the ```plotSubsSignatures```
 function. Moreover, the function ```plotFitResults``` will infer the fit method (Fit or FitMS) and use the
 appropriate plot function, in this case ```plotFitMS```.
+
+The ```signatureFit``` script that can be found in the ```scripts``` folder is a command line wrapper for the
+```signatureFit_pipeline``` function.
 
 
 ## Frequently Asked Questions
