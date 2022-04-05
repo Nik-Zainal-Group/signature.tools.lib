@@ -59,8 +59,8 @@ the most important functions is given below.
 
 2.0
 
-- New signature fit multi-step algorithm, FitMS
-- New organ-specific signatures from Genomics England Cancer data
+- New signature fit multi-step algorithm, FitMS, from Degasperi et al. 2022, *Science*
+- New organ-specific signatures obtained using Genomics England Cancer data, from Degasperi et al. 2022, *Science*
 - Reorganisation of old signature fit functions under the new Fit function
 - Rewrite of plot scripts for displaying signature fit results, now available using plotFit and plotFitMS functions
 - Added support for trinucleotide variant catalogues
@@ -69,8 +69,8 @@ the most important functions is given below.
 1.0
 
 - Signature analysis functions for signature extraction and fit
-- Mutational signatures available are COSMICv2 and reference signatures from *Degasperi et al. 2020 Nature Cancer*.
-- HRDetect pipeline available as command line script, includes HRDetect with bootstrap as published in *Degasperi et al. 2020 Nature Cancer*
+- Mutational signatures available are COSMICv2 and reference signatures from Degasperi et al. 2020, *Nature Cancer*
+- HRDetect pipeline available as command line script, includes HRDetect with bootstrap as published in Degasperi et al. 2020, *Nature Cancer*
 - Genome plot circos function (fork of Wellcome Sanger Institute genome plot function)
 - HRD indexes functions written by Nicolai Juul Birkbak
 
@@ -80,8 +80,8 @@ the most important functions is given below.
 
 These are the research articles associated with ```signature.tools.lib```:
 
-- A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service.** *Science*, 2022.
-- A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies.** *Nature Cancer*, [https://doi.org/10.1038/s43018-020-0027-5], 2020.
+- A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service.** *Science*, doi:10.1126/science.abl9283, 2022.
+- A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies.** *Nature Cancer*, doi:10.1038/s43018-020-0027-5, 2020.
 
 More in details, these are the specific signatures and algorithms introduced in each publication:
 
