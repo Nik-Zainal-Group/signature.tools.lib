@@ -59,7 +59,7 @@
 #' @return returns the activities/exposures of the signatures in the given sample and other information
 #' @keywords mutational signatures fit
 #' @export
-#' @references A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service. Science, 2022.
+#' @references A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers in the UK population. Science, 2022.
 #' @examples
 #' res <- FitMS(catalogues,"Breast")
 #' plotFitMS(res,"results/")

@@ -116,7 +116,7 @@ res <- FitMS(catalogues,"Breast")
 plotFitMS(res,"results/")
 }
 \references{
-A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service. Science, 2022.
+A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers in the UK population. Science, 2022.
 }
 \keyword{fit}
 \keyword{mutational}

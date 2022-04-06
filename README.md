@@ -80,7 +80,7 @@ the most important functions is given below.
 
 These are the research articles associated with ```signature.tools.lib```:
 
-- A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service.** *Science*, doi:10.1126/science.abl9283, 2022.
+- A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers in the UK population.** *Science*, doi:10.1126/science.abl9283, 2022.
 - A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies.** *Nature Cancer*, doi:10.1038/s43018-020-0027-5, 2020.
 
 More in details, these are the specific signatures and algorithms introduced in each publication:

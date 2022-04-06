@@ -179,7 +179,7 @@ Please check the output to see whether everything worked as planned.
 \references{
 A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, ... H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 
-A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers of the UK national health service. Science, 2022.
+A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers in the UK population. Science, 2022.
 
 Davies, H., Glodzik, D., Morganella, S., Yates, L. R., Staaf, J., Zou, X., ... Nik-Zainal, S. (2017). HRDetect is a predictor of BRCA1 and BRCA2 deficiency based on mutational signatures. Nature Medicine, 23(4), 517–525. https://doi.org/10.1038/nm.4292
 
