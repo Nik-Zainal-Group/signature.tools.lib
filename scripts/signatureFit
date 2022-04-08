@@ -517,16 +517,16 @@ if(!is.null(pipelineRes$fitResults)){
 
 if(!is.null(pipelineRes$catalogues)){
   message("[info signatureFit script] writing and plotting catalogues...")
-  writeTable(t = pipelineRes$catalogues,
-             file = paste0(outdir,"catalogues.tsv"))
-  plotSignatures(signature_data_matrix = pipelineRes$catalogues,
-                 output_file = paste0(outdir,"catalogues.pdf"))
+  signature.tools.lib::writeTable(t = pipelineRes$catalogues,
+                                  file = paste0(outdir,"catalogues.tsv"))
+  signature.tools.lib::plotSignatures(signature_data_matrix = pipelineRes$catalogues,
+                                      output_file = paste0(outdir,"catalogues.pdf"))
 }
 
 if(!is.null(pipelineRes$annotated_mutations)){
   message("[info signatureFit script] writing annotated mutations...")
-  writeTable(t = pipelineRes$annotated_mutations,
-             file = paste0(outdir,"annotated_mutations.tsv"))
+  signature.tools.lib::writeTable(t = pipelineRes$annotated_mutations,
+                                  file = paste0(outdir,"annotated_mutations.tsv"))
 }
 
 message("[info signatureFit script] done!")
