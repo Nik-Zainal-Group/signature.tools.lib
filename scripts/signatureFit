@@ -164,6 +164,11 @@ how_to <- function(){
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used.")
   message("  -f, --nboot=NBOOT         Number of bootstrap to be used when bootstrap is")
   message("                              requested (-b), if not specified, NBOOT=200.")
+  message("  -A, --writeannotations    Write the annotated mutations to file. This is off")
+  message("                              by default, because annotated mutations are saved as")
+  message("                              a flat text file containing mutations from all samples")
+  message("                              and may occupy a lot of space if many samples and many")
+  message("                              mutations are processed.")
   message("  -r, --randomSeed=SEED     Specify a random seed to obtain always the same")
   message("                              identical results.")
   message("  -v, --verbose             Verbose option for additional output.")
@@ -207,6 +212,7 @@ spec = matrix(c(
   'genomev',            'e', 1, "character",
   'nboot',              'f', 1, "double",
   'randomSeed',         'r', 1, "double",
+  'writeannotations',   'A', 0, "logical",
   'verbose',            'v', 0, "logical"
 ), byrow=TRUE, ncol=4)
 
@@ -225,6 +231,12 @@ if ( !is.null(opt$bootstrap) ) {
   useBootstrap <- TRUE
 }else{
   useBootstrap <- FALSE
+}
+
+if ( !is.null(opt$writeannotations) ) {
+  writeAnnotations <- TRUE
+}else{
+  writeAnnotations <- FALSE
 }
 
 if ( !is.null(opt$outdir) ) {
@@ -523,7 +535,7 @@ if(!is.null(pipelineRes$catalogues)){
                                       output_file = paste0(outdir,"catalogues.pdf"))
 }
 
-if(!is.null(pipelineRes$annotated_mutations)){
+if(!is.null(pipelineRes$annotated_mutations) & writeAnnotations){
   message("[info signatureFit script] writing annotated mutations...")
   signature.tools.lib::writeTable(t = pipelineRes$annotated_mutations,
                                   file = paste0(outdir,"annotated_mutations.tsv"))
