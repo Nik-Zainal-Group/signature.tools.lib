@@ -1306,8 +1306,8 @@ RMSE <- function(m1,m2){
 #' @param t R table or matrix
 #' @param file name of the output plain text file
 #' @export
-writeTable <- function(t,file){
-  write.table(t,file = file,sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
+writeTable <- function(t,file,row.names=TRUE){
+  write.table(t,file = file,sep = "\t",quote = FALSE,row.names = row.names,col.names = TRUE)
 }
 
 #' readTable
