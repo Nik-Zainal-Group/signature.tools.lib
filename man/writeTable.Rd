@@ -4,7 +4,7 @@
 \alias{writeTable}
 \title{writeTable}
 \usage{
-writeTable(t, file)
+writeTable(t, file, row.names = TRUE)
 }
 \arguments{
 \item{t}{R table or matrix}

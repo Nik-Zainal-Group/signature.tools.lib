@@ -40,5 +40,6 @@ Imports:
     readr,
     doRNG,
     combinat,
-    limSolve
+    limSolve,
+    getopt
 RoxygenNote: 7.1.2
