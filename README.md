@@ -224,17 +224,16 @@ applying NMF to the input matrix. Multiple NMF runs and bootstrapping is
 used for robustness, followed by clustering of the solutions. A range of
 number of signatures to be used is required.
 - **```Fit(...)```**: This is a standard interface for basic signature fit with/without bootstrap.
-The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results. Use the function
-```fitToJSON``` to export the results into a JSON file.
+The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results.
 - **```FitMS(...)```**: Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. 
 In the first step, only a set of common signatures are fitted into the samples. In the following steps, one or more rare signatures
 are fitted into the samples in addition to the common signatures. Common and rare signatures can be determined automatically 
 by providing the name of an organ, or can be supplied by the user.
-The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. Use the function
-```fitMStoJSON``` to export the results into a JSON file.
+The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. 
 A manual for FitMS can be found in the ```userManuals``` folder.
 - **```signatureFit_pipeline```**: an interface for the ```Fit``` and ```FitMS``` functions, which aim to automate various signature fit analysis steps, like generating the mutational catalogues and selecting which mutational signatures to fit. This function can be accessed via command line using the ```signatureFit``` script in the ```scripts``` folder.
-- **```plotFitResults(...)```**: this function can be used to plot results objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
+- **```plotFitResults(...)```**: this function can be used to plot result objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
+- **```writeFitResultsToJSON```**: this function can be used to write to file the content of the result objects from both ```Fit``` and ```FitMS``` functions as a compressed JSON file.
 
 Functions for organ-specific signatures and exposures conversion:
 

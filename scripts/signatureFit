@@ -169,6 +169,8 @@ how_to <- function(){
   message("                              a flat text file containing mutations from all samples")
   message("                              and may occupy a lot of space if many samples and many")
   message("                              mutations are processed.")
+  message("  -J, --writejson           Write the signature fit object to a JSON file,")
+  message("                              which will save all fit results and options used.")
   message("  -r, --randomSeed=SEED     Specify a random seed to obtain always the same")
   message("                              identical results.")
   message("  -v, --verbose             Verbose option for additional output.")
@@ -213,6 +215,7 @@ spec = matrix(c(
   'nboot',              'f', 1, "double",
   'randomSeed',         'r', 1, "double",
   'writeannotations',   'A', 0, "logical",
+  'writejson',          'J', 0, "logical",
   'verbose',            'v', 0, "logical"
 ), byrow=TRUE, ncol=4)
 
@@ -237,6 +240,12 @@ if ( !is.null(opt$writeannotations) ) {
   writeAnnotations <- TRUE
 }else{
   writeAnnotations <- FALSE
+}
+
+if ( !is.null(opt$writejson) ) {
+  writeJSON <- TRUE
+}else{
+  writeJSON <- FALSE
 }
 
 if ( !is.null(opt$outdir) ) {
@@ -525,6 +534,11 @@ if(!is.null(pipelineRes$fitResults)){
   # plot fit results
   signature.tools.lib::plotFitResults(fitObj = pipelineRes$fitResults,
                                       outdir = outdir)
+  if(writeJSON){
+    message("[info signatureFit script] saving fit to JSON...")
+    signature.tools.lib::writeFitResultsToJSON(fitObj = pipelineRes$fitResults,
+                                               outdir = outdir)
+  }
 }
 
 if(!is.null(pipelineRes$catalogues)){

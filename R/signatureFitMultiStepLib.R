@@ -1321,7 +1321,7 @@ fitToJSON <- function(fitObj,
   }else{
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
-  cat(indent,"\t\"fitAlgorithm\": ",fitObj$fitAlgorithm,",\n",sep = "")
+  cat(indent,"\t\"fitAlgorithm\": \"",fitObj$fitAlgorithm,"\",\n",sep = "")
   cat(indent,"\t\"nsamples\": ",nrow(fitObj$exposures),",\n",sep = "")
   cat(indent,"\t\"nsignatures\": ",ncol(fitObj$signatures),",\n",sep = "")
   cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
@@ -1411,7 +1411,7 @@ fitMStoJSON <- function(fitObj,
   }else{
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
-  cat(indent,"\t\"fitAlgorithm\": ",fitObj$fitAlgorithm,",\n",sep = "")
+  cat(indent,"\t\"fitAlgorithm\": \"",fitObj$fitAlgorithm,"\",\n",sep = "")
   cat(indent,"\t\"nsamples\": ",ncol(fitObj$catalogues),",\n",sep = "")
   cat(indent,"\t\"ncommonSignatures\": ",ncol(fitObj$commonSignatures),",\n",sep = "")
   cat(indent,"\t\"nrareSignatures\": ",ncol(fitObj$rareSignatures),",\n",sep = "")
@@ -1536,6 +1536,47 @@ fitMStoJSON <- function(fitObj,
   cat("\n")
   cat(indent,"}\n",sep = "")
   if(!disableFileWrite) sink()
+}
+
+#' Write the results from the Fit or FitMS function to JSON
+#'
+#' Writing of the results obtained with the Fit or FitMS function to JSON.
+#'
+#' @param fitObj object obtained from the Fit or FitMS function
+#' @param outdir output directory where the JSON should be saved
+#' @export
+#' @examples
+#' res <- Fit(catalogues,getOrganSignatures("Breast"))
+#' writeFitResultsToJSON(res,"results/")
+writeFitResultsToJSON <- function(fitObj,
+                                  outdir = ""){
+  if(!is.null(fitObj$fitAlgorithm)){
+    if(fitObj$fitAlgorithm=="Fit"){
+      fitToJSON(fitObj = fitObj,
+                filename = paste0(outdir,"fitData.json"))
+      # zip the file
+      current_wd <- getwd()
+      setwd(outdir)
+      zip(zipfile = "fitData.json.zip",
+          files = "fitData.json")
+      unlink("fitData.json")
+      setwd(current_wd)
+    }else if(fitObj$fitAlgorithm=="FitMS"){
+      fitMStoJSON(fitObj = fitObj,
+                  filename = paste0(outdir,"fitData.json"))
+      # zip the file
+      current_wd <- getwd()
+      setwd(outdir)
+      zip(zipfile = "fitData.json.zip",
+          files = "fitData.json")
+      unlink("fitData.json")
+      setwd(current_wd)
+    }else{
+      message("[error plotFitResults] unknown fitAlgorithm attribute ",fitObj$fitAlgorithm,", expecting Fit or FitMS. Input fitObj not recognised. ")
+    }
+  }else{
+    message("[error plotFitResults] missing fitAlgorithm attribute, fitObj not recognised.")
+  }
 }
 
 #' Save fit object to file
