@@ -74,12 +74,21 @@ simpleCatalogueSimulation <- function(commonSignatures,
               signatures=allSignatures))
 }
 
+#' mutationSampling
+#'
+#' @param allSignatures mutational signatures matrix with the signatures to sample
+#' @param exposures exposures with how many muts for each signatures in each sample
+
+#' @return sampled catalogues
+#' @export
 mutationSampling <- function(allSignatures,exposures){
-  sampled <- matrix(0,nrow = nrow(allSignatures),ncol = ncol(exposures))
+  sampled <- matrix(0,nrow = nrow(allSignatures),ncol = ncol(exposures),dimnames = list(rownames(allSignatures),colnames(exposures)))
   for(j in 1:ncol(exposures)){
     for(i in 1:nrow(exposures)){
-      tmpSample <- table(sample(1:nrow(allSignatures),size = exposures[i,j],replace = T,prob = allSignatures[,i]))
-      sampled[as.numeric(names(tmpSample)),j] <- sampled[as.numeric(names(tmpSample)),j] + tmpSample
+      if(exposures[i,j]>0){
+        tmpSample <- table(sample(1:nrow(allSignatures),size = exposures[i,j],replace = T,prob = allSignatures[,i]))
+        sampled[as.numeric(names(tmpSample)),j] <- sampled[as.numeric(names(tmpSample)),j] + tmpSample
+      }
     }
   }
   return(sampled)
