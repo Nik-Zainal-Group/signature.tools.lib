@@ -38,7 +38,8 @@ FitMS(
 
 \item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
-dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.}
+dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
+More specifically, T2 includes all the reference signatures that were observed as rare in the specified organ and also reference signatures that were observed as rare in other at least two organs.}
 
 \item{commonSignatures}{signatures, signatures as columns, channels as rows. These are the signatures that are assumed to be present in most samples and will be used in the first step.
 Can be set automatically by specifying the organ parameter}

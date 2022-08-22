@@ -1429,6 +1429,39 @@ getCOSMICSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
   return(sigs)
 }
 
+#' getSignaturesForFitting
+#'
+#' Given a tissue type/organ, his function returns the common and rare mutational signatures
+#' to be used with FitMS, as suggested in Degasperi et al. 2022, Science paper.
+#'
+#' @param organ organs available are: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid", "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param typemut only subs supported at the moment
+#' @param tier either "T1" or "T2". "T2" is default. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
+#' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
+#' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
+#' More specifically, T2 includes all the reference signatures that were observed as rare in the specified organ and also reference signatures that were observed as rare in other at least two organs.
+#' @return list of signatures matrix
+#' @export
+getSignaturesForFitting <- function(organ,typemut="subs",tier="T2",verbose = TRUE){
+  sigs <- NULL
+  if(typemut=="subs"){
+    organsAvail <- rownames(sigsForFittingSBSv2.03)
+    if(organ %in% organsAvail){
+      sigs <- list()
+      signames_common <- strsplit(sigsForFittingSBSv2.03[organ,paste0("common")],split = ",")[[1]]
+      signames_rare <- strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",tier)],split = ",")[[1]]
+      sigs[["common"]] <- organSignaturesSBSv2.03[,signames_common,drop=F]
+      sigs[["rare"]] <- referenceSignaturesSBSv2.03[,signames_rare,drop=F]
+    }
+  }
+  if(is.null(sigs)){
+    message("[warning getSignaturesForFitting] Signatures not available for mutation type ",typemut, ", organ ",organ,", tier ",tier, ".")
+  }else{
+    if(ncol(sigs$common)==0 & verbose) message("[warning getSignaturesForFitting] Common signatures not available for mutation type ",typemut, ", organ ",organ,", tier ",tier, ".")
+    if(ncol(sigs$rare)==0 & verbose) message("[warning getSignaturesForFitting] Rare signatures not available for mutation type ",typemut, ", organ ",organ,", tier ",tier, ".")
+  }
+  return(sigs)
+}
 
 #' convertExposuresFromOrganToRefSigs
 #'
