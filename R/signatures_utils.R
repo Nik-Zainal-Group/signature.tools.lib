@@ -1363,9 +1363,72 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
     }
     sigs <- organSignaturesSBSv2.03[,grepl(colnames(organSignaturesSBSv2.03),pattern = paste0(cohort,"-",organ)),drop=F]
   }
-  if(ncol(sigs)==0 & verbose) message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+  if(is.null(sigs)){
+    message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+  }else{
+    if(ncol(sigs)==0 & verbose) message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+  }
   return(sigs)
 }
+
+
+#' getReferenceSignatures
+#'
+#' This function returns the reference signatures for a given mutation type as defined in Degasperi et al. 2020 Nat Cancer paper,
+#' and Degasperi et al. 2022 Science paper.
+#'
+#' @param typemut either subs, DNV or rearr
+#' @param version version "1" includes subs or rearr (ICGC cohort) reference signatures from Degasperi et al. 2020, while version "2" includes the improved subs reference signatures, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.
+#' @return reference signatures matrix
+#' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @export
+getReferenceSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
+  sigs <- NULL
+  if(typemut=="subs" & version=="1"){
+    sigs <- RefSigv1_subs
+  }else if(typemut=="rearr" & (version=="1" | version=="latest")){
+    sigs <- RefSigv1_rearr
+  }else if(typemut=="DNV" & (version=="2" | version=="1" | version=="latest")){
+    sigs <- referenceSignaturesDBSv1.01
+  }else if(typemut=="subs" & (version=="2" | version=="latest")){
+    sigs <- referenceSignaturesSBSv2.03
+  }
+  if(is.null(sigs)){
+    message("[warning getReferenceSignatures] Reference signatures not available for mutation type ",typemut, ", version ",version, ".")
+  }else{
+    if(ncol(sigs)==0 & verbose) message("[warning getReferenceSignatures] Reference signatures not available for mutation type ",typemut, ", version ",version, ".")
+  }
+  return(sigs)
+}
+
+
+#' getCOSMICSignatures
+#'
+#' This function returns the COSMIC signatures for a given mutation type.
+#'
+#' @param typemut either subs, DNV or rearr
+#' @param version this is either "latest", which is v3.2 for SBS and DBS, or it is possible to specify "2" in combination with typemut="subs" to obtain the old COSMIC 30 signatures. For rearrangements, this function only returns the 6 breast cancer rearr signatures from Nik-Zainal et al. 2016.
+#' @return reference signatures matrix
+#' @export
+getCOSMICSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
+  sigs <- NULL
+  if(typemut=="subs" & version=="2"){
+    sigs <- cosmic30
+  }else if(typemut=="rearr" & version=="latest"){
+    sigs <- RS.Breast560
+  }else if(typemut=="DNV" & (version=="3.2" | version=="latest")){
+    sigs <- COSMIC_v3.2_DBS_GRCh37
+  }else if(typemut=="subs" & (version=="3.2" | version=="latest")){
+    sigs <- COSMIC_v3.2_SBS_GRCh37
+  }
+  if(is.null(sigs)){
+    message("[warning getCOSMICSignatures] COSMIC signatures not available for mutation type ",typemut, ", version ",version, ".")
+  }else{
+    if(ncol(sigs)==0 & verbose) message("[warning getCOSMICSignatures] COSMIC signatures not available for mutation type ",typemut, ", version ",version, ".")
+  }
+  return(sigs)
+}
+
 
 #' convertExposuresFromOrganToRefSigs
 #'
