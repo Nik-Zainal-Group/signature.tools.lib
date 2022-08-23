@@ -4,9 +4,9 @@
 
 
 #' Mutational Signatures Extraction
-#' 
+#'
 #' Perform signature extraction, by applying NMF to the input matrix. Multiple NMF runs and bootstrapping is used for robustness, followed by clustering of the solutions. A range of number of signatures to be used is required.
-#' 
+#'
 #' @param cat matrix with samples as columns and channels as rows
 #' @param matrix_of_fixed_signatures matrix with known signatures as columns and channels as rows. Used for partial extraction with NNLM package, with Lee KLD (brunet) only. If NULL, NMF package is used instead and different nmf methods can be used.
 #' @param outFilePath path were the extraction output files should go. Remember to add "/" at the end of the path
@@ -74,24 +74,24 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 normaliseCatalogue = FALSE, # scale samples to sum to 1
                                 plotCatalogue = FALSE, #also plot the catalogue, this may crash the library if the catalogue is too big, should work up to ~300 samples
                                 plotResultsFromAllClusteringMethods=TRUE){ #if TRUE, all clustering methods are used and results are reported and plotted for all of them. If FALSE, only the requested clustering is reported
-  
+
   library(NMF)
-  
+
   #tmp for debug
   if (completeLinkageFlag) tmp_outFilePath <- outFilePath
-  
+
   #remove blacklisted samples
   if(length(blacklist)>0){
     cat <- cat[,setdiff(colnames(cat),blacklist)]
   }
-  
+
   group <- project
-  
+
   doParallel::registerDoParallel(nparallel)
   dir.create(outFilePath,showWarnings = FALSE,recursive = TRUE)
-  
+
   message("\n------------- START COMPUTATION ------------\n")
-  
+
   ## Read the catalogue
   message("[STEP 1]: Reading and Preprocessing the Catalogue...", appendLF=F)
   if (type_of_extraction=="subs") cat <- sortCatalogue(cat)
@@ -115,60 +115,60 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
   cat_file <- paste0(outFilePath,"CatalogueUsedAfterPreprocessing_plot_",group,".txt")
   write.table(cat,file = cat_file,
               sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
-  
+
   nrow_cat <- nrow(cat)
-  
+
   #remove channels if necessary
   all_rows_cat <- cat
   #cat <-  preprocessCatalgue(cat, mut_thr)
   channelsRemoved <- FALSE
   if(nrow(all_rows_cat)>nrow(cat)) channelsRemoved <- TRUE
-  
+
   #normalised catalogue for computing replicates later
   ncat <- cat
   if(normaliseCatalogue) ncat <- normaliseSamples(cat)
-  
+
   if(sum(nsig>ncol(cat))>0){
     nsig <- nsig[nsig[length(nsig)]<=ncol(cat)]
   }
-  
+
   message("DONE")
   message("\t> ", ncol(cat), " Samples and ",nrow_cat, " Mutations Correclty Processed")
-  
 
-  
+
+
   if(mut_thr>0){
     message("\t> ", nrow_cat -nrow(cat), " Mutation(s) Channel(s) Removed (<", mut_thr, ")")
   }
-  
+
   nmuts <- apply(cat, 2, sum)
-  
+
   sample_names <- colnames(cat)
-  
+
   ###### Find Signature ######
   message("\n[STEP 2]: Finding Signatures")
-  
+
   ## Iterate Until Convergence
   complete <- FALSE
   round <- 1
   solutions <- matrix(0, 0, 4)
-  colnames(solutions) <- c("Round", "Optim_Nsig", "Estimate", "NumUncorrelated") 
-  
+  colnames(solutions) <- c("Round", "Optim_Nsig", "Estimate", "NumUncorrelated")
+
   prev_num_uncorr <- ncol(cat)
-  
+
   while(complete==FALSE){
     message("\t> Running round ", round)
-    
+
     ## Create Directory
     outDir <- paste(outFilePath, "round_", round, "/", sep="")
     cmd_res <- system(paste("mkdir -p", outDir))
-    
-    
+
+
     err <- c()
     cos_sim <- c()
     average_corr_smpls <- c()
     sil <- c()
-    
+
     #additional metrics
     ave.RMSE <- c()
     sd.RMSE <- c()
@@ -194,24 +194,24 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
     mmcs_pam <- c()
     mmcs_hclust <- c()
     mmcs_MC <- c()
-    
+
     ## Run Hunter on the specified range of signatures
     for(ns in nsig){
-      
+
       #tmp for debug
       if (completeLinkageFlag) outFilePath <- tmp_outFilePath
-      
+
       outNsDir <- paste(outDir, "sig_", ns, "/", sep="")
       cmd_res <- system(paste("mkdir -p ", outNsDir))
-      
+
       message("\n> Running for ", ns,  " Signatures (", nboots, " bootstraps)")
       strt<-Sys.time()
-      
+
       #---------Bootstraps start here
-      
+
       #Define smoothing matrix S in case nsNMF is used
       if (nmfmethod=="nsNMF") S <- diag(ns)*0.5 + matrix(1,nrow=ns,ncol=ns)*0.5/ns
-      
+
       #bootstraps file:
       bootstraps_file <- paste0(outFilePath,"bootstraps_",group,"_ns",ns,"_nboots",nboots,".Rdata")
       if (file.exists(bootstraps_file)){
@@ -237,9 +237,9 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
             if(normaliseCatalogue) boot_cat[[i]] <- normaliseSamples(boot_cat[[i]])
           }
           for(tt in 1:nseq){
-            message(".",  appendLF=F)	
-            boots_list <- foreach::foreach(i=1:nparallel) %dopar%{						
-              rnd_cat <- boot_cat[[(tt-1)*nparallel + i]]			
+            message(".",  appendLF=F)
+            boots_list <- foreach::foreach(i=1:nparallel) %dopar%{
+              rnd_cat <- boot_cat[[(tt-1)*nparallel + i]]
               rnd_cat <- preprocessCatalgue(rnd_cat, mut_thr) #remove channels with 0 mutations
               if(!is.null(matrix_of_fixed_signatures)){
                 nnmf.res <- list()
@@ -291,7 +291,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                 #just take all the runs
                 runsToChooseFrom <- 1:length(nmf_res)
               }
-              
+
               countRuns <- 1
               for (j in 1:length(nmf_res)){
                 #keep at most 10 repeats that have residuals close to the best (within 0.1% more than residual)
@@ -341,7 +341,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                       e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
                       err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
                     }
-                    
+
                   }
 
                   boot_tracker <- c(boot_tracker,rep((tt-1)*nparallel + i,ns))
@@ -375,9 +375,9 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
           #   }
           # }
           #boots_list <- unlist(boots_list_tmp)
-        }else{ ## No Parallel	
+        }else{ ## No Parallel
           for(i in 1:nboots){
-            message(".",  appendLF=F)			
+            message(".",  appendLF=F)
             boot_cat[[i]] <- generateRandMuts(cat)
             if(normaliseCatalogue) boot_cat[[i]] <- normaliseSamples(boot_cat[[i]])
             rnd_cat <- preprocessCatalgue(boot_cat[[i]], mut_thr) #remove channels with 0 mutations
@@ -414,7 +414,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                 }
               }
             }
-            
+
             if(filterBestOfEachBootstrap){
               #filter the best runs
               runsToChooseFrom <- which(best_residual*(1+filterBest_RTOL)>=residuals_list)
@@ -475,24 +475,28 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                     e_boot <- cbind(e_boot , t(NMF::coef(nmf_res@.Data[[j]])))
                     err_boot <- c(err_boot,NMF::residuals(nmf_res@.Data[[j]]))
                   }
-                  
+
                 }
                 boot_tracker <- c(boot_tracker,rep(i,ns))
-                boot_tracker_e <- c(boot_tracker_e,rep(i,ns+ncol(matrix_of_fixed_signatures)))
+                if(!is.null(matrix_of_fixed_signatures)){
+                  boot_tracker_e <- c(boot_tracker_e,rep(i,ns+ncol(matrix_of_fixed_signatures)))
+                }else{
+                  boot_tracker_e <- c(boot_tracker_e,rep(i,ns))
+                }
                 countRuns <- countRuns + 1
               }
             }
             rm(nmf_res)
             gc()
-          }	
+          }
         }
         #how many solutions were saved?
         saved_nmf_runs <- ncol(p_boot)/ns
         save(file = bootstraps_file,ns,nboots,nrepeats,e_boot,p_boot,err_boot,cat,all_rows_cat,saved_nmf_runs,boot_tracker,boot_tracker_e,boot_cat)
       }
-      
+
       #now add back the missing channel and reset cat to all channels
-      
+
       # if(channelsRemoved){
       #   lmissing <- setdiff(rownames(all_rows_cat),rownames(cat))
       #   nmissing <- length(lmissing)
@@ -502,7 +506,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
       #   p_boot <- rbind(p_boot,newrows)[rownames(all_rows_cat),]
       #   #cat <- all_rows_cat
       # }
-      
+
       # ## Compute the average silhouette grouping all the computed solutions in ns clusters
       #sil <- c(sil, summary(silhouette(pam(p_boot, ns)))$avg.width)
       #above dissimilarity is not based on cosine similarity
@@ -522,16 +526,16 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         distMatrix <- 1 - computeCorrelation_parallel(p_boot,nparallel = nparallel,parallel = TRUE)
         save(file = distMatrix_file,distMatrix)
       }
-      
+
       #change prefix (debug)
       if (completeLinkageFlag) outNsDir <- paste0(outNsDir,"completeLinkage")
-      
+
       if(ns>1 & saved_nmf_runs>1){
         #Hierarchical clustering
         if (completeLinkageFlag) {
-          fit_clust <- stats::hclust(as.dist(distMatrix), method="complete") 
+          fit_clust <- stats::hclust(as.dist(distMatrix), method="complete")
         }else{
-          fit_clust <- stats::hclust(as.dist(distMatrix), method="average") 
+          fit_clust <- stats::hclust(as.dist(distMatrix), method="average")
         }
         #Hierarchical clustering partitioning
         cut_res <- stats::cutree(fit_clust,k = ns)
@@ -551,7 +555,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         medoids_hclust <- findMedoidsHclust(distMatrix,cut_res)
         medoids_MC <- findMedoidsHclust(distMatrix,cut_res_MC)
         medoids_PAM <- clustering_result$medoids
-        
+
       }else if(ns==1 & saved_nmf_runs>1){
         cut_res <- rep(1,ncol(distMatrix))
         names(cut_res) <- colnames(distMatrix)
@@ -577,9 +581,9 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         medoids_MC <- medoids_hclust
         medoids_PAM <- medoids_hclust
       }
-      
+
       norm_p_boot <- p_boot/matrix(data=rep(apply(p_boot,2,sum),nrow(p_boot)),nrow = nrow(p_boot),byrow = TRUE)
-      
+
       #mean and sd
       #set up mean and sd of signatures
       mean_signatures <- list()
@@ -592,7 +596,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         row.names(mean_signatures[[cm]]) <- row.names(p_boot)
         row.names(sd_signatures[[cm]]) <- row.names(p_boot)
       }
-      
+
       for (cm in c("HC","PAM","MC")){
         if(cm=="HC"){
           partitions <- cut_res
@@ -619,26 +623,26 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
           sd_signatures[[cm]] <- cbind(tmpmatrix,sd_signatures[[cm]])
         }
       }
-      
+
       if(ns>1 & saved_nmf_runs>1){
         #Compute Silhouettes
         sil_hclust <- summary(cluster::silhouette(cut_res,as.dist(distMatrix)))
         sil_pam <- summary(cluster::silhouette(cut_res,as.dist(distMatrix)))
         sil_MC <- summary(cluster::silhouette(cut_res_MC,as.dist(distMatrix)))
         plotWithinClusterSilWidth(sil_hclust,sil_pam,sil_MC,outNsDir,group,ns,nboots)
-        
+
         #compute within cluster cos similiraty distance
         cosSimPAM <- withinClusterCosSim(clustering_result$clustering,distMatrix,parallel = TRUE)
         cosSimHClust <- withinClusterCosSim(cut_res,distMatrix,parallel = TRUE)
         cosSimMC <- withinClusterCosSim(cut_res_MC,distMatrix,parallel = TRUE)
         plotWithinClusterCosSim(cosSimHClust,cosSimPAM,cosSimMC,outNsDir,group,ns,nboots)
-        
+
         #compute cophenetic correlation
         coph <- cor(stats::cophenetic(fit_clust),as.dist(distMatrix))
-        
+
         #compute the proportion of the solutions that contain signatures that are too similar
         #propTooSimilar <- computePropTooSimilar(distMatrix,saved_nmf_runs,ns)
-        
+
         #Save metrics
         #ave.CosSim.hclust <- c(ave.CosSim.hclust,mean(cosSimHClust))
         #ave.CosSim.PAM <- c(ave.CosSim.PAM,mean(cosSimPAM))
@@ -647,17 +651,17 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         ave.SilWid.MC <- c(ave.SilWid.MC,sil_MC$avg.width)
         cophenetic.corr.hclust <- c(cophenetic.corr.hclust,coph)
         #proportion.tooSimilar.Signatures <- c(proportion.tooSimilar.Signatures,propTooSimilar)
-        
+
         #save metrics
         additional_perf_file <- paste0(outNsDir,"Sigs_WithinClusterPerf_",group,"_ns",ns,"_nboots",nboots,".rData")
         save(file = additional_perf_file,sil_pam,sil_hclust,sil_MC,cosSimPAM,cosSimHClust,cosSimMC)
         #plotHierarchicalCluster(fit_clust,outNsDir,group,ns,nboots)
-        
+
         #Max Medoids Cosine Similarity
         mmcs_pam <- c(mmcs_pam,max(medoids_cosSimMatrix(p_boot,medoids_PAM) - diag(ns)))
         mmcs_hclust <- c(mmcs_hclust,max(medoids_cosSimMatrix(p_boot,medoids_hclust) - diag(ns)))
         mmcs_MC <- c(mmcs_MC,max(medoids_cosSimMatrix(p_boot,medoids_MC) - diag(ns)))
-        
+
       }else{
         ave.SilWid.hclust <- c(ave.SilWid.hclust,NA)
         ave.SilWid.PAM <- c(ave.SilWid.PAM,NA)
@@ -667,8 +671,8 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         mmcs_hclust <- c(mmcs_hclust,NA)
         mmcs_MC <- c(mmcs_MC,NA)
       }
-      
-      
+
+
       #error
       rmse_list <- c()
       kld_list <- c()
@@ -697,28 +701,28 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
       sd.RMSE <- c(sd.RMSE,sd(rmse_list))
       ave.KLD <- c(ave.KLD,mean(kld_list))
       sd.KLD <- c(sd.KLD,sd(kld_list))
-      # 
+      #
       ave.RMSE.orig <- c(ave.RMSE.orig,mean(rmse_orig_list))
       sd.RMSE.orig <- c(sd.RMSE.orig,sd(rmse_orig_list))
       ave.KLD.orig <- c(ave.KLD.orig,mean(kld_orig_list))
       sd.KLD.orig <- c(sd.KLD.orig,sd(kld_orig_list))
-      
+
       #use requested medoids
       medoids_final <- medoids_hclust
       if(clusteringMethod=="PAM") medoids_final <- medoids_PAM
       if(clusteringMethod=="MC") medoids_final <- medoids_MC
-      
+
       #plot signatures and compute similarity to known signatures
       clustering_list <- ""
       clustering_list_tag <- clusteringMethod
       if (plotResultsFromAllClusteringMethods) clustering_list <- c("","_HC","_PAM","_MC")
       if (plotResultsFromAllClusteringMethods) clustering_list_tag <- c(clusteringMethod,"HC","PAM","MC")
-      
+
       for (cli in 1:length(clustering_list)){
         cl <- clustering_list[cli]
         cl_tag <- clustering_list_tag[cli]
         signature_names <- paste0("S",1:length(medoids_final))
-        
+
         if (cl==""){
           signature_data_matrix <- p_boot[,medoids_final,drop=FALSE]/matrix(data=rep(apply(p_boot[,medoids_final,drop=FALSE],2,sum),nrow(p_boot)),nrow = nrow(p_boot),byrow = TRUE)
         }else if(cl=="_HC"){
@@ -728,7 +732,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         }else if(cl=="_MC"){
           signature_data_matrix <- p_boot[,medoids_MC,drop=FALSE]/matrix(data=rep(apply(p_boot[,medoids_MC,drop=FALSE],2,sum),nrow(p_boot)),nrow = nrow(p_boot),byrow = TRUE)
         }
-        
+
         colnames(signature_data_matrix) <- signature_names
         row.names(signature_data_matrix) <- row.names(p_boot)
         if(!is.null(matrix_of_fixed_signatures)){
@@ -751,12 +755,12 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         subs_file <- paste0(outNsDir,"Sigs_plot_",group,"_ns",ns,"_nboots",nboots,cl,".tsv")
         write.table(signature_data_matrix,file = subs_file,
                     sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
-        
+
         #similarity to known signatures
         if(type_of_extraction=="subs"){
           #find the most similar cosmic signatures
-          res_cosmic <- findClosestCOSMIC30_withSimilarity(signature_data_matrix) 
-          res_cosmicComb <- findClosestCOSMIC30andCombinations_withSimilarity(signature_data_matrix) 
+          res_cosmic <- findClosestCOSMIC30_withSimilarity(signature_data_matrix)
+          res_cosmicComb <- findClosestCOSMIC30andCombinations_withSimilarity(signature_data_matrix)
           res_cosmic_table <- data.frame(res_cosmic,res_cosmicComb)
           cosmic_file <- paste0(outNsDir,"Sigs_cosmicSimilar_",group,"_ns",ns,"_nboots",nboots,cl,".tsv")
           write.table(res_cosmic_table,file = cosmic_file,
@@ -769,7 +773,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                       sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
         }
       }
-      
+
       if (ns>1){
         #More metrics
         #spread of the clusters: minimum within cluster cosine similarity (MinWCCS)
@@ -779,14 +783,14 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         names(MinWCCS.MC) <- signature_names
         MinWCCS.PAM <- minWithinClusterCosSim(clustering = clustering_result$clustering,distMatrix = distMatrix,parallel = TRUE)
         names(MinWCCS.PAM) <- signature_names
-        
+
         MinWCCS_file <- paste0(outNsDir,"MinWithinClusterCosSim_",group,"_ns",ns,"_nboots",nboots,".tsv")
         write.table(data.frame(MinWCCS.hclust=MinWCCS.hclust,MinWCCS.PAM=MinWCCS.PAM,MinWCCS.MC=MinWCCS.MC),file = MinWCCS_file,
                     sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
         min.MinWCCS.hclust <- c(min.MinWCCS.hclust,min(MinWCCS.hclust))
         min.MinWCCS.PAM <- c(min.MinWCCS.PAM,min(MinWCCS.PAM))
         min.MinWCCS.MC <- c(min.MinWCCS.MC,min(MinWCCS.MC))
-        
+
         #cluster neighbours: maximum between cluster cosine similarity (MaxBCCS)
         MaxBCCS.hclust <- maxBetweenClustersCosSim(clustering = cut_res,distMatrix = distMatrix,parallel = TRUE)
         colnames(MaxBCCS.hclust) <- signature_names
@@ -797,7 +801,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         MaxBCCS.PAM <- maxBetweenClustersCosSim(clustering = clustering_result$clustering,distMatrix = distMatrix,parallel = TRUE)
         colnames(MaxBCCS.PAM) <- signature_names
         row.names(MaxBCCS.PAM) <- signature_names
-        
+
         MaxBCCS.hclust_file <- paste0(outNsDir,"MaxBetweenClusterCosSim.hclust_",group,"_ns",ns,"_nboots",nboots,".tsv")
         write.table(MaxBCCS.hclust,file = MaxBCCS.hclust_file,
                     sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
@@ -807,18 +811,18 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
         MaxBCCS.MC_file <- paste0(outNsDir,"MaxBetweenClusterCosSim.MC_",group,"_ns",ns,"_nboots",nboots,".tsv")
         write.table(MaxBCCS.MC,file = MaxBCCS.MC_file,
                     sep = "\t",quote = FALSE,row.names = TRUE,col.names = TRUE)
-        
-        max.MaxBCCS.hclust <- c(max.MaxBCCS.hclust,max(MaxBCCS.hclust - diag(nrow(MaxBCCS.hclust)))) 
+
+        max.MaxBCCS.hclust <- c(max.MaxBCCS.hclust,max(MaxBCCS.hclust - diag(nrow(MaxBCCS.hclust))))
         max.MaxBCCS.PAM <- c(max.MaxBCCS.PAM,max(MaxBCCS.PAM - diag(nrow(MaxBCCS.PAM))))
-        max.MaxBCCS.MC <- c(max.MaxBCCS.MC,max(MaxBCCS.MC - diag(nrow(MaxBCCS.MC)))) 
+        max.MaxBCCS.MC <- c(max.MaxBCCS.MC,max(MaxBCCS.MC - diag(nrow(MaxBCCS.MC))))
       }else if (ns==1){
         min.MinWCCS.hclust <- c(min.MinWCCS.hclust,NA)
         min.MinWCCS.PAM <- c(min.MinWCCS.PAM,NA)
         min.MinWCCS.MC <- c(min.MinWCCS.MC,NA)
-        max.MaxBCCS.hclust <- c(max.MaxBCCS.hclust,NA) 
+        max.MaxBCCS.hclust <- c(max.MaxBCCS.hclust,NA)
         max.MaxBCCS.PAM <- c(max.MaxBCCS.PAM,NA)
         max.MaxBCCS.MC <- c(max.MaxBCCS.MC,NA)
-      }      
+      }
       #-------------------
       #----- clean this ns
       #-------------------
@@ -827,7 +831,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
       rm(distMatrix)
       gc()
     }
-    
+
     #Collect metrics
     overall_metrics <- data.frame(nsig,       #1
                                   ave.RMSE,   #2
@@ -851,21 +855,21 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                   mmcs_hclust,        #20
                                   mmcs_pam,           #21
                                   mmcs_MC)            #22
-    
+
     #write table with all the metrics
     overall_metrics_file <- paste0(outFilePath,"Sigs_OverallMetrics_",group,"_nboots",nboots,".tsv")
     write.table(overall_metrics,file = overall_metrics_file,
                 sep = "\t",quote = FALSE,row.names = FALSE,col.names = TRUE)
-    
+
     whattoplot_hclust <- c(10,14,17,20,13)
-    whattoplot_PAM <- c(11,15,18,21)    
+    whattoplot_PAM <- c(11,15,18,21)
     whattoplot_MC <- c(12,16,19,22)
-    
+
     #plot requested medoids
     whattoplot_final <- whattoplot_hclust
     if(clusteringMethod=="PAM") whattoplot_final <- whattoplot_PAM
     if(clusteringMethod=="MC") whattoplot_final <- whattoplot_MC
-    
+
     for (cl in clustering_list){
 
       overall_metrics_file <- paste0(outFilePath,"Sigs_OverallMetrics_",group,"_nboots",nboots,cl,".jpg")
@@ -886,12 +890,12 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
     }
     complete <- TRUE
   }
-  
+
 
   message("\n\nResults can be found in ", outFilePath)
-  
+
   message("\n------------- COMPUTATION  SUCCESSFULLY COMPLETED ------------\n")
-  
+
 }
 
 #############################################
