@@ -216,7 +216,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(resncol>1){
           rescolsum <- apply(reslist$rearr_catalogue,2,sum)
           sampletouse <- which.max(rescolsum)[1]
-          message(paste0("[warning signatureFit_pipeline] BEDPE file for sample ",sample," contained ",resncol," sample names: ",paste(colnames(res),collapse = ", "),". This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangements (",colnames(res)[sampletouse],"). Please double check and rerun if necessary with only one sample for each BEDPE file."))
+          message(paste0("[warning signatureFit_pipeline] BEDPE file for sample ",sample," contained ",resncol," sample names: ",paste(colnames(reslist$rearr_catalogue),collapse = ", "),". This could be due to germline rearrangements that should be removed. Using only the sample with the largest number of rearrangements (",colnames(reslist$rearr_catalogue)[sampletouse],"). Please double check and rerun if necessary with only one sample for each BEDPE file."))
           reslist$rearr_catalogue <- reslist$rearr_catalogue[,sampletouse,drop=F]
           reslist$annotated_bedpe <- reslist$annotated_bedpe[reslist$annotated_bedpe$sample==colnames(reslist$rearr_catalogue)[sampletouse],,drop=F]
         }
