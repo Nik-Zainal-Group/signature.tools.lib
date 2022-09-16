@@ -55,12 +55,12 @@ returns the activities/exposures of the signatures in the given sample and other
 \description{
 This function is a wrapper for the function SignatureFit_withBootstrap_Analysis, which
 produces several plots for each sample in the catalogues cat.
-Fit a given set of mutational signatures into mutational catalogues to extimate the 
-activty/exposure of each of the given signatures in the catalogues. Implementation 
-of method similar to Huang 2017, Detecting presence of mutational signatures with 
-confidence, which uses a bootstrap apporach to calculate the empirical probability 
-of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample). 
-This probability can be used to decide which exposures to remove from the initial fit, 
+Fit a given set of mutational signatures into mutational catalogues to extimate the
+activty/exposure of each of the given signatures in the catalogues. Implementation
+of method similar to Huang 2017, Detecting presence of mutational signatures with
+confidence, which uses a bootstrap apporach to calculate the empirical probability
+of an exposure to be larger or equal to a given threshold (i.e. 5% of mutations of a sample).
+This probability can be used to decide which exposures to remove from the initial fit,
 thus increasing the sparsity of the exposures.
 Note that SignatureFit_withBootstrap_Analysis will save the results of SignatureFit_withBootstrap
 in the outdir directory using the R save() function. If SignatureFit_withBootstrap_Analysis

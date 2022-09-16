@@ -12,8 +12,8 @@ export_SignatureFit_withBootstrap_to_JSON(outdir, res)
 \item{res}{R object obtained from the SignatureFit_withBootstrap or SignatureFit_withBootstrap_Analysis function}
 }
 \description{
-Given a res file obtained from the SignatureFit_withBootstrap or 
-SignatureFit_withBootstrap_Analysis function, export it to a set of 
+Given a res file obtained from the SignatureFit_withBootstrap or
+SignatureFit_withBootstrap_Analysis function, export it to a set of
 JSON files that can be used for web visualisation
 }
 \examples{
