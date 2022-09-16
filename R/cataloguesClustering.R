@@ -48,7 +48,7 @@ cataloguesClustering <- function(samplescatalogues,
     clusters_table[names(cl),as.character(i)] <- cl
     sil <- cluster::silhouette(cl,as.dist(dM))
     
-    if(i==1){
+    if(i==1 | i==ncol(samplescatalogues)){
       sw_table[as.character(i),"ASW"] <- NA
       sw_table[as.character(i),"n"] <- i
     }else if(!is.na(summary(sil)$avg.width)){
@@ -66,7 +66,7 @@ cataloguesClustering <- function(samplescatalogues,
       clusters_stats[[i]][as.character(j),"nclsamples"] <- ncol(tmpCatalogues)
       clusters_stats[[i]][as.character(j),"cltotmuts"] <- sum(tmpCatalogues)
       clusters_stats[[i]][as.character(j),"clmeanmuts"] <- sum(tmpCatalogues)/ncol(tmpCatalogues)
-      if(i>1) clusters_stats[[i]][as.character(j),"asw"] <- summary(sil)$clus.avg.widths[j]
+      if(i>1 & i<ncol(samplescatalogues)) clusters_stats[[i]][as.character(j),"asw"] <- summary(sil)$clus.avg.widths[j]
       tmpCatalogues <- apply(tmpCatalogues,2,function(x) x/abs(sum(x)))
       mean_catalogues[[i]][[j]] <- matrix(apply(tmpCatalogues,1,mean),
                                           ncol = 1,nrow = nrow(tmpCatalogues),
