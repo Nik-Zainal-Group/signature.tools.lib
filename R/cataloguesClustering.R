@@ -81,13 +81,14 @@ cataloguesClustering <- function(samplescatalogues,
     dir.create(outdir,showWarnings = F,recursive = T)
     signature.tools.lib::writeTable(clusters_table,paste0(outdir,"/clusters_table.tsv"),row.names = T)
     signature.tools.lib::writeTable(sw_table,paste0(outdir,"/sw_table.tsv"),row.names = F)
-    
-    pdf(paste0(outdir,"/sw_table.pdf"),width = 6,height = 4.5,pointsize = pointsize)
-    par(mar=c(5,5,3,1))
-    plot(sw_table$n,sw_table$ASW,type="l",lwd=2,xlab="nclusters",ylab = "average silhouette width",las=1)
-    grid()
-    lines(sw_table$n,sw_table$ASW,type="l",lwd=2)
-    dev.off()
+    if(!all(is.na(sw_table$ASW))){
+      pdf(paste0(outdir,"/sw_table.pdf"),width = 6,height = 4.5,pointsize = pointsize)
+      par(mar=c(5,5,3,1))
+      plot(sw_table$n,sw_table$ASW,type="l",lwd=2,xlab="nclusters",ylab = "average silhouette width",las=1)
+      grid()
+      lines(sw_table$n,sw_table$ASW,type="l",lwd=2)
+      dev.off()
+    }
     
     maxlengthlable <- max(strwidth(colnames(samplescatalogues),units = "inch",ps = par(ps=pointsize)))
     hcd <- as.dendrogram(h)
