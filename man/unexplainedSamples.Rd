@@ -18,7 +18,9 @@ unexplainedSamples(
 \arguments{
 \item{outfileRoot}{if specified, generate a plot, otherwise no plot is generated}
 
-\item{sigs}{mutational signautures used for fitting, channels as rows, signatures as columns}
+\item{catalogues}{original catalogues, channels as rows and samples as columns}
+
+\item{sigs}{mutational signatures used for fitting, channels as rows, signatures as columns}
 
 \item{pvalue_threshold}{threshold for statistical significance of the normalised error/residual}
 
@@ -29,8 +31,6 @@ unexplainedSamples(
 \item{nmutsMethod}{method to be used for the absolute criterion. Default is residualSSD. Alternatives are errorSAD or residualSAD}
 
 \item{considerOnlyNmutsThreshold}{use only the absolute criterion and disables the relative criterion}
-
-\item{catalogue}{original catalogue, channels as rows and samples as columns}
 }
 \value{
 table of samples with associated error metrics and samples with significant error and/orr residual highlighted
@@ -63,7 +63,7 @@ present in the catalogue butt not captured by he given signatures.
 Both criteria are necessary to consider a sample unexplained, unless considerOnlyNmutsThreshold=TRUE.
 }
 \examples{
-resObj <- unexplainedSamples(catalogue=catalogue,
+resObj <- unexplainedSamples(catalogues=catalogues,
                              sigs=signatures)
 }
 \keyword{samples}

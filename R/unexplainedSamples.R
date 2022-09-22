@@ -28,8 +28,8 @@
 #' Both criteria are necessary to consider a sample unexplained, unless considerOnlyNmutsThreshold=TRUE.
 #' 
 #' @param outfileRoot if specified, generate a plot, otherwise no plot is generated
-#' @param catalogue original catalogue, channels as rows and samples as columns
-#' @param sigs mutational signautures used for fitting, channels as rows, signatures as columns
+#' @param catalogues original catalogues, channels as rows and samples as columns
+#' @param sigs mutational signatures used for fitting, channels as rows, signatures as columns
 #' @param nmuts_threshold minimum number of mutations in the error/residual to consider the samples unexplained
 #' @param pvalue_threshold threshold for statistical significance of the normalised error/residual
 #' @param pvalueMethod method to be used for the relative criterion. Default is normErrorSAD. Alternatives are normResidualSAD or normResidualSSD
@@ -39,7 +39,7 @@
 #' @return table of samples with associated error metrics and samples with significant error and/orr residual highlighted
 #' @export
 #' @examples
-#' resObj <- unexplainedSamples(catalogue=catalogue,
+#' resObj <- unexplainedSamples(catalogues=catalogues,
 #'                              sigs=signatures)
 unexplainedSamples <- function(outfileRoot=NULL,
                                catalogues,
