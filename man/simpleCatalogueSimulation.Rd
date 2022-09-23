@@ -39,6 +39,6 @@ catalogues, signatures and exposures of simulated data
 This is a simple function that produces simulated mutational catalgoues and exposures, given a set of mutational signatures.
 Each catalogue is simulated as follows. The total number of mutations in a catalogue is sampled uniformely in the log space,
 and the results exponetiated, so that most samples have total mutations closer to min_mutations than max_mutations.
-exposures for common signatures and rare signatures (if any) are then sampled uniformely, and the result scaled so that the 
+exposures for common signatures and rare signatures (if any) are then sampled uniformely, and the result scaled so that the
 sum of the mutations corresponds to the number sampled initially.
 }
