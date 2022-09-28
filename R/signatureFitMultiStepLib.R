@@ -884,6 +884,7 @@ plotMatrix <- function(dataMatrix,
                        thresholdMark = NULL,
                        ndigitsafterzero = 2,
                        cex.numbers = 0.7,
+                       title = NULL,
                        circlesColBasic = "#A1CAF1",
                        circlesColHighlight = "#F6A600"){
 
@@ -910,18 +911,21 @@ plotMatrix <- function(dataMatrix,
   for(i in 1:ncol(dataMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),dataMatrix[,i])
   toPlot[toPlot=="0" | toPlot=="-0"] <- ""
 
-  circleDim <- dataMatrix/max(dataMatrix)*5
+  circleDim <- dataMatrix/max(dataMatrix,na.rm = T)*5
 
   for(i in 1:ncol(circleDim)) {
     for(j in 1:nrow(circleDim)){
-      usecol <- circlesColBasic
-      if(!is.null(thresholdMark)) {
-        if(thresholdMark <= dataMatrix[j,i]) usecol <- circlesColHighlight
+      if(!is.na(dataMatrix[j,i])){
+        usecol <- circlesColBasic
+        if(!is.null(thresholdMark)) {
+          if(thresholdMark <= dataMatrix[j,i]) usecol <- circlesColHighlight
+        }
+        drawCircle(radius = circleDim[j,i]/10,position = c(j,i),col = usecol,border = NA)
       }
-      drawCircle(radius = circleDim[j,i]/10,position = c(j,i),col = usecol,border = NA)
     }
   }
   for(i in 1:ncol(toPlot)) text(y = rep(i,nrow(toPlot)), x = 1:nrow(toPlot),labels = toPlot[,i],cex = cex.numbers)
+  if(!is.null(title)) title(main = title)
   if(!is.null(output_file)) dev.off()
 }
 

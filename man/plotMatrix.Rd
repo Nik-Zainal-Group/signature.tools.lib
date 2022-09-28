@@ -10,6 +10,7 @@ plotMatrix(
   thresholdMark = NULL,
   ndigitsafterzero = 2,
   cex.numbers = 0.7,
+  title = NULL,
   circlesColBasic = "#A1CAF1",
   circlesColHighlight = "#F6A600"
 )
