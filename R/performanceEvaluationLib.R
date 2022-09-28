@@ -150,14 +150,16 @@ plotPerformanceExposures <- function(perfTables,
   cairo_pdf(filename = outfile,height = plotHeight,width = plotWidth,pointsize = pointsize)
   par(mfrow=c(nmetrics,ifelse(plotRareSigs,2,1)),mai=c(maxNamesLength+0.1,1,1,1))
   for(i in 1:nmetrics){
+    metricsName <- rownames(perfTables$resPerfCommon)[i]
+    if(plotRareSigs) metricsName <- paste0(metricsName," - common")
     barplot(unlist(perfTables$resPerfCommon[i,,drop=T]),beside = T,
             names.arg = colnames(perfTables$resPerfCommon),
             col = allcolours[1:ncol(perfTables$resPerfCommon)],border = NA,
-            main = rownames(perfTables$resPerfCommon)[i],las=2)
+            main = metricsName,las=2)
     if(plotRareSigs) barplot(unlist(perfTables$resPerfRare[i,,drop=T]),beside = T,
                              names.arg = colnames(perfTables$resPerfRare),
                              col = allcolours[1:ncol(perfTables$resPerfRare)],border = NA,
-                             main = rownames(perfTables$resPerfRare)[i],las=2)
+                             main = paste0(rownames(perfTables$resPerfRare)[i]," - rare"),las=2)
   }
   dev.off()
   return(perfTables)
