@@ -15,6 +15,7 @@
 #' @param maxRareSigsPerSample the maxiumum number of rare signature that can be present in a sample
 #' @param min_mutations minimum number of mutations in a sample
 #' @param max_mutations maximum number of mutations in a sample
+#' @param randomSeed set a random seed for reproducibility
 #' @return catalogues, signatures and exposures of simulated data
 #' @export
 simpleCatalogueSimulation <- function(commonSignatures,
@@ -24,7 +25,13 @@ simpleCatalogueSimulation <- function(commonSignatures,
                                       nsamplesWrareSigs=10,
                                       maxRareSigsPerSample = 1,
                                       min_mutations=1000,
-                                      max_mutations=50000){
+                                      max_mutations=50000,
+                                      randomSeed = NULL){
+
+  if(!is.null(randomSeed)){
+    set.seed(randomSeed)
+  }
+
   nmutations <- exp(runif(ngenomes,log(min_mutations),log(max_mutations)))
   nsignatures <- ncol(commonSignatures)
   exposures <- matrix(runif(ngenomes*nsignatures),nrow = nsignatures)
