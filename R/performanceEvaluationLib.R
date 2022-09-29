@@ -36,6 +36,20 @@ evaluatePerformanceExposuresCore <- function(true_exposures,
   return(resPerf)
 }
 
+#' evaluate performance exposures
+#'
+#' Compare two exposure matrices, one with the true exposures and one with estimated exposures, and
+#' compute various metrics to determine how well the estimated exposures match the true exposures.
+#' If the names of common and/or rare mutational signatures are provided, then the 
+#' metrics are calculated separately for common and rare signatures. 
+#' Results are plotted to a file if outfile is specified.
+#'
+#' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames
+#' @param estimated_exposures matrix of estimated exposures, for example obtained using a signature extraction or fit algorithm on a simulated dataset, with mutational signatures names as colnames and sample names as rownames
+#' @param commonNames names of common mutational signatures. If NULL, all signatures in the colnames of true_exposures and estimated_exposures will be used
+#' @param rareNames names of rare mutational signatures. If NULL, rare signatures metrics will not be computed. This is ok if the simulated data didn't have any rare signatures.
+#' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
+#' @return performance metrics 
 #' @export
 evaluatePerformanceExposures <- function(true_exposures,
                                          estimated_exposures,
@@ -46,9 +60,9 @@ evaluatePerformanceExposures <- function(true_exposures,
     resPerfCommon <- evaluatePerformanceExposuresCore(true_exposures[,commonNames,drop=F],
                                                       estimated_exposures[,intersect(commonNames,colnames(estimated_exposures)),drop=F])
   }else{
-    intersectionNames <- intersect(colnames(true_exposures),colnames(estimated_exposures))
-    resPerfCommon <- evaluatePerformanceExposuresCore(true_exposures[,intersectionNames,drop=F],
-                                                      estimated_exposures[,intersectionNames,drop=F])
+    # the core function will take care of merging the signature names
+    resPerfCommon <- evaluatePerformanceExposuresCore(true_exposures,
+                                                      estimated_exposures)
   }
 
   if(!is.null(rareNames)){
@@ -71,6 +85,20 @@ evaluatePerformanceExposures <- function(true_exposures,
   return(perfTables)
 }
 
+#' evaluate performance exposures list
+#'
+#' Compare an exposure matrix with the true exposures with a list of estimated exposure matrices, and
+#' compute various metrics to determine how well the estimated exposures match the true exposures.
+#' If the names of common and/or rare mutational signatures are provided, then the 
+#' metrics are calculated separately for common and rare signatures. 
+#' Results are plotted to a file if outfile is specified.
+#'
+#' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames
+#' @param estimated_exposures_list list of matrices of estimated exposures, for example obtained using a signature extraction or fit algorithm on a simulated dataset, with mutational signatures names as colnames and sample names as rownames. Use a named list, so that the names can be used in he data structure returned and plots.
+#' @param commonNames names of common mutational signatures. If NULL, all signatures in the colnames of true_exposures and estimated_exposures will be used
+#' @param rareNames names of rare mutational signatures. If NULL, rare signatures metrics will not be computed. This is ok if the simulated data didn't have any rare signatures.
+#' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
+#' @return performance metrics 
 #' @export
 evaluatePerformanceExposuresList <- function(true_exposures,
                                              estimated_exposures_list,
@@ -166,6 +194,20 @@ plotPerformanceExposures <- function(perfTables,
 }
 
 
+#' evaluate performance signature similarity
+#'
+#' Compare a signatures matrix of true signatures with a matrix of estimated signatures, and
+#' compute a match between the signatures and their cosine similarity. The match implies
+#' an optimal assignment that maximises the cosine similarity while allowing each true_signature
+#' to match at most one estimated signature and viceversa.
+#' If the number of signatures differ, the least similar signatures are removed until the number
+#' of signatures is the same
+#' Results are plotted to a file if outfile is specified.
+#'
+#' @param true_signatures matrix of true signatures, for example obtained using simulations, with mutational signatures names as colnames and channels as rownames
+#' @param estimated_signatures matrix of estimated signatures, for example obtained using a signature extraction on a simulated dataset, with mutational signatures names as colnames and channels as rownames.
+#' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
+#' @return cosine similarity and signatures match between true and estimated signature names
 #' @export
 evaluatePerformanceSignatureSimilarity <- function(true_signatures,
                                                    estimated_signatures,
@@ -240,6 +282,21 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
   return(res)
 }
 
+#' evaluate performance signature similarity list
+#'
+#' Compare a signatures matrix of true signatures with a list of matrices of estimated signatures, and
+#' compute a match between the signatures and their cosine similarity. 
+#' For each matrix of estimated signatures, a match implies
+#' an optimal assignment that maximises the cosine similarity while allowing each true_signature
+#' to match at most one estimated signature and viceversa.
+#' If the number of signatures differ, the least similar signatures are removed until the number
+#' of signatures is the same
+#' Results are plotted to a file if outfile is specified.
+#'
+#' @param true_signatures matrix of true signatures, for example obtained using simulations, with mutational signatures names as colnames and channels as rownames
+#' @param estimated_signatures_list list of matrices of estimated signatures, for example obtained using a signature extraction on a simulated dataset, with mutational signatures names as colnames and channels as rownames. Use a named list, so that the names can be used in he data structure returned and plots.
+#' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
+#' @return cosine similarity and signatures match between true and estimated signature names
 #' @export
 evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
                                                        estimated_signatures_list,
