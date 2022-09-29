@@ -13,10 +13,11 @@
 - [Command line scripts](#scripts)
 - [Examples](#examples)
   - [Test examples](#examplestests)
-  - [Example 01](#examplese01)
-  - [Example 02](#examplese02)
-  - [Example 03](#examplese03)
-  - [Example 04](#examplese04)
+  - [Example 01: signature fit and HRDetect](#examplese01)
+  - [Example 02: signature fit of organ-specific signatures](#examplese02)
+  - [Example 03: signature fit using FitMS](#examplese03)
+  - [Example 04: signature fit using signatureFit_pipeline](#examplese04)
+  - [Example 05: common and rare signature extraction workflow](#examplese05)
 - [Frequently Asked Questions](#faq)
 
 <a name="intro"/>
@@ -38,6 +39,11 @@ the most important functions is given below.
 ## Versions
 
 <a name="version"/>
+
+2.2.0
+
+- Added functions for rare signature extraction workflow
+- Added functions for simulating catalogues and for evaluating the performance of signature extractions and fits
 
 2.1.2
 
@@ -217,12 +223,25 @@ from Zou's to Alexandrov's style.
 - **```plotDNVSignatures(...)```**: plot one or more DNV signatures or catalogues, compatible with both
 Zou's style and Alexandrov's style of channels.
 
-Functions for signature extraction and signature fit:
+Functions for signature extraction:
 
 - **```SignatureExtraction(...)```**: perform signature extraction, by
 applying NMF to the input matrix. Multiple NMF runs and bootstrapping is
 used for robustness, followed by clustering of the solutions. A range of
 number of signatures to be used is required.
+- **```unexplainedSamples(...)```**: identifies samples whose mutational
+catalogue cannot be fully explained by the extracted common signatures alone.
+- **```rareSignatureExtraction(...)```**: extract rare signatures from samples 
+using the samples identified with ```unexplainedSamples```.
+- **```finaliseCommonRareSignatureExposures```**: this function fits all common
+and rare mutational signatures into the appropriate samples as identified
+using the ```unexplainedSamples``` and ```rareSignatureExtraction``` functions.
+- **```catalogueClustering(...)```**: cluster mutational catalogues using
+hierarchical clustering and a cosine similarity distance. Can be used to cluster
+catalogues, signatures and residuals.
+
+Functions for signature fit:
+
 - **```Fit(...)```**: This is a standard interface for basic signature fit with/without bootstrap.
 The object returned by this function can be passed to the ```plotFit()``` function for automated plotting of the results.
 - **```FitMS(...)```**: Given a set of mutational catalogues, this function will attempt fit mutational signature in a multi-step manner. 
@@ -233,7 +252,8 @@ The object returned by this function can be passed to the ```plotFitMS()``` func
 A manual for FitMS can be found in the ```userManuals``` folder.
 - **```signatureFit_pipeline```**: an interface for the ```Fit``` and ```FitMS``` functions, which aim to automate various signature fit analysis steps, like generating the mutational catalogues and selecting which mutational signatures to fit. This function can be accessed via command line using the ```signatureFit``` script in the ```scripts``` folder.
 - **```plotFitResults(...)```**: this function can be used to plot result objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
-- **```writeFitResultsToJSON```**: this function can be used to write to file the content of the result objects from both ```Fit``` and ```FitMS``` functions as a compressed JSON file.
+- **```writeFitResultsToJSON(...)```**: this function can be used to write to file the content of the result objects from both ```Fit``` and ```FitMS``` functions as a compressed JSON file.
+
 
 Functions for organ-specific signatures and exposures conversion:
 
@@ -286,10 +306,10 @@ mutations of substitution signature 8.
 the HDR-LOH index for each sample, the HRDetect BRCAness probability
 score for each sample, and the contribution of each of the six features
 to the HRDetect BRCAness probability score.
-- **```plot_HRDetect_overall```**: uses the ```HRDetect_pipeline```
+- **```plot_HRDetect_overall(...)```**: uses the ```HRDetect_pipeline```
 output to generate an overall plot of the HRDetect BRCAness probability
 score.
-- **```plot_HRDetect_BootstrapScores```**: overall plot of scores obtained
+- **```plot_HRDetect_BootstrapScores(...)```**: overall plot of scores obtained
 from the ```HRDetect_pipeline``` output when HRDetect with bootstrap is
 enabled.
 
@@ -302,6 +322,9 @@ deletions (indels), copy number variations (CNV) and rearrangements.
 - **```plotSignatures(...)```**: this function will plot signatures or
 catalogues trying to identify the appropriate mutation type (SNV, DNV, SV...)
 from the input row names.
+
+Functions for catalogue simulations and performance evaluation:
+- **```genomePlot(...)```**:
 
 <a name="scripts"/>
 
@@ -339,7 +362,7 @@ Moreover, examples of typical workflows are given below.
 
 <a name="examplese01"/>
 
-### Example 01
+### Example 01: signature fit and HRDetect
 
 In this example we illustrate a typical workflow for signature fit and
 HRDetect using two test samples. This code can be easily adapted to be
@@ -480,7 +503,7 @@ in the ```Example01``` directory.
 
 <a name="examplese02"/>
 
-### Example 02
+### Example 02: signature fit of organ-specific signatures
 
 In this example we illustrate a typical workflow for signature fit
 using organ-specific signatures. This code can be easily adapted to be
@@ -568,7 +591,7 @@ writeTable(snv_exp,"RefSigSubsExposures.tsv")
 
 <a name="examplese03"/>
 
-### Example 03
+### Example 03: signature fit using FitMS
 
 In this example we show how to use the multi-step signature fit function along with the Gini-based exposure filter.
 
@@ -594,7 +617,7 @@ A manual for FitMS can be found in the ```userManuals``` folder.
 
 <a name="examplese04"/>
 
-### Example 04
+### Example 04: signature fit using signatureFit_pipeline
 
 Here we provide an example of using the ```signatureFit_pipeline``` function introduced in v2.1.0. This function is meant to automate
 some recurrent tasks in signature analysis, such as catalogues generation and selection of signatures to fit.
@@ -640,6 +663,110 @@ appropriate plot function, in this case ```plotFitMS```.
 
 The ```signatureFit``` script that can be found in the ```scripts``` folder is a command line wrapper for the
 ```signatureFit_pipeline``` function.
+
+<a name="examplese05"/>
+
+### Example 05: common and rare signature extraction workflow
+
+In this example, we provide an example of signature extraction workflow where both common and rare signatures are extracted.
+For more details, please see the rare signatures extraction manual in the ```userManuals``` folder.
+
+We being by importing the package and setting an output directory where we will store all the results.
+
+```
+#import the package
+library(signature.tools.lib)
+# set an output directory
+outdir <- "~/Example05/"
+dir.create(outdir,showWarnings = F,recursive = T)
+```
+
+We load the catalogue and perform a clustering to see if samples with rare profiles can be identified
+and excluded from the extraction of common signatures.
+
+```
+# these are simulated data with 100 catalogues (9 common and 2 rare signatures)
+catalogues <- readTable("tests/testthat/rareExtraction/SDExample05/catalogues.tsv")
+# we begin by exploring the data using clustering
+resCl <- cataloguesClustering(catalogues,nclusters = 1:15,
+                              outdir = paste0(outdir,"cataloguesClustering/"))
+```
+
+After inspection of the clustering results, we can clearly identify one cluster with just two samples that we can exclude
+(nclusters=5, remove cluster 5). Then, we perform a signature extraction using NMF on the remaining samples.
+
+```
+# Let's try to remove samples that may have a rare signatures first
+nclustersSelection <- "5"
+clusters_to_keep <- c(1:4)
+samplesSelected <- rownames(resCl$clusters_table)[resCl$clusters_table[,nclustersSelection] %in% clusters_to_keep]
+#now extract common signatures
+SignatureExtraction(cat = catalogues[,samplesSelected],
+                    outFilePath = paste0(outdir,"Extraction/"),
+                    nrepeats = 25,nboots = 4,filterBestOfEachBootstrap = T,
+                    nparallel = 4,nsig = 8:11,plotResultsFromAllClusteringMethods = F,
+                    parallel = T)
+```
+
+We now need to decide how many signatures are present, based on the error and the average silhouette width. In this case,
+9 or 10 signatures seem optimal. Let us choose 9 here, though feel free to try 10 as well
+and see how the results are affected downstream.
+
+```
+# load the optimal signatures (9)
+estimated_signatures <- readTable(paste0(outdir,"Extraction/round_1/sig_9/Sigs_plot_extraction_ns9_nboots4.tsv"))
+```
+
+Now we have a set of common signatures and we want to find whether some samples are still not fully explained by these signatures
+and see if we can extract rare signatures out of them.
+
+```
+# is there any sample that was not fully explained by the signatures we found?
+unexplSamples <- unexplainedSamples(outfileRoot = paste0(outdir,"unexplained/Example05"),
+                                    catalogues = catalogues,
+                                    sigs = estimated_signatures,
+                                    nmuts_threshold = 300,
+                                    pvalue_threshold = 0.15)
+```
+
+Indeed there are four samples that are not fully explained. As there is some randomness you might have to tune the 
+```nmuts_threshold``` and ```pvalue_threshold``` parameters to select them. Use the ```Example05_UnexplainedCataloguesSelectionPlot.pdf```
+scatter plot in the ```unexplained``` folder to guide you.
+
+We cluster the residuals of the four samples, and we identify two clusters of two samples, each of them having very similar residuals.
+We can use the samples in these clusters to then extract two rare mutational signatures.
+
+```
+# yes, 4 samples, get their residual
+significant_residuals <- unexplSamples$all_residuals[,unexplSamples$which_significant]
+# now we cluster the residuals
+resCl_residuals <- cataloguesClustering(significant_residuals,
+                                        nclusters = 1:3,
+                                        outdir = paste0(outdir,"residualClustering/"))
+# we decide that there are two clusters, having two samples in each
+# now we need to extract the rare signatures
+resRareSigs <- rareSignatureExtraction(outfileRoot = paste0(outdir,"ExtractionRare/Example05"),
+                                       catalogues = catalogues,
+                                       residuals = unexplSamples$all_residuals,
+                                       unexpl_samples = unexplSamples$unexplSamples,
+                                       clusters = resCl_residuals$clusters_table[,"2"],
+                                       useclusters = list(c(1),c(2)),
+                                       commonSignatures = estimated_signatures,
+                                       commonExposures = unexplSamples$exposures)
+```
+
+Finally, we can use all the common and rare signatures, as well as the information about where we extracted the rare signatures from,
+to estimate the exposures of each signature in each sample.
+
+```
+# now let's get the exposures
+resFinalExpo <- finaliseCommonRareSignatureExposures(outfileRoot = paste0(outdir,"ExtractionRare/Example05"),
+                                                     catalogues = catalogues,
+                                                     commonSigs = estimated_signatures,
+                                                     listofsignatures = resRareSigs$listofsignatures,
+                                                     listofsamples = resRareSigs$listofsamples,
+                                                     nboot = 50,nparallel = 4)
+```
 
 
 ## Frequently Asked Questions
