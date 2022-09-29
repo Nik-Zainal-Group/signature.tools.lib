@@ -99,9 +99,10 @@ FitMS <- function(catalogues,
       return(NULL)
     }else{
       if(typeofmuts=="subs"){
-        commonSignatures <- organSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,"common"],split = ",")[[1]],drop=F]
-        if(ncol(commonSignatures)==0) {
-          message("[error FitMS] No common signatures is associated with organ ",organ,". Nothing to do.")
+        if(organ %in% rownames(sigsForFittingSBSv2.03)){
+          commonSignatures <- organSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,"common"],split = ",")[[1]],drop=F]
+        }else{
+          message("[error FitMS] Organ not found: ",organ,". Nothing to do. Available organs for FitMS are: ",paste(rownames(sigsForFittingSBSv2.03),collapse = ", "))
           return(NULL)
         }
       }else{
@@ -121,9 +122,14 @@ FitMS <- function(catalogues,
         return(NULL)
       }else{
         if(typeofmuts=="subs"){
-          rareSignatures <- referenceSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",rareSignatureTier)],split = ",")[[1]],drop=F]
-          if(ncol(rareSignatures)==0) {
-            message("[error FitMS] No rare signatures are associated with organ ",organ,". Nothing to do.")
+          if(organ %in% rownames(sigsForFittingSBSv2.03)){
+            rareSignatures <- referenceSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",rareSignatureTier)],split = ",")[[1]],drop=F]
+            if(ncol(rareSignatures)==0) {
+              message("[error FitMS] No rare signatures are associated with organ ",organ,". Nothing to do.")
+              return(NULL)
+            }
+          }else{
+            message("[error FitMS] Organ not found: ",organ,". Nothing to do. Available organs for FitMS are: ",paste(rownames(sigsForFittingSBSv2.03),collapse = ", "))
             return(NULL)
           }
         }else{
