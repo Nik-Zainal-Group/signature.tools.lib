@@ -324,7 +324,25 @@ catalogues trying to identify the appropriate mutation type (SNV, DNV, SV...)
 from the input row names.
 
 Functions for catalogue simulations and performance evaluation:
-- **```genomePlot(...)```**:
+
+- **```simpleCatalogueSimulation(...)```**: simulates a dataset with the 
+requested number of samples, given a set of common and rare mutational
+signatures. A matrix of mutational catalogues and corresponding 
+signature exposures is generated. The functions ```saveSimulatetdData```
+and ```loadSimulatedData``` can be used for saving and loading the simulated
+data object.
+
+- **```evaluatePerformanceSignatureSimilarity```**: compare a signatures matrix 
+of true signatures with a matrix of estimated signatures, and compute a match 
+between the signatures and their cosine similarity. Multiple matrices of
+estimated signatures can be compared to the true signatures at once using the
+```evaluatePerformanceSignatureSimilarityList``` function.
+
+- **```evaluatePerformanceExposures(...)```**: compare an exposure matrix
+of true exposures with a matrix of estimated exposures, and compute
+various metrics like sensitivity, specificity, F1 score and so on.
+Multiple matrices of estimated exposures can be compared to the true exposures
+at once using the ```evaluatePerformanceExposuresList``` function.
 
 <a name="scripts"/>
 

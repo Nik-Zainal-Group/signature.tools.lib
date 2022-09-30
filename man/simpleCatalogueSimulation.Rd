@@ -12,7 +12,8 @@ simpleCatalogueSimulation(
   nsamplesWrareSigs = 10,
   maxRareSigsPerSample = 1,
   min_mutations = 1000,
-  max_mutations = 50000
+  max_mutations = 50000,
+  randomSeed = NULL
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ simpleCatalogueSimulation(
 \item{min_mutations}{minimum number of mutations in a sample}
 
 \item{max_mutations}{maximum number of mutations in a sample}
+
+\item{randomSeed}{set a random seed for reproducibility}
 }
 \value{
 catalogues, signatures and exposures of simulated data
