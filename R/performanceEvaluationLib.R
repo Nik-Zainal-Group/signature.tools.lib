@@ -10,15 +10,15 @@ evaluatePerformanceExposuresCore <- function(true_exposures,
   true_exposures[,setdiff(allSigNames,colnames(true_exposures))] <- 0
   # fix missing in the estimated
   estimated_exposures[,setdiff(allSigNames,colnames(estimated_exposures))] <- 0
-  
+
   # now reorder the columns and rows
   estimated_exposures <- estimated_exposures[rownames(true_exposures),colnames(true_exposures)]
-  
+
   TP <- sum(estimated_exposures[true_exposures>0]>0)
   FP <- sum(estimated_exposures[true_exposures==0]>0)
   TN <- sum(estimated_exposures[true_exposures==0]==0)
   FN <- sum(estimated_exposures[true_exposures>0]==0)
-  
+
   # now compute the TP,TN,FP,FN assignments
   resPerf <- list()
   # npos <- sum(estimated_exposures>0)
@@ -40,8 +40,8 @@ evaluatePerformanceExposuresCore <- function(true_exposures,
 #'
 #' Compare two exposure matrices, one with the true exposures and one with estimated exposures, and
 #' compute various metrics to determine how well the estimated exposures match the true exposures.
-#' If the names of common and/or rare mutational signatures are provided, then the 
-#' metrics are calculated separately for common and rare signatures. 
+#' If the names of common and/or rare mutational signatures are provided, then the
+#' metrics are calculated separately for common and rare signatures.
 #' Results are plotted to a file if outfile is specified.
 #'
 #' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames
@@ -49,7 +49,7 @@ evaluatePerformanceExposuresCore <- function(true_exposures,
 #' @param commonNames names of common mutational signatures. If NULL, all signatures in the colnames of true_exposures and estimated_exposures will be used
 #' @param rareNames names of rare mutational signatures. If NULL, rare signatures metrics will not be computed. This is ok if the simulated data didn't have any rare signatures.
 #' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
-#' @return performance metrics 
+#' @return performance metrics
 #' @export
 evaluatePerformanceExposures <- function(true_exposures,
                                          estimated_exposures,
@@ -71,13 +71,13 @@ evaluatePerformanceExposures <- function(true_exposures,
   }else{
     resPerfRare <- NULL
   }
-  
+
   perfList <- list()
   perfList[["performance"]] <- list(resPerfCommon=resPerfCommon,
                                     resPerfRare=resPerfRare)
   # convert to tables
   perfTables <- combinePerformanceExposures(perfList)
-  
+
   if(!is.null(outfile)){
     plotPerformanceExposures(perfTables,outfile)
   }
@@ -89,8 +89,8 @@ evaluatePerformanceExposures <- function(true_exposures,
 #'
 #' Compare an exposure matrix with the true exposures with a list of estimated exposure matrices, and
 #' compute various metrics to determine how well the estimated exposures match the true exposures.
-#' If the names of common and/or rare mutational signatures are provided, then the 
-#' metrics are calculated separately for common and rare signatures. 
+#' If the names of common and/or rare mutational signatures are provided, then the
+#' metrics are calculated separately for common and rare signatures.
 #' Results are plotted to a file if outfile is specified.
 #'
 #' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames
@@ -98,7 +98,7 @@ evaluatePerformanceExposures <- function(true_exposures,
 #' @param commonNames names of common mutational signatures. If NULL, all signatures in the colnames of true_exposures and estimated_exposures will be used
 #' @param rareNames names of rare mutational signatures. If NULL, rare signatures metrics will not be computed. This is ok if the simulated data didn't have any rare signatures.
 #' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
-#' @return performance metrics 
+#' @return performance metrics
 #' @export
 evaluatePerformanceExposuresList <- function(true_exposures,
                                              estimated_exposures_list,
@@ -113,7 +113,7 @@ evaluatePerformanceExposuresList <- function(true_exposures,
                                                   commonNames = commonNames,
                                                   rareNames = rareNames)
   }
-  
+
   # combine tables
   # perfColNames <- c()
   # perfTableNames <- c()
@@ -130,11 +130,11 @@ evaluatePerformanceExposuresList <- function(true_exposures,
       }
     }
   }
-  
+
   if(!is.null(outfile)){
     plotPerformanceExposures(perfTables,outfile)
   }
-  
+
   return(perfTables)
 }
 
@@ -168,13 +168,13 @@ plotPerformanceExposures <- function(perfTables,
     plotRareSigs <- TRUE
   }
   allcolours <- c("#F3C300","#875692","#F38400","#A1CAF1","#BE0032","#C2B280","#848482","#008856","#E68FAC","#0067A5","#F99379","#604E97","#F6A600","#B3446C","#DCD300")
-  
+
   pointsize <- 16
   maxNamesLength <- max(sapply(colnames(perfTables$resPerfCommon),function(x) strwidth(x,units = "inch",ps = pointsize),USE.NAMES = F))
-  
+
   plotHeight <- 5*nmetrics
   plotWidth <- ifelse(plotRareSigs,12,6)
-  
+
   cairo_pdf(filename = outfile,height = plotHeight,width = plotWidth,pointsize = pointsize)
   par(mfrow=c(nmetrics,ifelse(plotRareSigs,2,1)),mai=c(maxNamesLength+0.1,1,1,1))
   for(i in 1:nmetrics){
@@ -214,7 +214,7 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
                                                    outfile = NULL){
   # get the similarities
   distMatrix <- 1 - signature.tools.lib::computeCorrelationOfTwoSetsOfSigs(estimated_signatures,true_signatures)
-  
+
   if(ncol(estimated_signatures)!=ncol(true_signatures)){
     message("[warning evaluateSignatureSimilarity] number of estimated signatures and truth signatures is not the same. Eliminating least similar signatures until same number is reached.")
     if (ncol(estimated_signatures)>ncol(true_signatures)){
@@ -237,17 +237,17 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
       }
     }
   }
-  
+
   # find match
   res_match <- lpSolve::lp.assign(as.matrix(distMatrix))
   match_is <- apply(res_match$solution,1,which.max)
   # get cos sim
   matchCS <- 1 - apply(distMatrix*res_match$solution,1,max)
-  
+
   # check unmatched
   unmatched_estimated <- setdiff(colnames(estimated_signatures),rownames(distMatrix))
   unmatched_truth <- setdiff(colnames(true_signatures),colnames(distMatrix))
-  
+
   #return the match
   res <- list()
   res$matchTable <- data.frame(`estimated signatures`=rownames(distMatrix),
@@ -265,10 +265,10 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
                                                       `cosine similarity`=rep(NA,length(unmatched_truth)),
                                                       stringsAsFactors = F,check.names = F))
   }
-  
+
   res$minCosSim <- min(matchCS)
   res$averageCosSim <- mean(matchCS)
-  
+
   # if needed, plot before returning
   if(!is.null(outfile)){
     dir.create(dirname(outfile),showWarnings = F,recursive = T)
@@ -278,14 +278,14 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
                output_file = outfile,
                thresholdMark = 0.95)
   }
-  
+
   return(res)
 }
 
 #' evaluate performance signature similarity list
 #'
 #' Compare a signatures matrix of true signatures with a list of matrices of estimated signatures, and
-#' compute a match between the signatures and their cosine similarity. 
+#' compute a match between the signatures and their cosine similarity.
 #' For each matrix of estimated signatures, a match implies
 #' an optimal assignment that maximises the cosine similarity while allowing each true_signature
 #' to match at most one estimated signature and viceversa.
@@ -307,7 +307,7 @@ evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
     perfList[[g]] <- evaluatePerformanceSignatureSimilarity(true_signatures,
                                                             estimated_signatures_list[[g]])
   }
-  
+
   signames <- c()
   for (g in groupNames){
     signames <- union(signames,perfList[[g]]$matchTable$`matched true signatures`)
@@ -319,7 +319,7 @@ evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
     tmpTable <- perfList[[g]]$matchTable[complete.cases(perfList[[g]]$matchTable),,drop=F]
     returnTable[tmpTable$`matched true signatures`,g] <- tmpTable$`cosine similarity`
   }
-  
+
   # if needed, plot before returning
   if(!is.null(outfile)){
     dir.create(dirname(outfile),showWarnings = F,recursive = T)
@@ -327,12 +327,40 @@ evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
                output_file = outfile,
                thresholdMark = 0.95)
   }
-  
+
   returnObj <- list()
   returnObj$returnTable <- returnTable
   returnObj$perfList <- perfList
-  
+
   return(returnObj)
 }
 
-
+#' update signature names using a match table
+#'
+#' This function is part of the workflow of simulating a dataset, testing a
+#' signature extraction and evaluating the signatures/exposures accuracy.
+#' The function evaluatePerformanceSignatureSimilarity returns a table
+#' matching true signatures with estimated signatures. The updateSigNamesWithMatchTable
+#' function can be used with the match table to replace the names of the
+#' estimated signatures with those of the true signatures, for example in the
+#' matrix of estimated exposures. See example below.
+#'
+#' @param signames vector of signature names, typically estimated signatures, that need to be replaced
+#' @param matchTable table with matched true and estimated signature names
+#' @return updated signames vector
+#' @export
+#' @examples
+#' sigsPerf <- evaluatePerformanceSignatureSimilarity(true_signatures,
+#'                                                    estimated_signatures)
+#' updatedNames <- updateSigNamesWithMatchTable(signames,
+#'                                              sigsPerf$matchTable)
+#'
+updateSigNamesWithMatchTable <- function(signames,
+                                         matchTable){
+  tmpTable <- matchTable[complete.cases(matchTable),,drop=F]
+  intnames <- intersect(signames,tmpTable$`estimated signatures`)
+  for (i in intnames){
+    signames[signames==i] <- matchTable$`matched true signatures`[matchTable$`estimated signatures`==i]
+  }
+  return(signames)
+}

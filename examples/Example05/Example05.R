@@ -61,5 +61,19 @@ resFinalExpo <- finaliseCommonRareSignatureExposures(outfileRoot = paste0(outdir
                                                      listofsamples = resRareSigs$listofsamples,
                                                      nboot = 50,nparallel = 4)
 
-
-
+# Since we analysed a simulated dataset, we can check how well we did
+true_signatures <- readTable("../../tests/testthat/rareExtraction/SDExample05/signatures.tsv")
+true_exposures <- readTable("../../tests/testthat/rareExtraction/SDExample05/exposures.tsv")
+sigsPerf <- evaluatePerformanceSignatureSimilarity(true_signatures,
+                                                   resRareSigs$commonAndRareSignatures)
+estimated_exposures <- resFinalExpo$fitWithRare$exposures
+rownames(estimated_exposures) <- updateSigNamesWithMatchTable(rownames(estimated_exposures),
+                                                              sigsPerf$matchTable)
+sigNames <- colnames(true_signatures)
+whichCommon <- grepl(sigNames,pattern = "common")
+commonNames <- sigNames[whichCommon]
+rareNames <- sigNames[!whichCommon]
+expPerf <- evaluatePerformanceExposures(t(true_exposures),
+                                        t(estimated_exposures),
+                                        commonNames = commonNames,
+                                        rareNames = rareNames)

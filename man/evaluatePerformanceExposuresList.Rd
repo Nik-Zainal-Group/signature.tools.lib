@@ -29,7 +29,7 @@ performance metrics
 \description{
 Compare an exposure matrix with the true exposures with a list of estimated exposure matrices, and
 compute various metrics to determine how well the estimated exposures match the true exposures.
-If the names of common and/or rare mutational signatures are provided, then the 
-metrics are calculated separately for common and rare signatures. 
+If the names of common and/or rare mutational signatures are provided, then the
+metrics are calculated separately for common and rare signatures.
 Results are plotted to a file if outfile is specified.
 }

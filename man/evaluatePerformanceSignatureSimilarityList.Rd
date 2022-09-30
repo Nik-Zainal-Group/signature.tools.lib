@@ -22,7 +22,7 @@ cosine similarity and signatures match between true and estimated signature name
 }
 \description{
 Compare a signatures matrix of true signatures with a list of matrices of estimated signatures, and
-compute a match between the signatures and their cosine similarity. 
+compute a match between the signatures and their cosine similarity.
 For each matrix of estimated signatures, a match implies
 an optimal assignment that maximises the cosine similarity while allowing each true_signature
 to match at most one estimated signature and viceversa.
