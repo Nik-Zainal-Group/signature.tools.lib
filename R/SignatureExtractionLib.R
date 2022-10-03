@@ -627,7 +627,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
       if(ns>1 & saved_nmf_runs>1){
         #Compute Silhouettes
         sil_hclust <- summary(cluster::silhouette(cut_res,as.dist(distMatrix)))
-        sil_pam <- summary(cluster::silhouette(cut_res,as.dist(distMatrix)))
+        sil_pam <- summary(cluster::silhouette(cut_res.PAM,as.dist(distMatrix)))
         sil_MC <- summary(cluster::silhouette(cut_res_MC,as.dist(distMatrix)))
         plotWithinClusterSilWidth(sil_hclust,sil_pam,sil_MC,outNsDir,group,ns,nboots)
 
