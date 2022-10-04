@@ -7,6 +7,7 @@
 evaluatePerformanceSignatureSimilarity(
   true_signatures,
   estimated_signatures,
+  true_exposures = NULL,
   outfile = NULL
 )
 }
@@ -14,6 +15,8 @@ evaluatePerformanceSignatureSimilarity(
 \item{true_signatures}{matrix of true signatures, for example obtained using simulations, with mutational signatures names as colnames and channels as rownames}
 
 \item{estimated_signatures}{matrix of estimated signatures, for example obtained using a signature extraction on a simulated dataset, with mutational signatures names as colnames and channels as rownames.}
+
+\item{true_exposures}{matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames. This is optional, and it useful to show which of the true_signature are actually present in the dataset.}
 
 \item{outfile}{file name for plotting, please use .pdf file name extension. Can be omitted.}
 }

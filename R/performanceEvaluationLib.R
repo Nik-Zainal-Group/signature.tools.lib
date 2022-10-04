@@ -57,7 +57,7 @@ evaluatePerformanceExposures <- function(true_exposures,
                                          rareNames = NULL,
                                          outfile = NULL){
   if(!is.null(commonNames)){
-    resPerfCommon <- evaluatePerformanceExposuresCore(true_exposures[,commonNames,drop=F],
+    resPerfCommon <- evaluatePerformanceExposuresCore(true_exposures[,intersect(commonNames,colnames(true_exposures)),drop=F],
                                                       estimated_exposures[,intersect(commonNames,colnames(estimated_exposures)),drop=F])
   }else{
     # the core function will take care of merging the signature names
@@ -66,7 +66,7 @@ evaluatePerformanceExposures <- function(true_exposures,
   }
 
   if(!is.null(rareNames)){
-    resPerfRare <- evaluatePerformanceExposuresCore(true_exposures[,rareNames,drop=F],
+    resPerfRare <- evaluatePerformanceExposuresCore(true_exposures[,intersect(rareNames,colnames(true_exposures)),drop=F],
                                                     estimated_exposures[,intersect(rareNames,colnames(estimated_exposures)),drop=F])
   }else{
     resPerfRare <- NULL
@@ -161,11 +161,16 @@ combinePerformanceExposures <- function(perfList){
 
 plotPerformanceExposures <- function(perfTables,
                                      outfile = NULL){
+
+  dir.create(dirname(outfile),showWarnings = F,recursive = T)
+
   nmetrics <- nrow(perfTables$resPerfCommon)
   if(is.null(perfTables$resPerfRare)) {
     plotRareSigs <- FALSE
   }else if (!(ncol(perfTables$resPerfRare)==0)){
     plotRareSigs <- TRUE
+    # also replace NA and NaN with zeros
+    perfTables$resPerfRare[is.na(perfTables$resPerfRare)] <- 0
   }
   allcolours <- c("#F3C300","#875692","#F38400","#A1CAF1","#BE0032","#C2B280","#848482","#008856","#E68FAC","#0067A5","#F99379","#604E97","#F6A600","#B3446C","#DCD300")
 
@@ -176,7 +181,7 @@ plotPerformanceExposures <- function(perfTables,
   plotWidth <- ifelse(plotRareSigs,12,6)
 
   cairo_pdf(filename = outfile,height = plotHeight,width = plotWidth,pointsize = pointsize)
-  par(mfrow=c(nmetrics,ifelse(plotRareSigs,2,1)),mai=c(maxNamesLength+0.1,1,1,1))
+  par(mfrow=c(nmetrics,ifelse(plotRareSigs,2,1)),mai=c(maxNamesLength+0.2,1,1,1))
   for(i in 1:nmetrics){
     metricsName <- rownames(perfTables$resPerfCommon)[i]
     if(plotRareSigs) metricsName <- paste0(metricsName," - common")
@@ -206,35 +211,53 @@ plotPerformanceExposures <- function(perfTables,
 #'
 #' @param true_signatures matrix of true signatures, for example obtained using simulations, with mutational signatures names as colnames and channels as rownames
 #' @param estimated_signatures matrix of estimated signatures, for example obtained using a signature extraction on a simulated dataset, with mutational signatures names as colnames and channels as rownames.
+#' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames. This is optional, and it useful to show which of the true_signature are actually present in the dataset.
 #' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
 #' @return cosine similarity and signatures match between true and estimated signature names
 #' @export
 evaluatePerformanceSignatureSimilarity <- function(true_signatures,
                                                    estimated_signatures,
+                                                   true_exposures = NULL,
                                                    outfile = NULL){
   # get the similarities
   distMatrix <- 1 - signature.tools.lib::computeCorrelationOfTwoSetsOfSigs(estimated_signatures,true_signatures)
+  dummynames <- NULL
 
   if(ncol(estimated_signatures)!=ncol(true_signatures)){
-    message("[warning evaluateSignatureSimilarity] number of estimated signatures and truth signatures is not the same. Eliminating least similar signatures until same number is reached.")
+    # message("[warning evaluateSignatureSimilarity] number of estimated signatures and truth signatures is not the same. Eliminating least similar signatures until same number is reached.")
     if (ncol(estimated_signatures)>ncol(true_signatures)){
       # need to remove estimated signatures
-      minsigdist <- apply(distMatrix,1,min)
+      # minsigdist <- apply(distMatrix,1,min)
       ndiff <- ncol(estimated_signatures)-ncol(true_signatures)
-      for (i in 1:ndiff){
-        ni <- which.max(minsigdist)
-        minsigdist <- minsigdist[-ni]
-        distMatrix <- distMatrix[-ni,]
-      }
+      # for (i in 1:ndiff){
+      #   ni <- which.max(minsigdist)
+      #   minsigdist <- minsigdist[-ni]
+      #   distMatrix <- distMatrix[-ni,]
+      # }
+      # add dummy variables
+      dummynames <- (1:ndiff)+ncol(true_signatures)
+      distMatrix <- cbind(distMatrix,matrix(data = 1,
+                                            nrow = ncol(estimated_signatures),
+                                            ncol = ndiff,
+                                            dimnames = list(colnames(estimated_signatures),
+                                                            dummynames)))
+
     }else if (ncol(estimated_signatures)<ncol(true_signatures)){
       # need to remove true_signatures signatures
-      minsigdist <- apply(distMatrix,2,min)
+      # minsigdist <- apply(distMatrix,2,min)
       ndiff <- ncol(true_signatures)-ncol(estimated_signatures)
-      for (i in 1:ndiff){
-        ni <- which.max(minsigdist)
-        minsigdist <- minsigdist[-ni]
-        distMatrix <- distMatrix[,-ni]
-      }
+      # for (i in 1:ndiff){
+      #   ni <- which.max(minsigdist)
+      #   minsigdist <- minsigdist[-ni]
+      #   distMatrix <- distMatrix[,-ni]
+      # }
+      # add dummy variables
+      dummynames <- (1:ndiff)+ncol(estimated_signatures)
+      distMatrix <- rbind(distMatrix,matrix(data = 1,
+                                            nrow = ndiff,
+                                            ncol=ncol(true_signatures),
+                                            dimnames = list(dummynames,
+                                                            colnames(true_signatures))))
     }
   }
 
@@ -244,39 +267,57 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
   # get cos sim
   matchCS <- 1 - apply(distMatrix*res_match$solution,1,max)
 
+  unmatched <- matchCS < 0.85
+  matchCS[unmatched] <- NA
+
   # check unmatched
-  unmatched_estimated <- setdiff(colnames(estimated_signatures),rownames(distMatrix))
-  unmatched_truth <- setdiff(colnames(true_signatures),colnames(distMatrix))
+  # unmatched_estimated <- setdiff(colnames(estimated_signatures),rownames(distMatrix))
+  # unmatched_truth <- setdiff(colnames(true_signatures),colnames(distMatrix))
 
   #return the match
   res <- list()
   res$matchTable <- data.frame(`estimated signatures`=rownames(distMatrix),
                                `matched true signatures`=colnames(distMatrix)[match_is],
                                `cosine similarity`=matchCS,stringsAsFactors = F,check.names = F)
-  # add other signatures unmatched
-  if(length(unmatched_estimated)>0){
-    res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=unmatched_estimated,
-                                                      `matched true signatures`=rep(NA,length(unmatched_estimated)),
-                                                      `cosine similarity`=rep(NA,length(unmatched_estimated)),
-                                                      stringsAsFactors = F,check.names = F))
-  }else if (length(unmatched_truth)>0){
-    res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=rep(NA,length(unmatched_truth)),
-                                                      `matched true signatures`=unmatched_truth,
-                                                      `cosine similarity`=rep(NA,length(unmatched_truth)),
-                                                      stringsAsFactors = F,check.names = F))
+
+  # still need to fix for dummy variables
+  if (ncol(estimated_signatures)>ncol(true_signatures)){
+    # remove dummy variables
+    whereToRemove <- res$matchTable[,"matched true signatures"] %in% dummynames
+    res$matchTable[whereToRemove,"matched true signatures"] <- NA
+  }else if (ncol(estimated_signatures)<ncol(true_signatures)){
+    # remove dummy variables
+    whereToRemove <- res$matchTable[,"estimated signatures"] %in% dummynames
+    res$matchTable[whereToRemove,"estimated signatures"] <- NA
   }
 
-  res$minCosSim <- min(matchCS)
-  res$averageCosSim <- mean(matchCS)
+  # add other signatures unmatched
+  # if(length(unmatched_estimated)>0){
+  #   res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=unmatched_estimated,
+  #                                                     `matched true signatures`=rep(NA,length(unmatched_estimated)),
+  #                                                     `cosine similarity`=rep(NA,length(unmatched_estimated)),
+  #                                                     stringsAsFactors = F,check.names = F))
+  # }else if (length(unmatched_truth)>0){
+  #   res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=rep(NA,length(unmatched_truth)),
+  #                                                     `matched true signatures`=unmatched_truth,
+  #                                                     `cosine similarity`=rep(NA,length(unmatched_truth)),
+  #                                                     stringsAsFactors = F,check.names = F))
+  # }
+
+  res$minCosSim <- min(matchCS,na.rm = T)
+  res$averageCosSim <- mean(matchCS,na.rm = T)
+
+  # if possible annotate which signature are actually present in the dataset
+  if(!is.null(true_exposures)){
+    signames <- colnames(true_exposures)[apply(true_exposures,2,sum)>0]
+    res$matchTable[,"true signature in dataset"] <- FALSE
+    res$matchTable[res$matchTable$`matched true signatures` %in% signames,"true signature in dataset"] <- TRUE
+  }
 
   # if needed, plot before returning
   if(!is.null(outfile)){
-    dir.create(dirname(outfile),showWarnings = F,recursive = T)
-    tmpMatrix <- res$matchTable[,3:ncol(res$matchTable),drop=F]
-    row.names(tmpMatrix) <- res$matchTable$`matched true signatures`
-    plotMatrix(tmpMatrix,
-               output_file = outfile,
-               thresholdMark = 0.95)
+    plotPerformanceSignatures(matchTable = res$matchTable,
+                              outfile = outfile)
   }
 
   return(res)
@@ -295,17 +336,20 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
 #'
 #' @param true_signatures matrix of true signatures, for example obtained using simulations, with mutational signatures names as colnames and channels as rownames
 #' @param estimated_signatures_list list of matrices of estimated signatures, for example obtained using a signature extraction on a simulated dataset, with mutational signatures names as colnames and channels as rownames. Use a named list, so that the names can be used in he data structure returned and plots.
+#' @param true_exposures matrix of true exposures, for example obtained using simulations, with mutational signatures names as colnames and sample names as rownames. This is optional, and it useful to show which of the true_signature are actually present in the dataset.
 #' @param outfile file name for plotting, please use .pdf file name extension. Can be omitted.
 #' @return cosine similarity and signatures match between true and estimated signature names
 #' @export
 evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
                                                        estimated_signatures_list,
+                                                       true_exposures = NULL,
                                                        outfile = NULL){
   groupNames <- names(estimated_signatures_list)
   perfList <- list()
   for (g in groupNames) {
     perfList[[g]] <- evaluatePerformanceSignatureSimilarity(true_signatures,
-                                                            estimated_signatures_list[[g]])
+                                                            estimated_signatures_list[[g]],
+                                                            true_exposures = true_exposures)
   }
 
   signames <- c()
@@ -316,16 +360,21 @@ evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
   signames <- setdiff(signames,NA)
   returnTable <- data.frame(row.names = signames,check.names = F,stringsAsFactors = F)
   for (g in groupNames){
-    tmpTable <- perfList[[g]]$matchTable[complete.cases(perfList[[g]]$matchTable),,drop=F]
+    tmpTable <- perfList[[g]]$matchTable
     returnTable[tmpTable$`matched true signatures`,g] <- tmpTable$`cosine similarity`
+  }
+
+  # if possible annotate which signature are actually present in the dataset
+  if(!is.null(true_exposures)){
+    sigsInData <- colnames(true_exposures)[apply(true_exposures,2,sum)>0]
+    returnTable[,"true signature in dataset"] <- FALSE
+    returnTable[sigsInData,"true signature in dataset"] <- TRUE
   }
 
   # if needed, plot before returning
   if(!is.null(outfile)){
-    dir.create(dirname(outfile),showWarnings = F,recursive = T)
-    plotMatrix(returnTable,
-               output_file = outfile,
-               thresholdMark = 0.95)
+    plotPerformanceSignaturesList(matchTable = returnTable,
+                                  outfile = outfile)
   }
 
   returnObj <- list()
@@ -333,6 +382,48 @@ evaluatePerformanceSignatureSimilarityList <- function(true_signatures,
   returnObj$perfList <- perfList
 
   return(returnObj)
+}
+
+plotPerformanceSignatures <- function(matchTable,
+                                      outfile){
+  dir.create(dirname(outfile),showWarnings = F,recursive = T)
+  tmpMatrix <- matchTable[,3:ncol(matchTable),drop=F]
+  row.names(tmpMatrix) <- matchTable$`matched true signatures`
+  whichInDataset <- NULL
+  if("true signature in dataset" %in% colnames(matchTable)){
+    whichInDataset <- matchTable$`matched true signatures`[matchTable$`true signature in dataset`]
+    tmpMatrix <- tmpMatrix[,-which(colnames(tmpMatrix)=="true signature in dataset"),drop=F]
+  }
+
+  sigsToPlot <- row.names(tmpMatrix)[apply(tmpMatrix,1,function(x) any(!is.na(x)))]
+  if("true signature in dataset" %in% colnames(matchTable)){
+    sigsToPlot <- union(sigsToPlot,whichInDataset)
+  }
+  tmpMatrix <- tmpMatrix[sigsToPlot,,drop=F]
+  plotMatrix(tmpMatrix,
+             output_file = outfile,
+             thresholdMark = 0.95)
+}
+
+
+plotPerformanceSignaturesList <- function(matchTable,
+                                          outfile){
+  dir.create(dirname(outfile),showWarnings = F,recursive = T)
+  tmpMatrix <- matchTable
+  whichInDataset <- NULL
+  if("true signature in dataset" %in% colnames(matchTable)){
+    whichInDataset <- rownames(matchTable)[matchTable$`true signature in dataset`]
+    tmpMatrix <- tmpMatrix[,-which(colnames(tmpMatrix)=="true signature in dataset"),drop=F]
+  }
+
+  sigsToPlot <- row.names(tmpMatrix)[apply(tmpMatrix,1,function(x) any(!is.na(x)))]
+  if("true signature in dataset" %in% colnames(matchTable)){
+    sigsToPlot <- union(sigsToPlot,whichInDataset)
+  }
+  tmpMatrix <- tmpMatrix[sigsToPlot,,drop=F]
+  plotMatrix(tmpMatrix,
+             output_file = outfile,
+             thresholdMark = 0.95)
 }
 
 #' update signature names using a match table
@@ -360,7 +451,7 @@ updateSigNamesWithMatchTable <- function(signames,
   tmpTable <- matchTable[complete.cases(matchTable),,drop=F]
   intnames <- intersect(signames,tmpTable$`estimated signatures`)
   for (i in intnames){
-    signames[signames==i] <- matchTable$`matched true signatures`[matchTable$`estimated signatures`==i]
+    signames[signames==i] <- tmpTable$`matched true signatures`[tmpTable$`estimated signatures`==i]
   }
   return(signames)
 }
