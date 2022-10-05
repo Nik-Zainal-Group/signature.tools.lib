@@ -185,14 +185,22 @@ plotPerformanceExposures <- function(perfTables,
   for(i in 1:nmetrics){
     metricsName <- rownames(perfTables$resPerfCommon)[i]
     if(plotRareSigs) metricsName <- paste0(metricsName," - common")
-    barplot(unlist(perfTables$resPerfCommon[i,,drop=T]),beside = T,
+    dataToPlot <- unlist(perfTables$resPerfCommon[i,,drop=T])
+    ytop <- max(dataToPlot)
+    if(ytop<=1) ytop <- 1
+    barplot(dataToPlot,beside = T,ylim = c(0,ytop),
             names.arg = colnames(perfTables$resPerfCommon),
             col = allcolours[1:ncol(perfTables$resPerfCommon)],border = NA,
             main = metricsName,las=2)
-    if(plotRareSigs) barplot(unlist(perfTables$resPerfRare[i,,drop=T]),beside = T,
-                             names.arg = colnames(perfTables$resPerfRare),
-                             col = allcolours[1:ncol(perfTables$resPerfRare)],border = NA,
-                             main = paste0(rownames(perfTables$resPerfRare)[i]," - rare"),las=2)
+    if(plotRareSigs) {
+      dataToPlot <- unlist(perfTables$resPerfRare[i,,drop=T])
+      ytop <- max(dataToPlot)
+      if(ytop<=1) ytop <- 1
+      barplot(dataToPlot,beside = T,ylim = c(0,ytop),
+              names.arg = colnames(perfTables$resPerfRare),
+              col = allcolours[1:ncol(perfTables$resPerfRare)],border = NA,
+              main = paste0(rownames(perfTables$resPerfRare)[i]," - rare"),las=2)
+    }
   }
   dev.off()
   return(perfTables)
