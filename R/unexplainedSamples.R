@@ -1,6 +1,6 @@
 
 #' Estimate samples not fully explained by the given signatures
-#' 
+#'
 #' Given a catalogue of samples, and a set of signatures, this functions identifies
 #' samples that have a  significantly higher error than the rest. It is important to
 #' have enough samples that are fully explained by the singatures in the catalogue
@@ -16,17 +16,17 @@
 #' This first criterion can be disabled by setting considerOnlyNmutsThreshold=TRUE.
 #' The second criterion is a minimum number of mutations that should be in the error
 #' or residual, which can be set with nmuts_threshold. The parameter nmutsMethod
-#' determines the type of error used, here we suggest residualSSD, the sum of signed 
+#' determines the type of error used, here we suggest residualSSD, the sum of signed
 #' differences of every channel of the residual.
-#' In this function we refer to the error as the difference between the 
+#' In this function we refer to the error as the difference between the
 #' original catalogue and the catalogue reconstructed from the exposures obtained
 #' with a simple signature fit (optimise for KLD), while we refer to the residual
 #' as the difference between the original catalogue and the catalogue reconstructed
-#' from the exposures obtained with a contrained fit, where the difference is 
-#' constrained to be mostly positive, to better highlight the pattern that might be 
+#' from the exposures obtained with a contrained fit, where the difference is
+#' constrained to be mostly positive, to better highlight the pattern that might be
 #' present in the catalogue butt not captured by he given signatures.
 #' Both criteria are necessary to consider a sample unexplained, unless considerOnlyNmutsThreshold=TRUE.
-#' 
+#'
 #' @param outfileRoot if specified, generate a plot, otherwise no plot is generated
 #' @param catalogues original catalogues, channels as rows and samples as columns
 #' @param sigs mutational signatures used for fitting, channels as rows, signatures as columns
@@ -50,22 +50,22 @@ unexplainedSamples <- function(outfileRoot=NULL,
                                nmutsMethod="residualSSD", #residualSSD or errorSAD or residualSAD
                                considerOnlyNmutsThreshold=FALSE){
   # initial fit with common signatures
-  exposures <- signature.tools.lib::SignatureFit(catalogues,signature_data_matrix = sigs,method = "KLD",showDeprecated = F,doRound = F)
+  exposures <- SignatureFit(catalogues,signature_data_matrix = sigs,method = "KLD",showDeprecated = F,doRound = F)
   # initial fit with common signatures using Tau's method
   exposures_constr <- flexconstr_sigfit_multipleSamples(as.matrix(sigs),as.matrix(catalogues),allmut_tolratio = 0.003)
   # calculate the residual for all samples
   residuals <- catalogues - as.matrix(sigs) %*% as.matrix(exposures_constr)
   # calculate the error from the reconstucted catalogues
   error <- catalogues - as.matrix(sigs) %*% as.matrix(exposures)
-  
+
   #look at various metrics
   # SAD = Sum of Absolute Deviations
   # SSD = Sum of Signed Deviations
   # errorSSD tends to zero so it is useless here
-  errorSAD <- c() 
+  errorSAD <- c()
   residualSAD <- c()
   residualSSD <- c()
-  norm_errorSAD <- c() 
+  norm_errorSAD <- c()
   norm_residualSAD <- c()
   norm_residualSSD <- c()
   for (i in 1:ncol(catalogues)){
@@ -73,11 +73,11 @@ unexplainedSamples <- function(outfileRoot=NULL,
     residualSAD <- c(residualSAD,sum(abs(residuals[,i])))
     residualSSD <- c(residualSSD,sum(residuals[,i]))
     sumcati <- sum(catalogues[,i])
-    norm_errorSAD <- c(norm_errorSAD,errorSAD[i]/sumcati) 
+    norm_errorSAD <- c(norm_errorSAD,errorSAD[i]/sumcati)
     norm_residualSAD <- c(norm_residualSAD,residualSAD[i]/sumcati)
     norm_residualSSD <- c(norm_residualSSD,residualSSD[i]/sumcati)
   }
-  
+
   # use requested values to determine the unexplained samples
   if(pvalueMethod=="normErrorSAD"){
     normValues <- norm_errorSAD
@@ -92,7 +92,7 @@ unexplainedSamples <- function(outfileRoot=NULL,
     message("Invalid pvalueMethod ",pvalueMethod,", plese use one of these: normErrorSAD, normResidualSAD or normResidualSSD")
     return(NULL)
   }
-  
+
   if(nmutsMethod=="residualSSD"){
     values <- residualSSD
     ylab <- "residual SSD"
@@ -106,21 +106,21 @@ unexplainedSamples <- function(outfileRoot=NULL,
     message("Invalid nmutsMethod ",nmutsMethod,", plese use one of these: residualSSD, errorSAD or residualSAD")
     return(NULL)
   }
-  
+
   # get p-values for the norm values
   pval_normValues <- c()
   for (i in 1:length(normValues)) {
     m <- mean(normValues[-i])
     s <- sd(normValues[-i])
-    pval_normValues <- c(pval_normValues, 1 - pnorm(normValues[i], 
+    pval_normValues <- c(pval_normValues, 1 - pnorm(normValues[i],
                                                     mean = m, sd = s, lower.tail = TRUE))
   }
-  
+
   selection <- values >= nmuts_threshold
   if(!considerOnlyNmutsThreshold) selection <- selection & pval_normValues < pvalue_threshold
   which_significant <- which(selection)
-  
-  
+
+
   #prepare return obj
   res <- list()
   res$info_samples <- data.frame(index=1:ncol(catalogues),
@@ -145,21 +145,21 @@ unexplainedSamples <- function(outfileRoot=NULL,
   res$numberOfUnexplSamples <- length(which_significant)
   res$all_residuals <- residuals
   res$all_errors <- error
-  
+
   # also plot if requested
   if(!is.null(outfileRoot)){
-    
+
     trimdir <- function(x){
       while(substr(x,nchar(x),nchar(x))!="/" & nchar(x)>0){
         x <- substr(x,1,nchar(x)-1)
       }
       return(x)
     }
-    
+
     # create dir
     xdir <- trimdir(outfileRoot)
     if(nchar(xdir)>0) dir.create(xdir,recursive = T,showWarnings = F)
-    
+
     if(considerOnlyNmutsThreshold){
       plottitle <- bquote(atop(paste("Unexplained Catalogues"),paste(.(nmutsMethod)>=.(nmuts_threshold))))
     }else{
@@ -179,17 +179,17 @@ unexplainedSamples <- function(outfileRoot=NULL,
     if(!considerOnlyNmutsThreshold) abline(v = -log10(pvalue_threshold),col = "red",lty = 2)
     abline(h = nmuts_threshold,col = "red",lty = 2)
     dev.off()
-    
+
     plotError(outfileRoot = outfileRoot,
               catalogues = catalogues,
               sigs = sigs,
               samplesToHighlight = res$unexplSamples,
               exposures = exposures)
-    
+
     if(length(which_significant)>0){
-      signature.tools.lib::plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedCatalogues.pdf"),res$unexplSamples_catalogues,ncolumns = 3)
-      signature.tools.lib::plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedResiduals.pdf"),res$unexplSamples_residuals,ncolumns = 3)
-      signature.tools.lib::plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedError.pdf"),res$unexplSamples_errors,ncolumns = 3)
+      plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedCatalogues.pdf"),res$unexplSamples_catalogues,ncolumns = 3)
+      plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedResiduals.pdf"),res$unexplSamples_residuals,ncolumns = 3)
+      plotSignatures(output_file = paste0(outfileRoot,"_UnexplainedError.pdf"),res$unexplSamples_errors,ncolumns = 3)
     }
     write.table(x = res$info_samples,
                 file = paste0(outfileRoot,"_UnexplainedCataloguesSelection.tsv"),sep = "\t",
@@ -206,8 +206,8 @@ plotError <- function(outfileRoot=NULL,
                       samplesToHighlight=NULL,
                       tag=""){
   error <- catalogues - as.matrix(sigs) %*% as.matrix(exposures)
-  errorSAD <- c() 
-  norm_errorSAD <- c() 
+  errorSAD <- c()
+  norm_errorSAD <- c()
   for (i in 1:ncol(catalogues)){
     errorSAD <- c(errorSAD,sum(abs(error[,i])))
     sumcati <- sum(catalogues[,i])
@@ -231,6 +231,6 @@ plotError <- function(outfileRoot=NULL,
     points(selectedPoints,norm_errorSAD[selectedPoints],col="red",pch=16)
   }
   dev.off()
-  
+
 }
 

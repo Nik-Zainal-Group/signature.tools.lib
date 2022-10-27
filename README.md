@@ -103,6 +103,13 @@ package so it will work on any computer with R installed. We recommend to
 use the latest version of R, as some of the R dependencies constantly increase
 the minimum version of R required for installation.
 
+Download the `signature.tools.lib` repository:
+
+```
+git clone https://github.com/Nik-Zainal-Group/signature.tools.lib.git
+cd signature.tools.lib
+```
+
 You can install ```signature.tools.lib``` by entering the R environment from the main
 directory and typing:
 

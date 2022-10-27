@@ -1,5 +1,5 @@
 #' Rare Signatures Extraction
-#' 
+#'
 #' Extract rare signatures from sample catalogues. This function is the last step of
 #' the extraction of rare signatures from sample catalogues. Before running this
 #' function one should use the unexplainedSamples function to identify which
@@ -14,7 +14,7 @@
 #' The extraction will use a variant of the Lee and Seung multiplicative algorithm,
 #' optimising the KLD. The starting point for the extraction will be the commonExposures
 #' provided. Specific signature exposures can be ignored with the parameter commonSigsToIgnore.
-#' 
+#'
 #' @param outfileRoot if specified, generate a plot, otherwise no plot is generated
 #' @param catalogues original catalogues, channels as rows and samples as columns
 #' @param commonSignatures common mutational signatures used for fitting, channels as rows, signatures as columns
@@ -33,7 +33,7 @@
 #' @examples
 #' resUnexpl <- unexplainedSamples(catalogues=catalogues,
 #'                                 sigs=signatures)
-#' significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]                               
+#' significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]
 #' clusterResiduals <- cataloguesClustering(significant_residuals,
 #'                                          nclusters = 1:5)
 #' resObj <- rareSignatureExtraction(catalogues=catalogues,
@@ -58,19 +58,19 @@ rareSignatureExtraction <- function(outfileRoot,
                                     nsigs=1){
   listofsignatures <- list()
   listofsamples <- list()
-  
+
   for (rarecounter in 1:length(useclusters)) {
     message("[info rareSignatureExtraction] Extracting rare signatures: ", rarecounter, " of ",length(useclusters))
-    
+
     currentSampleNames <- unexpl_samples[clusters %in% useclusters[[rarecounter]]]
     currentSamples <- catalogues[,currentSampleNames,drop=F]
     currentResiduals <- residuals[,currentSampleNames,drop=F]
     expoCurrentSamples <- commonExposures[,currentSampleNames,drop=F]
-    
+
     # set common sigs to ignore if any
     if(typeof(commonSigsToIgnore)=="list"){
       if(!is.null(commonSigsToIgnore[[rarecounter]]) & !is.na(commonSigsToIgnore[[rarecounter]])){
-        expoCurrentSamples[commonSigsToIgnore[[rarecounter]],] <- 0  
+        expoCurrentSamples[commonSigsToIgnore[[rarecounter]],] <- 0
       }
     }
     # check max iter
@@ -84,7 +84,7 @@ rareSignatureExtraction <- function(outfileRoot,
       usensigs <- nsigs
     }else{
       usensigs <- nsigs[rarecounter]
-    }  
+    }
     suppressWarnings(
       res.nnmf <- NNLM::nnmf(as.matrix(currentSamples),
                              init = list(W0 = as.matrix(commonSignatures),H1 = as.matrix(expoCurrentSamples)),
@@ -98,10 +98,10 @@ rareSignatureExtraction <- function(outfileRoot,
     signames <- paste0("U",rarecounter)
     if(usensigs>1) signames <- paste0(signames,letters[1:usensigs])
     colnames(rareSignatures) <- signames
-    
+
     #listofsignatures[[paste0("rare",rarecounter)]] <- rareSignatures
     #listofsamples[[paste0("rare",rarecounter)]] <- colnames(currentSamples)
-    
+
     samplesMissed <- c()
     if(checkForMissed){
       residualPositiveUnseen <- residuals[,setdiff(colnames(residuals),unexpl_samples),drop=F]
@@ -118,20 +118,20 @@ rareSignatureExtraction <- function(outfileRoot,
     currentSampleNames <- union(currentSampleNames,samplesMissed)
     listofsignatures[[paste0("rare",rarecounter)]] <- rareSignatures
     listofsamples[[paste0("rare",rarecounter)]] <- currentSampleNames
-    
+
     # update
     currentSamples <- catalogues[,currentSampleNames,drop=F]
     currentResiduals <- residuals[,currentSampleNames,drop=F]
   }
-  
+
   # combine to save and plot
   fullorgansigs <- cbind(commonSignatures,do.call(cbind,listofsignatures))
-  
+
   # plotting
   if(!is.null(outfileRoot)){
-    
 
-    
+
+
     # create the directory if missing
     trimdir <- function(x){
       while(substr(x,nchar(x),nchar(x))!="/" & nchar(x)>0){
@@ -139,30 +139,30 @@ rareSignatureExtraction <- function(outfileRoot,
       }
       return(x)
     }
-    
+
     # create dir
     xdir <- trimdir(outfileRoot)
     if(nchar(xdir)>0) dir.create(xdir,recursive = T,showWarnings = F)
-    
+
     message("[info rareSignatureExtraction] Saving to file in ",ifelse(nchar(xdir)>0,xdir,"current directory"),".")
-    
-    signature.tools.lib::writeTable(fullorgansigs[,(ncol(commonSignatures) + 1):(ncol(fullorgansigs)),drop=F],paste0(outfileRoot,"_","signatures_rare.tsv"))
-    signature.tools.lib::plotSignatures(fullorgansigs[,(ncol(commonSignatures) + 1):(ncol(fullorgansigs)),drop=F],paste0(outfileRoot,"_","signatures_rare.pdf"),plot_sum = F,ncolumns = 3)
+
+    writeTable(fullorgansigs[,(ncol(commonSignatures) + 1):(ncol(fullorgansigs)),drop=F],paste0(outfileRoot,"_","signatures_rare.tsv"))
+    plotSignatures(fullorgansigs[,(ncol(commonSignatures) + 1):(ncol(fullorgansigs)),drop=F],paste0(outfileRoot,"_","signatures_rare.pdf"),plot_sum = F,ncolumns = 3)
     # saving
-    signature.tools.lib::writeTable(fullorgansigs,paste0(outfileRoot,"_","signatures.tsv"))
-    signature.tools.lib::plotSignatures(fullorgansigs,paste0(outfileRoot,"_","signatures.pdf"),plot_sum = F,ncolumns = 3)
+    writeTable(fullorgansigs,paste0(outfileRoot,"_","signatures.tsv"))
+    plotSignatures(fullorgansigs,paste0(outfileRoot,"_","signatures.pdf"),plot_sum = F,ncolumns = 3)
 
     for (rarecounter in 1:length(useclusters)) {
       currentSampleNames <- listofsamples[[paste0("rare",rarecounter)]]
       currentSamples <- catalogues[,currentSampleNames,drop=F]
       currentResiduals <- residuals[,currentSampleNames,drop=F]
       rareSignatures <- listofsignatures[[paste0("rare",rarecounter)]]
-      signature.tools.lib::plotSignatures(currentSamples,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_Catalogues.pdf"),ncolumns = 3)
-      signature.tools.lib::plotSignatures(currentResiduals,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_Residuals.pdf"),ncolumns = 3)
-      signature.tools.lib::plotSignatures(rareSignatures,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_rareSignatures.pdf"),plot_sum = F,ncolumns = 3)
+      plotSignatures(currentSamples,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_Catalogues.pdf"),ncolumns = 3)
+      plotSignatures(currentResiduals,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_Residuals.pdf"),ncolumns = 3)
+      plotSignatures(rareSignatures,output_file = paste0(outfileRoot,"_","SamplesCluster",rarecounter,"_rareSignatures.pdf"),plot_sum = F,ncolumns = 3)
     }
   }
-  
+
   res <- list()
   res$listofsignatures <- listofsignatures
   res$listofsamples <- listofsamples
@@ -173,14 +173,14 @@ rareSignatureExtraction <- function(outfileRoot,
 
 
 #' Finalise Common and Rare Signature Exposures
-#' 
+#'
 #' This function is part of the pipeline for the extraction of rare signatures. After the
 #' rare signatures have been extracted and the corresponding samples identified
 #' using the rareSignatureExtraction function, this function fits the common and
 #' rare signatures into the sample catalogues and reports also a comparison
 #' between the normalised error withvs without rare signatures.
-#' 
-#' 
+#'
+#'
 #' @param outfileRoot output directory and base file name, for example outdir/BaseName. Multiple output files will be generated with filenames the chosen BaseName as prefix.
 #' @param catalogues original catalogues, channels as rows and samples as columns
 #' @param commonSigs common mutational signatures used for fitting, channels as rows, signatures as columns
@@ -197,7 +197,7 @@ rareSignatureExtraction <- function(outfileRoot,
 #' @examples
 #' resUnexpl <- unexplainedSamples(catalogues=catalogues,
 #'                                 sigs=signatures)
-#' significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]                               
+#' significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]
 #' clusterResiduals <- cataloguesClustering(significant_residuals,
 #'                                          nclusters = 1:5)
 #' resObj <- rareSignatureExtraction(catalogues=catalogues,
@@ -216,47 +216,48 @@ rareSignatureExtraction <- function(outfileRoot,
 finaliseCommonRareSignatureExposures <- function(outfileRoot,
                                                  catalogues,
                                                  commonSigs,
-                                                 listofsignatures,
-                                                 listofsamples,
+                                                 listofsignatures=NULL,
+                                                 listofsamples=NULL,
                                                  nboot = 200,
                                                  threshold_percent = 5,
                                                  threshold_p.value = 0.05,
                                                  min_sample_muts = 100,
                                                  nparallel = 1){
-  
+
   if(is.null(outfileRoot)){
     message("[error finaliseCommonRareSignatureExposures] please provide the output directy and root file name using the outfileRoot parameter. Nothing done.")
     return(NULL)
   }
-  
+
   # combine signatures
-  fullorgansigs <- cbind(commonSigs,do.call(cbind,listofsignatures))
-  
+  fullorgansigs <- commonSigs
+  if(!is.null(listofsignatures)) fullorgansigs <- cbind(fullorgansigs,do.call(cbind,listofsignatures))
+
   message("[info finaliseCommonRareSignatureExposures] setting up the fit mask.")
-  
+
   # prepare the signature fit mask
   sigfitmask <- matrix(TRUE,ncol = ncol(catalogues),nrow = ncol(commonSigs),dimnames = list(colnames(commonSigs),colnames(catalogues)))
   sigfitmaskCommonOnly <- matrix(TRUE,ncol = ncol(catalogues),nrow = ncol(commonSigs),dimnames = list(colnames(commonSigs),colnames(catalogues)))
-  
+
   if(!is.null(listofsignatures)){
     newsigcount <- ncol(commonSigs) + 1
-    
+
     for (i in names(listofsignatures)){
       # i <- "rare1"
       newsigs <- listofsignatures[[i]]
       newsigssamples <- listofsamples[[i]]
-      
+
       newsigcount <- newsigcount + ncol(newsigs)
-      
+
       newrows <- matrix(FALSE,nrow = ncol(newsigs),ncol = ncol(sigfitmask),dimnames = list(colnames(newsigs),colnames(sigfitmask)))
       # sigfitmaskCommonOnly <- rbind(sigfitmaskCommonOnly,newrows)
       newrows[,newsigssamples] <- TRUE
       sigfitmask <- rbind(sigfitmask,newrows)
     }
   }
-  
+
   message("[info finaliseCommonRareSignatureExposures] Fitting using common and rare signatures...")
-  
+
   resfitWithRare <- fitSignaturesAndSave(outfileRoot = paste0(outfileRoot,"_fitWithRare"),
                                          fullorgansigs = fullorgansigs,
                                          sigfitmask = sigfitmask,
@@ -266,9 +267,9 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
                                          threshold_p.value = threshold_p.value,
                                          min_sample_muts = min_sample_muts,
                                          nparallel = nparallel)
-  
+
   message("[info finaliseCommonRareSignatureExposures] Fitting using common signatures only...")
-  
+
   resfitCommonOnly <- fitSignaturesAndSave(outfileRoot = paste0(outfileRoot,"_fitCommonOnly"),
                                            fullorgansigs = commonSigs,
                                            sigfitmask = sigfitmaskCommonOnly,
@@ -278,10 +279,10 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
                                            threshold_p.value = threshold_p.value,
                                            min_sample_muts = min_sample_muts,
                                            nparallel = nparallel)
-  
-  
+
+
   message("[info finaliseCommonRareSignatureExposures] Comparing common only with common+rare...")
-  
+
   # compare results
   resCompare <- compareError(outfileRoot = outfileRoot,
                              catalogues = catalogues,
@@ -290,9 +291,9 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
                              sigs2 = fullorgansigs,
                              exposures2 = resfitWithRare$exposures[-nrow(resfitWithRare$exposures),colnames(catalogues)],
                              samplesWithRareSig = unlist(listofsamples))
-  
+
   # plotting
-  
+
   # create the directory if missing
   trimdir <- function(x){
     while(substr(x,nchar(x),nchar(x))!="/" & nchar(x)>0){
@@ -300,14 +301,14 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
     }
     return(x)
   }
-  
+
   # this is where the plots/tables output go
-  signature.tools.lib::writeTable(sigfitmask,paste0(outfileRoot,"_","sigfitmask.tsv"))
-  signature.tools.lib::plotExposures(resfitCommonOnly$exposures,output_file = paste0(outfileRoot,"_fitCommonOnlyExp.pdf"))
-  signature.tools.lib::plotExposures(resfitWithRare$exposures,output_file = paste0(outfileRoot,"_fitWithRareExp.pdf"))
-    
+  writeTable(sigfitmask,paste0(outfileRoot,"_","sigfitmask.tsv"))
+  plotExposures(resfitCommonOnly$exposures,output_file = paste0(outfileRoot,"_fitCommonOnlyExp.pdf"))
+  plotExposures(resfitWithRare$exposures,output_file = paste0(outfileRoot,"_fitWithRareExp.pdf"))
+
   message("[info finaliseCommonRareSignatureExposures] done.")
-  
+
   # any return obj
   res <- list()
   res$sigfitmask <- sigfitmask
@@ -333,16 +334,16 @@ fitSignaturesAndSave <- function(outfileRoot,
   res.fit.boot <- matrix(0,ncol = ncol(sigfitmask),nrow = nrow(sigfitmask),dimnames = dimnames(sigfitmask))
   # add unassigned mutations row
   res.fit.boot <- rbind(res.fit.boot,matrix(0,nrow = 1,ncol = ncol(res.fit.boot),dimnames = list("unassigned",colnames(res.fit.boot))))
-  
+
   res.boot.data <- list()
-  
+
   for (i in 1:ncol(sigfitmask)){
     # i <- 1
     message("sample ",i, " of ",ncol(sigfitmask))
     sigstouse <- fullorgansigs[,sigfitmask[,i],drop=F]
     sampleMuts <- sum(catalogues[,i,drop=F])
     if(sampleMuts>=min_sample_muts){
-      res.boot.data[[i]] <- signature.tools.lib::SignatureFit_withBootstrap(cat = catalogues[,i,drop=F],
+      res.boot.data[[i]] <- SignatureFit_withBootstrap(cat = catalogues[,i,drop=F],
                                                                             signature_data_matrix = sigstouse,
                                                                             nboot = nboot,
                                                                             threshold_percent = threshold_percent,
@@ -359,12 +360,12 @@ fitSignaturesAndSave <- function(outfileRoot,
       res.fit.boot["unassigned",i] <- sampleMuts
     }
   }
-  
-  signature.tools.lib::writeTable(res.fit.boot,file = paste0(outfileRoot,"_","exposures_final.tsv"))
+
+  writeTable(res.fit.boot,file = paste0(outfileRoot,"_","exposures_final.tsv"))
   save(file = paste0(outfileRoot,"_","exposures_bootstraps.rData"),res.boot.data)
-  
+
   res <- list()
-  res$exposures <- res.fit.boot 
+  res$exposures <- res.fit.boot
   res$bootstraps <- res.boot.data
   return(res)
 }
@@ -379,10 +380,10 @@ compareError <- function(outfileRoot=NULL,
                          samplesWithRareSig){
   error1 <- catalogues - as.matrix(sigs1) %*% as.matrix(exposures1)
   error2 <- catalogues - as.matrix(sigs2) %*% as.matrix(exposures2)
-  errorSAD1 <- c() 
-  errorSAD2 <- c() 
-  norm_errorSAD1 <- c() 
-  norm_errorSAD2 <- c() 
+  errorSAD1 <- c()
+  errorSAD2 <- c()
+  norm_errorSAD1 <- c()
+  norm_errorSAD2 <- c()
   for (i in 1:ncol(catalogues)){
     errorSAD1 <- c(errorSAD1,sum(abs(error1[,i])))
     errorSAD2 <- c(errorSAD2,sum(abs(error2[,i])))
@@ -409,7 +410,7 @@ compareError <- function(outfileRoot=NULL,
   legend(x="bottomright",col = rgb(0.6,0,0,1),pch = 16,legend = "samples with rare sig",bty = 'n',cex = 0.9)
   abline(a = 0, b = 1,lty = 2)
   dev.off()
-  
+
   # return object
   res <- list()
   res$norm_errorSAD1 <- norm_errorSAD1

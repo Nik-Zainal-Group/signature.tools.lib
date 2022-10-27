@@ -122,9 +122,9 @@ saveSimulatedData <- function(simObj,
   if(!saveAsPlainText){
     save(file = paste0(simDir,"/simdata.rData"),simObj)
   }else{
-    signature.tools.lib::writeTable(simObj$catalogues,paste0(simDir,"/catalogues.tsv"))
-    signature.tools.lib::writeTable(simObj$exposures,paste0(simDir,"/exposures.tsv"))
-    signature.tools.lib::writeTable(simObj$signatures,paste0(simDir,"/signatures.tsv"))
+    writeTable(simObj$catalogues,paste0(simDir,"/catalogues.tsv"))
+    writeTable(simObj$exposures,paste0(simDir,"/exposures.tsv"))
+    writeTable(simObj$signatures,paste0(simDir,"/signatures.tsv"))
   }
 }
 
@@ -144,9 +144,9 @@ loadSimulatedData <- function(simDir){
     load(simdatafile)
   }else if(file.exists(simtxtfile)){
     simObj <- list()
-    simObj$catalogues <- signature.tools.lib::readTable(paste0(simDir,"/catalogues.tsv"))
-    simObj$exposures <- signature.tools.lib::readTable(paste0(simDir,"/exposures.tsv"))
-    simObj$signatures <- signature.tools.lib::readTable(paste0(simDir,"/signatures.tsv"))
+    simObj$catalogues <- readTable(paste0(simDir,"/catalogues.tsv"))
+    simObj$exposures <- readTable(paste0(simDir,"/exposures.tsv"))
+    simObj$signatures <- readTable(paste0(simDir,"/signatures.tsv"))
   }else{
     message("[error loadSimulatedData] simulated data not found in directory ",simDir)
     simObj <- NULL
