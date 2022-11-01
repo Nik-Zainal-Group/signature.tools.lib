@@ -60,7 +60,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
                                 completeLinkageFlag=FALSE, #if clusteringMethod="HC", use complete linkage instead of default average linkage
                                 useMaxMatching=TRUE, #if clusteringMethod="MC", use the assignment problem algorithm (match with max similarity) instead of the stable matching algorithm (any stable match)
                                 filterBestOfEachBootstrap=TRUE, #if true only at most filterBest_nmaxtokeep of the nrepeats runs that are within filterBest_RTOL*best from the best are kept
-                                filterBest_RTOL=0.001, #realtive tolerace from best fit to consider a run as good as the best
+                                filterBest_RTOL=0.001, #relative tolerance from best fit to consider a run as good as the best
                                 filterBest_nmaxtokeep=10, #max number of runs that should be kept that are within the relative tolerance from the best
                                 nparallel=1, # how many processing units to use
                                 nsig=c(3:15), # range of number of signatures to try

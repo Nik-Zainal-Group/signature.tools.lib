@@ -149,10 +149,10 @@ dnvTabToDNVcatalogue <- function(dnvtab){
 
 
 #' TAB to DNV catalogue
-#' 
+#'
 #' Convert a data frame containing SNVs and DNVs to a DNV catalogue. The data frame should containt the SNVs and/or DNVs of a single sample. Two SNVs that are next to each other will be combined into a DNV.
 #' The data frame should have the following columns: chr, position, REF, ALT.
-#' 
+#'
 #' @param muttable data frame with the mutations, formatted with the following column names: chr, position, REF, ALT.
 #' @return returns the DNV catalogue for the given sample and mutation list
 #' @keywords DNV catalogue
@@ -161,11 +161,11 @@ dnvTabToDNVcatalogue <- function(dnvtab){
 #' muttable <- readTable("mutations.tsv")
 #' res <- tabToSNVcatalogue(muttable)
 tabToDNVcatalogue <- function(muttable) {
-  
+
   # setup return variables
   DNV_catalogue <- NULL
   DNV_table <- list()
-  
+
   # now consider the SNV first
   snvSelection <- nchar(muttable$REF)==1 & nchar(muttable$ALT)==1
   if(sum(snvSelection)>0){
@@ -179,7 +179,7 @@ tabToDNVcatalogue <- function(muttable) {
     DNV_catalogue <- res_snv$DNV_catalogue
     DNV_table[["snv"]] <- res_snv$DNV_table
   }
-  
+
   # now consider the DNV
   dnvSelection <- nchar(muttable$REF)==2 & nchar(muttable$ALT)==2
   if(sum(dnvSelection)>0){
@@ -198,8 +198,8 @@ tabToDNVcatalogue <- function(muttable) {
       DNV_table[["dnv"]]  <- res_dnv$DNV_table
     }
   }
-  
-  # 
+
+  #
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
@@ -207,9 +207,9 @@ tabToDNVcatalogue <- function(muttable) {
 }
 
 #' VCF to DNV catalogue
-#' 
+#'
 #' Convert a vcf file containing SNVs and DNVs to a DNV catalogue. The VCF file should containt the SNVs and/or DNVs of a single sample. Two SNVs that are next to each other will be combined into a DNV.
-#' 
+#'
 #' @param vcfFilename path to input VCF (file must be tabix indexed)
 #' @param genome.v either "hg38" (will load BSgenome.Hsapiens.UCSC.hg38), "hg19" (will load BSgenome.Hsapiens.1000genomes.hs37d5), mm10 (will load BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10) or canFam3 (will load BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)
 #' @return returns the DNV catalogue for the given sample and mutation list
@@ -219,7 +219,7 @@ tabToDNVcatalogue <- function(muttable) {
 #' file_muts <- "mutations.vcf"
 #' res <- vcfToSNVcatalogue(file_muts,genome.v = "hg38")
 vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
-  
+
   # load the vcf and find both SNVs that are next to each other and also check if DNVs are reported directly
   if(genome.v=="hg19"){
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
@@ -231,62 +231,62 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
     expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   }else if(genome.v=="canFam3"){
-    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
+    expected_chroms <- paste0("chr",c(seq(1:38),"X"))
     genomeSeq <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
   }
-  
+
   # read only chr seqnames from VCF, not contigs
   gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  
-  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames 
+
+  vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
   }
-  
+
   if(tools:::.BioC_version_associated_with_R_version()<3.5){
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
   }else{
     gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
   }
-  
+
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
   }
-  
+
   # load the vcf file
   vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v, gr)
   vcf_data <- VariantAnnotation::expand(vcf_data)
-  
+
   #filters failed for each variant
   rd <- SummarizedExperiment::rowRanges(vcf_data)
-  
+
   info.data <- VariantAnnotation::info(vcf_data)
-  
+
   rgs <- IRanges::ranges(vcf_data)
   starts <- BiocGenerics::start(rgs)
   ends <-  BiocGenerics::end(rgs)
-  
+
   #Check chromosomes exist
   chroms <- as.character(GenomeInfoDb::seqnames(vcf_data))
-  
-  if (length(chroms)==0){ 
+
+  if (length(chroms)==0){
     stop("[vcfToDNVcatalogue error] Input vcf does not contain variants ", vcfFilename)
   }
-  
+
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(chroms,expected_chroms))==0) chroms <- paste0("chr",chroms)
   }
-  
+
   fxd <- (VariantAnnotation::fixed(vcf_data))
   wt <- as.character(rd$REF)
   mt <- as.character(rd$ALT)
-  
-  
+
+
   # setup return variables
   DNV_catalogue <- NULL
   DNV_table <- list()
-  
+
   # now consider the SNV first
   snvSelection <- chroms %in% expected_chroms & nchar(wt)==1 & nchar(mt)==1
   if(sum(snvSelection)>0){
@@ -300,7 +300,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
     DNV_catalogue <- res_snv$DNV_catalogue
     DNV_table[["snv"]] <- res_snv$DNV_table
   }
-  
+
   # now consider the DNV
   dnvSelection <- chroms %in% expected_chroms & nchar(wt)==2 & nchar(mt)==2
   if(sum(dnvSelection)>0){
@@ -319,8 +319,8 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
       DNV_table[["dnv"]]  <- res_dnv$DNV_table
     }
   }
-  
-  # 
+
+  #
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
@@ -411,7 +411,7 @@ plotDNVSignatures <- function(signature_data_matrix,
     catalogueType <- "Alexandrov"
   }else{
     message("Unknown DNV channels (rownames) style, please use NN>NN rownames in either Zou or Alexandrov style")
-    exit(1)
+    return(NULL)
   }
 
   if(catalogueType=="Zou"){
@@ -433,7 +433,7 @@ plotDNVSignatures <- function(signature_data_matrix,
     muttypes <- c("AC>NN","AT>NN","CC>NN","CG>NN","CT>NN","GC>NN","TA>NN","TC>NN","TG>NN","TT>NN")
   }else{
     message("Unknown catalogue type.")
-    exit(1)
+    return(NULL)
   }
 
   rearr.colours <- c()
@@ -540,7 +540,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     catalogueType <- "Alexandrov"
   }else{
     message("Unknown DNV channels (rownames) style, please use NN>NN rownames in either Zou or Alexandrov style")
-    exit(1)
+    return(NULL)
   }
 
   if(catalogueType=="Zou"){
@@ -562,7 +562,7 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
     muttypes <- c("AC>NN","AT>NN","CC>NN","CG>NN","CT>NN","GC>NN","TA>NN","TC>NN","TG>NN","TT>NN")
   }else{
     message("Unknown catalogue type.")
-    exit(1)
+    return(NULL)
   }
 
   rearr.colours <- c()

@@ -139,7 +139,7 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
     catalogueType <- "Alexandrov"
   }else{
     message("Unknown DNV channels (rownames) style, please use NN>NN rownames in either Zou or Alexandrov style")
-    exit(1)
+    return(NULL)
   }
 
   if(catalogueType=="Zou"){
@@ -161,7 +161,7 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
     muttypes <- c("AC>NN","AT>NN","CC>NN","CG>NN","CT>NN","GC>NN","TA>NN","TC>NN","TG>NN","TT>NN")
   }else{
     message("Unknown catalogue type.")
-    exit(1)
+    return(NULL)
   }
 
   rearr.colours <- c()

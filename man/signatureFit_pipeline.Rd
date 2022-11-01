@@ -26,6 +26,7 @@ signatureFit_pipeline(
   giniThresholdScaling = 10,
   multiStepMode = "errorReduction",
   threshold_p.value = 0.05,
+  commonSignatureTier = "T1",
   rareSignatureTier = "T2",
   residualNegativeProp = 0.003,
   minResidualMutations = NULL,
@@ -64,7 +65,7 @@ signatureFit_pipeline(
 
 \item{signature_names}{if no signatures have been provided using the signatures and rare_signatures parameters, and if no organ is specified, then signature_names can be used to specify a list of signature names, which should match the corresponding mutation type (inferred automatically) and reference signatures requested using the signature_version parameter.}
 
-\item{fit_method}{either Fit or FitMS. Notice that automatic selection of signatures in FitMS is currrently available only for SNV mutations or catalogues, signature_version=RefSigv2 and specifying an organ. Alternatively, FitMS can be used by specifying both signatures (which will be considered common signatures) and rare_signatures parameters.}
+\item{fit_method}{either Fit or FitMS. Notice that automatic selection of signatures in FitMS is currently available only for SNV mutations or catalogues, signature_version=RefSigv2 and specifying an organ. Alternatively, FitMS can be used by specifying both signatures (which will be considered common signatures) and rare_signatures parameters.}
 
 \item{optimisation_method}{KLD or NNLS}
 
@@ -82,6 +83,10 @@ signatureFit_pipeline(
 
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
 
+\item{commonSignatureTier}{either T1 or T2. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS}
+
 \item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.}
@@ -97,7 +102,7 @@ when using multiStepMode=constrainedFit}
 
 \item{minCosSimIncrease}{minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method}
 
-\item{maxRareSigsPerSample}{masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.}
+\item{maxRareSigsPerSample}{maximum number of rare signatures that should be searched in each sample. In most situations, leaving this at 1 should be enough.}
 
 \item{noFit}{if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.}
 

@@ -44,6 +44,22 @@ how_to <- function(){
   message("                              to select from the COSMIC or reference signatures,")
   message("                              depending on the SIGVERSION requested. For example,")
   message("                              for COSMICv3.2 use: SBS1,SBS2,SBS3.")
+  message("  -q, --snvcstier=SNVCSTIER")
+  message("                            SNVCSTIER is either T1 or T2. For each organ, T1 indicates")
+  message("                              to use the common organ-specific substitution signatures, while T2")
+  message("                              indicates to use he corresponding reference signatures.")
+  message("                              In general, T1 should be more appropriate for organs")
+  message("                              where there are no mixed organ-specific signatures, e.g.")
+  message("                              SBS1+18 or SBS2+13, while T2 might be more suitable")
+  message("                              for when such mixed signatures are present, so that")
+  message("                              each signature can be fitted, e.g. fitting the two")
+  message("                              signatures SBS1 and SBS18, instead of a single SBS1+18.")
+  message("                              If not specified SNVCSTIER=T1.")
+  message("  -Q, --svcstier=SVCSTIER")
+  message("                            SVCSTIER is either T1 or T2. For each organ, T1 indicates")
+  message("                              to use the common organ-specific rearrangement signatures, while T2")
+  message("                              indicates to use he corresponding reference signatures.")
+  message("                              If not specified SVCSTIER=T1.")
   message("  -b, --bootstrap           Request HRDetect with bootstrap")
   message("  -t, --filtertype=FTYPE    FTYPE is either fixedThreshold or giniScaledThreshold.")
   message("                              When using fixedThreshold, exposures will be removed")
@@ -121,6 +137,8 @@ spec = matrix(c(
   'svfitfile',     'X', 1, "character",
   'sv3altname',    'Y', 1, "character",
   'sv5altname',    'Z', 1, "character",
+  'snvcstier',     'q', 1, "character",
+  'svcstier',      'Q', 1, "character",
   'nparallel',     'n', 1, "double",
   'genomev',       'e', 1, "character",
   'nbootFit',      'f', 1, "double",
@@ -191,6 +209,19 @@ if ( !is.null(opt$genomev) ) {
 }else{
   genomev <- "hg19"
 }
+
+if ( !is.null(opt$snvcstier) ) {
+  snvcstier <- opt$snvcstier
+}else{
+  snvcstier <- "T1"
+}
+
+if ( !is.null(opt$svcstier) ) {
+  svcstier <- opt$svcstier
+}else{
+  svcstier <- "T1"
+}
+
 
 if ( !is.null(opt$filtertype) ) {
   filtertype <- opt$filtertype
@@ -313,6 +344,8 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                customNameSNV8 = opt$snv8altname,
                                customNameSV3 = opt$sv3altname,
                                customNameSV5 = opt$sv5altname,
+                               SNV_commonSignatureTier = snvcstier,
+                               SV_commonSignatureTier = svcstier,
                                organ = organ,
                                nbootFit = nboots,
                                randomSeed = randomSeed,
@@ -359,6 +392,11 @@ if(!is.null(hrdet_res)){
       write.table(hrdet_res$exposures_subs,sep = "\t",
                   file = paste0(outdir,"/Exposures_subs.tsv"),
                   col.names = TRUE,row.names = TRUE,quote = FALSE)
+      if(!is.null(hrdet_res$exposures_organSpecific_subs)){
+        write.table(hrdet_res$exposures_organSpecific_subs,sep = "\t",
+                    file = paste0(outdir,"/Exposures_organSpecific_subs.tsv"),
+                    col.names = TRUE,row.names = TRUE,quote = FALSE)
+      }
       plotFitResults(hrdet_res$fitRes_subs,outdir = paste0(outdir,"/subsfit/"))
     }
     if(!is.null(hrdet_res$SV_catalogues)){
@@ -371,6 +409,11 @@ if(!is.null(hrdet_res)){
       write.table(hrdet_res$exposures_rearr,sep = "\t",
                   file = paste0(outdir,"/Exposures_rearr.tsv"),
                   col.names = TRUE,row.names = TRUE,quote = FALSE)
+      if(!is.null(hrdet_res$exposures_organSpecific_rearr)){
+        write.table(hrdet_res$exposures_organSpecific_rearr,sep = "\t",
+                    file = paste0(outdir,"/Exposures_organSpecific_rearr.tsv"),
+                    col.names = TRUE,row.names = TRUE,quote = FALSE)
+      }
       plotFitResults(hrdet_res$fitRes_rearr,outdir = paste0(outdir,"/rearrfit/"))
     }
 

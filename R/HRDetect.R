@@ -91,6 +91,10 @@
 #' @param customNameSNV8 custom signature name that will be considered as SNV8 input for HRDetect. Useful for when subs_fit_obj is provided and custom signatures are used.
 #' @param customNameSV3 custom signature name that will be considered as SV3 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.
 #' @param customNameSV5 custom signature name that will be considered as SV5 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.
+#' @param SNV_commonSignatureTier either T1 or T2. Used when fitting organ specific substitution signatures (organ is specified).For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+#' T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+#' each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS
+#' @param SV_commonSignatureTier either T1 or T2. Used when fitting organ specific rearrangement signatures (organ is specified). See SNV_commonSignatureTier description.
 #' @param optimisation_method can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
 #' @param exposureFilterTypeFit use either fixedThreshold or giniScaledThreshold as exposure filter in signature fit. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percentFit will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScalingFit
 #' @param giniThresholdScalingFit scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature
@@ -130,6 +134,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               customNameSNV8=NULL,
                               customNameSV3=NULL,
                               customNameSV5=NULL,
+                              SNV_commonSignatureTier = "T1",
+                              SV_commonSignatureTier = "T1",
                               optimisation_method = "KLD",
                               exposureFilterTypeFit = "fixedThreshold",
                               giniThresholdScalingFit = 10,
@@ -230,6 +236,10 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   #initialise final exposures output table
   exposures_subs <- NULL
   exposures_rearr <- NULL
+  #initialise exposures output table in case organ-specific fit is used
+  #so we can store the results before we convert them to reference signatures
+  exposures_organSpecific_subs <- NULL
+  exposures_organSpecific_rearr <- NULL
   #initialise indels classification table
   indels_classification_table <- NULL
   #initialise hrdetect bootstrap tables
@@ -305,6 +315,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                              signature_version = SNV_signature_version,
                                              signature_names = SNV_signature_names,
                                              fit_method = SNV_fit_method,
+                                             commonSignatureTier = SNV_commonSignatureTier,
                                              optimisation_method = optimisation_method,
                                              useBootstrap = bootstrapSignatureFit,
                                              exposureFilterType = exposureFilterTypeFit,
@@ -339,7 +350,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     data_matrix[colnames(exposures_subs),"SNV8"] <- 0
 
     # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
-    if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ)){
+    if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & SNV_commonSignatureTier=="T1"){
+      # store before converting
+      exposures_organSpecific_subs <- exposures_subs
       # if RefSigv2 was used, there may be some SBS sigs in the names
       sbssigs <- rownames(exposures_subs)[grepl(rownames(exposures_subs),pattern = "^SBS")]
       if(length(sbssigs)>0){
@@ -421,6 +434,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                             signature_version = SV_signature_version,
                                             signature_names = SV_signature_names,
                                             fit_method = SV_fit_method,
+                                            commonSignatureTier = SV_commonSignatureTier,
                                             optimisation_method = optimisation_method,
                                             useBootstrap = bootstrapSignatureFit,
                                             exposureFilterType = exposureFilterTypeFit,
@@ -455,7 +469,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     data_matrix[colnames(exposures_rearr),"SV5"] <- 0
 
     # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
-    if((SV_signature_version=="RefSigv1") & !is.null(organ)){
+    if((SV_signature_version=="RefSigv1") & !is.null(organ) & SV_commonSignatureTier == "T1"){
+      # store before converting
+      exposures_organSpecific_rearr <- exposures_rearr
       #convert to reference signatures
       exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
       exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
@@ -601,7 +617,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   #now, compute HRDetect score for all complete cases, so first notify of incomplete cases if any
   incomplete_cases <- rownames(data_matrix)[!complete.cases(data_matrix)]
   if(length(incomplete_cases)>0){
-    message("[info HRDetect_pipeline] Some samples do not have data necessary to compute the HRDetect score (check output $data_matrix). Will NOT compute HRDetect score for the following samples: ",paste(incomplete_cases,collapse = " "))
+    message("[warning HRDetect_pipeline] Some samples do not have data necessary to compute the HRDetect score (check output $data_matrix). Will NOT compute HRDetect score for the following samples: ",paste(incomplete_cases,collapse = " "))
     hrdetect_input <- data_matrix[complete.cases(data_matrix),,drop=FALSE]
   }else{
     hrdetect_input <- data_matrix
@@ -704,7 +720,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
             tmp_data_matrix[colnames(current_subs),"SNV8"] <- 0
 
             # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
-            if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ)){
+            if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & bn=="fit_subs" & SNV_commonSignatureTier=="T1"){
               # if RefSigv2 was used, there may be some SBS sigs in the names
               sbssigs <- rownames(current_subs)[grepl(rownames(current_subs),pattern = "^SBS")]
               if(length(sbssigs)>0){
@@ -755,7 +771,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
             tmp_data_matrix[colnames(current_rearr),"SV5"] <- 0
 
             # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
-            if((SV_signature_version=="RefSigv1") & !is.null(organ)){
+            if((SV_signature_version=="RefSigv1") & !is.null(organ) & bn=="fit_rearr" & SV_commonSignatureTier=="T1"){
               #convert to reference signatures
               current_rearr <- convertExposuresFromOrganToRefSigs(current_rearr,typemut = "rearr")
               current_rearr <- current_rearr[apply(current_rearr, 1,sum)>0,,drop=FALSE]
@@ -783,14 +799,14 @@ HRDetect_pipeline <- function(data_matrix=NULL,
         message("[info HRDetect_pipeline] HRDetect with bootstrap successful!")
 
       }else{
-        message("[info HRDetect_pipeline] Not enough data to run HRDetect bootstrap scores.")
+        message("[warning HRDetect_pipeline] Not enough data to run HRDetect bootstrap scores.")
         if(!bootstrapSignatureFit) message("[info HRDetect_pipeline] bootstrapSignatureFit needs to be TRUE to compute HRDetect bootstrap scores.")
       }
     }
 
     message("[info HRDetect_pipeline] HRDetect pipeline completed!")
   }else{
-    message("[info HRDetect_pipeline] Impossible to compute any HRDetect score, as no sample seems to have all the necessary data. Check output $data_matrix to see what has been computed with the data provided.")
+    message("[error HRDetect_pipeline] Impossible to compute any HRDetect score, as no sample seems to have all the necessary data. Check output $data_matrix to see what has been computed with the data provided.")
     hrdetect_output <- NULL
   }
 
@@ -817,6 +833,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res$hrdetect_output <- hrdetect_output
   res$exposures_subs <- exposures_subs
   res$exposures_rearr <- exposures_rearr
+  res$exposures_organSpecific_subs <- exposures_organSpecific_subs
+  res$exposures_organSpecific_rearr <- exposures_organSpecific_rearr
   res$fitRes_subs <- fitRes_subs
   res$fitRes_rearr <- fitRes_rearr
   res$annotated_mutations_subs <- annotated_mutations_subs
@@ -837,6 +855,8 @@ updateDataMatrix <- function(data_matrix,
   whichFeature <- rownames(exposures) %in% SigNames
   if(sum(whichFeature)>0){
     data_matrix[colnames(exposures),data_matrixFeature] <- apply(exposures[whichFeature,,drop=F],2,sum)
+  }else{
+    data_matrix[colnames(exposures),data_matrixFeature] <- 0
   }
   return(data_matrix)
 }

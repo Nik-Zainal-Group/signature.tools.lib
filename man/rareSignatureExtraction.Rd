@@ -66,7 +66,7 @@ provided. Specific signature exposures can be ignored with the parameter commonS
 \examples{
 resUnexpl <- unexplainedSamples(catalogues=catalogues,
                                 sigs=signatures)
-significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]                               
+significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]
 clusterResiduals <- cataloguesClustering(significant_residuals,
                                          nclusters = 1:5)
 resObj <- rareSignatureExtraction(catalogues=catalogues,

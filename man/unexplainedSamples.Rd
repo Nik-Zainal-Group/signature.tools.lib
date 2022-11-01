@@ -51,14 +51,14 @@ deviations of every channel divided by the number of mutations in the sample.
 This first criterion can be disabled by setting considerOnlyNmutsThreshold=TRUE.
 The second criterion is a minimum number of mutations that should be in the error
 or residual, which can be set with nmuts_threshold. The parameter nmutsMethod
-determines the type of error used, here we suggest residualSSD, the sum of signed 
+determines the type of error used, here we suggest residualSSD, the sum of signed
 differences of every channel of the residual.
-In this function we refer to the error as the difference between the 
+In this function we refer to the error as the difference between the
 original catalogue and the catalogue reconstructed from the exposures obtained
 with a simple signature fit (optimise for KLD), while we refer to the residual
 as the difference between the original catalogue and the catalogue reconstructed
-from the exposures obtained with a contrained fit, where the difference is 
-constrained to be mostly positive, to better highlight the pattern that might be 
+from the exposures obtained with a contrained fit, where the difference is
+constrained to be mostly positive, to better highlight the pattern that might be
 present in the catalogue butt not captured by he given signatures.
 Both criteria are necessary to consider a sample unexplained, unless considerOnlyNmutsThreshold=TRUE.
 }

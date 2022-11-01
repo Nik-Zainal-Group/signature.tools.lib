@@ -31,6 +31,9 @@
 #' @param organ #automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available:
 #' "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid",
 #' "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param commonSignatureTier either T1 or T2. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+#' T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+#' each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18.
 #' @param rareSignatureTier either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 #' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 #' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
@@ -66,6 +69,7 @@
 #' plotFitMS(res,"results/")
 FitMS <- function(catalogues,
                   organ = NULL, #automatically sets the common and rare signatures
+                  commonSignatureTier = "T1",  #either T1 for organ-specific or T2 for corresponding reference signatures
                   rareSignatureTier = "T2",  #either T1 for observed in organ or T2 for extended
                   commonSignatures = NULL,
                   rareSignatures = NULL,
@@ -100,7 +104,20 @@ FitMS <- function(catalogues,
     }else{
       if(typeofmuts=="subs"){
         if(organ %in% rownames(sigsForFittingSBSv2.03)){
-          commonSignatures <- organSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,"common"],split = ",")[[1]],drop=F]
+          if(commonSignatureTier %in% c("T1","T2")){
+            tierSel <- "common" # default to common in case T1 is given
+            if(commonSignatureTier=="T2") tierSel <- "commonT2"
+            commonSigNames <- strsplit(sigsForFittingSBSv2.03[organ,tierSel],split = ",")[[1]]
+            if(commonSignatureTier=="T1"){
+              commonSignatures <- organSignaturesSBSv2.03[,commonSigNames,drop=F]
+            }else{
+              commonSignatures <- referenceSignaturesSBSv2.03[,commonSigNames,drop=F]
+            }
+
+          }else{
+            message("[error FitMS] invalid commonSignatureTier ",commonSignatureTier,". Please provide your own commonSignatures or choose between T1 and T2.")
+            return(NULL)
+          }
         }else{
           message("[error FitMS] Organ not found: ",organ,". Nothing to do. Available organs for FitMS are: ",paste(rownames(sigsForFittingSBSv2.03),collapse = ", "))
           return(NULL)
@@ -413,6 +430,7 @@ FitMS <- function(catalogues,
   resObj$useBootstrap <- useBootstrap
   resObj$nboot <- nboot
   resObj$threshold_p.value <- threshold_p.value
+  resObj$commonSignatureTier <- commonSignatureTier
   resObj$rareSignatureTier <- rareSignatureTier
   resObj$maxRareSigsPerSample <- maxRareSigsPerSample
   # add all fit results and info

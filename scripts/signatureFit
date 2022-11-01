@@ -120,6 +120,17 @@ how_to <- function(){
   message("  -a, --fitmsmode=FMSMODE   FMSMODE is either constrainedFit, partialNMF,")
   message("                              errorReduction, or cossimIncrease. If not specified")
   message("                              FMSMODE=errorReduction.")
+  message("  -q, --commonsigtier=CSTIER")
+  message("                            CSTIER is either T1 or T2. For each organ, T1 indicates")
+  message("                              to use the common organ-specific signatures, while T2")
+  message("                              indicates to use he corresponding reference signatures.")
+  message("                              In general, T1 should be more appropriate for organs")
+  message("                              where there are no mixed organ-specific signatures, e.g.")
+  message("                              SBS1+18 or SBS2+13, while T2 might be more suitable")
+  message("                              for when such mixed signatures are present, so that")
+  message("                              each signature can be fitted, e.g. fitting the two")
+  message("                              signatures SBS1 and SBS18, instead of a single SBS1+18.")
+  message("                              If not specified CSTIER=T1.")
   message("  -T, --raresigtier=RSTIER  RSTIER is either T1 or T2. For each organ we provide")
   message("                              two lists of rare signatures that can be used.")
   message("                              Tier 1 (T1) are rare signatures that were observed")
@@ -203,6 +214,7 @@ spec = matrix(c(
   'giniscaling',        'd', 1, "double",
   'thresholdpval',      'u', 1, "double",
   'fitmsmode',          'a', 1, "character",
+  'commonsigtier',      'q', 1, "character",
   'raresigtier',        'T', 1, "character",
   'residualnegprop',    'i', 1, "double",
   'minresidualmuts',    'R', 1, "double",
@@ -424,6 +436,12 @@ if ( !is.null(opt$fitmsmode) ) {
   fitmsmode <- "errorReduction"
 }
 
+if ( !is.null(opt$commonsigtier) ) {
+  commonsigtier <- opt$commonsigtier
+}else{
+  commonsigtier <- "T1"
+}
+
 if ( !is.null(opt$raresigtier) ) {
   raresigtier <- opt$raresigtier
 }else{
@@ -514,6 +532,7 @@ pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
                                   giniThresholdScaling = giniscaling,
                                   multiStepMode = fitmsmode,
                                   threshold_p.value = thresholdpval,
+                                  commonSignatureTier = commonsigtier,
                                   rareSignatureTier = raresigtier,
                                   residualNegativeProp = residualnegprop,
                                   minResidualMutations = minresidualmuts,

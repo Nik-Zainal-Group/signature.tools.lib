@@ -8,8 +8,8 @@ finaliseCommonRareSignatureExposures(
   outfileRoot,
   catalogues,
   commonSigs,
-  listofsignatures,
-  listofsamples,
+  listofsignatures = NULL,
+  listofsamples = NULL,
   nboot = 200,
   threshold_percent = 5,
   threshold_p.value = 0.05,
@@ -51,7 +51,7 @@ between the normalised error withvs without rare signatures.
 \examples{
 resUnexpl <- unexplainedSamples(catalogues=catalogues,
                                 sigs=signatures)
-significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]                               
+significant_residuals <- resUnexpl$all_residuals[,resUnexpl$which_significant]
 clusterResiduals <- cataloguesClustering(significant_residuals,
                                          nclusters = 1:5)
 resObj <- rareSignatureExtraction(catalogues=catalogues,

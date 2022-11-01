@@ -7,6 +7,7 @@
 FitMS(
   catalogues,
   organ = NULL,
+  commonSignatureTier = "T1",
   rareSignatureTier = "T2",
   commonSignatures = NULL,
   rareSignatures = NULL,
@@ -35,6 +36,10 @@ FitMS(
 \item{organ}{#automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available:
 "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid",
 "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+
+\item{commonSignatureTier}{either T1 or T2. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18.}
 
 \item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
 that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular

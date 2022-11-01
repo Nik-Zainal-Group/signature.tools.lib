@@ -26,6 +26,8 @@ HRDetect_pipeline(
   customNameSNV8 = NULL,
   customNameSV3 = NULL,
   customNameSV5 = NULL,
+  SNV_commonSignatureTier = "T1",
+  SV_commonSignatureTier = "T1",
   optimisation_method = "KLD",
   exposureFilterTypeFit = "fixedThreshold",
   giniThresholdScalingFit = 10,
@@ -80,6 +82,12 @@ HRDetect_pipeline(
 \item{customNameSV3}{custom signature name that will be considered as SV3 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.}
 
 \item{customNameSV5}{custom signature name that will be considered as SV5 input for HRDetect. Useful for when rearr_fit_obj is provided and custom signatures are used.}
+
+\item{SNV_commonSignatureTier}{either T1 or T2. Used when fitting organ specific substitution signatures (organ is specified).For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS}
+
+\item{SV_commonSignatureTier}{either T1 or T2. Used when fitting organ specific rearrangement signatures (organ is specified). See SNV_commonSignatureTier description.}
 
 \item{optimisation_method}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
 
