@@ -36,6 +36,7 @@ HRDetect_pipeline(
   nbootFit = 100,
   threshold_p.valueFit = 0.05,
   bootstrapHRDetectScores = FALSE,
+  SNV_maxRareSigs = 1,
   nparallel = 1,
   randomSeed = NULL
 )
@@ -104,6 +105,8 @@ each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, in
 \item{threshold_p.valueFit}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
 
 \item{bootstrapHRDetectScores}{perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.}
+
+\item{SNV_maxRareSigs}{the maximum number of rare substitution signatures allowed in a sample (default SNV_maxRareSigs=1) when using FitMS to fit SNV signatures. FitMS is used if the organ parameter is specified and SNV_signature_version=RefSigv2 (which is the default).}
 
 \item{nparallel}{how many parallel threads to use.}
 

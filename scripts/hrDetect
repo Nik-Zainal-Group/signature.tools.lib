@@ -105,6 +105,11 @@ how_to <- function(){
   message("  -Z, --sv5altname=CSV5     Custom signature name that will be considered as SV5")
   message("                              input for HRDetect. Useful for when svfitfile is")
   message("                              provided and custom signatures are used.")
+  message("  -a, --snvmaxrs=SNVMAXRS   Maximum number of rare signature allowed in a sample when")
+  message("                              using FitMS to fit SNV signatures (which is the default if.")
+  message("                              ORGAN is given). If not specified SNVMAXRS=1. Sometimes it")
+  message("                              is useful to increase this to check whether additional rare")
+  message("                              signatures might be present, e.g. SNVMAXRS=2.")
   message("  -e, --genomev=GENOMEV     Genome version to be used: hg19, hg38 or mm10. If not")
   message("                              specified GENOMEV=hg19.")
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used")
@@ -139,6 +144,7 @@ spec = matrix(c(
   'sv5altname',    'Z', 1, "character",
   'snvcstier',     'q', 1, "character",
   'svcstier',      'Q', 1, "character",
+  'snvmaxrs',      'a', 1, "double",
   'nparallel',     'n', 1, "double",
   'genomev',       'e', 1, "character",
   'nbootFit',      'f', 1, "double",
@@ -189,6 +195,12 @@ if ( !is.null(opt$svsigversion) ) {
   svsigversion <- opt$svsigversion
 }else{
   svsigversion <- "RefSigv1"
+}
+
+if ( !is.null(opt$snvmaxrs) ) {
+  snvmaxrs <- opt$snvmaxrs
+}else{
+  snvmaxrs <- 1
 }
 
 if ( !is.null(opt$svsignames) ) {
@@ -348,6 +360,7 @@ hrdet_res <- HRDetect_pipeline(genome.v = genomev,
                                SV_commonSignatureTier = svcstier,
                                organ = organ,
                                nbootFit = nboots,
+                               SNV_maxRareSigs = snvmaxrs,
                                randomSeed = randomSeed,
                                nparallel = nparallel)
 
