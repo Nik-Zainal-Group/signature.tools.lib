@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.2.1
+
+- Added FitMS common signatures tier. T1 fits organ-specific signatures, T2 fits the corresponding reference signatures. T2 is useful in organs where there are mixed organ-specific signatures (e.g. SBS1+18), so that the signatures composing the mix can be fitted separately (e.g. SBS1 and SBS18 instead of SBS1+18)
+
 2.2.0
 
 - Added functions for rare signature extraction workflow
