@@ -810,7 +810,8 @@ plotSignatures <- function(signature_data_matrix,
                            add_to_titles = NULL,
                            mar=NULL,
                            howManyInOnePage=100,
-                           ncolumns=1){
+                           ncolumns=3){
+  if(ncol(signature_data_matrix)<3) ncolumns <- ncol(signature_data_matrix)
   # identify the type of mutations
   typeofmuts <- getTypeOfMutationsFromChannels(signature_data_matrix)
   if(typeofmuts=="subs"){
