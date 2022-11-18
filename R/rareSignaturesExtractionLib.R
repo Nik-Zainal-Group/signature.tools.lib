@@ -287,9 +287,9 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
   resCompare <- compareError(outfileRoot = outfileRoot,
                              catalogues = catalogues,
                              sigs1 = commonSigs,
-                             exposures1 = resfitCommonOnly$exposures[-nrow(resfitCommonOnly$exposures),colnames(catalogues)],
+                             exposures1 = resfitCommonOnly$exposures[-nrow(resfitCommonOnly$exposures),colnames(catalogues),drop=F],
                              sigs2 = fullorgansigs,
-                             exposures2 = resfitWithRare$exposures[-nrow(resfitWithRare$exposures),colnames(catalogues)],
+                             exposures2 = resfitWithRare$exposures[-nrow(resfitWithRare$exposures),colnames(catalogues),drop=F],
                              samplesWithRareSig = unlist(listofsamples))
 
   # plotting
