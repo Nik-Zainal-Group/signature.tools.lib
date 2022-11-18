@@ -104,8 +104,8 @@ cataloguesClustering <- function(samplescatalogues,
     if(!is.null(outdir)){
       pointsize <- 12
       dir.create(outdir,showWarnings = F,recursive = T)
-      signature.tools.lib::writeTable(clusters_table,paste0(outdir,"/clusters_table.tsv"),row.names = T)
-      signature.tools.lib::writeTable(sw_table,paste0(outdir,"/sw_table.tsv"),row.names = F)
+      writeTable(clusters_table,paste0(outdir,"/clusters_table.tsv"),row.names = T)
+      writeTable(sw_table,paste0(outdir,"/sw_table.tsv"),row.names = F)
       if(!all(is.na(sw_table$ASW))){
         pdf(paste0(outdir,"/sw_table.pdf"),width = 6,height = 4.5,pointsize = pointsize)
         par(mar=c(5,5,3,1))

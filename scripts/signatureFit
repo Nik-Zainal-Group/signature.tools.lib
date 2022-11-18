@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(getopt)
+library(signature.tools.lib)
 
 how_to <- function(){
   message(" ")
@@ -272,7 +273,7 @@ if ( !is.null(opt$outdir) ) {
 # Load the catalogues file
 if(!is.null(opt$cataloguesfile)){
   if(file.exists(opt$cataloguesfile)){
-    catalogues <- signature.tools.lib::readTable(opt$cataloguesfile)
+    catalogues <- readTable(opt$cataloguesfile)
   }else{
     message("[error signatureFit script] catalogues file does not exist: ",opt$cataloguesfile)
     q(status=1,save = "no")
@@ -355,7 +356,7 @@ if(!is.null(opt$svbedpe)){
 # Load the signatures file
 if(!is.null(opt$signaturesfile)){
   if(file.exists(opt$signaturesfile)){
-    signatures <- signature.tools.lib::readTable(opt$signaturesfile)
+    signatures <- readTable(opt$signaturesfile)
   }else{
     message("[error signatureFit script] signatures file does not exist: ",opt$signaturesfile)
     q(status=1,save = "no")
@@ -367,7 +368,7 @@ if(!is.null(opt$signaturesfile)){
 # Load the rare signatures file
 if(!is.null(opt$raresignaturesfile)){
   if(file.exists(opt$raresignaturesfile)){
-    raresignatures <- signature.tools.lib::readTable(opt$raresignaturesfile)
+    raresignatures <- readTable(opt$raresignaturesfile)
   }else{
     message("[error signatureFit script] rare signatures file does not exist: ",opt$raresignaturesfile)
     q(status=1,save = "no")
@@ -511,7 +512,7 @@ dir.create(outdir,showWarnings = F,recursive = T)
 message("[info signatureFit script] running signatureFit_pipeline...")
 
 # run the pipeline
-pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
+pipelineRes <- signatureFit_pipeline(catalogues=catalogues,
                                   genome.v=genomev,
                                   organ=organ,
                                   SNV_vcf_files=snvvcf,
@@ -547,31 +548,31 @@ pipelineRes <- signature.tools.lib::signatureFit_pipeline(catalogues=catalogues,
 if(!is.null(pipelineRes$fitResults)){
   message("[info signatureFit script] saving fit to file...")
   # save fit to file
-  signature.tools.lib::saveFitToFile(fitObj = pipelineRes$fitResults,
-                                     filename = paste0(outdir,"fitData.rData"))
+  saveFitToFile(fitObj = pipelineRes$fitResults,
+                filename = paste0(outdir,"fitData.rData"))
   message("[info signatureFit script] plotting fit...")
   # plot fit results
-  signature.tools.lib::plotFitResults(fitObj = pipelineRes$fitResults,
-                                      outdir = outdir)
+  plotFitResults(fitObj = pipelineRes$fitResults,
+                 outdir = outdir)
   if(writeJSON){
     message("[info signatureFit script] saving fit to JSON...")
-    signature.tools.lib::writeFitResultsToJSON(fitObj = pipelineRes$fitResults,
-                                               outdir = outdir)
+    writeFitResultsToJSON(fitObj = pipelineRes$fitResults,
+                          outdir = outdir)
   }
 }
 
 if(!is.null(pipelineRes$catalogues)){
   message("[info signatureFit script] writing and plotting catalogues...")
-  signature.tools.lib::writeTable(t = pipelineRes$catalogues,
-                                  file = paste0(outdir,"catalogues.tsv"))
-  signature.tools.lib::plotSignatures(signature_data_matrix = pipelineRes$catalogues,
-                                      output_file = paste0(outdir,"catalogues.pdf"))
+  writeTable(t = pipelineRes$catalogues,
+             file = paste0(outdir,"catalogues.tsv"))
+  plotSignatures(signature_data_matrix = pipelineRes$catalogues,
+                 output_file = paste0(outdir,"catalogues.pdf"))
 }
 
 if(!is.null(pipelineRes$annotated_mutations) & writeAnnotations){
   message("[info signatureFit script] writing annotated mutations...")
-  signature.tools.lib::writeTable(t = pipelineRes$annotated_mutations,
-                                  file = paste0(outdir,"annotated_mutations.tsv"))
+  writeTable(t = pipelineRes$annotated_mutations,
+             file = paste0(outdir,"annotated_mutations.tsv"))
 }
 
 message("[info signatureFit script] done!")
