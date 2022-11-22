@@ -12,7 +12,7 @@ plotSignatures(
   add_to_titles = NULL,
   mar = NULL,
   howManyInOnePage = 100,
-  ncolumns = 1
+  ncolumns = 3
 )
 }
 \arguments{
