@@ -95,6 +95,9 @@
 #' T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
 #' each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS
 #' @param SV_commonSignatureTier either T1 or T2. Used when fitting organ specific rearrangement signatures (organ is specified). See SNV_commonSignatureTier description.
+#' @param SNV_rareSignatureTier either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
+#' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
+#' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
 #' @param optimisation_method can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
 #' @param exposureFilterTypeFit use either fixedThreshold or giniScaledThreshold as exposure filter in signature fit. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percentFit will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScalingFit
 #' @param giniThresholdScalingFit scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature
@@ -137,6 +140,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               customNameSV5=NULL,
                               SNV_commonSignatureTier = "T1",
                               SV_commonSignatureTier = "T1",
+                              SNV_rareSignatureTier = "T2",
                               optimisation_method = "KLD",
                               exposureFilterTypeFit = "fixedThreshold",
                               giniThresholdScalingFit = 10,
@@ -324,6 +328,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                              threshold_percent = threshold_percentFit,
                                              giniThresholdScaling = giniThresholdScalingFit,
                                              nboot = nbootFit,
+                                             rareSignatureTier = SNV_rareSignatureTier,
                                              maxRareSigsPerSample = SNV_maxRareSigs,
                                              nparallel = nparallel,
                                              randomSeed = randomSeed)

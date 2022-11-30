@@ -28,6 +28,7 @@ HRDetect_pipeline(
   customNameSV5 = NULL,
   SNV_commonSignatureTier = "T1",
   SV_commonSignatureTier = "T1",
+  SNV_rareSignatureTier = "T2",
   optimisation_method = "KLD",
   exposureFilterTypeFit = "fixedThreshold",
   giniThresholdScalingFit = 10,
@@ -89,6 +90,10 @@ T1 should be more appropriate for organs where there are no mixed organ-specific
 each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS}
 
 \item{SV_commonSignatureTier}{either T1 or T2. Used when fitting organ specific rearrangement signatures (organ is specified). See SNV_commonSignatureTier description.}
+
+\item{SNV_rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
+that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
+dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.}
 
 \item{optimisation_method}{can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)}
 
