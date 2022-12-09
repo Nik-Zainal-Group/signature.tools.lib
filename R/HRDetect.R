@@ -278,6 +278,22 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     if(length(subs_conflict_samples)>0){
       message("[warning HRDetect_pipeline] There are sample names conflicts for substitutions. Some samples provided via subs_fit_file have also been provided via either catalogues or mutation files. Results in subs_fit_file will be used for samples ",paste(subs_conflict_samples,collapse = ","),".")
       SNV_samples_with_data <- setdiff(SNV_samples_with_data,subs_conflict_samples)
+      # now let's try to avoid rerunning Fit on samples where the fit is already provided
+      if(length(SNV_samples_with_data)==0){
+        SNV_samples_with_data <- NULL
+      }
+      if(!is.null(SNV_catalogues)){
+        SNV_catalogues <- SNV_catalogues[,setdiff(colnames(SNV_catalogues),subs_conflict_samples),drop=F]
+        if(ncol(SNV_catalogues)==0) SNV_catalogues <- NULL
+      }
+      if(!is.null(SNV_vcf_files)){
+        SNV_vcf_files <- SNV_vcf_files[setdiff(names(SNV_vcf_files),subs_conflict_samples)]
+        if(length(SNV_vcf_files)==0) SNV_vcf_files <- NULL
+      }
+      if(!is.null(SNV_tab_files)){
+        SNV_tab_files <- SNV_tab_files[setdiff(names(SNV_tab_files),subs_conflict_samples)]
+        if(length(SNV_tab_files)==0) SNV_tab_files <- NULL
+      }
     }
   }
 
@@ -414,6 +430,18 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     if(length(rearr_conflict_samples)>0){
       message("[warning HRDetect_pipeline] There are sample names conflicts for rearrangements. Some samples provided via rearr_fit_file have also been provided via either catalogues or mutation files. Results in rearr_fit_file will be used for samples ",paste(rearr_conflict_samples,collapse = ","),".")
       SV_samples_with_data <- setdiff(SV_samples_with_data,rearr_conflict_samples)
+      # now let's try to avoid rerunning Fit on samples where the fit is already provided
+      if(length(SV_samples_with_data)==0){
+        SV_samples_with_data <- NULL
+      }
+      if(!is.null(SV_catalogues)){
+        SV_catalogues <- SV_catalogues[,setdiff(colnames(SV_catalogues),rearr_conflict_samples),drop=F]
+        if(ncol(SV_catalogues)==0) SV_catalogues <- NULL
+      }
+      if(!is.null(SV_bedpe_files)){
+        SV_bedpe_files <- SV_bedpe_files[setdiff(names(SV_bedpe_files),rearr_conflict_samples)]
+        if(length(SV_bedpe_files)==0) SV_bedpe_files <- NULL
+      }
     }
   }
 
@@ -1112,7 +1140,7 @@ plot_HRDetect_BootstrapScores <- function(outdir,
   # jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)
   cairo_pdf(filename = paste0(outdir,"/HRDetect_bootstrap.pdf"),width = pwidth,height = pheight,pointsize = pointsize)
   par(mar=mar)
-  boxplot(hrdetect_res$hrdetect_bootstrap_table, xaxt="n", yaxt="n",ylim = c(0,1),border="white")
+  boxplot(hrdetect_res$hrdetect_bootstrap_table, xaxt="n", yaxt="n",ylim = c(0,1),border="white",col="white")
   grid()
   lines(x=c(0,ncol(hrdetect_res$hrdetect_bootstrap_table)+1),y=c(0.7,0.7),lty=2,col="red")
   boxplot(hrdetect_res$hrdetect_bootstrap_table[,o],ylim = c(0,1),main="",
