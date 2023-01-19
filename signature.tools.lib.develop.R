@@ -3,7 +3,7 @@
 
 # install.packages("devtools")
 # install.packages("roxygen2")
-# 
+#
 # devtools::create("signature.tools.lib")
 
 devtools::use_package("VariantAnnotation")
@@ -60,6 +60,7 @@ organSignaturesDBSv1.01 <- cbind(readTable("data/RefSigDBS_v1.01//OrganSpecificS
                                  readTable("data/RefSigDBS_v1.01/OrganSpecificSigs_Hartwig_DBS_v1.01.tsv"))
 conversionMatrixDBSv1.01 <- readTable("data/RefSigDBS_v1.01/RefSig_DBS_conversionMatrix_v1.01.tsv")
 referenceSignaturesDBSv1.01 <- readTable("data/RefSigDBS_v1.01/RefSig_DBS_v1.01.tsv")
+sigsForFittingDBSv1.01 <- readTable("data/RefSigDBS_v1.01/SigsForFitting_DBS_v1.01.tsv")
 
 COSMIC_v3.2_SBS_GRCh37 <- readTable("data/COSMIC_v3.2_SBS_GRCh37.tsv")
 rownames(COSMIC_v3.2_SBS_GRCh37) <- COSMIC_v3.2_SBS_GRCh37$Type
@@ -83,6 +84,7 @@ usethis::use_data(RS.Breast560,
                   organSignaturesDBSv1.01,
                   conversionMatrixDBSv1.01,
                   referenceSignaturesDBSv1.01,
+                  sigsForFittingDBSv1.01,
                   RefSigv1_subs,
                   RefSigv1_rearr,
                   COSMIC_v3.2_SBS_GRCh37,

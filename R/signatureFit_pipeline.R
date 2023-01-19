@@ -26,7 +26,7 @@
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
 #' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
 #' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
-#' @param multiStepMode use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".
+#' @param multiStepMode this is a FitMS parameter. Use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".
 #' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 #' when using multiStepMode=constrainedFit
 #' @param minResidualMutations minimum number of mutations in a residual when using constrainedFit or partialNMF. Deactivated by default.
@@ -41,6 +41,7 @@
 #' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
 #' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
 #' @param maxRareSigsPerSample maximum number of rare signatures that should be searched in each sample. In most situations, leaving this at 1 should be enough.
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
 #' @param nparallel to use parallel specify >1
 #' @param noFit if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.
 #' @param randomSeed set an integer random seed
@@ -80,6 +81,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                   minErrorReductionPerc = 15,
                                   minCosSimIncrease = 0.02,
                                   maxRareSigsPerSample = 1,
+                                  rareCandidateSelectionCriteria="MaxCosSim",
                                   noFit = FALSE,
                                   nparallel = 1,
                                   randomSeed = NULL,
@@ -303,7 +305,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
 
   # now, let's consider the following order/priorities:
   # 1. If the user provided signatures, then use those and ignore all other options
-  #    If the user chose FitMS but did not provide rare signatures, then we should ask the user to provide the rare too
+  #    If the user chose FitMS but did not provide rare signatures nor an organ, then we should warn the user and switch to Fit, while suggesting to provide the rare signatures or organ if FitMS is needed
   # 2. If the user did not provide signatures, let's check if the user provided an organ.
   #    With an organ, we can select signatures automatically, depending on the signature_version parameter
   #    a) if signature_version is NULL, then assume we are using the latest organ-specific signatures
@@ -315,19 +317,26 @@ signatureFit_pipeline <- function(catalogues=NULL,
   #    while if signature_names is NULL then use all the signatures at once
 
   if(!is.null(signatures)){
-    if(is.null(rare_signatures) & fit_method=="FitMS"){
-      message("[error signatureFit_pipeline] user selected FitMS and provided a signatures file, which will be used for the common signatures. ",
-              "Please also provide a file with the rare signatures using the parameter rare_signatures_file.")
-      return(returnObj)
+    if(is.null(rare_signatures) & fit_method=="FitMS" & is.null(organ)){
+      message("[warning signatureFit_pipeline] user selected FitMS which requires both common and rare signatures. ",
+              "Common signatures were provided using the signatures parameter, but the parameter rare_signatures is missing and no organ was provided to select it automatically. ",
+              "The fit_method parameters has been changed to Fit so that the provided signatures can be fitted. If FitMS was ",
+              "the intended method, please either provide the rare_signatures parameter or provide an organ for automatic signature selection.")
+      fit_method=="Fit"
+      # return(returnObj)
     }
     if(!is.null(organ)){
-      message("[warning signatureFit_pipeline] organ parameter ",organ," will be ignored because the user has specified signature files.")
+      if(fit_method=="FitMS"){
+        message("[warning signatureFit_pipeline] The organ parameter ",organ," will not be used to automatically select the common signatures to fit, because the user specified the common signatures using the signatures parameter.")
+      }else if(fit_method=="Fit"){
+        message("[warning signatureFit_pipeline] The organ parameter ",organ," will not be used to automatically select the signatures to fit, because the user specified the signatures using the signatures parameter.")
+      }
     }
-    if(!is.null(signature_version)){
-      message("[warning signatureFit_pipeline] signature_version parameter ",signature_version," will be ignored because the user has specified signature files.")
+    if(!is.null(signature_version) & fit_method=="Fit"){
+      message("[warning signatureFit_pipeline] signature_version parameter ",signature_version," will be ignored because the user has provided the signatures parameter.")
     }
   }else{
-    # user has not provided signatures using file names, so let's see what was requested
+    # user has not provided the signatures parameter, so let's see what was requested
 
     # let's check whether a specific signature_version was requested, and if not set to the latest
     if(is.null(signature_version)){
@@ -335,25 +344,30 @@ signatureFit_pipeline <- function(catalogues=NULL,
       signature_version <- "RefSigv2"
     }
 
-    # if FitMS was requested, but signature_version is not RefSigv2 or mtype_catalogues is not subs
-    # or no organ is specified, then I can't use it, so revert to Fit
-    if(fit_method=="FitMS"){
-      if(signature_version!="RefSigv2" | mtype_catalogues!="subs" | is.null(organ)){
-        message("[error signatureFit_pipeline] user selected FitMS and provided no signature files. ",
-                "This means that common and rare signatures need to be automatically selected. ",
-                "Automatic selection is currently available only for signature version RefSigv2, ",
-                "substitutions mutation type or catalogues, and an organ should be specified. ",
-                "Please correct your options or use fit_method=\"Fit\" instead.")
-        return(returnObj)
-      }
+    # Need to avoid code duplication by fixing some cases using warnings
+    if(signature_version=="RefSigv2" & mtype_catalogues =="rearr"){
+      message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
+              "switching to signature_version=RefSigv1")
+      signature_version="RefSigv1"
+    }
+    if(signature_version=="RefSigv1" & mtype_catalogues =="DNV"){
+      message("[warning signatureFit_pipeline] DBS RefSig mutational signatures only available in RefSigv2, ",
+              "switching to signature_version=RefSigv2")
+      signature_version="RefSigv2"
     }
 
     if(signature_version=="RefSigv2"){
       if(!is.null(organ)){
-        # an organ was requested. If FitMS and subs were requested, then leave it to FitMS to get the appropriate signatures
+        # an organ was requested. If FitMS was requested, then leave it to FitMS to get the appropriate signatures
         if(fit_method=="Fit"){
           if(mtype_catalogues %in% c("subs","DNV")){
             signatures <- getOrganSignatures(organ = organ,version = 2,typemut = mtype_catalogues)
+            # need to check that the getOrganSignatures functions returned something
+            if(is.null(signatures)){
+              message("[error signatureFit_pipeline] RefSigv2 signatures not available for mutation type ",mtype_catalogues,
+                      " and organ ",organ,".")
+              return(returnObj)
+            }
             if(commonSignatureTier=="T2"){
               # need to convert
               convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
@@ -362,25 +376,28 @@ signatureFit_pipeline <- function(catalogues=NULL,
               }else {
                 signatures <- referenceSignaturesDBSv1.01[,convertedNames,drop=F]
               }
+            }else if(commonSignatureTier=="T3"){
+              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues,mixedOnly = TRUE)
+              if(mtype_catalogues == "subs"){
+                combinedSigs <- cbind(referenceSignaturesSBSv2.03,organSignaturesSBSv2.03)
+                signatures <- combinedSigs[,convertedNames,drop=F]
+              }else {
+                combinedSigs <- cbind(referenceSignaturesDBSv1.01,organSignaturesDBSv1.01)
+                signatures <- combinedSigs[,convertedNames,drop=F]
+              }
             }
-          }else if(mtype_catalogues %in% c("rearr")){
-            message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
-                    "switching to signature_version=RefSigv1")
-            signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
-            if(commonSignatureTier=="T2"){
-              # need to convert
-              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
-              signatures <- RefSigv1_rearr[,convertedNames,drop=F]
-            }
+          }else if(mtype_catalogues == "rearr"){
+            # message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
+            #         "switching to signature_version=RefSigv1")
+            # signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
+            # if(commonSignatureTier=="T2"){
+            #   # need to convert
+            #   convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
+            #   signatures <- RefSigv1_rearr[,convertedNames,drop=F]
+            # }
           }else{
-            message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
+            message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
                     "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
-            return(returnObj)
-          }
-          # need to check that the getOrganSignatures functions returned something
-          if(ncol(signatures)==0){
-            message("[error signatureFit_pipeline] RefSigv2 signatures not available for mutation type ",mtype_catalogues,
-                    " and organ ",organ,".")
             return(returnObj)
           }
         }
@@ -392,11 +409,11 @@ signatureFit_pipeline <- function(catalogues=NULL,
         }else if(mtype_catalogues == c("DNV")){
           signatures <- referenceSignaturesDBSv1.01
         }else if(mtype_catalogues == c("rearr")){
-          message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
-                  "switching to signature_version=RefSigv1")
-          signatures <- RefSigv1_rearr
+          # message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
+          #         "switching to signature_version=RefSigv1")
+          # signatures <- RefSigv1_rearr
         }else{
-          message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
+          message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
                   "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
           return(returnObj)
         }
@@ -407,6 +424,12 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(fit_method=="Fit"){
           if(mtype_catalogues %in% c("subs","rearr")){
             signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
+            # need to check that the getOrganSignatures functions returned something
+            if(is.null(signatures)){
+              message("[error signatureFit_pipeline] RefSigv1 signatures not available for mutation type ",mtype_catalogues,
+                      " and organ ",organ,".")
+              return(returnObj)
+            }
             if(commonSignatureTier=="T2"){
               # need to convert
               convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
@@ -415,29 +438,31 @@ signatureFit_pipeline <- function(catalogues=NULL,
               }else {
                 signatures <- RefSigv1_rearr[,convertedNames,drop=F]
               }
+            }else if(commonSignatureTier=="T3"){
+              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues,mixedOnly = TRUE)
+              if(mtype_catalogues == "subs"){
+                combinedSigs <- cbind(RefSigv1_subs,all_organ_sigs_subs)
+                signatures <- combinedSigs[,convertedNames,drop=F]
+              }else {
+                combinedSigs <- cbind(RefSigv1_rearr,all_organ_sigs_rearr)
+                signatures <- combinedSigs[,convertedNames,drop=F]
+              }
             }
 
-          }else if(mtype_catalogues %in% c("DNV")){
-            message("[warning signatureFit_pipeline] DNV RefSig mutational signatures only available in RefSigv2, ",
-                    "switching to signature_version=RefSigv2")
-            signatures <- getOrganSignatures(organ = organ,version = 2,typemut = mtype_catalogues)
-            if(commonSignatureTier=="T2"){
-              # need to convert
-              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
-              signatures <- referenceSignaturesDBSv1.01[,convertedNames,drop=F]
-            }
+          }else if(mtype_catalogues == "DNV"){
+            # message("[warning signatureFit_pipeline] DNV RefSig mutational signatures only available in RefSigv2, ",
+            #         "switching to signature_version=RefSigv2")
+            # signatures <- getOrganSignatures(organ = organ,version = 2,typemut = mtype_catalogues)
+            # if(commonSignatureTier=="T2"){
+            #   # need to convert
+            #   convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
+            #   signatures <- referenceSignaturesDBSv1.01[,convertedNames,drop=F]
+            # }
           }else{
             message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
                     "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
             return(returnObj)
           }
-          # need to check that the getOrganSignatures functions returned something
-          if(ncol(signatures)==0){
-            message("[error signatureFit_pipeline] RefSigv1 signatures not available for mutation type ",mtype_catalogues,
-                    " and organ ",organ,".")
-            return(returnObj)
-          }
-
         }
       }else{
         # user did not provide an organ, use reference signatures and perhaps signature_names
@@ -445,9 +470,9 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(mtype_catalogues == c("subs")){
           signatures <- RefSigv1_subs
         }else if(mtype_catalogues == c("DNV")){
-          message("[warning signatureFit_pipeline] DBS RefSig mutational signatures only available in RefSigv2, ",
-                  "switching to signature_version=RefSigv2")
-          signatures <- referenceSignaturesDBSv1.01
+          # message("[warning signatureFit_pipeline] DBS RefSig mutational signatures only available in RefSigv2, ",
+          #         "switching to signature_version=RefSigv2")
+          # signatures <- referenceSignaturesDBSv1.01
         }else if(mtype_catalogues == c("rearr")){
           signatures <- RefSigv1_rearr
         }else{
@@ -497,12 +522,13 @@ signatureFit_pipeline <- function(catalogues=NULL,
 
 
   # signature selection using signature_names
-  if(!is.null(signature_names) & !is.null(signatures)){
+  if(!is.null(signature_names) & !is.null(signatures) & is.null(organ)){
     sigsToUseNames <- colnames(signatures)
     if(fit_method=="Fit"){
       # check that the names make sense
       if(!all(signature_names %in% sigsToUseNames)){
-        message("[error signatureFit_pipeline] using reference signatures for ",mtype_catalogues,", but some signature names provided ",
+        message("[error signatureFit_pipeline] using reference signatures for ",mtype_catalogues," and signature_version ",signature_version,
+                ", but some signature names provided ",
                 "with the signature_names parameters do not seem to match the reference signatures. This is the list of ",
                 "reference signatures available: ",paste(sigsToUseNames,collapse = ", "),".")
         return(returnObj)
@@ -519,6 +545,16 @@ signatureFit_pipeline <- function(catalogues=NULL,
   # Now, if fitMS was requested, and signature_type==NULL, then I think I can just call FitMS,
   # FitMS itself will take care of whether some of the parameters are invalid
   if(fit_method=="Fit"){
+    # when running Fit, the parameter signatures cannot be NULL or an empty table, so check again
+    if(is.null(sigs)){
+      message("[errorr signatureFit_pipeline] Trying to run Fit but could not determine the signatures to use. Please check your settings.")
+      return(returnObj)
+    }else{
+      if(ncol(sigs)==0){
+        message("[error signatureFit_pipeline] Trying to run Fit but could not determine the signatures to use. Please check your settings.")
+        return(returnObj)
+      }
+    }
     message("[info signatureFit_pipeline] all set, running Fit.")
     fitRes <- Fit(catalogues = catalogues,
                   signatures = signatures,

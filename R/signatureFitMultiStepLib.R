@@ -57,6 +57,7 @@
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
 #' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
 #' @param maxRareSigsPerSample masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
 #' @param nparallel to use parallel specify >1
 #' @param randomSeed set an integer random seed
 #' @param verbose use FALSE to suppress messages
@@ -69,8 +70,8 @@
 #' plotFitMS(res,"results/")
 FitMS <- function(catalogues,
                   organ = NULL, #automatically sets the common and rare signatures
-                  commonSignatureTier = "T1",  #either T1 for organ-specific or T2 for corresponding reference signatures
-                  rareSignatureTier = "T2",  #either T1 for observed in organ or T2 for extended
+                  commonSignatureTier = "T1",
+                  rareSignatureTier = "T2",
                   commonSignatures = NULL,
                   rareSignatures = NULL,
                   method = "KLD",
@@ -87,6 +88,7 @@ FitMS <- function(catalogues,
                   nboot = 200,
                   threshold_p.value = 0.05,
                   maxRareSigsPerSample = 1,
+                  rareCandidateSelectionCriteria="MaxCosSim",
                   nparallel = 1,
                   randomSeed = NULL,
                   verbose = FALSE){
@@ -102,30 +104,21 @@ FitMS <- function(catalogues,
       message("[error FitMS] No organ was specified and no commonSignatures were given. Nothing to do.")
       return(NULL)
     }else{
-      if(typeofmuts=="subs"){
-        if(organ %in% rownames(sigsForFittingSBSv2.03)){
-          if(commonSignatureTier %in% c("T1","T2")){
-            tierSel <- "common" # default to common in case T1 is given
-            if(commonSignatureTier=="T2") tierSel <- "commonT2"
-            commonSigNames <- strsplit(sigsForFittingSBSv2.03[organ,tierSel],split = ",")[[1]]
-            if(commonSignatureTier=="T1"){
-              commonSignatures <- organSignaturesSBSv2.03[,commonSigNames,drop=F]
-            }else{
-              commonSignatures <- referenceSignaturesSBSv2.03[,commonSigNames,drop=F]
-            }
-
-          }else{
-            message("[error FitMS] invalid commonSignatureTier ",commonSignatureTier,". Please provide your own commonSignatures or choose between T1 and T2.")
-            return(NULL)
-          }
-        }else{
-          message("[error FitMS] Organ not found: ",organ,". Nothing to do. Available organs for FitMS are: ",paste(rownames(sigsForFittingSBSv2.03),collapse = ", "))
-          return(NULL)
-        }
-      }else{
-        message("[error FitMS] Type of mutations ",typeofmuts," not available, please provide your own commonSignatures. Nothing to do.")
+      sigsToUse <- getSignaturesForFitting(organ = organ,
+                                           typemut = typeofmuts,
+                                           commontier = commonSignatureTier,
+                                           raretier = rareSignatureTier,
+                                           verbose = F)
+      # some checks
+      if(is.null(sigsToUse)){
+        message("[error FitMS] Common/Rare signatures for type of mutations ",typeofmuts," and organ ",organ," not available. As an alternative, you can provide your own commonSignatures.")
         return(NULL)
       }
+      if(ncol(sigsToUse$common)==0){
+        message("[error FitMS] Common signatures for type of mutations ",typeofmuts," and organ ",organ," not available. As an alternative, you can provide your own commonSignatures.")
+        return(NULL)
+      }
+      commonSignatures <- sigsToUse$common
     }
   }
 
@@ -133,30 +126,25 @@ FitMS <- function(catalogues,
   if(!is.null(rareSignatures)){
     if(verbose) message("[info FitMS] Using user provided rareSignatures.")
   }else{
-    if(rareSignatureTier %in% c("T1","T2")){
-      if(is.null(organ)){
-        message("[error FitMS] No organ was specified and no rareSignatures were given. Nothing to do.")
-        return(NULL)
-      }else{
-        if(typeofmuts=="subs"){
-          if(organ %in% rownames(sigsForFittingSBSv2.03)){
-            rareSignatures <- referenceSignaturesSBSv2.03[,strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",rareSignatureTier)],split = ",")[[1]],drop=F]
-            if(ncol(rareSignatures)==0) {
-              message("[error FitMS] No rare signatures are associated with organ ",organ,". Nothing to do.")
-              return(NULL)
-            }
-          }else{
-            message("[error FitMS] Organ not found: ",organ,". Nothing to do. Available organs for FitMS are: ",paste(rownames(sigsForFittingSBSv2.03),collapse = ", "))
-            return(NULL)
-          }
-        }else{
-          message("[error FitMS] Type of mutations ",typeofmuts," not available, please provide your own rareSignatures. Nothing to do.")
-          return(NULL)
-        }
-      }
-    }else{
-      message("[error FitMS] invalid rareSignatureTier ",rareSignatureTier,". Please provide your own rareSignatures or choose between T1 and T2.")
+    if(is.null(organ)){
+      message("[error FitMS] No organ was specified and no rareSignatures were given. Nothing to do.")
       return(NULL)
+    }else{
+      sigsToUse <- getSignaturesForFitting(organ = organ,
+                                           typemut = typeofmuts,
+                                           commontier = commonSignatureTier,
+                                           raretier = rareSignatureTier,
+                                           verbose = F)
+      # some checks
+      if(is.null(sigsToUse)){
+        message("[error FitMS] Common/Rare signatures for type of mutations ",typeofmuts," and organ ",organ," not available. As an alternative, you can provide your own rareSignatures.")
+        return(NULL)
+      }
+      if(ncol(sigsToUse$rare)==0){
+        message("[error FitMS] Rare signatures for type of mutations ",typeofmuts," and organ ",organ," not available. As an alternative, you can provide your own rareSignatures.")
+        return(NULL)
+      }
+      rareSignatures <- sigsToUse$rare
     }
   }
 
@@ -442,7 +430,8 @@ FitMS <- function(catalogues,
   resObj$commonSigsOnlyCosSim <- commonSigsOnlyCosSim
   resObj$samples <- samples
   # compute fit merge
-  resObj <- fitMerge(resObj)
+  resObj <- fitMerge(resObj = resObj,
+                     rareCandidateSelectionCriteria = rareCandidateSelectionCriteria)
   return(resObj)
 }
 
@@ -569,12 +558,14 @@ Fit <- function(catalogues,
 #' using the multi-step signature fit FitMS function.
 #'
 #' When running FitMS, some samples may have multiple candidate rare signatures or rare signature combinations that
-#' fit the sample reasonably well. This function selects the best rare signature for each sample based on cosine similarity and returns
+#' fit the sample reasonably well. This function selects the best rare signature for each sample based on
+#' highest cosine similarity or lowest error (mean absolute difference of channels) and returns
 #' an updated object with a summary exposures composed by each selected fit solution for each sample.
 #'
 #' The choise of rare signature can be changed using the parameter forceRareSigChoice.
 #'
 #' @param resObj result object obtained from the FitMS function
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. Using MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
 #' @param forceRareSigChoice if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
 #' If no rare signature is found, then the solution with only the common signatures is selected.
 #' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSigName".
@@ -582,7 +573,14 @@ Fit <- function(catalogues,
 #' @return returns the updated resObj object with updated exposures and rareSigChoice objects.
 #' If bootstrap was used, bootstraps of selected solutions can be found in the variable bootstrap_exposures_samples
 #' @export
-fitMerge <- function(resObj,forceRareSigChoice=NULL){
+fitMerge <- function(resObj,
+                     rareCandidateSelectionCriteria="MaxCosSim",
+                     forceRareSigChoice=NULL){
+  validSelectionCriteria <- c("MaxCosSim","MinError")
+  if(!rareCandidateSelectionCriteria %in% validSelectionCriteria){
+    message("[error fitMerge] rareCandidateSelectionCriteria ",rareCandidateSelectionCriteria," not valid, please select one of the following: ",paste(validSelectionCriteria,collapse = ", "),".")
+    return(resObj)
+  }
   # build exposure matrix with all signatures in the columns
   # will remove the signatures not present at the end
   rareSigChoice <- list()
@@ -607,19 +605,22 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
     }
 
     if(currentSample %in% resObj$whichSamplesMayHaveRareSigs & !forceCommon){
+      # select best candidate rare signature
       highestCosSimSig <- resObj$candidateRareSigs[[currentSample]][which.max(resObj$candidateRareSigsCosSim[[currentSample]])]
-      if(!is.null(forceRareSig)) highestCosSimSig <- forceRareSig
-      rareSigChoice[[currentSample]] <- highestCosSimSig
-      selectedExp <- t(resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$exposures)
+      lowestErrorSig <- resObj$candidateRareSigs[[currentSample]][which.min(resObj$candidateRareSigsError[[currentSample]])]
+      selectedSig <- highestCosSimSig
+      if(rareCandidateSelectionCriteria=="MinError") selectedSig <- lowestErrorSig
+      # check for forced selection
+      if(!is.null(forceRareSig)) selectedSig <- forceRareSig
+      rareSigChoice[[currentSample]] <- selectedSig
+      selectedExp <- t(resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
-      # exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$unassigned_muts
       # collect bootstraps
-      if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[highestCosSimSig]]$bootstrap_exposures_samples[[1]]
+      if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$bootstrap_exposures_samples[[1]]
     }else{
       if(forceCommon) rareSigChoice[[currentSample]] <- "commonOnly"
       selectedExp <- t(resObj$samples[[currentSample]]$fitCommonOnly$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
-      # exposures_merge[currentSample,"unassigned"] <- resObj$samples[[currentSample]]$fitCommonOnly$unassigned_muts
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
     }
@@ -650,6 +651,70 @@ fitMerge <- function(resObj,forceRareSigChoice=NULL){
 
   return(resObj)
 }
+
+
+#' getSignaturesForFitting
+#'
+#' Given a tissue type/organ, this function returns the common and rare mutational signatures
+#' to be used with FitMS, as suggested in Degasperi et al. 2022, Science paper.
+#'
+#' @param organ organs available are: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid", "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
+#' @param typemut only subs and DNV supported at the moment
+#' @param commontier either T1, T2 or T3. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
+#' T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
+#' each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18.
+#' @param raretier either T0, T1, T2, T3 or T4. "T2" is default. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
+#' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
+#' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
+#' More specifically, T2 includes all the reference signatures that were observed as rare in the specified organ and also reference signatures that were observed as rare in other at least two organs.
+#' @return list of signatures matrix
+#' @export
+getSignaturesForFitting <- function(organ,typemut="subs",commontier="T1",raretier="T2",verbose = TRUE){
+  sigs <- NULL
+  commonChoice <- paste0("common",commontier)
+  rareChoice <- paste0("rare",raretier)
+  signames_common <- NULL
+  signames_rare <- NULL
+
+  sigsForFittingTable <- NULL
+  allOrganAndReferenceSignatures <- NULL
+
+  if(typemut=="subs"){
+    sigsForFittingTable <- sigsForFittingSBSv2.03
+    allOrganAndReferenceSignatures <- cbind(organSignaturesSBSv2.03,referenceSignaturesSBSv2.03)
+  }else if(typemut=="DNV"){
+    sigsForFittingTable <- sigsForFittingDBSv1.01
+    allOrganAndReferenceSignatures <- cbind(organSignaturesDBSv1.01,referenceSignaturesDBSv1.01)
+  }else{
+    message("[error getSignaturesForFitting] Common/Rare signatures for fitting not available for mutation type \"",typemut, "\".")
+    return(NULL)
+  }
+
+  # OK get the signatures
+  organsAvail <- rownames(sigsForFittingTable)
+  if(organ %in% organsAvail){
+    sigs <- list()
+    if(commonChoice %in% colnames(sigsForFittingTable)) signames_common <- strsplit(sigsForFittingTable[organ,commonChoice],split = ",")[[1]]
+    if(commonChoice %in% colnames(sigsForFittingTable)) signames_rare <- strsplit(sigsForFittingTable[organ,rareChoice],split = ",")[[1]]
+    sigs[["common"]] <- allOrganAndReferenceSignatures[,signames_common,drop=F]
+    sigs[["rare"]] <- allOrganAndReferenceSignatures[,signames_rare,drop=F]
+  }else{
+    message("[error getSignaturesForFitting] Common/Rare signatures for fitting not available for mutation type ",typemut, ", organ ",
+            organ, ". Organ requested not available. Please select one of: ",paste(organsAvail,collapse = ", "))
+    return(NULL)
+  }
+
+  if(is.null(sigs)){
+    message("[error getSignaturesForFitting] Signatures not available for mutation type ",typemut, ", organ ",organ,", common tier ",commontier,", rare tier ",raretier, ".")
+    return(NULL)
+  }else{
+    if(ncol(sigs$common)==0 & verbose) message("[warning getSignaturesForFitting] Common signatures not available for mutation type ",typemut, ", organ ",organ,", common tier ",commontier,".")
+    if(ncol(sigs$rare)==0 & verbose) message("[warning getSignaturesForFitting] Rare signatures not available for mutation type ",typemut, ", organ ",organ,", rare tier ",raretier,".")
+  }
+  return(sigs)
+}
+
+
 
 
 flexconstr_sigfit <- function(P,m, mut_tol=0, allmut_tolratio=0.01){

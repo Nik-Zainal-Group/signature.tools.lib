@@ -25,6 +25,7 @@ FitMS(
   nboot = 200,
   threshold_p.value = 0.05,
   maxRareSigsPerSample = 1,
+  rareCandidateSelectionCriteria = "MaxCosSim",
   nparallel = 1,
   randomSeed = NULL,
   verbose = FALSE
@@ -80,6 +81,8 @@ when using multiStepMode=constrainedFit}
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
 
 \item{maxRareSigsPerSample}{masimum number of rare signatures that should be serched in each sample. In most situations, leaving this at 1 should be enough.}
+
+\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.}
 
 \item{nparallel}{to use parallel specify >1}
 

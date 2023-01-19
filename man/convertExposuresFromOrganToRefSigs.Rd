@@ -15,7 +15,7 @@ convertExposuresFromOrganToRefSigs(expMatrix, typemut = "subs")
 exposure matrix converted in reference signatures exposures
 }
 \description{
-This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures.
+This function converts the exposures matrix obtained from fitting organ-specific signatures into reference signatures exposures.
 The function will detect the version of the signatures automatically.
 }
 \references{

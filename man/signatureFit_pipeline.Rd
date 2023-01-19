@@ -34,6 +34,7 @@ signatureFit_pipeline(
   minErrorReductionPerc = 15,
   minCosSimIncrease = 0.02,
   maxRareSigsPerSample = 1,
+  rareCandidateSelectionCriteria = "MaxCosSim",
   noFit = FALSE,
   nparallel = 1,
   randomSeed = NULL,
@@ -79,7 +80,7 @@ signatureFit_pipeline(
 
 \item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature}
 
-\item{multiStepMode}{use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".}
+\item{multiStepMode}{this is a FitMS parameter. Use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".}
 
 \item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
 
@@ -103,6 +104,8 @@ when using multiStepMode=constrainedFit}
 \item{minCosSimIncrease}{minimum cosine similarity increase for a signature to be considered as candidate when using the cossimIncrease method}
 
 \item{maxRareSigsPerSample}{maximum number of rare signatures that should be searched in each sample. In most situations, leaving this at 1 should be enough.}
+
+\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.}
 
 \item{noFit}{if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.}
 

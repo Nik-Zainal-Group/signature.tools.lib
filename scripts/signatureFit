@@ -173,6 +173,15 @@ how_to <- function(){
   message("  -k, --maxraresigs=MAXRS   MAXRS is the maximum number of rare signatures that.")
   message("                              are allowed to be present in each sample. If not")
   message("                              specified MAXRS=1.")
+  message("  -S, --rarecandidatesel=RARESEL")
+  message("                            RARESEL is either MaxCosSim or MinError. This is a")
+  message("                              FitMS parameter.Whenever there is more than one rare")
+  message("                              signature candidate for a sample, then the best")
+  message("                              candidate rare signature is automatically selected")
+  message("                              using the RARESEL criteria. Error is computed as")
+  message("                              the mean absolute deviation of channels.allowed to")
+  message("                              be present in each sample. If not specified")
+  message("                              RARESEL=MaxCosSim.")
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used.")
   message("  -f, --nboot=NBOOT         Number of bootstrap to be used when bootstrap is")
   message("                              requested (-b), if not specified, NBOOT=200.")
@@ -223,6 +232,7 @@ spec = matrix(c(
   'minerrorredperc',    'E', 1, "double",
   'mincossimincr',      'I', 1, "double",
   'maxraresigs',        'k', 1, "double",
+  'rarecandidatesel',   'S', 1, "character",
   'nparallel',          'n', 1, "double",
   'genomev',            'e', 1, "character",
   'nboot',              'f', 1, "double",
@@ -485,6 +495,12 @@ if ( !is.null(opt$maxraresigs) ) {
   maxraresigs <- 1
 }
 
+if ( !is.null(opt$rarecandidatesel) ) {
+  rarecandidatesel <- opt$rarecandidatesel
+}else{
+  rarecandidatesel <- "MaxCosSim"
+}
+
 if ( !is.null(opt$nparallel) ) {
   nparallel <- opt$nparallel
 }else{
@@ -541,6 +557,7 @@ pipelineRes <- signatureFit_pipeline(catalogues=catalogues,
                                   minErrorReductionPerc = minerrorredperc,
                                   minCosSimIncrease = mincossimincr,
                                   maxRareSigsPerSample = maxraresigs,
+                                  rareCandidateSelectionCriteria = rarecandidatesel,
                                   nparallel = nparallel,
                                   randomSeed = randomSeed,
                                   verbose = verbose)

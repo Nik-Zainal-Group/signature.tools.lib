@@ -1347,7 +1347,7 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 #' @return organ-specific signatures matrix
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
-getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs",verbose = TRUE){
+getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs"){
   sigs <- NULL
   if(typemut=="subs" & version=="1" & (cohort=="best" | cohort=="ICGC")){
     sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
@@ -1366,7 +1366,10 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
   if(is.null(sigs)){
     message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
   }else{
-    if(ncol(sigs)==0 & verbose) message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+    if(ncol(sigs)==0){
+      message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+      sigs <- NULL
+    }
   }
   return(sigs)
 }
@@ -1429,48 +1432,10 @@ getCOSMICSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
   return(sigs)
 }
 
-#' getSignaturesForFitting
-#'
-#' Given a tissue type/organ, his function returns the common and rare mutational signatures
-#' to be used with FitMS, as suggested in Degasperi et al. 2022, Science paper.
-#'
-#' @param organ organs available are: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid", "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"
-#' @param typemut only subs supported at the moment
-#' @param commontier either T1 or T2. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
-#' T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
-#' each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18.
-#' @param raretier either "T1" or "T2". "T2" is default. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
-#' that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
-#' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
-#' More specifically, T2 includes all the reference signatures that were observed as rare in the specified organ and also reference signatures that were observed as rare in other at least two organs.
-#' @return list of signatures matrix
-#' @export
-getSignaturesForFitting <- function(organ,typemut="subs",commontier="T2",raretier="T2",verbose = TRUE){
-  sigs <- NULL
-  if(typemut=="subs"){
-    organsAvail <- rownames(sigsForFittingSBSv2.03)
-    if(organ %in% organsAvail){
-      sigs <- list()
-      commonChoice <- "" # no need to add anything for common T1
-      if (commontier != "T1") commonChoice <- commontier
-      signames_common <- strsplit(sigsForFittingSBSv2.03[organ,paste0("common",commonChoice)],split = ",")[[1]]
-      signames_rare <- strsplit(sigsForFittingSBSv2.03[organ,paste0("rare",raretier)],split = ",")[[1]]
-      sigs[["common"]] <- organSignaturesSBSv2.03[,signames_common,drop=F]
-      sigs[["rare"]] <- referenceSignaturesSBSv2.03[,signames_rare,drop=F]
-    }
-  }
-  if(is.null(sigs)){
-    message("[warning getSignaturesForFitting] Signatures not available for mutation type ",typemut, ", organ ",organ,", common tier ",commontier,", rare tier ",raretier, ".")
-  }else{
-    if(ncol(sigs$common)==0 & verbose) message("[warning getSignaturesForFitting] Common signatures not available for mutation type ",typemut, ", organ ",organ,", common tier ",commontier,", rare tier ",raretier,  ".")
-    if(ncol(sigs$rare)==0 & verbose) message("[warning getSignaturesForFitting] Rare signatures not available for mutation type ",typemut, ", organ ",organ,", common tier ",commontier,", rare tier ",raretier,  ".")
-  }
-  return(sigs)
-}
 
 #' convertExposuresFromOrganToRefSigs
 #'
-#' This function converts the exposures matrix obatined from fitting organ-specific signatures into reference signatures exposures.
+#' This function converts the exposures matrix obtained from fitting organ-specific signatures into reference signatures exposures.
 #' The function will detect the version of the signatures automatically.
 #'
 #' @param typemut either subs, DNV or rearr
@@ -1494,7 +1459,7 @@ convertExposuresFromOrganToRefSigs <- function(expMatrix,typemut="subs"){
   return(exposures)
 }
 
-convertSigNamesFromOrganToRefSigs <- function(sigNames,typemut="subs"){
+convertSigNamesFromOrganToRefSigs_subroutine <- function(sigNames,typemut="subs"){
   convertedNames <- NULL
   if(typemut=="subs"){
     if(all(sigNames %in% rownames(conversion_matrix_subs))){
@@ -1508,4 +1473,24 @@ convertSigNamesFromOrganToRefSigs <- function(sigNames,typemut="subs"){
     convertedNames <- colnames(conversionMatrixDBSv1.01)[apply(conversionMatrixDBSv1.01[sigNames,],2,sum)>0]
   }
   return(convertedNames)
+}
+
+convertSigNamesFromOrganToRefSigs <- function(sigNames,typemut="subs",mixedOnly=FALSE){
+  # alternatively just convert the mixed signatures
+  finalNames <- NULL
+  if(mixedOnly){
+    finalNames <- sigNames
+    isMixed <- grepl(finalNames,pattern = "[+]")
+    if(any(isMixed)){
+      mixedSigs <- finalNames[isMixed]
+      finalNames <- setdiff(finalNames,mixedSigs)
+      finalNamesRefSig <- convertSigNamesFromOrganToRefSigs_subroutine(finalNames,typemut)
+      mixedSigsRefSig <- convertSigNamesFromOrganToRefSigs_subroutine(mixedSigs,typemut)
+      mixedSigsRefSig <- setdiff(mixedSigsRefSig,finalNamesRefSig)
+      finalNames <- c(finalNames,mixedSigsRefSig)
+    }
+  }else{
+    finalNames <- convertSigNamesFromOrganToRefSigs_subroutine(sigNames,typemut)
+  }
+  return(finalNames)
 }

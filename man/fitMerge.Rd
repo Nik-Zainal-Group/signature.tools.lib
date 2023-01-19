@@ -4,10 +4,16 @@
 \alias{fitMerge}
 \title{Selecting and merging signature fit results from Multi-Step signature fit}
 \usage{
-fitMerge(resObj, forceRareSigChoice = NULL)
+fitMerge(
+  resObj,
+  rareCandidateSelectionCriteria = "MaxCosSim",
+  forceRareSigChoice = NULL
+)
 }
 \arguments{
 \item{resObj}{result object obtained from the FitMS function}
+
+\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. Using MaxCosSim by default. Error is computed as the mean absolute deviation of channels.}
 
 \item{forceRareSigChoice}{if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
 If no rare signature is found, then the solution with only the common signatures is selected.
@@ -24,7 +30,8 @@ using the multi-step signature fit FitMS function.
 }
 \details{
 When running FitMS, some samples may have multiple candidate rare signatures or rare signature combinations that
-fit the sample reasonably well. This function selects the best rare signature for each sample based on cosine similarity and returns
+fit the sample reasonably well. This function selects the best rare signature for each sample based on
+highest cosine similarity or lowest error (mean absolute difference of channels) and returns
 an updated object with a summary exposures composed by each selected fit solution for each sample.
 
 The choise of rare signature can be changed using the parameter forceRareSigChoice.
