@@ -322,8 +322,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
               "Common signatures were provided using the signatures parameter, but the parameter rare_signatures is missing and no organ was provided to select it automatically. ",
               "The fit_method parameters has been changed to Fit so that the provided signatures can be fitted. If FitMS was ",
               "the intended method, please either provide the rare_signatures parameter or provide an organ for automatic signature selection.")
-      fit_method=="Fit"
-      # return(returnObj)
+      fit_method <- "Fit"
     }
     if(!is.null(organ)){
       if(fit_method=="FitMS"){
@@ -342,6 +341,14 @@ signatureFit_pipeline <- function(catalogues=NULL,
     if(is.null(signature_version)){
       message("[warning signatureFit_pipeline] signature_version parameter unspecified, using latest RefSigv2.")
       signature_version <- "RefSigv2"
+    }
+    # if no organ was provided and fit_method=FitMS, we need to switch to Fit at this point
+    if(fit_method=="FitMS" & is.null(organ)){
+      message("[warning signatureFit_pipeline] user selected FitMS, but did not provide an organ for the automatic ",
+              "selection of signatures and did not provide signatures via the signatures and rare_signatuers parameters. ",
+              "The fit_method parameters has been changed to Fit so that we can still fit some signatures according to the ",
+              "signature_version parameter and the mutation type of the catalogues.")
+      fit_method <- "Fit"
     }
 
     # Need to avoid code duplication by fixing some cases using warnings
@@ -542,15 +549,15 @@ signatureFit_pipeline <- function(catalogues=NULL,
   }
 
 
-  # Now, if fitMS was requested, and signature_type==NULL, then I think I can just call FitMS,
+  # Now, if FitMS was requested, and signature_type==NULL, then I think I can just call FitMS,
   # FitMS itself will take care of whether some of the parameters are invalid
   if(fit_method=="Fit"){
     # when running Fit, the parameter signatures cannot be NULL or an empty table, so check again
-    if(is.null(sigs)){
-      message("[errorr signatureFit_pipeline] Trying to run Fit but could not determine the signatures to use. Please check your settings.")
+    if(is.null(signatures)){
+      message("[error signatureFit_pipeline] Trying to run Fit but could not determine the signatures to use. Please check your settings.")
       return(returnObj)
     }else{
-      if(ncol(sigs)==0){
+      if(ncol(signatures)==0){
         message("[error signatureFit_pipeline] Trying to run Fit but could not determine the signatures to use. Please check your settings.")
         return(returnObj)
       }

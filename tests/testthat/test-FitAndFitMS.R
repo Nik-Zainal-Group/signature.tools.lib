@@ -12,7 +12,7 @@ test_that("test that Fit() works on a random matrix, using useBootstrap=FALSE", 
              signatures = cosmic30,
              useBootstrap = FALSE,
              threshold_percent = 0.1)
-  
+
   #here goes the test
   expect_true(TRUE)
 })
@@ -60,7 +60,7 @@ test_that("test that Fit() works on a random matrix with useBootstrap=TRUE, and 
               threshold_p.value = 0.1,
               nparallel = 1,
               randomSeed = 1)
-  
+
   #here goes the test
   expect_equal(res1$exposures,res2$exposures)
 })
@@ -89,7 +89,7 @@ test_that("test that Fit() works on a random matrix with useBootstrap=TRUE, and 
               threshold_p.value = 0.1,
               nparallel = 2,
               randomSeed = 1)
-  
+
   #here goes the test
   expect_equal(res1$exposures,res2$exposures)
 })
@@ -109,9 +109,9 @@ test_that("test that plotFit() works on a random matrix", {
              threshold_percent = 0.1,
              threshold_p.value = 0.1)
   plotFit(res,outdir = "test_fit/")
-  
+
   unlink("test_fit/", recursive = TRUE)
-  
+
   #here goes the test
   expect_true(TRUE)
 })
@@ -124,9 +124,9 @@ test_that("test that FitMS() with multiStepMode=constrainedFit works with useBoo
                multiStepMode = "constrainedFit",
                threshold_percent = 0.1)
   plotFitMS(res,outdir = "test_fit/")
-  
+
   unlink("test_fit/", recursive = TRUE)
-  
+
   #here goes the test
   expect_true(TRUE)
 })
@@ -150,7 +150,7 @@ test_that("test that FitMS() with multiStepMode=constrainedFit with useBootstrap
                 threshold_percent = 0.1,
                 nparallel = 1,
                 randomSeed = 1)
-  
+
   #here goes the test
   expect_equal(res1$exposures,res2$exposures)
 })
@@ -174,7 +174,45 @@ test_that("test that FitMS() with multiStepMode=constrainedFit with useBootstrap
                 threshold_percent = 0.1,
                 nparallel = 2,
                 randomSeed = 1)
-  
+
   #here goes the test
   expect_equal(res1$exposures,res2$exposures)
+})
+
+test_that("test that FitMS() with different common and rare signatures tiers", {
+  #test substitutions
+  catalogues <- read.table("FitAndFitMStests/FitandFitMStestCatalogues.tsv",sep = "\t",check.names = F,header = T,stringsAsFactors = F)
+  res <- FitMS(catalogues = catalogues,
+               organ = "Breast",
+               commonSignatureTier = "T2",
+               rareSignatureTier = "T0")
+
+  res <- FitMS(catalogues = catalogues,
+               organ = "Breast",
+               commonSignatureTier = "T3",
+               rareSignatureTier = "T1")
+
+  res <- FitMS(catalogues = catalogues,
+               organ = "Breast",
+               commonSignatureTier = "T1",
+               rareSignatureTier = "T3")
+
+  res <- FitMS(catalogues = catalogues,
+               organ = "Breast",
+               commonSignatureTier = "T2",
+               rareSignatureTier = "T4")
+
+  #here goes the test
+  expect_true(TRUE)
+})
+
+test_that("test that FitMS() with different rare signatures selection criteria", {
+  #test substitutions
+  catalogues <- read.table("FitAndFitMStests/FitandFitMStestCatalogues.tsv",sep = "\t",check.names = F,header = T,stringsAsFactors = F)
+  res <- FitMS(catalogues = catalogues,
+               organ = "Breast",
+               rareCandidateSelectionCriteria = "MinError")
+
+  #here goes the test
+  expect_true(TRUE)
 })

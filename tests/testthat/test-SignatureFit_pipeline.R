@@ -1,5 +1,17 @@
 context("testing SignatureFit pipeline")
 
+test_that("test that signatureFit_pipeline() works with only the mutation files provided", {
+
+  snv_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
+                 "test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
+  names(snv_files) <- c("sample1","sample2")
+
+  suppressWarnings(res <- signatureFit_pipeline(SNV_tab_files = snv_files))
+
+  #here goes the test
+  expect_true(!is.null(res$fitResults))
+})
+
 test_that("test that signatureFit_pipeline() works on single substitutions with default parameters", {
 
   snv_files <- c("test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
