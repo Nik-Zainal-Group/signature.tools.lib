@@ -1336,7 +1336,7 @@ vectorToJSON <- function(v,
   indent <- rep("\t",nindent)
   cat(indent,"\"",vectorname,"\": ",sep = "")
   if(!is.null(names(v))){
-    cat(indent,"{\n",sep = "")
+    cat("{\n",sep = "")
     for (i in 1:length(v)) {
       cat(indent,"\t\"",names(v)[i],"\": ",sep = "")
       if(typeof(v[i])=="double"){
@@ -1349,7 +1349,7 @@ vectorToJSON <- function(v,
     }
     cat(indent,"}",sep = "")
   }else{
-    cat(indent,"[",sep = "")
+    cat("[",sep = "")
     for (i in 1:length(v)) {
       if(typeof(v[i])=="double"){
         cat(v[i],sep = "")
@@ -1643,7 +1643,7 @@ fitMStoJSON <- function(fitObj,
     }
     cat(indent,"\t}",sep = "")
   }else{
-    cat(indent,"\t\"bootstrap_exposures_samples\": \"NULL\"",sep = "")
+    cat(indent,"\t\"bootstrap_exposures_samples\": null",sep = "")
   }
   cat(",\n")
 
