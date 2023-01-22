@@ -416,6 +416,7 @@ FitMS <- function(catalogues,
   resObj$commonSignatureTier <- commonSignatureTier
   resObj$rareSignatureTier <- rareSignatureTier
   resObj$maxRareSigsPerSample <- maxRareSigsPerSample
+  resObj$rareCandidateSelectionCriteria <- rareCandidateSelectionCriteria
   # add all fit results and info
   resObj$whichSamplesMayHaveRareSigs <- colnames(catalogues)[whichSamplesMayHaveRareSigs]
   resObj$candidateRareSigs <- candidateRareSigs
@@ -526,18 +527,30 @@ Fit <- function(catalogues,
     fitRes$exposures <- resFit
     fitRes$unassigned_muts <- apply(catalogues,2,sum) - apply(fitRes$exposures,2,sum)
     fitRes$unassigned_muts_perc <- fitRes$unassigned_muts/apply(catalogues,2,sum)*100
-    fitRes$bootstrap_exposures <- NA
-    fitRes$bootstrap_exposures_samples <- NA
-    fitRes$bootstrap_exposures_pvalues <- NA
-    fitRes$nboot <- NA
-    fitRes$threshold_p.value <- NA
+    fitRes$bootstrap_exposures <- NULL
+    fitRes$bootstrap_exposures_samples <- NULL
+    fitRes$bootstrap_exposures_pvalues <- NULL
+    fitRes$nboot <- NULL
+    fitRes$threshold_p.value <- NULL
 
   }
 
   fitRes$useBootstrap <- useBootstrap
   fitRes$exposureFilterType <- exposureFilterType
-  fitRes$giniThresholdScaling <- ifelse(exposureFilterType=="giniScaledThreshold",giniThresholdScaling,NA)
-  fitRes$threshold_percent <- ifelse(exposureFilterType=="fixedThreshold",threshold_percent,NA)
+
+
+  if(exposureFilterType=="giniScaledThreshold") {
+    fitRes$giniThresholdScaling <- giniThresholdScaling
+  }else{
+    fitRes$giniThresholdScaling <- NULL
+  }
+
+  if(exposureFilterType=="fixedThreshold"){
+    fitRes$threshold_percent <- threshold_percent
+  }else{
+    fitRes$threshold_percent <- NULL
+  }
+
   fitRes$catalogues <- catalogues
   fitRes$signatures <- signatures
   fitRes$method <- method
@@ -1412,23 +1425,23 @@ fitToJSON <- function(fitObj,
   cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
   cat(indent,"\t\"method\": \"",fitObj$method,"\",\n",sep = "")
   cat(indent,"\t\"exposureFilterType\": \"",fitObj$exposureFilterType,"\",\n",sep = "")
-  if(!is.na(fitObj$threshold_percent)){
+  if(!is.null(fitObj$threshold_percent)){
     cat(indent,"\t\"threshold_percent\": ",fitObj$threshold_percent,",\n",sep = "")
   }else{
     cat(indent,"\t\"threshold_percent\": null,\n",sep = "")
   }
-  if(!is.na(fitObj$giniThresholdScaling)){
+  if(!is.null(fitObj$giniThresholdScaling)){
     cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
   }else{
     cat(indent,"\t\"giniThresholdScaling\": null,\n",sep = "")
   }
   cat(indent,"\t\"useBootstrap\": ",ifelse(fitObj$useBootstrap,"true","false"),",\n",sep = "")
-  if(!is.na(fitObj$nboot)){
+  if(!is.null(fitObj$nboot)){
     cat(indent,"\t\"nboot\": ",fitObj$nboot,",\n",sep = "")
   }else{
     cat(indent,"\t\"nboot\": null,\n",sep = "")
   }
-  if(!is.na(fitObj$threshold_p.value)){
+  if(!is.null(fitObj$threshold_p.value)){
     cat(indent,"\t\"threshold_p.value\": ",fitObj$threshold_p.value,",\n",sep = "")
   }else{
     cat(indent,"\t\"threshold_p.value\": null,\n",sep = "")
@@ -1443,7 +1456,7 @@ fitToJSON <- function(fitObj,
   cat(",\n")
   vectorToJSON(fitObj$unassigned_muts_perc,"unassigned_muts_perc",nindent = nindent + 1)
   cat(",\n")
-  if(all(!is.na(fitObj$bootstrap_exposures_samples))){
+  if(all(!is.null(fitObj$bootstrap_exposures_samples))){
     cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
     for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
       tableToJSON(fitObj$bootstrap_exposures_samples[[i]],tablename = rownames(fitObj$exposures)[i],nindent = nindent + 2)
@@ -1455,7 +1468,7 @@ fitToJSON <- function(fitObj,
     cat(indent,"\t\"bootstrap_exposures_samples\": null",sep = "")
   }
   cat(",\n")
-  if(all(!is.na(fitObj$bootstrap_exposures_pvalues))){
+  if(all(!is.null(fitObj$bootstrap_exposures_pvalues))){
     tableToJSON(fitObj$bootstrap_exposures_pvalues,tablename = "bootstrap_exposures_pvalues",nindent = nindent + 1)
   }else{
     cat(indent,"\t\"bootstrap_exposures_pvalues\": null",sep = "")
@@ -1504,11 +1517,13 @@ fitMStoJSON <- function(fitObj,
   cat(indent,"\t\"method\": \"",fitObj$method,"\",\n",sep = "")
   cat(indent,"\t\"multiStepMode\": \"",fitObj$multiStepMode,"\",\n",sep = "")
   cat(indent,"\t\"maxRareSigsPerSample\": ",fitObj$maxRareSigsPerSample,",\n",sep = "")
+  cat(indent,"\t\"rareCandidateSelectionCriteria\": \"",fitObj$rareCandidateSelectionCriteria,"\",\n",sep = "")
   if(!is.null(fitObj$organ)){
     cat(indent,"\t\"organ\": \"",fitObj$organ,"\",\n",sep = "")
   }else{
     cat(indent,"\t\"organ\": null,\n",sep = "")
   }
+  cat(indent,"\t\"commonSignatureTier\": \"",fitObj$commonSignatureTier,"\",\n",sep = "")
   cat(indent,"\t\"rareSignatureTier\": \"",fitObj$rareSignatureTier,"\",\n",sep = "")
   cat(indent,"\t\"minErrorReductionPerc\": ",fitObj$minErrorReductionPerc,",\n",sep = "")
   cat(indent,"\t\"minCosSimIncrease\": ",fitObj$minCosSimIncrease,",\n",sep = "")
@@ -1516,23 +1531,23 @@ fitMStoJSON <- function(fitObj,
   cat(indent,"\t\"minCosSimRareSig\": ",fitObj$minCosSimRareSig,",\n",sep = "")
 
   cat(indent,"\t\"exposureFilterType\": \"",fitObj$exposureFilterType,"\",\n",sep = "")
-  if(!is.na(fitObj$threshold_percent)){
+  if(!is.null(fitObj$threshold_percent)){
     cat(indent,"\t\"threshold_percent\": ",fitObj$threshold_percent,",\n",sep = "")
   }else{
     cat(indent,"\t\"threshold_percent\": null,\n",sep = "")
   }
-  if(!is.na(fitObj$giniThresholdScaling)){
+  if(!is.null(fitObj$giniThresholdScaling)){
     cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
   }else{
     cat(indent,"\t\"giniThresholdScaling\": null,\n",sep = "")
   }
   cat(indent,"\t\"useBootstrap\": ",ifelse(fitObj$useBootstrap,"true","false"),",\n",sep = "")
-  if(!is.na(fitObj$nboot)){
+  if(!is.null(fitObj$nboot)){
     cat(indent,"\t\"nboot\": ",fitObj$nboot,",\n",sep = "")
   }else{
     cat(indent,"\t\"nboot\": null,\n",sep = "")
   }
-  if(!is.na(fitObj$threshold_p.value)){
+  if(!is.null(fitObj$threshold_p.value)){
     cat(indent,"\t\"threshold_p.value\": ",fitObj$threshold_p.value,",\n",sep = "")
   }else{
     cat(indent,"\t\"threshold_p.value\": null,\n",sep = "")
@@ -1543,6 +1558,23 @@ fitMStoJSON <- function(fitObj,
   }else{
     cat(indent,"\t\"whichSamplesMayHaveRareSigs\": null,\n",sep = "")
   }
+
+  cat(indent,"\t\"commonSigsOnlyCosSim\": {\n",sep = "")
+  for (i in 1:length(fitObj$commonSigsOnlyCosSim)){
+    cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyCosSim)[i],"\": ",fitObj$commonSigsOnlyCosSim[[names(fitObj$commonSigsOnlyCosSim)[i]]],sep = "")
+    if(i < length(fitObj$commonSigsOnlyCosSim)) cat(",")
+    cat("\n")
+  }
+  cat(indent,"\t},\n",sep = "")
+
+  cat(indent,"\t\"commonSigsOnlyError\": {\n",sep = "")
+  for (i in 1:length(fitObj$commonSigsOnlyError)){
+    cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyError)[i],"\": ",fitObj$commonSigsOnlyError[[names(fitObj$commonSigsOnlyError)[i]]],sep = "")
+    if(i < length(fitObj$commonSigsOnlyError)) cat(",")
+    cat("\n")
+  }
+  cat(indent,"\t},\n",sep = "")
+
   if(length(fitObj$rareSigChoice)>0){
     cat(indent,"\t\"rareSigChoice\": {\n",sep = "")
     for (i in 1:length(fitObj$rareSigChoice)){
@@ -1562,7 +1594,7 @@ fitMStoJSON <- function(fitObj,
       cat(indent,"\t\t\"",sampleName,"\": {\n",sep = "")
       for (j in 1:length(candidates)) {
         cat(indent,"\t\t\t\"",names(candidates)[j],"\": ",candidates[j],sep = "")
-        if(j < length(fitObj$candidates)) cat(",")
+        if(j < length(candidates)) cat(",")
         cat("\n")
       }
       cat(indent,"\t\t}",sep = "")
@@ -1573,6 +1605,27 @@ fitMStoJSON <- function(fitObj,
   }else{
     cat(indent,"\t\"candidateRareSigsCosSim\": null,\n",sep = "")
   }
+
+  if(length(fitObj$candidateRareSigsError)>0){
+    cat(indent,"\t\"candidateRareSigsError\": {\n",sep = "")
+    for (i in 1:length(fitObj$candidateRareSigsError)){
+      sampleName <- names(fitObj$candidateRareSigsError)[i]
+      candidates <- fitObj$candidateRareSigsError[[sampleName]]
+      cat(indent,"\t\t\"",sampleName,"\": {\n",sep = "")
+      for (j in 1:length(candidates)) {
+        cat(indent,"\t\t\t\"",names(candidates)[j],"\": ",candidates[j],sep = "")
+        if(j < length(candidates)) cat(",")
+        cat("\n")
+      }
+      cat(indent,"\t\t}",sep = "")
+      if(i < length(fitObj$rareSigChoice)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t},\n",sep = "")
+  }else{
+    cat(indent,"\t\"candidateRareSigsError\": null,\n",sep = "")
+  }
+
   tableToJSON(fitObj$catalogues,tablename = "catalogues",nindent = nindent + 1)
   cat(",\n")
   tableToJSON(fitObj$commonSignatures,tablename = "commonSignatures",nindent = nindent + 1)
@@ -1581,7 +1634,7 @@ fitMStoJSON <- function(fitObj,
   cat(",\n")
   tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
   cat(",\n")
-  if(all(!is.na(fitObj$bootstrap_exposures_samples))){
+  if(all(!is.null(fitObj$bootstrap_exposures_samples))){
     cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
     for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
       tableToJSON(fitObj$bootstrap_exposures_samples[[i]],tablename = names(fitObj$bootstrap_exposures_samples)[i],nindent = nindent + 2)
