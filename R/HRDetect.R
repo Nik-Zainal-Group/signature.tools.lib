@@ -374,7 +374,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     data_matrix[colnames(exposures_subs),"SNV8"] <- 0
 
     # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
-    if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & SNV_commonSignatureTier=="T1"){
+    if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & (SNV_commonSignatureTier=="T1" | SNV_commonSignatureTier=="T3")){
       # store before converting
       exposures_organSpecific_subs <- exposures_subs
       # if RefSigv2 was used, there may be some SBS sigs in the names
@@ -505,12 +505,23 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     data_matrix[colnames(exposures_rearr),"SV5"] <- 0
 
     # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
-    if((SV_signature_version=="RefSigv1") & !is.null(organ) & SV_commonSignatureTier == "T1"){
+    if((SV_signature_version=="RefSigv1") & !is.null(organ) & (SV_commonSignatureTier == "T1" | SV_commonSignatureTier == "T3")){
       # store before converting
       exposures_organSpecific_rearr <- exposures_rearr
-      #convert to reference signatures
-      exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
-      exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
+
+      # if a mix of organ-specific and reference signatures were used, convert only the organ-specific
+      refsigs <- rownames(exposures_rearr)[grepl(rownames(exposures_rearr),pattern = "^RefSig")]
+      if(length(refsigs)>0){
+        exposures_rearr_toconvert <- exposures_rearr[setdiff(rownames(exposures_rearr),refsigs),,drop=F]
+        exposures_rearr_refsig <- exposures_rearr[refsigs,,drop=F]
+        exposures_rearr_converted <- convertExposuresFromOrganToRefSigs(exposures_rearr_toconvert,typemut = "rearr")
+        exposures_rearr_converted <- exposures_rearr_converted[apply(exposures_rearr_converted, 1,sum)>0,,drop=FALSE]
+        exposures_rearr <- rbind(exposures_rearr_converted,exposures_rearr_refsig)
+      }else{
+        #convert to reference signatures
+        exposures_rearr <- convertExposuresFromOrganToRefSigs(exposures_rearr,typemut = "rearr")
+        exposures_rearr <- exposures_rearr[apply(exposures_rearr, 1,sum)>0,,drop=FALSE]
+      }
     }
 
     # update the data_matrix
