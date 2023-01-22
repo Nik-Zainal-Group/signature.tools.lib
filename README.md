@@ -40,9 +40,11 @@ the most important functions is given below.
 
 <a name="version"/>
 
-2.2.1
+2.3.0
 
-- Added FitMS common signatures tier. T1 fits organ-specific signatures, T2 fits the corresponding reference signatures. T2 is useful in organs where there are mixed organ-specific signatures (e.g. SBS1+18), so that the signatures composing the mix can be fitted separately (e.g. SBS1 and SBS18 instead of SBS1+18)
+- Added FitMS common signature tiers T1-T3. T1 fits organ-specific signatures, T2 fits the corresponding reference signatures. T2 is useful in organs where there are mixed organ-specific signatures (e.g. SBS1+18), so that the signatures composing the mix can be fitted separately (e.g. SBS1 and SBS18 instead of SBS1+18). T3 is a combination of T1 and T2, where organ-specific signatures are used and only the mixed signatures are replaced with the corresponding reference signatures
+- Extended the FiMS rare signature tiers, now T0-T4. This is mainly to allow users to fit also the QC amber and red signatures presented in Degasperi et al. 2022, *Science*
+- DBS common and rare signatures support added to FitMS
 
 2.2.0
 

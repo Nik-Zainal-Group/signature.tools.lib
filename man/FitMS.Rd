@@ -38,14 +38,9 @@ FitMS(
 "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid",
 "NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
 
-\item{commonSignatureTier}{either T1 or T2. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use he corresponding reference signatures. In general,
-T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. SBS1+18 or SBS2+13, while T2 might be more suitable for when such mixed signatures are present, so that
-each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single SBS1+18.}
+\item{commonSignatureTier}{is either T1, T2 or T3. The default option is T1. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use the corresponding reference signatures. In general, T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. GEL-Ovary_common_SBS1+18, while T2 might be more suitable for when such mixed signatures are present, so that each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single GEL-Ovary_common_SBS1+18. T3 is an intermediate option between T1 and T2, where only the mixed organ signatures are replaced with the corresponding reference signatures.}
 
-\item{rareSignatureTier}{either T1 or T2. For each organ we provide two lists of rare signatures that can be used. Tier 1 (T1) are rare signatures
-that were observed in the requested organ. The problem with T1 is that it may be that a signature is not observed simply because there were not enough samples for a certain organ in the particular
-dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
-More specifically, T2 includes all the reference signatures that were observed as rare in the specified organ and also reference signatures that were observed as rare in other at least two organs.}
+\item{rareSignatureTier}{is either T0, T1, T2, T3 or T4. The default option is T2. For each organ, T0 are rare signatures that were observed in the requested organ, including low quality signatures (QC amber and red signatures). T1 are high quality (QC green) rare signatures that were observed in the requested organ. T2-T4 signatures extend the rare signatures set to what has been observed also in other organs. T2 includes all QC green signatures found in other organs, with the additional restriction in the case of SBS that the additional signatures were classified as rare at least twice in Degasperi et al. 2022 Science. T3 includes all QC green signatures (if not SBS, T3=T2). T4 includes all signatures including QC amber and red. In general we advise to use the rare T2 tier.}
 
 \item{commonSignatures}{signatures, signatures as columns, channels as rows. These are the signatures that are assumed to be present in most samples and will be used in the first step.
 Can be set automatically by specifying the organ parameter}

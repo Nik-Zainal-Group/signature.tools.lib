@@ -7,7 +7,7 @@
 getReferenceSignatures(version = "latest", typemut = "subs", verbose = TRUE)
 }
 \arguments{
-\item{version}{version "1" includes subs or rearr (ICGC cohort) reference signatures from Degasperi et al. 2020, while version "2" includes the improved subs reference signatures, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.}
+\item{version}{version "1" includes subs or rearr (ICGC cohort) reference signatures from Degasperi et al. 2020, while version "2" includes the improved subs reference signatures and the DNV signatures from Degasperi et al. 2022. Set to "latest" to get the latest signature available for a given mutation type.}
 
 \item{typemut}{either subs, DNV or rearr}
 }
@@ -20,4 +20,6 @@ and Degasperi et al. 2022 Science paper.
 }
 \references{
 A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+
+A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers in the UK population. Science, 2022.
 }

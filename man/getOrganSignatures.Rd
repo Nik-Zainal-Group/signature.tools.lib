@@ -8,7 +8,8 @@ getOrganSignatures(
   organ,
   version = "latest",
   cohort = "best",
-  typemut = "subs"
+  typemut = "subs",
+  verbose = FALSE
 )
 }
 \arguments{

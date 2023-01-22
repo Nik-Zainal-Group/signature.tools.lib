@@ -1347,7 +1347,7 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 #' @return organ-specific signatures matrix
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
-getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs"){
+getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs",verbose=FALSE){
   sigs <- NULL
   if(typemut=="subs" & version=="1" & (cohort=="best" | cohort=="ICGC")){
     sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
@@ -1365,9 +1365,11 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
   }
   if(is.null(sigs)){
     message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+    if(verbose) message("[warning getOrganSignatures] retrived sigs is NULL.")
   }else{
     if(ncol(sigs)==0){
       message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
+      if(verbose) message("[warning getOrganSignatures] retrived sigs is an empty table, set to NULL.")
       sigs <- NULL
     }
   }
@@ -1381,9 +1383,10 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
 #' and Degasperi et al. 2022 Science paper.
 #'
 #' @param typemut either subs, DNV or rearr
-#' @param version version "1" includes subs or rearr (ICGC cohort) reference signatures from Degasperi et al. 2020, while version "2" includes the improved subs reference signatures, and the new DNV signatures. Set to "latest" to get the latest signature available for a given mutation type.
+#' @param version version "1" includes subs or rearr (ICGC cohort) reference signatures from Degasperi et al. 2020, while version "2" includes the improved subs reference signatures and the DNV signatures from Degasperi et al. 2022. Set to "latest" to get the latest signature available for a given mutation type.
 #' @return reference signatures matrix
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @references A. Degasperi, X. Zou, T. D. Amarante, ..., H. Davies, Genomics England Research Consortium, S. Nik-Zainal. Substitution mutational signatures in whole-genome-sequenced cancers in the UK population. Science, 2022.
 #' @export
 getReferenceSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
   sigs <- NULL
