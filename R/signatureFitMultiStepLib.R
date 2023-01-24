@@ -143,6 +143,13 @@ FitMS <- function(catalogues,
     }
   }
 
+  # some checks
+  if((multiStepMode=="partialNMF" | multiStepMode=="constrainedFit") & rareCandidateSelectionCriteria=="MinError"){
+    message("[warning FitMS] multiStepMode set to ",multiStepMode,": changing rareCandidateSelectionCriteria to MaxCosSim.",
+            "The rareCandidateSelectionCriteria MinError is only used for multiStepMode errorReduction or cossimIncrease.")
+    rareCandidateSelectionCriteria <- "MaxCosSim"
+  }
+
   # ---- now determine which samples are likely to have rare signatures and how many
   # after this section, all we need are:
   # - whichSamplesMayHaveRareSigs
@@ -430,8 +437,7 @@ FitMS <- function(catalogues,
   resObj$commonSigsOnlyCosSim <- commonSigsOnlyCosSim
   resObj$samples <- samples
   # compute fit merge
-  resObj <- fitMerge(resObj = resObj,
-                     rareCandidateSelectionCriteria = rareCandidateSelectionCriteria)
+  resObj <- fitMerge(resObj = resObj)
   return(resObj)
 }
 
@@ -580,7 +586,6 @@ Fit <- function(catalogues,
 #' The choise of rare signature can be changed using the parameter forceRareSigChoice.
 #'
 #' @param resObj result object obtained from the FitMS function
-#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. Using MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
 #' @param forceRareSigChoice if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
 #' If no rare signature is found, then the solution with only the common signatures is selected.
 #' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSigName".
@@ -589,13 +594,15 @@ Fit <- function(catalogues,
 #' If bootstrap was used, bootstraps of selected solutions can be found in the variable bootstrap_exposures_samples
 #' @export
 fitMerge <- function(resObj,
-                     rareCandidateSelectionCriteria="MaxCosSim",
                      forceRareSigChoice=NULL){
+  rareCandidateSelectionCriteria <- resObj$rareCandidateSelectionCriteria
+  # some checks
   validSelectionCriteria <- c("MaxCosSim","MinError")
-  if(!rareCandidateSelectionCriteria %in% validSelectionCriteria){
+  if(!resObj$rareCandidateSelectionCriteria %in% validSelectionCriteria){
     message("[error fitMerge] rareCandidateSelectionCriteria ",rareCandidateSelectionCriteria," not valid, please select one of the following: ",paste(validSelectionCriteria,collapse = ", "),".")
     return(resObj)
   }
+
   # build exposure matrix with all signatures in the columns
   # will remove the signatures not present at the end
   rareSigChoice <- list()
@@ -1376,19 +1383,29 @@ plotFitMS <- function(fitMSobj,
     for (i in 1:length(fitMSobj$whichSamplesMayHaveRareSigs)){
       # i <- 1
       currentSample <- fitMSobj$whichSamplesMayHaveRareSigs[i]
-      summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
-                                                  candidate="commonSigsOnly",
-                                                  cossim=fitMSobj$commonSigsOnlyCosSim[[currentSample]],
-                                                  error=fitMSobj$commonSigsOnlyError[[currentSample]],
-                                                  selected=fitMSobj$rareSigChoice[[currentSample]]=="commonOnly",
-                                                  stringsAsFactors = F,row.names = rowi))
-      for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
+      if(fitMSobj$multiStepMode=="errorReduction" | fitMSobj$multiStepMode=="cossimIncrease"){
         summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
-                                                    candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
-                                                    cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
-                                                    error=fitMSobj$candidateRareSigsError[[currentSample]][j],
-                                                    selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                    candidate="commonSigsOnly",
+                                                    cossim=fitMSobj$commonSigsOnlyCosSim[[currentSample]],
+                                                    error=fitMSobj$commonSigsOnlyError[[currentSample]],
+                                                    selected=fitMSobj$rareSigChoice[[currentSample]]=="commonOnly",
                                                     stringsAsFactors = F,row.names = rowi))
+      }
+      for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
+        if(fitMSobj$multiStepMode=="errorReduction" | fitMSobj$multiStepMode=="cossimIncrease"){
+          summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
+                                                      candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                      cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
+                                                      error=fitMSobj$candidateRareSigsError[[currentSample]][j],
+                                                      selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                      stringsAsFactors = F,row.names = rowi))
+        }else{
+          summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
+                                                      candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                      cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
+                                                      selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
+                                                      stringsAsFactors = F,row.names = rowi))
+        }
         rowi <- rowi+1
       }
     }
