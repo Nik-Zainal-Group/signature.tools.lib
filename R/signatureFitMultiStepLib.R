@@ -1713,21 +1713,25 @@ fitMStoJSON <- function(fitObj,
     cat(indent,"\t\"whichSamplesMayHaveRareSigs\": null,\n",sep = "")
   }
 
-  cat(indent,"\t\"commonSigsOnlyCosSim\": {\n",sep = "")
-  for (i in 1:length(fitObj$commonSigsOnlyCosSim)){
-    cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyCosSim)[i],"\": ",fitObj$commonSigsOnlyCosSim[[names(fitObj$commonSigsOnlyCosSim)[i]]],sep = "")
-    if(i < length(fitObj$commonSigsOnlyCosSim)) cat(",")
-    cat("\n")
+  if(length(fitObj$commonSigsOnlyCosSim)>0){
+    cat(indent,"\t\"commonSigsOnlyCosSim\": {\n",sep = "")
+    for (i in 1:length(fitObj$commonSigsOnlyCosSim)){
+      cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyCosSim)[i],"\": ",fitObj$commonSigsOnlyCosSim[[names(fitObj$commonSigsOnlyCosSim)[i]]],sep = "")
+      if(i < length(fitObj$commonSigsOnlyCosSim)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t},\n",sep = "")
   }
-  cat(indent,"\t},\n",sep = "")
 
-  cat(indent,"\t\"commonSigsOnlyError\": {\n",sep = "")
-  for (i in 1:length(fitObj$commonSigsOnlyError)){
-    cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyError)[i],"\": ",fitObj$commonSigsOnlyError[[names(fitObj$commonSigsOnlyError)[i]]],sep = "")
-    if(i < length(fitObj$commonSigsOnlyError)) cat(",")
-    cat("\n")
+  if(length(fitObj$commonSigsOnlyError)>0){
+    cat(indent,"\t\"commonSigsOnlyError\": {\n",sep = "")
+    for (i in 1:length(fitObj$commonSigsOnlyError)){
+      cat(indent,"\t\t\"",names(fitObj$commonSigsOnlyError)[i],"\": ",fitObj$commonSigsOnlyError[[names(fitObj$commonSigsOnlyError)[i]]],sep = "")
+      if(i < length(fitObj$commonSigsOnlyError)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t},\n",sep = "")
   }
-  cat(indent,"\t},\n",sep = "")
 
   if(length(fitObj$rareSigChoice)>0){
     cat(indent,"\t\"rareSigChoice\": {\n",sep = "")
