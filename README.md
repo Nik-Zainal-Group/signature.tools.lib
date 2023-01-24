@@ -263,6 +263,7 @@ are fitted into the samples in addition to the common signatures. Common and rar
 by providing the name of an organ, or can be supplied by the user.
 The object returned by this function can be passed to the ```plotFitMS()``` function for automated plotting of the results. 
 A manual for FitMS can be found in the ```userManuals``` folder.
+- **```getSignaturesForFitting```**: given a tissue type/organ, this function returns the common and rare mutational signatures to be used with FitMS
 - **```signatureFit_pipeline```**: an interface for the ```Fit``` and ```FitMS``` functions, which aim to automate various signature fit analysis steps, like generating the mutational catalogues and selecting which mutational signatures to fit. This function can be accessed via command line using the ```signatureFit``` script in the ```scripts``` folder.
 - **```plotFitResults(...)```**: this function can be used to plot result objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
 - **```writeFitResultsToJSON(...)```**: this function can be used to write to file the content of the result objects from both ```Fit``` and ```FitMS``` functions as a compressed JSON file.

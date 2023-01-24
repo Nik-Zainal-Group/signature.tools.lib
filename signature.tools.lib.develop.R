@@ -94,6 +94,7 @@ usethis::use_data(RS.Breast560,
 
 devtools::document()
 devtools::install()
+# devtools::install(dependencies = FALSE)
 
 #test all
 devtools::test()

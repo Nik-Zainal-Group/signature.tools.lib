@@ -1102,6 +1102,44 @@ plotFit <- function(fitObj,
     par(xpd=FALSE)
   }
 
+  # build the info table
+  infoTable <- NULL
+  infoTable <- rbind(infoTable,data.frame(parameter="fitAlgorithm",value=fitObj$fitAlgorithm,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nparallel",value=fitObj$nparallel,stringsAsFactors = F))
+  if(!is.null(fitObj$randomSeed)){
+    infoTable <- rbind(infoTable,data.frame(parameter="randomSeed",value=fitObj$randomSeed,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="randomSeed",value="NULL",stringsAsFactors = F))
+  }
+  infoTable <- rbind(infoTable,data.frame(parameter="nsamples",value=ncol(fitObj$catalogues),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nsignatures",value=ncol(fitObj$signatures),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nchannels",value=nrow(fitObj$catalogues),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="method",value=fitObj$method,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="exposureFilterType",value=fitObj$exposureFilterType,stringsAsFactors = F))
+  if(!is.null(fitObj$threshold_percent)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value=fitObj$threshold_percent,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitObj$giniThresholdScaling)){
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value=fitObj$giniThresholdScaling,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value="NULL",stringsAsFactors = F))
+  }
+  infoTable <- rbind(infoTable,data.frame(parameter="useBootstrap",value=ifelse(fitObj$useBootstrap,"TRUE","FALSE"),stringsAsFactors = F))
+  if(!is.null(fitObj$nboot)){
+    infoTable <- rbind(infoTable,data.frame(parameter="nboot",value=fitObj$nboot,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="nboot",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitObj$threshold_p.value)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_p.value",value=fitObj$threshold_p.value,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_p.value",value="NULL",stringsAsFactors = F))
+  }
+  # save it
+  writeTable(t = infoTable,file = paste0(outdir,"infoTable.tsv"),row.names = F)
+
   reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
 
   #plot and save exposures
@@ -1154,6 +1192,8 @@ plotFit <- function(fitObj,
     }
     colnames(sigMatrix) <- paste0(colnames(sigMatrix)," ",addToTitle)
 
+    # save it
+    writeTable(t = sigMatrix,file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_pointEstimate.tsv"))
     plotSignatures(signature_data_matrix = sigMatrix,add_to_title = NULL,
                    output_file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_pointEstimate.pdf"))
 
@@ -1200,6 +1240,10 @@ plotFit <- function(fitObj,
       if(ncol(fitObj$signatures)>1){
         #5 top correlated signatures
         res.cor <- suppressWarnings(cor(t(fitObj$bootstrap_exposures_samples[[p]]),method = "spearman"))
+        # save it
+        writeTable(t = res.cor,file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_Correlation.tsv"))
+
+        # plot only upper triangular
         res.cor_triangular <- res.cor
         res.cor_triangular[row(res.cor)+(ncol(res.cor)-col(res.cor))>=ncol(res.cor)] <- 0
         res.cor_triangular_label <- matrix(sprintf("%0.2f",res.cor_triangular),nrow = nrow(res.cor_triangular))
@@ -1271,6 +1315,60 @@ plotFitMS <- function(fitMSobj,
   # now let's plot
   if(outdir != "") dir.create(outdir,showWarnings = F,recursive = T)
 
+  # build the info table
+  infoTable <- NULL
+  infoTable <- rbind(infoTable,data.frame(parameter="fitAlgorithm",value=fitMSobj$fitAlgorithm,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nparallel",value=fitMSobj$nparallel,stringsAsFactors = F))
+  if(!is.null(fitMSobj$randomSeed)){
+    infoTable <- rbind(infoTable,data.frame(parameter="randomSeed",value=fitMSobj$randomSeed,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="randomSeed",value="NULL",stringsAsFactors = F))
+  }
+  infoTable <- rbind(infoTable,data.frame(parameter="nsamples",value=ncol(fitMSobj$catalogues),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="ncommonSignatures",value=ncol(fitMSobj$commonSignatures),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nrareSignatures",value=ncol(fitMSobj$rareSignatures),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="nchannels",value=nrow(fitMSobj$catalogues),stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="method",value=fitMSobj$method,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="multiStepMode",value=fitMSobj$multiStepMode,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="maxRareSigsPerSample",value=fitMSobj$maxRareSigsPerSample,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="rareCandidateSelectionCriteria",value=fitMSobj$rareCandidateSelectionCriteria,stringsAsFactors = F))
+  if(!is.null(fitMSobj$organ)){
+    infoTable <- rbind(infoTable,data.frame(parameter="organ",value=fitMSobj$organ,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="organ",value="NULL",stringsAsFactors = F))
+  }
+  infoTable <- rbind(infoTable,data.frame(parameter="commonSignatureTier",value=fitMSobj$commonSignatureTier,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="rareSignatureTier",value=fitMSobj$rareSignatureTier,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="minErrorReductionPerc",value=fitMSobj$minErrorReductionPerc,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="minCosSimIncrease",value=fitMSobj$minCosSimIncrease,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="residualNegativeProp",value=fitMSobj$residualNegativeProp,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="minCosSimRareSig",value=fitMSobj$minCosSimRareSig,stringsAsFactors = F))
+  infoTable <- rbind(infoTable,data.frame(parameter="exposureFilterType",value=fitMSobj$exposureFilterType,stringsAsFactors = F))
+  if(!is.null(fitMSobj$threshold_percent)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value=fitMSobj$threshold_percent,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitMSobj$giniThresholdScaling)){
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value=fitMSobj$giniThresholdScaling,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value="NULL",stringsAsFactors = F))
+  }
+  infoTable <- rbind(infoTable,data.frame(parameter="useBootstrap",value=ifelse(fitMSobj$useBootstrap,"TRUE","FALSE"),stringsAsFactors = F))
+  if(!is.null(fitMSobj$nboot)){
+    infoTable <- rbind(infoTable,data.frame(parameter="nboot",value=fitMSobj$nboot,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="nboot",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitMSobj$threshold_p.value)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_p.value",value=fitMSobj$threshold_p.value,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_p.value",value="NULL",stringsAsFactors = F))
+  }
+
+  # save it
+  writeTable(t = infoTable,file = paste0(outdir,"infoTable.tsv"),row.names = F)
+
   # now plot some generic info
   if(length(fitMSobj$whichSamplesMayHaveRareSigs)>0){
     summaryFits <- NULL
@@ -1278,10 +1376,17 @@ plotFitMS <- function(fitMSobj,
     for (i in 1:length(fitMSobj$whichSamplesMayHaveRareSigs)){
       # i <- 1
       currentSample <- fitMSobj$whichSamplesMayHaveRareSigs[i]
+      summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
+                                                  candidate="commonSigsOnly",
+                                                  cossim=fitMSobj$commonSigsOnlyCosSim[[currentSample]],
+                                                  error=fitMSobj$commonSigsOnlyError[[currentSample]],
+                                                  selected=fitMSobj$rareSigChoice[[currentSample]]=="commonOnly",
+                                                  stringsAsFactors = F,row.names = rowi))
       for (j in 1:length(fitMSobj$candidateRareSigs[[currentSample]])){
         summaryFits <- rbind(summaryFits,data.frame(sample=currentSample,
                                                     candidate=fitMSobj$candidateRareSigs[[currentSample]][j],
                                                     cossim=fitMSobj$candidateRareSigsCosSim[[currentSample]][j],
+                                                    error=fitMSobj$candidateRareSigsError[[currentSample]][j],
                                                     selected=fitMSobj$rareSigChoice[[currentSample]]==fitMSobj$candidateRareSigs[[currentSample]][j],
                                                     stringsAsFactors = F,row.names = rowi))
         rowi <- rowi+1
