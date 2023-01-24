@@ -644,6 +644,13 @@ and as a second step it will attempt to determine the presence of the rare signa
 In this example we have also specified to use bootstrap and to use the giniScaledThreshold exposure filter method.
 Results can be plotted with the ```plotFitMS``` function.
 
+In addition, it is possible to save all the data in the ```subs_fit_res``` object as a JSON file:
+
+```
+writeFitResultsToJSON(fitObj = subs_fit_res,
+                      filename = "FitMSresults.json")
+```
+
 A manual for FitMS can be found in the ```userManuals``` folder.
 
 <a name="examplese04"/>

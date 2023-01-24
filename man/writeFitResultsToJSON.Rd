@@ -4,12 +4,14 @@
 \alias{writeFitResultsToJSON}
 \title{Write the results from the Fit or FitMS function to JSON}
 \usage{
-writeFitResultsToJSON(fitObj, outdir = "")
+writeFitResultsToJSON(fitObj, compress = TRUE, filename = "fitData.json")
 }
 \arguments{
 \item{fitObj}{object obtained from the Fit or FitMS function}
 
-\item{outdir}{output directory where the JSON should be saved}
+\item{compress}{if TRUE then compress the JSON file. This is recommended as a plain JSON text file can be quite large. Set to TRUE as default}
+
+\item{filename}{output file name of the JSON file. If the parameter compress is TRUE then the ".zip" postfix will be added}
 }
 \description{
 Writing of the results obtained with the Fit or FitMS function to JSON.

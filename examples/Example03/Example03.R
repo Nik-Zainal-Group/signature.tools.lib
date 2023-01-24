@@ -6,7 +6,7 @@ library(signature.tools.lib)
 #set sample names
 sample_names <- c("sample1","sample2")
 
-#set the file names. 
+#set the file names.
 SNV_tab_files <- c("../../tests/testthat/test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
                    "../../tests/testthat/test_hrdetect_2/test_hrdetect_2.snv.simple.txt")
 
@@ -35,9 +35,6 @@ subs_fit_res <- FitMS(catalogues = SNV_catalogues,
                       organ = "Breast")
 plotFitMS(subs_fit_res,outdir = "signatureFit/")
 
-#The signature exposures can be found here and correspond to the median of the boostrapped runs followed by false positive filters. See ?Fit for details
-snv_exp <- subs_fit_res$exposures
-
-#write the results
-writeTable(snv_exp,"RefSigSubsExposures.tsv")
+#all the data in the subs_fit_res object can be saved as a JSON file
+writeFitResultsToJSON(fitObj = subs_fit_res,filename = "FitMSresults.json")
 

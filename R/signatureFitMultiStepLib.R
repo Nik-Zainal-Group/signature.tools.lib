@@ -251,7 +251,8 @@ FitMS <- function(catalogues,
                                       threshold_p.value = threshold_p.value,
                                       method = method,
                                       useBootstrap = FALSE,
-                                      nparallel = nparallel)
+                                      nparallel = nparallel,
+                                      randomSeed = randomSeed)
 
               quickFit <- list()
               for(j in 1:ncol(rareSigsToUse)){
@@ -266,7 +267,8 @@ FitMS <- function(catalogues,
                                        threshold_p.value = threshold_p.value,
                                        method = method,
                                        useBootstrap = FALSE,
-                                       nparallel = nparallel)
+                                       nparallel = nparallel,
+                                       randomSeed = randomSeed)
               }
 
               # commonError <- KLD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
@@ -417,6 +419,8 @@ FitMS <- function(catalogues,
   resObj$rareSignatureTier <- rareSignatureTier
   resObj$maxRareSigsPerSample <- maxRareSigsPerSample
   resObj$rareCandidateSelectionCriteria <- rareCandidateSelectionCriteria
+  if(!is.null(randomSeed)) resObj$randomSeed <- randomSeed
+  resObj$nparallel <- nparallel
   # add all fit results and info
   resObj$whichSamplesMayHaveRareSigs <- colnames(catalogues)[whichSamplesMayHaveRareSigs]
   resObj$candidateRareSigs <- candidateRareSigs
@@ -555,6 +559,9 @@ Fit <- function(catalogues,
   fitRes$signatures <- signatures
   fitRes$method <- method
   fitRes$exposures <- t(rbind(fitRes$exposures,unassigned=fitRes$unassigned_muts))
+
+  if(!is.null(randomSeed)) fitRes$randomSeed <- randomSeed
+  fitRes$nparallel <- nparallel
 
   return(fitRes)
 }
@@ -1420,6 +1427,12 @@ fitToJSON <- function(fitObj,
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
   cat(indent,"\t\"fitAlgorithm\": \"",fitObj$fitAlgorithm,"\",\n",sep = "")
+  cat(indent,"\t\"nparallel\": ",fitObj$nparallel,",\n",sep = "")
+  if(!is.null(fitObj$randomSeed)){
+    cat(indent,"\t\"randomSeed\": ",fitObj$randomSeed,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"randomSeed\": null,\n",sep = "")
+  }
   cat(indent,"\t\"nsamples\": ",nrow(fitObj$exposures),",\n",sep = "")
   cat(indent,"\t\"nsignatures\": ",ncol(fitObj$signatures),",\n",sep = "")
   cat(indent,"\t\"nchannels\": ",nrow(fitObj$catalogues),",\n",sep = "")
@@ -1510,6 +1523,12 @@ fitMStoJSON <- function(fitObj,
     cat(indent,"\"",blockname,"\": {\n",sep = "")
   }
   cat(indent,"\t\"fitAlgorithm\": \"",fitObj$fitAlgorithm,"\",\n",sep = "")
+  cat(indent,"\t\"nparallel\": ",fitObj$nparallel,",\n",sep = "")
+  if(!is.null(fitObj$randomSeed)){
+    cat(indent,"\t\"randomSeed\": ",fitObj$randomSeed,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"randomSeed\": null,\n",sep = "")
+  }
   cat(indent,"\t\"nsamples\": ",ncol(fitObj$catalogues),",\n",sep = "")
   cat(indent,"\t\"ncommonSignatures\": ",ncol(fitObj$commonSignatures),",\n",sep = "")
   cat(indent,"\t\"nrareSignatures\": ",ncol(fitObj$rareSignatures),",\n",sep = "")
@@ -1681,39 +1700,40 @@ fitMStoJSON <- function(fitObj,
 #' Writing of the results obtained with the Fit or FitMS function to JSON.
 #'
 #' @param fitObj object obtained from the Fit or FitMS function
-#' @param outdir output directory where the JSON should be saved
+#' @param compress if TRUE then compress the JSON file. This is recommended as a plain JSON text file can be quite large. Set to TRUE as default
+#' @param filename output file name of the JSON file. If the parameter compress is TRUE then the ".zip" postfix will be added
 #' @export
 #' @examples
 #' res <- Fit(catalogues,getOrganSignatures("Breast"))
 #' writeFitResultsToJSON(res,"results/")
 writeFitResultsToJSON <- function(fitObj,
-                                  outdir = ""){
+                                  compress = TRUE,
+                                  filename = "fitData.json"){
   if(!is.null(fitObj$fitAlgorithm)){
     if(fitObj$fitAlgorithm=="Fit"){
       fitToJSON(fitObj = fitObj,
-                filename = paste0(outdir,"fitData.json"))
-      # zip the file
-      current_wd <- getwd()
-      setwd(outdir)
-      zip(zipfile = "fitData.json.zip",
-          files = "fitData.json")
-      unlink("fitData.json")
-      setwd(current_wd)
+                filename = filename)
     }else if(fitObj$fitAlgorithm=="FitMS"){
       fitMStoJSON(fitObj = fitObj,
-                  filename = paste0(outdir,"fitData.json"))
-      # zip the file
-      current_wd <- getwd()
-      setwd(outdir)
-      zip(zipfile = "fitData.json.zip",
-          files = "fitData.json")
-      unlink("fitData.json")
-      setwd(current_wd)
+                  filename = filename)
     }else{
       message("[error plotFitResults] unknown fitAlgorithm attribute ",fitObj$fitAlgorithm,", expecting Fit or FitMS. Input fitObj not recognised. ")
+      return(NULL)
+    }
+    if(file.exists(filename) & compress){
+      # zip the file
+      current_wd <- getwd()
+      outdir <- dirname(filename)
+      filebasename <- basename(filename)
+      setwd(outdir)
+      zip(zipfile = paste0(filebasename,".zip"),
+          files = filebasename)
+      unlink(filebasename)
+      setwd(current_wd)
     }
   }else{
     message("[error plotFitResults] missing fitAlgorithm attribute, fitObj not recognised.")
+    return(NULL)
   }
 }
 
