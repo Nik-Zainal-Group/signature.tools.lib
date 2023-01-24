@@ -437,7 +437,8 @@ FitMS <- function(catalogues,
   resObj$commonSigsOnlyCosSim <- commonSigsOnlyCosSim
   resObj$samples <- samples
   # compute fit merge
-  resObj <- fitMerge(resObj = resObj)
+  resObj <- fitMerge(resObj = resObj,
+                     rareCandidateSelectionCriteria = rareCandidateSelectionCriteria)
   return(resObj)
 }
 
@@ -586,6 +587,7 @@ Fit <- function(catalogues,
 #' The choise of rare signature can be changed using the parameter forceRareSigChoice.
 #'
 #' @param resObj result object obtained from the FitMS function
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
 #' @param forceRareSigChoice if NULL this function will select the rare signature candidate with the highest associated cosine similarity.
 #' If no rare signature is found, then the solution with only the common signatures is selected.
 #' To select specific candidates, specify them in the forceRareSigChoice list object, in the form forceRareSigChoice[["sample_name"]] <- "rareSigName".
@@ -594,13 +596,24 @@ Fit <- function(catalogues,
 #' If bootstrap was used, bootstraps of selected solutions can be found in the variable bootstrap_exposures_samples
 #' @export
 fitMerge <- function(resObj,
+                     rareCandidateSelectionCriteria="MaxCosSim",
                      forceRareSigChoice=NULL){
-  rareCandidateSelectionCriteria <- resObj$rareCandidateSelectionCriteria
+
   # some checks
   validSelectionCriteria <- c("MaxCosSim","MinError")
   if(!resObj$rareCandidateSelectionCriteria %in% validSelectionCriteria){
     message("[error fitMerge] rareCandidateSelectionCriteria ",rareCandidateSelectionCriteria," not valid, please select one of the following: ",paste(validSelectionCriteria,collapse = ", "),".")
     return(resObj)
+  }
+  if(rareCandidateSelectionCriteria != resObj$rareCandidateSelectionCriteria){
+    message("[info fitMerge] changing rareCandidateSelectionCriteria from ",resObj$rareCandidateSelectionCriteria," to ",rareCandidateSelectionCriteria,", as requested.")
+    resObj$rareCandidateSelectionCriteria <- rareCandidateSelectionCriteria
+  }
+  if((resObj$multiStepMode=="partialNMF" | resObj$multiStepMode=="constrainedFit") & rareCandidateSelectionCriteria=="MinError"){
+    message("[warning FitMS] multiStepMode set to ",resObj$multiStepMode,": changing rareCandidateSelectionCriteria to MaxCosSim. ",
+            "The rareCandidateSelectionCriteria MinError is only used for multiStepMode errorReduction or cossimIncrease.")
+    rareCandidateSelectionCriteria <- "MaxCosSim"
+    resObj$rareCandidateSelectionCriteria <- rareCandidateSelectionCriteria
   }
 
   # build exposure matrix with all signatures in the columns
