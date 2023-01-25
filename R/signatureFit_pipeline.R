@@ -353,12 +353,12 @@ signatureFit_pipeline <- function(catalogues=NULL,
               "switching to signature_version=RefSigv1")
       signature_version <- "RefSigv1"
     }
-    if(fitmethod=="FitMS" & mtype_catalogues=="rearr"){
+    if(fit_method=="FitMS" & mtype_catalogues=="rearr"){
       message("[warning signatureFit_pipeline] FitMS does not support rearrangement sigantures yet, ",
               "switching to fit_method=Fit")
       fit_method <- "Fit"
     }
-    if(fitmethod=="FitMS" & mtype_catalogues=="subs" & signature_version=="RefSigv1"){
+    if(fit_method=="FitMS" & mtype_catalogues=="subs" & signature_version=="RefSigv1"){
       message("[warning signatureFit_pipeline] FitMS with signature version RefSigv1 requested for substitutions, ",
               "switching to fit_method=Fit. If you intended to use FitMS, then set signature_version to RefSigv2")
       fit_method <- "Fit"
@@ -368,7 +368,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
               "switching to signature_version=RefSigv2")
       signature_version <- "RefSigv2"
     }
-    if((signature_version=="COSMICv3.2" | signature_version=="COSMICv2") &  fitmethod=="FitMS"){
+    if((signature_version=="COSMICv3.2" | signature_version=="COSMICv2") &  fit_method=="FitMS"){
       message("[warning signatureFit_pipeline] FitMS does not support COSMIC signatures, ",
               "switching to fit_method=Fit")
       fit_method <- "Fit"
