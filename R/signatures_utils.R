@@ -1349,19 +1349,60 @@ shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
 #' @export
 getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="subs",verbose=FALSE){
   sigs <- NULL
+  organsAvail <- NULL
   if(typemut=="subs" & version=="1" & (cohort=="best" | cohort=="ICGC")){
-    sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
+    # find available organs
+    organsAvail <- unique(sapply(colnames(all_organ_sigs_subs), function(x) {
+      b <- strsplit(x,split = "_")[[1]]
+      return(paste(b[1:(length(b)-1)],collapse = "_"))
+    },USE.NAMES = F))
+    if(organ %in% organsAvail) sigs <- all_organ_sigs_subs[,colnames(all_organ_sigs_subs)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_subs))]]
   }else if(typemut=="rearr" & (version=="1" | version=="latest") & (cohort=="best" | cohort=="ICGC")){
-    sigs <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_rearr))]]
+    organsAvail <- unique(sapply(colnames(all_organ_sigs_rearr), function(x) {
+      b <- strsplit(x,split = "_")[[1]]
+      return(paste(b[1:(length(b)-1)],collapse = "_"))
+    },USE.NAMES = F))
+    if(organ %in% organsAvail) sigs <- all_organ_sigs_rearr[,colnames(all_organ_sigs_rearr)[grep(pattern = paste0("^",organ),colnames(all_organ_sigs_rearr))]]
   }else if(typemut=="DNV" & (version=="2" | version=="latest")){
-    if(cohort=="best") cohort <- "GEL"
-    sigs <- organSignaturesDBSv1.01[,grepl(colnames(organSignaturesDBSv1.01),pattern = paste0(cohort,"-",organ)),drop=F]
-  }else if(typemut=="subs" & (version=="2" | version=="latest")){
-    if(cohort=="best") {
-      cohort <- "GEL"
-      if(organ=="Esophagus" | organ=="Head_neck") cohort <- "ICGC"
+    cohortToUse <- cohort
+    if(cohortToUse=="best") cohortToUse <- "GEL"
+    signames <- colnames(organSignaturesDBSv1.01)[grepl(colnames(organSignaturesDBSv1.01),pattern = cohortToUse)]
+    if(length(signames)>0){
+      organsAvail <- unique(sapply(signames, function(x) {
+        a <- strsplit(x,split = "-")[[1]]
+        b <- strsplit(a[2],split = "_")[[1]]
+        pos <- which(b %in% c("common","rare"))
+        return(paste(b[1:(pos-1)],collapse = "_"))
+      },USE.NAMES = F))
     }
-    sigs <- organSignaturesSBSv2.03[,grepl(colnames(organSignaturesSBSv2.03),pattern = paste0(cohort,"-",organ)),drop=F]
+    if(organ %in% organsAvail) sigs <- organSignaturesDBSv1.01[,grepl(colnames(organSignaturesDBSv1.01),pattern = paste0(cohortToUse,"-",organ)),drop=F]
+  }else if(typemut=="subs" & (version=="2" | version=="latest")){
+    cohortToUse <- cohort
+    if(cohortToUse=="best") {
+      cohortToUse <- "GEL"
+      if(organ=="Esophagus" | organ=="Head_neck") cohortToUse <- "ICGC"
+    }
+    signames <- colnames(organSignaturesSBSv2.03)[grepl(colnames(organSignaturesSBSv2.03),pattern = cohortToUse)]
+    if(length(signames)>0){
+      organsAvail <- unique(sapply(signames, function(x) {
+        a <- strsplit(x,split = "-")[[1]]
+        b <- strsplit(a[2],split = "_")[[1]]
+        pos <- which(b %in% c("common","rare"))
+        return(paste(b[1:(pos-1)],collapse = "_"))
+      },USE.NAMES = F))
+    }
+    if(organ %in% organsAvail) sigs <- organSignaturesSBSv2.03[,grepl(colnames(organSignaturesSBSv2.03),pattern = paste0(cohortToUse,"-",organ)),drop=F]
+    # need the actual organsAvail for the "best" cohort, which is GEL all organs + ICGC Esophagus and Head_neck
+    if(cohort=="best"){
+      signames <- colnames(organSignaturesSBSv2.03)[grepl(colnames(organSignaturesSBSv2.03),pattern = "GEL")]
+      organsAvail <- unique(sapply(signames, function(x) {
+        a <- strsplit(x,split = "-")[[1]]
+        b <- strsplit(a[2],split = "_")[[1]]
+        pos <- which(b %in% c("common","rare"))
+        return(paste(b[1:(pos-1)],collapse = "_"))
+      },USE.NAMES = F))
+      organsAvail <- c(organsAvail,"Esophagus","Head_neck")
+    }
   }
   if(is.null(sigs)){
     message("[warning getOrganSignatures] Organ ",organ, " not available for mutation type ",typemut, ", version ",version, " and cohort ",cohort,".")
@@ -1372,6 +1413,9 @@ getOrganSignatures <- function(organ,version="latest",cohort="best",typemut="sub
       if(verbose) message("[warning getOrganSignatures] retrived sigs is an empty table, set to NULL.")
       sigs <- NULL
     }
+  }
+  if(is.null(sigs) & !is.null(organsAvail)){
+    message("[warning getOrganSignatures] Organ ",organ, " not available, but you can try one of the following for your specified cohort ",cohort,": ",paste(organsAvail,collapse = ", "))
   }
   return(sigs)
 }
