@@ -4,18 +4,22 @@
 \alias{bedpeToRearrCatalogue}
 \title{bedpeToRearrCatalogue}
 \usage{
-bedpeToRearrCatalogue(sv_bedpe)
+bedpeToRearrCatalogue(sv_bedpe, kmin = 10, PEAK.FACTOR = 10)
 }
 \arguments{
 \item{sv_bedpe}{data frame BEDPE as described above}
+
+\item{kmin}{minimum number of break points in a segment to consider it a cluster. Default is 10.}
+
+\item{PEAK.FACTOR}{this factor is used to calculate a threshold for the minimum average distance of breakpoints in a cluster. The threshold is given by the expected distance divided by the PEAK.FACTOR. In turn, the expected distance is the number of base pairs in a genome divided by the total number of break points. Default is 10.}
 }
 \value{
 returns a list with 1) the rearrangement catalogue for the given sample and 2) the annotated bedpe for the given sample
 }
 \description{
-This function converts a data frame BEDPE into a rearrangement catalogue, 
+This function converts a data frame BEDPE into a rearrangement catalogue,
 you should pass rearrangements of only one sample, and one rearrangement for each paired-end mates.
-The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). 
+The BEDPE data fram should contain the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name).
 In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication.
 If you specify the "svclass" column, then the "strand1" and "strand2" columns will be ignored. If the "svclass" column is absent, then it will be created
 using the convention of BrassII from the Sanger Institute pipeline: inversion when strand1 and strand2 are different, deletion when strand1 and strand2 are both +,
@@ -24,7 +28,7 @@ tandem-duplication when strand1 and strand2 are both -, and translocation when s
 \details{
 Please notice that the interpretation of strand1 and strand2 from your rearrangement caller may differ from the BrassII Sanger interpretation.
 Typically, other calles may have the strand2 sign inverted with respect to what is shown by BrassII, so for example a deletion is when strand1 is + and strand2 is -,
-instead of when both are + as in our case. To avoid confusion, double check the convention of your caller, and possibly specify the svclass column yourself to simply ignore 
+instead of when both are + as in our case. To avoid confusion, double check the convention of your caller, and possibly specify the svclass column yourself to simply ignore
 the strand1 and strand2 automated interpretation.
 }
 \examples{
