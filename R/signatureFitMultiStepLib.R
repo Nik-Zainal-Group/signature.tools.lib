@@ -1029,7 +1029,7 @@ plotMatrix <- function(dataMatrix,
 
   toPlot <- dataMatrix
   for(i in 1:ncol(dataMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),dataMatrix[,i])
-  toPlot[toPlot=="0" | toPlot=="-0"] <- ""
+  toPlot[toPlot=="0" | toPlot=="-0" | toPlot==paste0("0.",paste(rep("0",ndigitsafterzero),collapse = ""))] <- ""
 
   circleDim <- dataMatrix/max(dataMatrix,na.rm = T)*5
 

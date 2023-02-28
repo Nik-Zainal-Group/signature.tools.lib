@@ -42,4 +42,4 @@ Imports:
     combinat,
     limSolve,
     getopt
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
