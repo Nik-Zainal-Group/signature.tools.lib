@@ -744,7 +744,8 @@ plotRearrSignatures <-function(signature_data_matrix,
                                add_to_titles = NULL,
                                mar=NULL,
                                howManyInOnePage=100,
-                               ncolumns=1){
+                               ncolumns=1,
+                               textscaling = 1){
   #This function plots a set of signatures in a single file, three signatures for each row.
   #signature_data_matrix is a data frame that contains the rearrangement signatures.
   #                      The columns are the signatures, while the rows are the 32 features
@@ -794,24 +795,20 @@ plotRearrSignatures <-function(signature_data_matrix,
       pos <- barplot(tmpmatrix[,pos],
                      main = title,
                      names.arg = NA,
-                     #names.arg = sizes_names,
+                     cex.axis = textscaling,
                      col=rearr.colours,
                      beside = FALSE,
-                     #las=2,
-                     cex.names = 0.8,
-                     cex.main = 0.9,
-                     #mgp=c(3,2,0),
+                     cex.names = 0.8*textscaling,
+                     cex.main = 0.9*textscaling,
                      border = 0,
                      space = 0.1)
       axis(1,
            las=2,
-           #hadj=0.5,
            at=pos,
            lab=sizes_names,
-           #mgp=c(3,2,0),
            col = "transparent",
-           line = 1,
-           cex.axis = 0.8)
+           line = 1*textscaling,
+           cex.axis = 0.8*textscaling)
       #save old plot coordinates
       op <- par("usr")
       #set new coordinates
@@ -829,30 +826,30 @@ plotRearrSignatures <-function(signature_data_matrix,
         start <- stop
         stop <- start + xsep
         rect(start, -0.14, stop, -0.02,col = del_col,lwd = 0,border = NA)
-        text(x = start+0.5*xsep,y = -0.08,"del",col = "white")
+        text(x = start+0.5*xsep,y = -0.08,"del",col = "white",cex = textscaling)
         start <- stop
         stop <- start + xsep
         rect(start, -0.14, stop, -0.02,col = td_col,lwd = 0,border = NA)
-        text(x = start+0.5*xsep,y = -0.08,"tds",col = "white")
+        text(x = start+0.5*xsep,y = -0.08,"tds",col = "white",cex = textscaling)
         start <- stop
         stop <- start + xsep
         rect(start, -0.14, stop, -0.02,col = inv_col,lwd = 0,border = NA)
-        text(x = start+0.5*xsep,y = -0.08,"inv",col = "white")
+        text(x = start+0.5*xsep,y = -0.08,"inv",col = "white",cex = textscaling)
         start <- stop
         stop <- start + tr_size
         rect(start, -0.14, stop, -0.02,col = transloc_col,lwd = 0,border = NA)
-        text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white")
+        text(x = start+0.5*tr_size,y = -0.08,"tr",col = "white",cex = textscaling)
       }
       xsep2 <- 3*xsep+tr_size
       rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)
-      text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white")
+      text(x = start1+0.5*xsep2,y = -0.2,"clustered",col = "white",cex = textscaling)
       rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
-      text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black")
+      text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black",cex = textscaling)
 
       #restore old coordinates
       par(usr = op)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 1.5)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5*textscaling)
     if(!is.null(output_file)) dev.off()
   }
 }

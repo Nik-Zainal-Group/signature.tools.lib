@@ -37,11 +37,25 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   }
 
   clusters_table <- NULL
-
+  
+  if(nrow(sv_bedpe)>0){
+    # make sure that there are no multiple samples here
+    if(length(unique(sv_bedpe$sample))>1){
+      # keep only the most frequent sample
+      tmpsamplenames <- unique(sv_bedpe$sample)
+      tmpcounts <- table(sv_bedpe$sample)
+      pos <- which.max(tmpcounts)
+      samplechoice <- names(pos)
+      sv_bedpe <- sv_bedpe[sv_bedpe$sample==samplechoice,,drop=F]
+      message("[warning bedpeToRearrCatalogue] bedpeToRearrCatalogue sample column should have only one sample name, however multiple sample names were detected: ",
+              paste(tmpsamplenames,collapse = ", "),". Trying to fix this by using only the sample with the largest number of rearrangements (",samplechoice,"). ",
+              "This fix should work if there are a few rearrangements from the germline sample, so all we would do is to remove the germline sample name and variants",
+              "while keeping all the tumour sample variants.")
+    }
+  }
   #Annotate the bedpe if necessary
 
   if(nrow(sv_bedpe)>0){
-
 
     clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
                                                         plot.path = NA,

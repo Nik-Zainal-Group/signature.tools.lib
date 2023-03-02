@@ -115,6 +115,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
   annotated_mutations <- NULL
   mtype_mutations <- NULL
   catalogues_mutations <- NULL
+  clustering_regions_mutations <- NULL
 
   if(sum(specified_files)>1){
     # too many mutation file types passed
@@ -212,6 +213,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
                                stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
         reslist <- bedpeToRearrCatalogue(sv_bedpe)
+        reslist$clustering_regions$sample <- sample
         # res <- reslist$rearr_catalogue
         # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
         resncol <- ncol(reslist$rearr_catalogue)
@@ -230,6 +232,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$rearr_catalogue)
         annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
+        clustering_regions_mutations <- rbind(clustering_regions_mutations,cat_list[[i]]$clustering_regions)
       }
     }
 
@@ -267,6 +270,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
   returnObj$catalogues <- catalogues
   returnObj$mtype_catalogues <- mtype_catalogues
   returnObj$annotated_mutations <- annotated_mutations
+  returnObj$clustering_regions_mutations <- clustering_regions_mutations
 
   # if no signature fit was requested then finish early and return catalogue and annotated mutations
   if(noFit){

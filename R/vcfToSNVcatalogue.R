@@ -13,6 +13,12 @@
 #' res <- vcfToSNVcatalogue(file_subs,genome.v = "hg38")
 vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   
+  # check that file exists
+  if (!file.exists(vcfFilename)){
+    message("[error vcfToSNVcatalogue] vcfFilename file not found: ",vcfFilename)
+    return(NULL)
+  }
+  
   if(genome.v=="hg19"){
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
     genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5

@@ -41,5 +41,6 @@ Imports:
     doRNG,
     combinat,
     limSolve,
-    getopt
+    getopt,
+    circlize
 RoxygenNote: 7.2.1
