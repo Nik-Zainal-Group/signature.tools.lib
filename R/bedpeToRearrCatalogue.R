@@ -97,7 +97,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
   return_list$annotated_bedpe <- all_sv_annotated
-  return_list$clustering_regions <- clustering_regions
+  if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
 
   return(return_list)
 }

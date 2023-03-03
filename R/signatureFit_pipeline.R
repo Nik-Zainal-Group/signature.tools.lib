@@ -213,7 +213,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
                                stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
         reslist <- bedpeToRearrCatalogue(sv_bedpe)
-        reslist$clustering_regions$sample <- sample
+        if(!is.null(reslist$clustering_regions)) reslist$clustering_regions$sample <- sample
         # res <- reslist$rearr_catalogue
         # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
         resncol <- ncol(reslist$rearr_catalogue)
@@ -232,7 +232,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$rearr_catalogue)
         annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
-        clustering_regions_mutations <- rbind(clustering_regions_mutations,cat_list[[i]]$clustering_regions)
+        if(!is.null(cat_list[[i]]$clustering_regions)) clustering_regions_mutations <- rbind(clustering_regions_mutations,cat_list[[i]]$clustering_regions)
       }
     }
 

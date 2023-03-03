@@ -38,12 +38,49 @@ genomeChartSV <- function(SV_bedpe_file,
   }
   
   # # check if non-template and micro-homology columns are present
-  # if(all(c("non-template","micro-homology") %in% colnames(sv_obj$annotated_bedpe))){
-  #   nt_only <- sv_obj$annotated_bedpe$`non-template`[sv_obj$annotated_bedpe$`non-template`!="."]
-  #   mh_only <- sv_obj$annotated_bedpe$`micro-homology`[sv_obj$annotated_bedpe$`micro-homology`!="."]
-  #   table(nchar(nt_only))
-  #   table(nchar(mh_only))
-  # }
+  if(all(c("non-template","micro-homology") %in% colnames(sv_obj$annotated_bedpe))){
+    junctions_catalogue_channels <- paste(rep(c("clustered","non-clustered"),each=7),
+                                          rep(c(rep("_non-templated",3),rep("_homologous",3),"_other"),2),
+                                          rep(c(rep(c("_1-3","_3-10","_>10"),2),""),2),sep = "")
+    junctions_catalogue <- data.frame(sample=rep(0,length(junctions_catalogue_channels)),
+                                      row.names = junctions_catalogue_channels,
+                                      stringsAsFactors = F)
+    for (clustered in c(TRUE,FALSE)){
+      # clustered <- F
+      channelc <- ifelse(clustered,"clustered","non-clustered")
+      for (typebp in c("_non-templated","_homologous","_other")){
+        # typebp <- "_non-templated"
+        channel <- paste0(channelc,typebp)
+        if(typebp %in% c("_non-templated","_homologous")){
+          bedpecol <- ifelse(typebp=="_non-templated","non-template","micro-homology")
+          currentseqlength <- nchar(sv_obj$annotated_bedpe[sv_obj$annotated_bedpe[,bedpecol]!="." & sv_obj$annotated_bedpe$is.clustered==clustered,bedpecol])
+          if(length(currentseqlength)>0){
+            currentlengthtable <- table(currentseqlength)
+            for(i in 1:length(currentlengthtable)){
+              # i <- 1
+              tmpn <- as.numeric(names(currentlengthtable))[i]
+              if(tmpn>0 & tmpn<=3){
+                junctions_catalogue[paste0(channel,"_1-3"),"sample"] <- junctions_catalogue[paste0(channel,"_1-3"),"sample"] + currentlengthtable[i]
+              }else if(tmpn>3 & tmpn<=10){
+                junctions_catalogue[paste0(channel,"_3-10"),"sample"] <- junctions_catalogue[paste0(channel,"_3-10"),"sample"] + currentlengthtable[i]
+              }else if(tmpn>10){
+                junctions_catalogue[paste0(channel,"_>10"),"sample"] <- junctions_catalogue[paste0(channel,"_>10"),"sample"] + currentlengthtable[i]
+              }
+            }
+          }
+        }else{
+          tmpn <- sum(sv_obj$annotated_bedpe[,"non-template"]=="." &  sv_obj$annotated_bedpe[,"micro-homology"]=="." & sv_obj$annotated_bedpe$is.clustered==clustered)
+          junctions_catalogue[channel,"sample"] <- junctions_catalogue[channel,"sample"] + tmpn
+        }
+      }
+    }
+    
+    
+    nt_only <- sv_obj$annotated_bedpe$`non-template`[sv_obj$annotated_bedpe$`non-template`!="."]
+    mh_only <- sv_obj$annotated_bedpe$`micro-homology`[sv_obj$annotated_bedpe$`micro-homology`!="."]
+    table(nchar(nt_only))
+    table(nchar(mh_only))
+  }
   
   
   # time to plot, outfilename needs to be specified
