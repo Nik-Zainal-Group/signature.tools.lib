@@ -86,16 +86,22 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
     all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
     sv_bedpe <- sv_bedpe[!toberemoved,]
 
-    #now compute the catalogue
-    rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+
   }else{
-    #case in which the sv_bedpe table has 0 rows
-    rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+
     all_sv_annotated <- NULL
   }
+  
+  #now compute the catalogue (this takes care of the 0 SVs case)
+  rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  # get the junctions catalogue too (this takes care of the 0 SVs case)
+  junctions_catalogue <- build_junctions_catalogue(sv_bedpe)
+  colnames(junctions_catalogue) <- colnames(rearr_catalogue)
 
+  # return all results
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
+  return_list$junctions_catalogue <- junctions_catalogue
   return_list$annotated_bedpe <- all_sv_annotated
   if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
 
@@ -307,3 +313,55 @@ classifyRearrangementsFromBedpe <- function(sv_bedpe){
   sv_bedpe
 }
 
+
+build_junctions_catalogue <- function(annotated_bedpe){
+  
+  junctions_catalogue_channels <- paste(rep(c("clustered","non-clustered"),each=7),
+                                        rep(c(rep("_non-templated",3),rep("_homologous",3),"_other"),2),
+                                        rep(c(rep(c("_1-3","_4-10","_>10"),2),""),2),sep = "")
+  junctions_catalogue <- data.frame(sample=rep(0,length(junctions_catalogue_channels)),
+                                    row.names = junctions_catalogue_channels,
+                                    stringsAsFactors = F)
+  if(nrow(annotated_bedpe)==0){
+    # cut short here returning a 0 catalogue if there are no SVs
+    return(junctions_catalogue)
+  }
+  
+  # # check if non-template and micro-homology columns are present
+  if(all(c("non-template","micro-homology") %in% colnames(annotated_bedpe))){
+    for (clustered in c(TRUE,FALSE)){
+      # clustered <- F
+      channelc <- ifelse(clustered,"clustered","non-clustered")
+      for (typebp in c("_non-templated","_homologous","_other")){
+        # typebp <- "_non-templated"
+        channel <- paste0(channelc,typebp)
+        if(typebp %in% c("_non-templated","_homologous")){
+          bedpecol <- ifelse(typebp=="_non-templated","non-template","micro-homology")
+          currentseqlength <- nchar(annotated_bedpe[annotated_bedpe[,bedpecol]!="." & annotated_bedpe$is.clustered==clustered,bedpecol])
+          if(length(currentseqlength)>0){
+            currentlengthtable <- table(currentseqlength)
+            for(i in 1:length(currentlengthtable)){
+              # i <- 1
+              tmpn <- as.numeric(names(currentlengthtable))[i]
+              if(tmpn>0 & tmpn<=3){
+                junctions_catalogue[paste0(channel,"_1-3"),"sample"] <- junctions_catalogue[paste0(channel,"_1-3"),"sample"] + currentlengthtable[i]
+              }else if(tmpn>3 & tmpn<=10){
+                junctions_catalogue[paste0(channel,"_4-10"),"sample"] <- junctions_catalogue[paste0(channel,"_4-10"),"sample"] + currentlengthtable[i]
+              }else if(tmpn>10){
+                junctions_catalogue[paste0(channel,"_>10"),"sample"] <- junctions_catalogue[paste0(channel,"_>10"),"sample"] + currentlengthtable[i]
+              }
+            }
+          }
+        }else{
+          tmpn <- sum(annotated_bedpe[,"non-template"]=="." &  annotated_bedpe[,"micro-homology"]=="." & annotated_bedpe$is.clustered==clustered)
+          junctions_catalogue[channel,"sample"] <- junctions_catalogue[channel,"sample"] + tmpn
+        }
+      }
+    }
+    return(junctions_catalogue)
+  }else{
+    # return NULL if there are SVs but no "non-template" and "micro-homology" columns
+    return(NULL)
+  }
+  
+}

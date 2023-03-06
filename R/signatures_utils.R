@@ -544,7 +544,8 @@ plotSubsSignatures <- function(signature_data_matrix,
                                add_to_titles = NULL,
                                mar=NULL,
                                howManyInOnePage=100,
-                               ncolumns=1){
+                               ncolumns=1,
+                               textscaling=1){
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
   # plotcolours <- c("blue","black","red","gray","green","pink")
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
@@ -586,12 +587,13 @@ plotSubsSignatures <- function(signature_data_matrix,
       xlabels <- rep("",96)
       barplot(tmpmatrix[,pos],
               main = title,
+              cex.axis = textscaling,
               names.arg = xlabels,
               col=rearr.colours,
               beside = TRUE,
               las=2,
-              cex.main = 0.9,
-              cex.names = 1,border = NA,space = 0.2)
+              cex.main = 0.9*textscaling,
+              cex.names = 1*textscaling,border = NA,space = 0.2)
       par(xpd=TRUE)
       par(usr = c(0, 1, 0, 1))
       recttop <- -0.02
@@ -605,12 +607,12 @@ plotSubsSignatures <- function(signature_data_matrix,
       rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
       rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
       textposx <- 0.04+seq(8,88,16)/104
-      text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
-      text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
+      text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2,cex = textscaling)
+      text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2,cex = textscaling)
       #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 1.5)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5*textscaling)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -802,13 +804,13 @@ plotRearrSignatures <-function(signature_data_matrix,
                      cex.main = 0.9*textscaling,
                      border = 0,
                      space = 0.1)
-      axis(1,
-           las=2,
-           at=pos,
-           lab=sizes_names,
-           col = "transparent",
-           line = 1*textscaling,
-           cex.axis = 0.8*textscaling)
+      # axis(1,
+      #      las=2,
+      #      at=pos,
+      #      lab=sizes_names,
+      #      col = "transparent",
+      #      line = 1*textscaling,
+      #      cex.axis = 0.8*textscaling)
       #save old plot coordinates
       op <- par("usr")
       #set new coordinates
@@ -846,6 +848,12 @@ plotRearrSignatures <-function(signature_data_matrix,
       rect(start1+xsep2, -0.26, start1+2*xsep2, -0.14,col = non_clust_col,lwd = 0,border = NA)
       text(x = start1+1.5*xsep2,y = -0.2,"non-clustered",col = "black",cex = textscaling)
 
+      # plot text
+      tstep <- xsep/5
+      tstart <- start1+tstep/2
+      tpos <- seq(from = tstart,by = tstep,length.out = length(sizes_names))
+      text(x = tpos,y = -0.3,adj = 1,labels = sizes_names,cex = 0.8*textscaling,srt = 90)
+      
       #restore old coordinates
       par(usr = op)
     }

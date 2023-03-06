@@ -36,52 +36,7 @@ genomeChartSV <- function(SV_bedpe_file,
     sbs_obj <- tabToSNVcatalogue(subs,genome.v = genome.v)
     SNVprovided <- TRUE
   }
-  
-  # # check if non-template and micro-homology columns are present
-  if(all(c("non-template","micro-homology") %in% colnames(sv_obj$annotated_bedpe))){
-    junctions_catalogue_channels <- paste(rep(c("clustered","non-clustered"),each=7),
-                                          rep(c(rep("_non-templated",3),rep("_homologous",3),"_other"),2),
-                                          rep(c(rep(c("_1-3","_3-10","_>10"),2),""),2),sep = "")
-    junctions_catalogue <- data.frame(sample=rep(0,length(junctions_catalogue_channels)),
-                                      row.names = junctions_catalogue_channels,
-                                      stringsAsFactors = F)
-    for (clustered in c(TRUE,FALSE)){
-      # clustered <- F
-      channelc <- ifelse(clustered,"clustered","non-clustered")
-      for (typebp in c("_non-templated","_homologous","_other")){
-        # typebp <- "_non-templated"
-        channel <- paste0(channelc,typebp)
-        if(typebp %in% c("_non-templated","_homologous")){
-          bedpecol <- ifelse(typebp=="_non-templated","non-template","micro-homology")
-          currentseqlength <- nchar(sv_obj$annotated_bedpe[sv_obj$annotated_bedpe[,bedpecol]!="." & sv_obj$annotated_bedpe$is.clustered==clustered,bedpecol])
-          if(length(currentseqlength)>0){
-            currentlengthtable <- table(currentseqlength)
-            for(i in 1:length(currentlengthtable)){
-              # i <- 1
-              tmpn <- as.numeric(names(currentlengthtable))[i]
-              if(tmpn>0 & tmpn<=3){
-                junctions_catalogue[paste0(channel,"_1-3"),"sample"] <- junctions_catalogue[paste0(channel,"_1-3"),"sample"] + currentlengthtable[i]
-              }else if(tmpn>3 & tmpn<=10){
-                junctions_catalogue[paste0(channel,"_3-10"),"sample"] <- junctions_catalogue[paste0(channel,"_3-10"),"sample"] + currentlengthtable[i]
-              }else if(tmpn>10){
-                junctions_catalogue[paste0(channel,"_>10"),"sample"] <- junctions_catalogue[paste0(channel,"_>10"),"sample"] + currentlengthtable[i]
-              }
-            }
-          }
-        }else{
-          tmpn <- sum(sv_obj$annotated_bedpe[,"non-template"]=="." &  sv_obj$annotated_bedpe[,"micro-homology"]=="." & sv_obj$annotated_bedpe$is.clustered==clustered)
-          junctions_catalogue[channel,"sample"] <- junctions_catalogue[channel,"sample"] + tmpn
-        }
-      }
-    }
-    
-    
-    nt_only <- sv_obj$annotated_bedpe$`non-template`[sv_obj$annotated_bedpe$`non-template`!="."]
-    mh_only <- sv_obj$annotated_bedpe$`micro-homology`[sv_obj$annotated_bedpe$`micro-homology`!="."]
-    table(nchar(nt_only))
-    table(nchar(mh_only))
-  }
-  
+
   
   # time to plot, outfilename needs to be specified
   plottype <- substr(outfilename, nchar(outfilename) - 2, nchar(outfilename))
@@ -108,7 +63,19 @@ genomeChartSV <- function(SV_bedpe_file,
                genome.v = genome.v)
   par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
   plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
-  
+  par(fig = c(0.69,0.97,0.22,0.61),new=TRUE)
+  plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
+  if(SNVprovided){
+    par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
+    colnames(sbs_obj$catalogue) <- paste0(sample_name," - all SNVs")
+    plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
+    if(!is.null(sv_obj$clustering_regions)){
+      par(fig = c(0.65,0.98,0.01,0.21),new=TRUE)
+      # colnames(sbs_obj$catalogue) <- paste0(sample_name," - SNVs in clusters")
+      # plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
+    }
+
+  }
   # close the file
   dev.off()
   
@@ -135,7 +102,7 @@ plotCircosSV <- function(sv_bedpe,
                     '2B3D26','222222','F2F3F4', 'CCCCCC','CCCCCC','CCCCCC')
   kelly_colors <- paste0("#",kelly_colors)
   
-  clustering_regions$colour <- kelly_colors[1:nrow(clustering_regions)]
+  if(!is.null(clustering_regions)) clustering_regions$colour <- kelly_colors[1:nrow(clustering_regions)]
   
   circlize::circos.par("start.degree" = 90)
   circlize::circos.initializeWithIdeogram(species = genome.v,plotType = NULL)
@@ -154,17 +121,18 @@ plotCircosSV <- function(sv_bedpe,
     chromNumber <- gsub("chr", "", circlize::CELL_META$sector.index)
     # circos.text(CELL_META$xcenter, CELL_META$ylim[1]+(CELL_META$ylim[2]-CELL_META$ylim[1])*0.3, 
     # displaytext, cex = 0.6, niceFacing = TRUE)
-    tmpRows <- clustering_regions[clustering_regions$chr==chromNumber,,drop=F]
-    if(nrow(tmpRows)>0){
-      for (i in 1:nrow(tmpRows)){
-        circlize::circos.rect(xleft = tmpRows$start.bp[i],
-                              ybottom = circlize::CELL_META$ylim[1],
-                              xright = tmpRows$end.bp[i],
-                              ytop = circlize::CELL_META$ylim[2],
-                              border = NA,col=tmpRows$colour[i])
+    if(!is.null(clustering_regions)){
+      tmpRows <- clustering_regions[clustering_regions$chr==chromNumber,,drop=F]
+      if(nrow(tmpRows)>0){
+        for (i in 1:nrow(tmpRows)){
+          circlize::circos.rect(xleft = tmpRows$start.bp[i],
+                                ybottom = circlize::CELL_META$ylim[1],
+                                xright = tmpRows$end.bp[i],
+                                ytop = circlize::CELL_META$ylim[2],
+                                border = NA,col=tmpRows$colour[i])
+        }
       }
     }
-    
   }, track.height = 0.1, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey", bg.lwd = 0.5)
   
   # draw unclustered links first
@@ -177,22 +145,23 @@ plotCircosSV <- function(sv_bedpe,
   }
   
   # draw links from clusters
-  for(i in 1:nrow(clustering_regions)){
-    #i <- 1
-    whichSVs <- getSVinRange(sv_bedpe,clustering_regions$chr[i],clustering_regions$start.bp[i],clustering_regions$end.bp[i])
-    if(sum(whichSVs)>0){
-      tmpBEDPE <- sv_bedpe[whichSVs,,drop=F]
-      for(j in 1:nrow(tmpBEDPE)){
-        circlize::circos.link(sector.index1 = paste0("chr",tmpBEDPE$chrom1[j]),
-                              point1 = tmpBEDPE$start1[j],
-                              sector.index2 = paste0("chr",tmpBEDPE$chrom2[j]),
-                              point2 = tmpBEDPE$start2[j],col = clustering_regions$colour[i],lwd = 2)
+  if(!is.null(clustering_regions)){
+    for(i in 1:nrow(clustering_regions)){
+      #i <- 1
+      whichSVs <- getSVinRange(sv_bedpe,clustering_regions$chr[i],clustering_regions$start.bp[i],clustering_regions$end.bp[i])
+      if(sum(whichSVs)>0){
+        tmpBEDPE <- sv_bedpe[whichSVs,,drop=F]
+        for(j in 1:nrow(tmpBEDPE)){
+          circlize::circos.link(sector.index1 = paste0("chr",tmpBEDPE$chrom1[j]),
+                                point1 = tmpBEDPE$start1[j],
+                                sector.index2 = paste0("chr",tmpBEDPE$chrom2[j]),
+                                point2 = tmpBEDPE$start2[j],col = clustering_regions$colour[i],lwd = 2)
+        }
+        
       }
       
     }
-    
   }
-  
   circlize::circos.clear()
 }
 
