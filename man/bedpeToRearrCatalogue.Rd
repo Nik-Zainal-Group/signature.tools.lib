@@ -14,7 +14,7 @@ bedpeToRearrCatalogue(sv_bedpe, kmin = 10, PEAK.FACTOR = 10)
 \item{PEAK.FACTOR}{this factor is used to calculate a threshold for the minimum average distance of breakpoints in a cluster. The threshold is given by the expected distance divided by the PEAK.FACTOR. In turn, the expected distance is the number of base pairs in a genome divided by the total number of break points. Default is 10.}
 }
 \value{
-returns a list with 1) the rearrangement catalogue for the given sample and 2) the annotated bedpe for the given sample
+returns a list with the rearrangement catalogue (rearr_catalogue) for the given sample and the annotated bedpe (annotated_bedpe) for the given sample. Also, a junctions catalogue will be returned if the non-template and micro-homology columns are provided. If clusters of rearrangements are found then the clustering regions will also be returned (clustering_regions).
 }
 \description{
 This function converts a data frame BEDPE into a rearrangement catalogue,
@@ -27,16 +27,23 @@ tandem-duplication when strand1 and strand2 are both -, and translocation when s
 }
 \details{
 Please notice that the interpretation of strand1 and strand2 from your rearrangement caller may differ from the BrassII Sanger interpretation.
-Typically, other calles may have the strand2 sign inverted with respect to what is shown by BrassII, so for example a deletion is when strand1 is + and strand2 is -,
+Typically, other callers may have the strand2 sign inverted with respect to what is shown by BrassII, so for example a deletion is when strand1 is + and strand2 is -,
 instead of when both are + as in our case. To avoid confusion, double check the convention of your caller, and possibly specify the svclass column yourself to simply ignore
 the strand1 and strand2 automated interpretation.
+
+Optionally, the user can provide in the bedpe two additional columns, "non-template" and "micro-homology",
+which should contain the DNA sequence inserted ("non-template") or deleted ("micro-homology") at the breakpoints junction.
+A dot (".") should be inserted in these columns if a DNA sequence is not available. When these two columns are available,
+a junctions catalogue will be computed and returned. A junction catalogue contains the counts of how many clustered/unclustered
+rearrangements have non-templated insertions or micro-homology deletions of a certain size.
 }
 \examples{
 vcf_sv_file.bedpe <- "sample.bedpe"
 sv_bedpe <- read.table(vcf_sv_file.bedpe,sep = "\t",header = TRUE,
                      stringsAsFactors = FALSE,check.names = FALSE)
 #build a catalogue from the bedpe file
-res.cat <- bedpeToRearrCatalogue(sv_bedpe)
+res <- bedpeToRearrCatalogue(sv_bedpe)
+plotRearrSignatures(res$rearr_catalogue)
 }
 \keyword{bedpe}
 \keyword{rearrangement}

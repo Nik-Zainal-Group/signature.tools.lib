@@ -31,7 +31,14 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   #check that the required columns are present
   required_cols <- c("chr", "position", "ALT", "REF")
   if(!length(intersect(required_cols,colnames(subs)))==length(required_cols)){
-    stop("[tabToSNVcatalogue error] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
+    message("[tabToSNVcatalogue error] missing columns in subs data frame, following columns required: chr, position, REF, ALT")
+    return(NULL)
+  }
+  
+  # check if there are mutations at all
+  if(nrow(subs)==0){
+    # return early an empty catalogue
+    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
   }
   
   # select only SNVs

@@ -25,18 +25,33 @@ genomeChartSV <- function(SV_bedpe_file,
   sample_name <- unique(sv_obj$annotated_bedpe$sample)
   
   # check if we have SNVs
-  SNVprovided <- FALSE
-  sbs_obj <- NULL
+  snvs_table <- NULL
   if(!is.null(SNV_vcf_file)){
-    sbs_obj <- vcfToSNVcatalogue(vcfFilename = SNV_vcf_file,genome.v = genome.v)
-    SNVprovided <- TRUE
+    snvs_table <- fromVcfToTable(vcfFilename = SNV_vcf_file,
+                                 genome.v = genome.v)
   }else if(!is.null(SNV_tab_file)){
-    subs <- read.table(file = SNV_tab_file,sep = "\t",header = TRUE,
-                       check.names = FALSE,stringsAsFactors = FALSE)
-    sbs_obj <- tabToSNVcatalogue(subs,genome.v = genome.v)
-    SNVprovided <- TRUE
+    snvs_table <- read.table(file = SNV_tab_file,sep = "\t",header = TRUE,
+                             check.names = FALSE,stringsAsFactors = FALSE)
   }
 
+  clustering_regions_sbs_catalogues <- NULL
+  clusteringSBScatalogue_all <- NULL
+  if(!is.null(sv_obj$clustering_regions) & !is.null(snvs_table)){
+    # now find snvs in SV clusters and build catalogues
+    clustering_regions_sbs_catalogues <- list()
+    for(i in 1:nrow(sv_obj$clustering_regions)){
+      region_chr <- sv_obj$clustering_regions$chr[i]
+      region_start <- sv_obj$clustering_regions$start.bp[i]
+      region_end <- sv_obj$clustering_regions$end.bp[i]
+      region_snvs <- snvs_table[snvs_table$chr==region_chr & snvs_table$position >= region_start & snvs_table$position <= region_end,]
+      res_sbs <- tabToSNVcatalogue(region_snvs,genome.v = genome.v)
+      colnames(res_sbs$catalogue) <- paste0(sample_name," - cluster ",i)
+      clustering_regions_sbs_catalogues[[i]] <- res_sbs$catalogue
+    }
+    clustering_regions_sbs_catalogues <- do.call(cbind,clustering_regions_sbs_catalogues)
+    clusteringSBScatalogue_all <- data.frame(apply(clustering_regions_sbs_catalogues, 1, sum),stringsAsFactors = F)
+    colnames(clusteringSBScatalogue_all) <- paste0(sample_name," - SNVs in clusters")
+  }
   
   # time to plot, outfilename needs to be specified
   plottype <- substr(outfilename, nchar(outfilename) - 2, nchar(outfilename))
@@ -63,18 +78,11 @@ genomeChartSV <- function(SV_bedpe_file,
                genome.v = genome.v)
   par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
   plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
-  par(fig = c(0.69,0.97,0.22,0.61),new=TRUE)
+  par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
   plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
-  if(SNVprovided){
+  if(!is.null(clusteringSBScatalogue_all)){
     par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
-    colnames(sbs_obj$catalogue) <- paste0(sample_name," - all SNVs")
-    plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
-    if(!is.null(sv_obj$clustering_regions)){
-      par(fig = c(0.65,0.98,0.01,0.21),new=TRUE)
-      # colnames(sbs_obj$catalogue) <- paste0(sample_name," - SNVs in clusters")
-      # plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
-    }
-
+    plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
   }
   # close the file
   dev.off()
@@ -82,9 +90,28 @@ genomeChartSV <- function(SV_bedpe_file,
   # also I can return all the data/info obtained
   returnObj <- NULL
   returnObj$sv_obj <- sv_obj
-  if(SNVprovided) returnObj$sbs_obj <- sbs_obj
+  returnObj$clustering_regions_sbs_catalogues <- clustering_regions_sbs_catalogues
+  returnObj$clusteringSBScatalogue_all <- clusteringSBScatalogue_all
+  return(returnObj)
 }
 
+fromVcfToTable <- function(vcfFilename,
+                           genome.v){
+  vcf_data <- VariantAnnotation::readVcf(vcfFilename, genome.v)
+  vcf_data <- VariantAnnotation::expand(vcf_data)
+  rd <- SummarizedExperiment::rowRanges(vcf_data)
+  ref <- as.character(rd$REF)
+  alt <- as.character(rd$ALT)
+  chr <- as.character(GenomeInfoDb::seqnames(vcf_data))
+  rgs <- IRanges::ranges(vcf_data)
+  position <- BiocGenerics::start(rgs)
+  muts_table <- data.frame(chr = chr,
+                           position = position,
+                           REF = ref,
+                           ALT = alt,
+                           stringsAsFactors = F)
+  return(muts_table)
+}
 
 
 getSVinRange <- function(sv_bedpe,chr,pstart,pend){

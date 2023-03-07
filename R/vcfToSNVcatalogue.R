@@ -62,6 +62,12 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   vcf_data <- VariantAnnotation::expand(vcf_data)
   nmutsloaded <- nrow(vcf_data)
   
+  # check if there are mutations at all
+  if(nrow(nmutsloaded)==0){
+    # return early an empty catalogue
+    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
+  }
+  
   #filters failed for each variant
   rd <- SummarizedExperiment::rowRanges(vcf_data)
   selectionvcf <- nchar(as.character(rd$REF))==1 & nchar(as.character(rd$ALT))==1
@@ -83,7 +89,8 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   chroms <- GenomeInfoDb::seqnames(vcf_data)
 
   if (length(chroms)==0){ 
-     stop("[vcfToSNVcatalogue error] Input vcf does not contain variants ", vcfFilename)
+    # return early an empty catalogue
+    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
   }
   
   if (genome.v=="hg38" || genome.v=="mm10") {
