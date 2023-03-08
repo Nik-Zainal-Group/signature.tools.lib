@@ -123,13 +123,31 @@ getSVinRange <- function(sv_bedpe,chr,pstart,pend){
 plotCircosSV <- function(sv_bedpe,
                          clustering_regions,
                          genome.v){
-  kelly_colors <- c('F3C300', '875692', 'F38400', 'A1CAF1', 'BE0032',
-                    'C2B280', '848482', '008856', 'E68FAC', '0067A5', 'F99379', '604E97',
-                    'F6A600', 'B3446C', 'DCD300', '882D17', '8DB600', '654522', 'E25822',
-                    '2B3D26','222222','F2F3F4', 'CCCCCC','CCCCCC','CCCCCC')
-  kelly_colors <- paste0("#",kelly_colors)
+  kelly_colors <- c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
+                    '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
+                    '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
+                    '#882D17', '#8DB600', '#654522', '#E25822',
+                    '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
   
-  if(!is.null(clustering_regions)) clustering_regions$colour <- kelly_colors[1:nrow(clustering_regions)]
+  if(nrow(sv_bedpe>0)){
+    if(!startsWith(sv_bedpe$chrom1[1],"chr")){
+      sv_bedpe$chrom1 <- paste0("chr",sv_bedpe$chrom1)
+      sv_bedpe$chrom2 <- paste0("chr",sv_bedpe$chrom2)
+    }
+  }
+  
+  if(!is.null(clustering_regions)) {
+    maxcolours <- length(kelly_colors)
+    if(nrow(clustering_regions)>maxcolours){
+      clustering_regions$colour <- rep("#CCCCCC",nrow(clustering_regions))
+      clustering_regions$colour[1:maxcolours] <- kelly_colors[1:maxcolours]
+    }else{
+      clustering_regions$colour <- kelly_colors[1:nrow(clustering_regions)]
+    }
+    if(!startsWith(clustering_regions$chr[1],"chr")){
+      clustering_regions$chr <- paste0("chr",clustering_regions$chr)
+    }
+  }
   
   circlize::circos.par("start.degree" = 90)
   circlize::circos.initializeWithIdeogram(species = genome.v,plotType = NULL)
@@ -145,9 +163,8 @@ plotCircosSV <- function(sv_bedpe,
   
   # draw rectangles where the clusters are
   circlize::circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
-    chromNumber <- gsub("chr", "", circlize::CELL_META$sector.index)
-    # circos.text(CELL_META$xcenter, CELL_META$ylim[1]+(CELL_META$ylim[2]-CELL_META$ylim[1])*0.3, 
-    # displaytext, cex = 0.6, niceFacing = TRUE)
+    chromNumber <- circlize::CELL_META$sector.index
+
     if(!is.null(clustering_regions)){
       tmpRows <- clustering_regions[clustering_regions$chr==chromNumber,,drop=F]
       if(nrow(tmpRows)>0){
@@ -165,10 +182,11 @@ plotCircosSV <- function(sv_bedpe,
   # draw unclustered links first
   tmpBEDPE <- sv_bedpe[sv_bedpe$is.clustered==F,,drop=F]
   for(j in 1:nrow(tmpBEDPE)){
-    circlize::circos.link(sector.index1 = paste0("chr",tmpBEDPE$chrom1[j]),
+    circlize::circos.link(sector.index1 = tmpBEDPE$chrom1[j],
                           point1 = tmpBEDPE$start1[j],
-                          sector.index2 = paste0("chr",tmpBEDPE$chrom2[j]),
+                          sector.index2 = tmpBEDPE$chrom2[j],
                           point2 = tmpBEDPE$start2[j],col = "lightgrey")
+
   }
   
   # draw links from clusters
@@ -179,9 +197,9 @@ plotCircosSV <- function(sv_bedpe,
       if(sum(whichSVs)>0){
         tmpBEDPE <- sv_bedpe[whichSVs,,drop=F]
         for(j in 1:nrow(tmpBEDPE)){
-          circlize::circos.link(sector.index1 = paste0("chr",tmpBEDPE$chrom1[j]),
+          circlize::circos.link(sector.index1 = tmpBEDPE$chrom1[j],
                                 point1 = tmpBEDPE$start1[j],
-                                sector.index2 = paste0("chr",tmpBEDPE$chrom2[j]),
+                                sector.index2 = tmpBEDPE$chrom2[j],
                                 point2 = tmpBEDPE$start2[j],col = clustering_regions$colour[i],lwd = 2)
         }
         

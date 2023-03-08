@@ -65,7 +65,9 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   # check if there are mutations at all
   if(nrow(nmutsloaded)==0){
     # return early an empty catalogue
-    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
+    result <- list()
+    result$catalogue <- as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F)
+    return(result)
   }
   
   #filters failed for each variant
@@ -90,7 +92,9 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
 
   if (length(chroms)==0){ 
     # return early an empty catalogue
-    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
+    result <- list()
+    result$catalogue <- as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F)
+    return(result)
   }
   
   if (genome.v=="hg38" || genome.v=="mm10") {

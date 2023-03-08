@@ -38,7 +38,9 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   # check if there are mutations at all
   if(nrow(subs)==0){
     # return early an empty catalogue
-    return(as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F))
+    result <- list()
+    result$catalogue <- as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F)
+    return(result)
   }
   
   # select only SNVs
