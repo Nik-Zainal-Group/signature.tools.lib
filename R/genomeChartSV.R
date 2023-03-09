@@ -61,7 +61,7 @@ genomeChartSV <- function(SV_bedpe_file,
   if(plottype=="pdf"){
     cairo_pdf(filename = outfilename,width = 10,height = 7)
   }else if(plottype=="png"){
-    png(filename = outfilename)
+    png(filename = outfilename,width = 3000,height = 2100,res = 300)
   }else{
     message("[error genomeChartSV] incorrect file type: ",plottype,". ",
             "Please end your file name with .pdf or .png")
