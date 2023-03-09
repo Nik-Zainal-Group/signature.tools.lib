@@ -27,11 +27,19 @@ genomeChartSV <- function(SV_bedpe_file,
   # check if we have SNVs
   snvs_table <- NULL
   if(!is.null(SNV_vcf_file)){
-    snvs_table <- fromVcfToTable(vcfFilename = SNV_vcf_file,
-                                 genome.v = genome.v)
+    if (file.exists(SNV_vcf_file)){
+      snvs_table <- fromVcfToTable(vcfFilename = SNV_vcf_file,
+                                   genome.v = genome.v)
+    }else{
+      message("[warning genomeChartSV] SNV_vcf_file file not found: ",SNV_vcf_file,". Ignoring and moving on.")
+    }
   }else if(!is.null(SNV_tab_file)){
-    snvs_table <- read.table(file = SNV_tab_file,sep = "\t",header = TRUE,
-                             check.names = FALSE,stringsAsFactors = FALSE)
+    if (file.exists(SNV_tab_file)){
+      snvs_table <- read.table(file = SNV_tab_file,sep = "\t",header = TRUE,
+                               check.names = FALSE,stringsAsFactors = FALSE)
+    }else{
+      message("[warning genomeChartSV] SNV_tab_file file not found: ",SNV_tab_file,". Ignoring and moving on.")
+    }
   }
 
   clustering_regions_sbs_catalogues <- NULL
