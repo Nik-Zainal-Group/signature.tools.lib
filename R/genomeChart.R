@@ -42,6 +42,7 @@ genomeChart <- function(outfilename,
       SNV_tab_file <- NULL
     }
   }
+  
   # Loading Indels if available
   if(!is.null(Indels_vcf_file)){
     if (file.exists(Indels_vcf_file)){
@@ -69,6 +70,7 @@ genomeChart <- function(outfilename,
       Indels_tab_file <- NULL
     }
   }
+  
   # Loading CNV file
   if(!is.null(CNV_tab_file)){
     if (file.exists(CNV_tab_file)){
@@ -79,6 +81,7 @@ genomeChart <- function(outfilename,
       CNV_tab_file <- NULL
     }
   }
+  
   # Loading SV bedpe file
   if(!is.null(SV_bedpe_file)){
     if (file.exists(SV_bedpe_file)){
@@ -88,7 +91,6 @@ genomeChart <- function(outfilename,
       SV_bedpe_file <- NULL
     }
   }
-
   
   # check if there is anything at all to plot
   if(is.null(SNV_vcf_file) & is.null(SNV_tab_file) & is.null(Indels_vcf_file) & is.null(Indels_tab_file) & is.null(CNV_tab_file) & is.null(SV_bedpe_file)){
@@ -96,6 +98,27 @@ genomeChart <- function(outfilename,
     return(NULL)
   }
   
+  # get SBS catalogue if possible
+  if(!is.null(snvs_table)){
+    sbs_obj <- tabToSNVcatalogue(subs = snvs_table,
+                                 genome.v = genome.v)
+  }
   
+  # check SBS catalogues in SV clustering regions
+  clustering_regions_sbs_catalogues <- NULL
+  clusteringSBScatalogue_all <- NULL
+  if(!is.null(sv_obj$clustering_regions) & !is.null(snvs_table)){
+    # now find snvs in SV clusters and build catalogues
+    resSBSinSVclusters <- getSBScataloguesInSVclusters(clustering_regions = sv_obj$clustering_regions,
+                                                       snvs_table = snvs_table,
+                                                       sample_name = sample_name,
+                                                       genome.v = genome.v)
+    clustering_regions_sbs_catalogues <- resSBSinSVclusters$clustering_regions_sbs_catalogues
+    clusteringSBScatalogue_all <- resSBSinSVclusters$clusteringSBScatalogue_all
+    snvs_table <- resSBSinSVclusters$snvs_table
+  }
+  
+  # run the kataegis algorithm if requested
   
 }
+

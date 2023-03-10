@@ -46,19 +46,13 @@ genomeChartSV <- function(SV_bedpe_file,
   clusteringSBScatalogue_all <- NULL
   if(!is.null(sv_obj$clustering_regions) & !is.null(snvs_table)){
     # now find snvs in SV clusters and build catalogues
-    clustering_regions_sbs_catalogues <- list()
-    for(i in 1:nrow(sv_obj$clustering_regions)){
-      region_chr <- sv_obj$clustering_regions$chr[i]
-      region_start <- sv_obj$clustering_regions$start.bp[i]
-      region_end <- sv_obj$clustering_regions$end.bp[i]
-      region_snvs <- snvs_table[snvs_table$chr==region_chr & snvs_table$position >= region_start & snvs_table$position <= region_end,]
-      res_sbs <- tabToSNVcatalogue(region_snvs,genome.v = genome.v)
-      colnames(res_sbs$catalogue) <- paste0(sample_name," - cluster ",i)
-      clustering_regions_sbs_catalogues[[i]] <- res_sbs$catalogue
-    }
-    clustering_regions_sbs_catalogues <- do.call(cbind,clustering_regions_sbs_catalogues)
-    clusteringSBScatalogue_all <- data.frame(apply(clustering_regions_sbs_catalogues, 1, sum),stringsAsFactors = F)
-    colnames(clusteringSBScatalogue_all) <- paste0(sample_name," - SNVs in clusters")
+    resSBSinSVclusters <- getSBScataloguesInSVclusters(clustering_regions = sv_obj$clustering_regions,
+                                                       snvs_table = snvs_table,
+                                                       sample_name = sample_name,
+                                                       genome.v = genome.v)
+    clustering_regions_sbs_catalogues <- resSBSinSVclusters$clustering_regions_sbs_catalogues
+    clusteringSBScatalogue_all <- resSBSinSVclusters$clusteringSBScatalogue_all
+    snvs_table <- resSBSinSVclusters$snvs_table
   }
   
   # time to plot, outfilename needs to be specified
@@ -100,6 +94,7 @@ genomeChartSV <- function(SV_bedpe_file,
   returnObj$sv_obj <- sv_obj
   returnObj$clustering_regions_sbs_catalogues <- clustering_regions_sbs_catalogues
   returnObj$clusteringSBScatalogue_all <- clusteringSBScatalogue_all
+  returnObj$snvs_table <- snvs_table
   return(returnObj)
 }
 
@@ -126,6 +121,37 @@ getSVinRange <- function(sv_bedpe,chr,pstart,pend){
   bp1in <- sv_bedpe$chrom1==chr & sv_bedpe$start1>=pstart & sv_bedpe$start1<=pend
   bp2in <- sv_bedpe$chrom2==chr & sv_bedpe$start2>=pstart & sv_bedpe$start2<=pend
   return(bp1in | bp2in)
+}
+
+getSBScataloguesInSVclusters <- function(clustering_regions,
+                                         snvs_table,
+                                         sample_name,
+                                         genome.v){
+  
+  clustering_regions_sbs_catalogues <- list()
+  snvs_table$SVregion <- NA
+  
+  for(i in 1:nrow(clustering_regions)){
+    region_chr <- clustering_regions$chr[i]
+    region_start <- clustering_regions$start.bp[i]
+    region_end <- clustering_regions$end.bp[i]
+    select_snvs <- snvs_table$chr==region_chr & snvs_table$position >= region_start & snvs_table$position <= region_end
+    region_snvs <- snvs_table[select_snvs,]
+    snvs_table[select_snvs,"SVregion"] <- i
+    res_sbs <- tabToSNVcatalogue(region_snvs,
+                                 genome.v = genome.v)
+    colnames(res_sbs$catalogue) <- paste0(sample_name," - cluster ",i)
+    clustering_regions_sbs_catalogues[[i]] <- res_sbs$catalogue
+  }
+  clustering_regions_sbs_catalogues <- do.call(cbind,clustering_regions_sbs_catalogues)
+  clusteringSBScatalogue_all <- data.frame(apply(clustering_regions_sbs_catalogues, 1, sum),stringsAsFactors = F)
+  colnames(clusteringSBScatalogue_all) <- paste0(sample_name," - SNVs in clusters")
+  
+  res <- list()
+  res$clusteringSBScatalogue_all <- clusteringSBScatalogue_all
+  res$clustering_regions_sbs_catalogues <- clustering_regions_sbs_catalogues
+  res$snvs_table <- snvs_table
+  return(res)
 }
 
 plotCircosSV <- function(sv_bedpe,
