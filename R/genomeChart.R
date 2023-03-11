@@ -100,9 +100,12 @@ genomeChart <- function(outfilename,
   }
   
   # get SBS catalogue if possible
+  snvs_classified <- NULL
   if(!is.null(snvs_table)){
     sbs_obj <- tabToSNVcatalogue(subs = snvs_table,
                                  genome.v = genome.v)
+    colnames(sbs_obj$muts)[c(1,2,4,5)] <- c("chr","position","REF","ALT")
+    snvs_classified <- calcIntermutDist(sbs_obj$muts)
   }
   
   # check SBS catalogues in SV clustering regions
@@ -120,10 +123,192 @@ genomeChart <- function(outfilename,
   }
   
   # run the kataegis algorithm if requested
-  kataegis <- NULL
+  kataegis_regions <- NULL
   if(!is.null(snvs_table) & runKataegis){
     kataegis <- findKataegis(snvs_table = snvs_table,
                              sample_name = sample_name)
+    kataegis_regions <- kataegis$katregions
+    snvs_table <- kataegis$snvs_table
   }
+  
+  # now plot
+  plotCircos(snvs_classified = snvs_classified,
+             kataegis_regions = kataegis_regions,
+             indels_table = indels_obj$indels_classified,
+             indels_stats = indels_obj$count_proportion,
+             CNV_table = CNV_table,
+             sv_bedpe = sv_obj$annotated_bedpe,
+             clustering_regions = sv_obj$clustering_regions,
+             genome.v = genome.v)
+}
+
+
+
+plotCircos <- function(snvs_classified,
+                       kataegis_regions,
+                       indels_table,
+                       indels_stats,
+                       CNV_table,
+                       sv_bedpe,
+                       clustering_regions,
+                       genome.v){
+  
+  # set some colours
+  kelly_colors <- c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
+                    '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
+                    '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
+                    '#882D17', '#8DB600', '#654522', '#E25822',
+                    '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
+  # SNVs colours
+  snvcolours <- c(rgb(5, 195, 239, maxColorValue = 255),
+                  rgb(0, 0, 0, maxColorValue = 255),
+                  rgb(230, 47, 41, maxColorValue = 255),
+                  rgb(208, 207, 207, maxColorValue = 255),
+                  rgb(169, 212, 108, maxColorValue = 255),
+                  rgb(238, 205, 204, maxColorValue = 255))
+  names(snvcolours) <- c("C>A","C>G","C>T","T>A","T>C","T>G")
+  
+  # Indel colours
+  indels_colours <- c('firebrick4','firebrick1','firebrick3','darkgreen','grey')
+  names(indels_colours) <- c("indel.mhomology",
+                             "indel.repeatmediated",
+                             "indel.other",
+                             "indel.insertion",
+                             "indel.complex")
+  # svclass colours
+  sv_colours <- c("#1C86EEFF","#EE6A50FF","#006400FF","#595959FF")
+  names(sv_colours) <- c("inversion",
+                         "deletion",
+                         "tandem-duplication",
+                         "translocation")
+  
+  # clusters colours
+  kataegis_region_colour <- kelly_colors[2]
+  SVcluster_region_colour <- kelly_colors[3]
+                             
+  if(!is.null(snvs_classified)){
+    if(nrow(snvs_classified)>0){
+      if(!startsWith(snvs_classified$chr[1],"chr")){
+        snvs_classified$chr <- paste0("chr",snvs_classified$chr)
+      }
+    }
+  }
+  
+  if(!is.null(kataegis_regions)){
+    if(nrow(kataegis_regions)>0){
+      if(!startsWith(kataegis_regions$chr[1],"chr")){
+        kataegis_regions$chr <- paste0("chr",kataegis_regions$chr)
+      }
+    }
+  }
+  
+  if(!is.null(indels_table)){
+    if(nrow(indels_table)>0){
+      if(!startsWith(indels_table$chr[1],"chr")){
+        indels_table$chr <- paste0("chr",indels_table$chr)
+      }
+    }
+  }
+  
+  if(!is.null(CNV_table)){
+    if(nrow(CNV_table)>0){
+      if(!startsWith(CNV_table$Chromosome[1],"chr")){
+        CNV_table$Chromosome <- paste0("chr",CNV_table$Chromosome)
+      }
+    }
+  }
+  
+  if(!is.null(sv_bedpe)){
+    if(nrow(sv_bedpe)>0){
+      if(!startsWith(sv_bedpe$chrom1[1],"chr")){
+        sv_bedpe$chrom1 <- paste0("chr",sv_bedpe$chrom1)
+        sv_bedpe$chrom2 <- paste0("chr",sv_bedpe$chrom2)
+      }
+    }
+  }
+  
+  if(!is.null(clustering_regions)) {
+    if(!startsWith(clustering_regions$chr[1],"chr")){
+      clustering_regions$chr <- paste0("chr",clustering_regions$chr)
+    }
+  }
+  
+  circlize::circos.par("start.degree" = 90)
+  circlize::circos.initializeWithIdeogram(species = genome.v,plotType = NULL)
+  
+  # chromosome names
+  circlize::circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+    chromNumber <- gsub("chr", "", circlize::CELL_META$sector.index)
+    circlize::circos.text(circlize::CELL_META$xcenter, circlize::CELL_META$ylim[1]+(circlize::CELL_META$ylim[2]-circlize::CELL_META$ylim[1])*0.3, 
+                          chromNumber, cex = 0.6, niceFacing = TRUE)
+  }, track.height = 0.05, cell.padding = c(0, 0, 0, 0), bg.border = NA)
+  
+  circlize::circos.genomicIdeogram(species = genome.v)
+  
+  # draw rectangles where the kataegis clusters are
+  circlize::circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+    chromNumber <- circlize::CELL_META$sector.index
+    
+    if(!is.null(kataegis_regions)){
+      tmpRows <- kataegis_regions[kataegis_regions$chr==chromNumber,,drop=F]
+      if(nrow(tmpRows)>0){
+        for (i in 1:nrow(tmpRows)){
+          circlize::circos.rect(xleft = tmpRows$start.bp[i],
+                                ybottom = circlize::CELL_META$ylim[1],
+                                xright = tmpRows$end.bp[i],
+                                ytop = circlize::CELL_META$ylim[2],
+                                border = kataegis_region_colour,col=kataegis_region_colour)
+        }
+      }
+    }
+  }, track.height = 0.01, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
+     bg.lwd = 0.5, track.margin = c(0,0.01))
+  
+  # draw snvs
+  circlize::circos.track(ylim = c(0, 8), panel.fun = function(x, y) {
+    chromNumber <- circlize::CELL_META$sector.index
+    tmpRows <- snvs_classified[snvs_classified$chr==chromNumber,,drop=F]
+    if(nrow(tmpRows)>0){
+      pos <- tmpRows$position
+      logdist <- log10(tmpRows$distPrev)
+      snvtype <- paste(tmpRows$pyrwt,tmpRows$pyrmut,sep = ">")
+      circlize::circos.points(pos, logdist,pch = 16,cex = 0.3,col = snvcolours[snvtype])
+    }
+    
+  }, track.height = 0.2, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
+     bg.lwd = 0.5, track.margin = c(0.005,0))
+  
+  
+  # draw rectangles where the SV clusters are
+  circlize::circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
+    chromNumber <- circlize::CELL_META$sector.index
+    
+    if(!is.null(clustering_regions)){
+      tmpRows <- clustering_regions[clustering_regions$chr==chromNumber,,drop=F]
+      if(nrow(tmpRows)>0){
+        for (i in 1:nrow(tmpRows)){
+          circlize::circos.rect(xleft = tmpRows$start.bp[i],
+                                ybottom = circlize::CELL_META$ylim[1],
+                                xright = tmpRows$end.bp[i],
+                                ytop = circlize::CELL_META$ylim[2],
+                                border = SVcluster_region_colour,col=SVcluster_region_colour)
+        }
+      }
+    }
+  }, track.height = 0.01, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
+     bg.lwd = 0.5, track.margin = c(0,0.005))
+  
+  # draw SV links
+  for(j in 1:nrow(sv_bedpe)){
+    circlize::circos.link(sector.index1 = sv_bedpe$chrom1[j],
+                          point1 = sv_bedpe$start1[j],
+                          sector.index2 = sv_bedpe$chrom2[j],
+                          point2 = sv_bedpe$start2[j],
+                          col = sv_colours[sv_bedpe$svclass[j]])
+    
+  }
+  
+ 
+  circlize::circos.clear()
 }
 

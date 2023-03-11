@@ -163,7 +163,7 @@ plotCircosSV <- function(sv_bedpe,
                     '#882D17', '#8DB600', '#654522', '#E25822',
                     '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
   
-  if(nrow(sv_bedpe>0)){
+  if(nrow(sv_bedpe)>0){
     if(!startsWith(sv_bedpe$chrom1[1],"chr")){
       sv_bedpe$chrom1 <- paste0("chr",sv_bedpe$chrom1)
       sv_bedpe$chrom2 <- paste0("chr",sv_bedpe$chrom2)
