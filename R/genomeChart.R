@@ -9,6 +9,7 @@ genomeChart <- function(outfilename,
                         CNV_tab_file = NULL,
                         SV_bedpe_file = NULL,
                         plot_title = NULL,
+                        runKataegis = TRUE,
                         genome.v = "hg19"){
   
   # set up some variables
@@ -119,6 +120,10 @@ genomeChart <- function(outfilename,
   }
   
   # run the kataegis algorithm if requested
-  
+  kataegis <- NULL
+  if(!is.null(snvs_table) & runKataegis){
+    kataegis <- findKataegis(snvs_table = snvs_table,
+                             sample_name = sample_name)
+  }
 }
 

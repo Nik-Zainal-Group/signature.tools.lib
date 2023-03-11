@@ -129,7 +129,7 @@ getSBScataloguesInSVclusters <- function(clustering_regions,
                                          genome.v){
   
   clustering_regions_sbs_catalogues <- list()
-  snvs_table$SVregion <- NA
+  snvs_table$SVcluster <- NA
   
   for(i in 1:nrow(clustering_regions)){
     region_chr <- clustering_regions$chr[i]
@@ -137,7 +137,7 @@ getSBScataloguesInSVclusters <- function(clustering_regions,
     region_end <- clustering_regions$end.bp[i]
     select_snvs <- snvs_table$chr==region_chr & snvs_table$position >= region_start & snvs_table$position <= region_end
     region_snvs <- snvs_table[select_snvs,]
-    snvs_table[select_snvs,"SVregion"] <- i
+    snvs_table[select_snvs,"SVcluster"] <- i
     res_sbs <- tabToSNVcatalogue(region_snvs,
                                  genome.v = genome.v)
     colnames(res_sbs$catalogue) <- paste0(sample_name," - cluster ",i)
