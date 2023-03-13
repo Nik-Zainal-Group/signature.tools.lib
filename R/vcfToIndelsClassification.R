@@ -55,8 +55,19 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df(indel.data,genomeSeq,genome.v,expected_chroms)
   
+  indels_classified <- mh(indel.df)
+  
+  # let's add another column to clarify the class of each indel
+  indels_classified$indel.class <- "-"
+  indels_classified$indel.class[indels_classified$classification=="Microhomology-mediated"] <- "del.mhomology"
+  indels_classified$indel.class[indels_classified$classification=="Repeat-mediated"] <- "del.repeatmediated"
+  indels_classified$indel.class[indels_classified$classification=="None"] <- "del.other"
+  indels_classified$indel.class[indels_classified$indel.type=="I"] <- "insertion"
+  indels_classified$indel.class[indels_classified$indel.type=="DI"] <- "indel.complex"
+  
+  # save and return
   res <- list()
-  res$indels_classified <- mh(indel.df)
+  res$indels_classified <- indels_classified
   res$count_proportion <- indelsToCountAndProportion(res$indels_classified,sampleID)
   
   return(res)
