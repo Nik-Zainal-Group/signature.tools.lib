@@ -140,12 +140,12 @@ getSBScataloguesInSVclusters <- function(clustering_regions,
     snvs_table[select_snvs,"SVcluster"] <- i
     res_sbs <- tabToSNVcatalogue(region_snvs,
                                  genome.v = genome.v)
-    colnames(res_sbs$catalogue) <- paste0(sample_name," - cluster ",i)
+    colnames(res_sbs$catalogue) <- paste0(sample_name," - SV cluster ",i)
     clustering_regions_sbs_catalogues[[i]] <- res_sbs$catalogue
   }
   clustering_regions_sbs_catalogues <- do.call(cbind,clustering_regions_sbs_catalogues)
   clusteringSBScatalogue_all <- data.frame(apply(clustering_regions_sbs_catalogues, 1, sum),stringsAsFactors = F)
-  colnames(clusteringSBScatalogue_all) <- paste0(sample_name," - SNVs in clusters")
+  colnames(clusteringSBScatalogue_all) <- paste0(sample_name," - SNVs in SV clusters")
   
   res <- list()
   res$clusteringSBScatalogue_all <- clusteringSBScatalogue_all

@@ -106,6 +106,7 @@ genomeChart <- function(outfilename,
                                  genome.v = genome.v)
     colnames(sbs_obj$muts)[c(1,2,4,5)] <- c("chr","position","REF","ALT")
     snvs_classified <- calcIntermutDist(sbs_obj$muts)
+    colnames(sbs_obj$catalogue) <- paste0(sample_name," - SBS catalogue")
   }
   
   # check SBS catalogues in SV clustering regions
@@ -124,14 +125,42 @@ genomeChart <- function(outfilename,
   
   # run the kataegis algorithm if requested
   kataegis_regions <- NULL
+  kataegisSBScatalogue_all <- NULL
   if(!is.null(snvs_table) & runKataegis){
     kataegis <- findKataegis(snvs_table = snvs_table,
                              sample_name = sample_name)
     kataegis_regions <- kataegis$katregions
     snvs_table <- kataegis$snvs_table
+    snvs_kataegis <- snvs_table[snvs_table$is.kataegis,,drop=F]
+    if(nrow(snvs_kataegis)>0){
+      resSBSkataegis <- tabToSNVcatalogue(subs = snvs_kataegis,
+                                          genome.v = genome.v)
+      kataegisSBScatalogue_all <- resSBSkataegis$catalogue
+      colnames(kataegisSBScatalogue_all) <- paste0(sample_name," - SNVs in kataegis")
+    }
   }
   
-  # now plot
+  # time to plot, outfilename needs to be specified
+  plottype <- substr(outfilename, nchar(outfilename) - 2, nchar(outfilename))
+  dir.create(dirname(outfilename),showWarnings = F,recursive = T)
+  
+  # open the file
+  if(plottype=="pdf"){
+    cairo_pdf(filename = outfilename,width = 14,height = 7)
+  }else if(plottype=="png"){
+    png(filename = outfilename,width = 4200,height = 2100,res = 300)
+  }else{
+    message("[error genomeChartSV] incorrect file type: ",plottype,". ",
+            "Please end your file name with .pdf or .png")
+    return(NULL)
+  }
+  
+  # plot data
+  if(is.null(plot_title)) plot_title <- sample_name
+  par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0))
+  plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
+  title(main = plot_title,adj = 0)
+  par(fig = c(0,0.5,0,1),new=TRUE)
   plotCircos(snvs_classified = snvs_classified,
              kataegis_regions = kataegis_regions,
              indels_table = indels_obj$indels_classified,
@@ -140,6 +169,37 @@ genomeChart <- function(outfilename,
              sv_bedpe = sv_obj$annotated_bedpe,
              clustering_regions = sv_obj$clustering_regions,
              genome.v = genome.v)
+  par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
+  plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
+  par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
+  plotSubsSignatures(kataegisSBScatalogue_all,textscaling = 0.6)
+  par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
+  plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
+  # par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
+  # plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
+  # par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
+  # plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
+  # if(!is.null(clusteringSBScatalogue_all)){
+  #   par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
+  #   plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
+  # }
+  
+  # close the file
+  dev.off()
+  
+  # also I can return all the data/info obtained
+  returnObj <- NULL
+  returnObj$snvs_table <- snvs_table
+  returnObj$snvs_classified <- snvs_classified
+  returnObj$sbs_obj <- sbs_obj
+  returnObj$kataegis_regions <- kataegis_regions
+  returnObj$indels_obj <- indels_obj
+  returnObj$CNV_table <- CNV_table
+  returnObj$sv_obj <- sv_obj
+  returnObj$clustering_regions_sbs_catalogues <- clustering_regions_sbs_catalogues
+  returnObj$clusteringSBScatalogue_all <- clusteringSBScatalogue_all
+  return(returnObj)
+  
 }
 
 
@@ -296,7 +356,7 @@ plotCircos <- function(snvs_classified,
         pos <- tmpRows$position
         logdist <- log10(tmpRows$distPrev)
         snvtype <- paste(tmpRows$pyrwt,tmpRows$pyrmut,sep = ">")
-        circlize::circos.points(pos, logdist,pch = 16,cex = 0.3,col = snvcolours[snvtype])
+        circlize::circos.points(pos, logdist,pch = 16,cex = 0.4,col = snvcolours[snvtype])
       }
     }
   }, track.height = 0.2, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
@@ -315,7 +375,7 @@ plotCircos <- function(snvs_classified,
         }
       }
     }
-  }, track.height = 0.05, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
+  }, track.height = 0.04, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
   bg.lwd = 0.5, track.margin = c(0.005,0.005))
   
   # draw deletions
@@ -331,7 +391,7 @@ plotCircos <- function(snvs_classified,
         }
       }
     }
-  }, track.height = 0.05, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
+  }, track.height = 0.04, cell.padding = c(0, 0, 0, 0), bg.border = "lightgrey",
   bg.lwd = 0.5, track.margin = c(0.005,0.005))
   
   # draw Total copy number data (gains)
@@ -354,7 +414,7 @@ plotCircos <- function(snvs_classified,
         }
       }
     }
-  }, track.height = 0.05, cell.padding = c(0, 0, 0, 0), bg.border = NA,
+  }, track.height = 0.04, cell.padding = c(0, 0, 0, 0), bg.border = NA,
   bg.lwd = 0.5, track.margin = c(0.005,0.005))
   
   # draw Minor copy number data (LOH)
@@ -377,7 +437,7 @@ plotCircos <- function(snvs_classified,
         }
       }
     }
-  }, track.height = 0.05, cell.padding = c(0, 0, 0, 0), bg.border = NA,
+  }, track.height = 0.04, cell.padding = c(0, 0, 0, 0), bg.border = NA,
   bg.lwd = 0.5, track.margin = c(0.005,0.005))
   
   # draw rectangles where the SV clusters are
@@ -415,5 +475,6 @@ plotCircos <- function(snvs_classified,
   }
  
   circlize::circos.clear()
+  
 }
 
