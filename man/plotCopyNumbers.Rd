@@ -8,10 +8,13 @@ plotCopyNumbers(
   sv_df,
   sample_name,
   filename = NULL,
+  plottitle = NULL,
   mar = NULL,
   highlightRegions = NULL,
   highlightText = NULL,
-  highlightColour = "brown"
+  highlightColour = "brown",
+  textscaling = 1,
+  genome.v = "hg19"
 )
 }
 \arguments{

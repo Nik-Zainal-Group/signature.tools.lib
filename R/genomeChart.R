@@ -10,7 +10,8 @@ genomeChart <- function(outfilename,
                         SV_bedpe_file = NULL,
                         plot_title = NULL,
                         runKataegis = TRUE,
-                        genome.v = "hg19"){
+                        genome.v = "hg19",
+                        debug=FALSE){
   
   # set up some variables
   snvs_table <- NULL
@@ -144,6 +145,19 @@ genomeChart <- function(outfilename,
   plottype <- substr(outfilename, nchar(outfilename) - 2, nchar(outfilename))
   dir.create(dirname(outfilename),showWarnings = F,recursive = T)
   
+  # function for debug of plots position
+  drawDebugBox <- function(n){
+    kelly_colors <- c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
+                               '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
+                               '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
+                               '#882D17', '#8DB600', '#654522', '#E25822',
+                               '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
+                               
+    par(mai=c(0,0,0,0),new=TRUE)
+    plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+    rect(0,0,1,1,border = kelly_colors[n],lwd = 3,lty = 3)
+  }
+  
   # open the file
   if(plottype=="pdf"){
     cairo_pdf(filename = outfilename,width = 14,height = 7)
@@ -157,8 +171,15 @@ genomeChart <- function(outfilename,
   
   # plot data
   if(is.null(plot_title)) plot_title <- sample_name
-  par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0))
-  plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n")
+  if(debug){
+    par(fig = c(0,1,0,1),mai=c(0,0,0,0))
+    plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+    grid(nx=10)
+    par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0),new=TRUE)
+  }else{
+    par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0))
+  }
+  plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
   title(main = plot_title,adj = 0)
   par(fig = c(0,0.5,0,1),new=TRUE)
   plotCircos(snvs_classified = snvs_classified,
@@ -169,21 +190,43 @@ genomeChart <- function(outfilename,
              sv_bedpe = sv_obj$annotated_bedpe,
              clustering_regions = sv_obj$clustering_regions,
              genome.v = genome.v)
-  par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
-  plotSubsSignatures(sbs_obj$catalogue,textscaling = 0.6)
-  par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
-  plotSubsSignatures(kataegisSBScatalogue_all,textscaling = 0.6)
-  par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
-  plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
-  # par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
-  # plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
-  # par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
-  # plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
-  # if(!is.null(clusteringSBScatalogue_all)){
-  #   par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
-  #   plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
-  # }
+  if(debug) drawDebugBox(1)
   
+  par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
+  plotSubsSignatures(sbs_obj$catalogue,
+                     textscaling = 0.6)
+  if(debug) drawDebugBox(2)
+  
+  par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
+  plotSubsSignatures(kataegisSBScatalogue_all,
+                     textscaling = 0.6)
+  if(debug) drawDebugBox(3)
+  
+  par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
+  plotSubsSignatures(clusteringSBScatalogue_all,
+                     textscaling = 0.6)
+  if(debug) drawDebugBox(4)
+  
+  par(fig = c(0.68,0.9,0.68,0.94),new=TRUE)
+  plotRearrSignatures(sv_obj$rearr_catalogue,
+                      textscaling = 0.6,
+                      mar = c(3.8, 3, 2, 1))
+  if(debug) drawDebugBox(5)
+  
+  par(fig = c(0.69,0.88,0.48,0.69),new=TRUE)
+  plotJunctionsCatalogues(sv_obj$junctions_catalogue,
+                          textscaling = 0.6,
+                          mar = c(2, 3, 2, 1))
+  if(debug) drawDebugBox(6)
+  
+  par(fig = c(0.45,0.8,0.02,0.22),new=TRUE)
+  plotCopyNumbers(sv_df = CNV_table,
+                  sample_name = sample_name,
+                  plottitle = "Copy Number Variations",
+                  genome.v = genome.v,
+                  mar = c(1.5,2.5,2,1),
+                  textscaling = 0.6)
+  if(debug) drawDebugBox(7)
   # close the file
   dev.off()
   
@@ -264,8 +307,8 @@ plotCircos <- function(snvs_classified,
                          "translocation")
   
   # clusters colours
-  kataegis_region_colour <- kelly_colors[21]
-  SVcluster_region_colour <- kelly_colors[21]
+  kataegis_region_colour <- kelly_colors[3]
+  SVcluster_region_colour <- kelly_colors[3]
                              
   if(!is.null(snvs_classified)){
     if(nrow(snvs_classified)>0){
@@ -344,12 +387,26 @@ plotCircos <- function(snvs_classified,
         }
       }
     }
-  }, track.height = 0.01, cell.padding = c(0, 0, 0, 0), bg.border = NA,
+  }, track.height = 0.02, cell.padding = c(0, 0, 0, 0), bg.border = NA,
      bg.lwd = 0.5, track.margin = c(0.005,0.01))
   
   # draw snvs
-  circlize::circos.track(ylim = c(0, 8), panel.fun = function(x, y) {
+  maxLogDistance <- 8
+  circlize::circos.track(ylim = c(0, maxLogDistance), panel.fun = function(x, y) {
     chromNumber <- circlize::CELL_META$sector.index
+    
+    if(!is.null(kataegis_regions)){
+      tmpRows <- kataegis_regions[kataegis_regions$chr==chromNumber,,drop=F]
+      if(nrow(tmpRows)>0){
+        for (i in 1:nrow(tmpRows)){
+          meanpos <- tmpRows$start.bp[i] + (tmpRows$end.bp[i] - tmpRows$start.bp[i])/2
+          suppressMessages(circlize::circos.lines(x = c(meanpos,meanpos),
+                                                  y = c(0,maxLogDistance+1),
+                                                  col = kataegis_region_colour))
+        }
+      }
+    }
+    
     if(!is.null(snvs_classified)){
       tmpRows <- snvs_classified[snvs_classified$chr==chromNumber,,drop=F]
       if(nrow(tmpRows)>0){
@@ -448,17 +505,14 @@ plotCircos <- function(snvs_classified,
       tmpRows <- clustering_regions[clustering_regions$chr==chromNumber,,drop=F]
       if(nrow(tmpRows)>0){
         for (i in 1:nrow(tmpRows)){
-          circlize::circos.rect(xleft = tmpRows$start.bp[i],
-                                ybottom = circlize::CELL_META$ylim[1],
-                                xright = tmpRows$end.bp[i],
-                                ytop = circlize::CELL_META$ylim[2],
-                                border = SVcluster_region_colour,
-                                col=SVcluster_region_colour,
-                                lwd=2)
+          circlize::circos.lines(x = c(tmpRows$start.bp[i],tmpRows$start.bp[i],
+                                       tmpRows$end.bp[i],tmpRows$end.bp[i]),
+                                 y = c(0,1,1,0),
+                                 col = SVcluster_region_colour)
         }
       }
     }
-  }, track.height = 0.01, cell.padding = c(0, 0, 0, 0), bg.border = NA,
+  }, track.height = 0.02, cell.padding = c(0, 0, 0, 0), bg.border = NA,
      bg.lwd = 0.5, track.margin = c(0,0.005))
   
   # draw SV links

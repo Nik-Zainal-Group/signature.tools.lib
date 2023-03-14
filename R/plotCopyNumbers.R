@@ -21,10 +21,13 @@
 plotCopyNumbers <- function(sv_df,
                             sample_name,
                             filename=NULL,
+                            plottitle=NULL,
                             mar=NULL,
                             highlightRegions=NULL,
                             highlightText=NULL,
-                            highlightColour = "brown"){
+                            highlightColour = "brown",
+                            textscaling = 1,
+                            genome.v="hg19"){
 
   if(!is.null(filename)) cairo_pdf(filename = filename,width = 7,height = 3)
   if(!is.null(mar)) {
@@ -32,12 +35,24 @@ plotCopyNumbers <- function(sv_df,
   } else {
     mar = c(4,4,3,2)
   }
-  chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Hsapiens.UCSC.hg38::Hsapiens)[1:24]
-  chrom_names <- substr(names(chromosome_lengths),4,5)
+  if(is.null(plottitle)) plottitle <- sample_name
+  if(genome.v=="hg38"){
+    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Hsapiens.UCSC.hg38::Hsapiens)[1:24]
+    chrom_names <- substr(names(chromosome_lengths),4,5)
+  }else if(genome.v=="hg19"){
+    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Hsapiens.1000genomes.hs37d5::hs37d5)[1:24]
+    chrom_names <- names(chromosome_lengths)
+  }else{
+    message("[error plotCopyNumbers] genome version ",genome.v," not supported.")
+    return(NULL)
+  }
+
+
   highestCN <- min(max(sv_df$total.copy.number.inTumour)+1,6) 
   maxCoord <- sum(as.numeric(chromosome_lengths))
-  plot(NA,xlim=c(0,maxCoord),ylim=c(0-0.15,highestCN+0.25),main=sample_name,cex.main=0.8,
-       ylab = "Copy Numbers",xlab = "",xaxt="n",xaxs="i",yaxs="i",mgp=c(1.5,0.6,0))
+  plot(NA,xlim=c(0,maxCoord),ylim=c(0-0.15,highestCN+0.25),main=plottitle,cex.main=0.8,
+       ylab = "Copy Numbers",xlab = "",xaxt="n",xaxs="i",yaxs="i",mgp=c(1.5,0.6,0),mar=mar,
+       cex = textscaling,cex.lab = textscaling, cex.main = textscaling,cex.axis = textscaling,las = 2)
   # abline(v=maxCoord)
   for (i in 1:length(chromosome_lengths)){
     chrom_name <- chrom_names[i]
@@ -45,7 +60,7 @@ plotCopyNumbers <- function(sv_df,
     startCoord <- ifelse(i==1,0,sum(as.numeric(chromosome_lengths[1:(i-1)])))
     if(startCoord>0) abline(v=startCoord)
     par(xpd=TRUE)
-    text(x=startCoord+(chromosome_lengths[i])/2,y=-1.2,labels = chrom_name,cex = 0.6)
+    text(x=startCoord+(chromosome_lengths[i])/2,y=-1.2*textscaling,labels = chrom_name,cex = 0.6*textscaling)
     par(xpd=FALSE)
     if(nrow(tmpChrom)>0){
       for (j in 1:nrow(tmpChrom)){
@@ -79,12 +94,12 @@ plotCopyNumbers <- function(sv_df,
   par(xpd=TRUE)
   if(!is.null(highlightRegions)){
     rect(xleft = 0,xright = maxCoord,ytop = -0.15,ybottom = -0.75)
-    if(!is.null(highlightText)) text(x=2*-10^8,y=-0.05,labels = highlightText,cex = 0.8,col = highlightColour,pos = 1)
+    if(!is.null(highlightText)) text(x=2*-10^8,y=-0.05,labels = highlightText,cex = 0.8*textscaling,col = highlightColour,pos = 1)
     # text(x=2*-10^8,y=-1.2,labels = nrow(HRDLOHregions),cex = 0.8,col = "brown")
   }
-  text(x=maxCoord/2,y=-2,labels = "chromosomes",cex = 1)
+  text(x=maxCoord/2,y=-2*textscaling,labels = "chromosomes",cex = textscaling)
   par(xpd=FALSE)
-  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c("green","red","purple"),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.3))
+  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c("green","red","purple"),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.3),cex=textscaling*0.8)
   if(!is.null(filename)) dev.off()
 
 }                                                                                                           
