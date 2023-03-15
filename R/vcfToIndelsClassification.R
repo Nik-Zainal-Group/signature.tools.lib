@@ -180,7 +180,7 @@ indelsToCountAndProportion <- function(all.indels.table, sampleIDs) {
     
     all.insertions.table <- subset(all.indels.table, indel.type=='I')
     if (nrow(all.insertions.table) >0) {
-      insertions.samples <- as.data.frame(table(all.insertions.table $sample))
+      insertions.samples <- as.data.frame(table(all.insertions.table$sample))
       colnames(insertions.samples ) <- c('sample', 'ins')
       rownames(insertions.samples) <- insertions.samples$sample
     } else {
@@ -188,20 +188,31 @@ indelsToCountAndProportion <- function(all.indels.table, sampleIDs) {
       rownames(insertions.samples) <- sampleIDs
     }
     
+    all.complex.table <- subset(all.indels.table, indel.type=='DI')
+    if (nrow(all.complex.table) >0) {
+      complex.samples <- as.data.frame(table(all.complex.table$sample))
+      colnames(complex.samples ) <- c('sample', 'complex')
+      rownames(complex.samples) <- complex.samples$sample
+    } else {
+      complex.samples <- data.frame(sample=sampleIDs, ins=0)
+      rownames(complex.samples) <- sampleIDs
+    }
+    
     indel.table <- data.frame(sample=sampleIDs,
                               del.mh=deletions.mh.samples[as.character(sampleIDs), 'del.mh'],
                               del.rep=deletions.repeat.samples[as.character(sampleIDs), 'del.rep'],
                               del.none=deletions.other.samples[as.character(sampleIDs), 'del.other'],
-                              ins=insertions.samples[as.character(sampleIDs), 'ins']
+                              ins=insertions.samples[as.character(sampleIDs), 'ins'],
+                              complex=complex.samples[as.character(sampleIDs), 'complex']
     )
     
-    indel.table$all.indels <- indel.table$del.mh+indel.table$del.rep+indel.table$del.none
-    
+    indel.table$all.del <- indel.table$del.mh+indel.table$del.rep+indel.table$del.none
+    indel.table$all.indels <- indel.table$all.del+indel.table$ins+indel.table$complex
     
     # del.mh.prop del.rep.prop del.none.prop
-    indel.table$del.mh.prop <- indel.table$del.mh/indel.table$all.indels
-    indel.table$del.rep.prop <- indel.table$del.rep/indel.table$all.indels
-    indel.table$del.none.prop <- indel.table$del.none/indel.table$all.indels
+    indel.table$del.mh.prop <- indel.table$del.mh/indel.table$all.del
+    indel.table$del.rep.prop <- indel.table$del.rep/indel.table$all.del
+    indel.table$del.none.prop <- indel.table$del.none/indel.table$all.del
     
     indel.table$del.mh.count <- indel.table$del.mh
     indel.table$del.rep.count <- indel.table$del.rep
@@ -211,9 +222,10 @@ indelsToCountAndProportion <- function(all.indels.table, sampleIDs) {
                               del.mh=rep(0,length(sampleIDs)),
                               del.rep=rep(0,length(sampleIDs)),
                               del.none=rep(0,length(sampleIDs)),
-                              ins=rep(0,length(sampleIDs)))
-    
-    indel.table$all.indels <- indel.table$del.mh+indel.table$del.rep+indel.table$del.none
+                              ins=rep(0,length(sampleIDs)),
+                              complex=rep(0,length(sampleIDs)))
+    indel.table$all.del <- 0
+    indel.table$all.indels <- 0
     
     
     # del.mh.prop del.rep.prop del.none.prop
@@ -226,7 +238,7 @@ indelsToCountAndProportion <- function(all.indels.table, sampleIDs) {
     indel.table$del.none.count <- indel.table$del.none
   }
   
-  indel.table
+  return(indel.table)
   
 }
 

@@ -147,22 +147,31 @@ genomeChart <- function(outfilename,
   
   # function for debug of plots position
   drawDebugBox <- function(n){
-    kelly_colors <- c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
-                               '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
-                               '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
-                               '#882D17', '#8DB600', '#654522', '#E25822',
-                               '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
+    kelly_colors <- getKellyColours()
                                
     par(mai=c(0,0,0,0),new=TRUE)
     plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
     rect(0,0,1,1,border = kelly_colors[n],lwd = 3,lty = 3)
   }
   
+  # organise panels according to a certain plot dimension (x,y)
+  plotx <- 1.8
+  ploty <- 1
+  debug_grid_gap <- 0.1
+  
+  placePanel <- function(where,width,height){
+    par(fig = c(where[1]/plotx,
+                (where[1]+width)/plotx,
+                where[2]/ploty,
+                (where[2]+height)/ploty),
+        new=TRUE)
+  }
+  
   # open the file
   if(plottype=="pdf"){
-    cairo_pdf(filename = outfilename,width = 14,height = 7)
+    cairo_pdf(filename = outfilename,width = 7*plotx,height = 7*ploty)
   }else if(plottype=="png"){
-    png(filename = outfilename,width = 4200,height = 2100,res = 300)
+    png(filename = outfilename,width = 2100*plotx,height = 2100*ploty,res = 300)
   }else{
     message("[error genomeChartSV] incorrect file type: ",plottype,". ",
             "Please end your file name with .pdf or .png")
@@ -173,15 +182,23 @@ genomeChart <- function(outfilename,
   if(is.null(plot_title)) plot_title <- sample_name
   if(debug){
     par(fig = c(0,1,0,1),mai=c(0,0,0,0))
-    plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
-    grid(nx=10)
+    plot(NULL,xlim = c(0,plotx),ylim = c(0,ploty),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+    gridx <- seq(0,plotx,debug_grid_gap)
+    gridy <- seq(0,ploty,debug_grid_gap)
+    abline(v = gridx,col="grey",lty = 3)
+    abline(h = gridy,col="grey",lty = 3)
+    text(x = gridx[1:(length(gridx)-1)]+0.007,y = 0.01,
+         labels = gridx[1:(length(gridx)-1)],col = "grey",cex=0.5,adj = 0)
+    text(x = 0.007,y = gridy[1:(length(gridy)-1)]+0.01,
+         labels = gridy[1:(length(gridy)-1)],col = "grey",cex=0.5,adj = 0)
     par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0),new=TRUE)
   }else{
     par(fig = c(0,1,0,1),mai=c(0,0.1,0.4,0))
   }
   plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
   title(main = plot_title,adj = 0)
-  par(fig = c(0,0.5,0,1),new=TRUE)
+  # par(fig = c(0,0.5,0,1),new=TRUE)
+  placePanel(where = c(0,0),width = 1,height = 1)
   plotCircos(snvs_classified = snvs_classified,
              kataegis_regions = kataegis_regions,
              indels_table = indels_obj$indels_classified,
@@ -192,34 +209,40 @@ genomeChart <- function(outfilename,
              genome.v = genome.v)
   if(debug) drawDebugBox(1)
   
-  par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
+  # par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
+  placePanel(where = c(0.96,0.73),width = 0.44,height = 0.21)
   plotSubsSignatures(sbs_obj$catalogue,
                      textscaling = 0.6)
   if(debug) drawDebugBox(2)
   
-  par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
+  # par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
+  placePanel(where = c(0.96,0.55),width = 0.44,height = 0.21)
   plotSubsSignatures(kataegisSBScatalogue_all,
                      textscaling = 0.6)
   if(debug) drawDebugBox(3)
   
-  par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
+  # par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
+  placePanel(where = c(0.96,0.37),width = 0.44,height = 0.21)
   plotSubsSignatures(clusteringSBScatalogue_all,
                      textscaling = 0.6)
   if(debug) drawDebugBox(4)
   
-  par(fig = c(0.68,0.9,0.68,0.94),new=TRUE)
+  # par(fig = c(0.68,0.9,0.68,0.94),new=TRUE)
+  placePanel(where = c(1.36,0.68),width = 0.44,height = 0.26)
   plotRearrSignatures(sv_obj$rearr_catalogue,
                       textscaling = 0.6,
                       mar = c(3.8, 3, 2, 1))
   if(debug) drawDebugBox(5)
   
-  par(fig = c(0.69,0.88,0.48,0.69),new=TRUE)
+  # par(fig = c(0.69,0.88,0.48,0.69),new=TRUE)
+  placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
   plotJunctionsCatalogues(sv_obj$junctions_catalogue,
                           textscaling = 0.6,
                           mar = c(2, 3, 2, 1))
   if(debug) drawDebugBox(6)
   
-  par(fig = c(0.45,0.8,0.02,0.22),new=TRUE)
+  # par(fig = c(0.45,0.8,0.02,0.22),new=TRUE)
+  placePanel(where = c(1,0.02),width = 0.75,height = 0.2)
   plotCopyNumbers(sv_df = CNV_table,
                   sample_name = sample_name,
                   plottitle = "Copy Number Variations",
@@ -227,6 +250,13 @@ genomeChart <- function(outfilename,
                   mar = c(1.5,2.5,2,1),
                   textscaling = 0.6)
   if(debug) drawDebugBox(7)
+  
+  placePanel(where = c(0.98,0.22),width = 0.4,height = 0.18)
+  plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
+                         textscaling = 0.6,
+                         mar = c(2,4,2,1))
+  if(debug) drawDebugBox(8)
+  
   # close the file
   dev.off()
   
@@ -245,6 +275,74 @@ genomeChart <- function(outfilename,
   
 }
 
+getSBSCatalogueColours <- function(){
+  snvcolours <- c(rgb(5, 195, 239, maxColorValue = 255),
+                  rgb(0, 0, 0, maxColorValue = 255),
+                  rgb(230, 47, 41, maxColorValue = 255),
+                  rgb(208, 207, 207, maxColorValue = 255),
+                  rgb(169, 212, 108, maxColorValue = 255),
+                  rgb(238, 205, 204, maxColorValue = 255))
+  names(snvcolours) <- c("C>A","C>G","C>T","T>A","T>C","T>G")
+  return(snvcolours)
+}
+
+getIndelsClassColours <- function(){
+  indels_colours <- c('firebrick4','firebrick1','firebrick3','darkgreen','grey')
+  names(indels_colours) <- c("del.mhomology",
+                             "del.repeatmediated",
+                             "del.other",
+                             "insertion",
+                             "indel.complex")
+  return(indels_colours)
+}
+
+getCNColoursAndRanges <- function(){
+  CNcolours <- list()
+  CNcolours$coloursTotalCN <- c("#D3D3D31A","#B3EE3A4C","#B3EE3A80","#B3EE3AB2",
+                                "#B3EE3ABF","#9ACD32E6","#698B22E6")
+  CNcolours$boundariesTotalCN <- c(0,3,4,8,16,32,64,10000)
+  CNcolours$coloursMinorCN <- c("#F08080FF","#D3D3D31A")
+  CNcolours$boundariesMinorCN <- c(0,1,10000)
+  return(CNcolours)
+}
+
+getSVClassColours <- function(){
+  sv_colours <- c("#1C86EEFF","#EE6A50FF","#006400FF","#595959FF")
+  names(sv_colours) <- c("inversion",
+                         "deletion",
+                         "tandem-duplication",
+                         "translocation")
+  return(sv_colours)
+}
+
+getKellyColours <- function(){
+  return(c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
+                    '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
+                    '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
+                    '#882D17', '#8DB600', '#654522', '#E25822',
+                    '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC'))
+}
+
+plotIndelsClassSummary <- function(indels_stats,
+                                   textscaling = 1,
+                                   mar = c(3,6,2,2)){
+  indels_colours <- getIndelsClassColours()
+  indels_colours <- indels_colours[c("del.mhomology","del.repeatmediated","del.other","insertion","indel.complex")]
+  values_to_plot <- indels_stats[,c("del.mh","del.rep","del.none","ins","complex")]
+  plot_labels <- c("deletion at MH","deletion at repeat","deletion other","insertion","complex")
+  par(mar=mar)
+  barplot(t(as.matrix(values_to_plot)),beside = T,
+          horiz = T,space = 0.2,
+          col = indels_colours,
+          names.arg = plot_labels,
+          mar=mar,
+          las=2,
+          main = paste0(indels_stats$all.indels," insertions and deletions"),
+          cex.axis = textscaling*0.7,
+          cex.names = textscaling*0.7,
+          border = NA,
+          cex.main=textscaling)
+}
 
 
 plotCircos <- function(snvs_classified,
@@ -257,34 +355,19 @@ plotCircos <- function(snvs_classified,
                        genome.v){
   
   # set some colours
-  kelly_colors <- c('#F3C300', '#875692', '#F38400', '#A1CAF1', '#BE0032',
-                    '#C2B280', '#848482', '#008856', '#E68FAC', '#0067A5', 
-                    '#F99379', '#604E97', '#F6A600', '#B3446C', '#DCD300',
-                    '#882D17', '#8DB600', '#654522', '#E25822',
-                    '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
+  kelly_colors <- getKellyColours()
   # SNVs colours
-  snvcolours <- c(rgb(5, 195, 239, maxColorValue = 255),
-                  rgb(0, 0, 0, maxColorValue = 255),
-                  rgb(230, 47, 41, maxColorValue = 255),
-                  rgb(208, 207, 207, maxColorValue = 255),
-                  rgb(169, 212, 108, maxColorValue = 255),
-                  rgb(238, 205, 204, maxColorValue = 255))
-  names(snvcolours) <- c("C>A","C>G","C>T","T>A","T>C","T>G")
+  snvcolours <- getSBSCatalogueColours()
   
   # Indel colours
-  indels_colours <- c('firebrick4','firebrick1','firebrick3','darkgreen','grey')
-  names(indels_colours) <- c("del.mhomology",
-                             "del.repeatmediated",
-                             "del.other",
-                             "insertion",
-                             "indel.complex")
+  indels_colours <- getIndelsClassColours()
   
   # CNV colours
-  coloursTotalCN <- c( "#D3D3D31A","#B3EE3A4C","#B3EE3A80","#B3EE3AB2",
-                       "#B3EE3ABF","#9ACD32E6","#698B22E6")
-  boundariesTotalCN <- c(0,3,4,8,16,32,64,10000)
-  coloursMinorCN <- c("#F08080FF","#D3D3D31A")
-  boundariesMinorCN <- c(0,1,10000)
+  CNcolours <- getCNColoursAndRanges()
+  coloursTotalCN <- CNcolours$coloursTotalCN
+  boundariesTotalCN <- CNcolours$boundariesTotalCN
+  coloursMinorCN <- CNcolours$coloursMinorCN
+  boundariesMinorCN <- CNcolours$boundariesMinorCN
   
   getCNVcolour <- function(CNVval,coloursScale,boundariesScale){
     found <- FALSE
@@ -300,11 +383,7 @@ plotCircos <- function(snvs_classified,
   }
   
   # svclass colours
-  sv_colours <- c("#1C86EEFF","#EE6A50FF","#006400FF","#595959FF")
-  names(sv_colours) <- c("inversion",
-                         "deletion",
-                         "tandem-duplication",
-                         "translocation")
+  sv_colours <- getSVClassColours()
   
   # clusters colours
   kataegis_region_colour <- kelly_colors[3]

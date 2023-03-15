@@ -23,6 +23,9 @@ plotCopyNumbers <- function(sv_df,
                             filename=NULL,
                             plottitle=NULL,
                             mar=NULL,
+                            minorCNcolour="green",
+                            totalCNcolour="red",
+                            outofrangeCNcolour="purple",
                             highlightRegions=NULL,
                             highlightText=NULL,
                             highlightColour = "brown",
@@ -67,15 +70,15 @@ plotCopyNumbers <- function(sv_df,
         if(tmpChrom$total.copy.number.inTumour[j]<7){
           rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
                ybottom = tmpChrom$total.copy.number.inTumour[j],
-               ytop = tmpChrom$total.copy.number.inTumour[j]+0.1,col = "red",border = "red")
+               ytop = tmpChrom$total.copy.number.inTumour[j]+0.1,col = totalCNcolour,border = totalCNcolour)
         }else{
           rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
                ybottom = 6.1,
-               ytop = 6.2,col = "purple",border = "purple")
+               ytop = 6.2,col = outofrangeCNcolour,border = outofrangeCNcolour)
         }     
         rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
              ybottom = tmpChrom$minor.copy.number.inTumour[j]-0.1,
-             ytop = tmpChrom$minor.copy.number.inTumour[j],col = "green",border = "green")
+             ytop = tmpChrom$minor.copy.number.inTumour[j],col = minorCNcolour,border = minorCNcolour)
       }
     }
     # add highlight regions
