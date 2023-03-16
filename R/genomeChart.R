@@ -88,6 +88,8 @@ genomeChart <- function(outfilename,
   if(!is.null(SV_bedpe_file)){
     if (file.exists(SV_bedpe_file)){
       sv_obj <- bedpeToRearrCatalogue(sv_bedpe = readTable(file = SV_bedpe_file))
+      colnames(sv_obj$rearr_catalogue) <- paste0(sample_name," - SV catalogue")
+      colnames(sv_obj$junctions_catalogue) <- paste0(sample_name," - SV junctions catalogue")
     }else{
       message("[warning genomeChart] SV_bedpe_file file not found: ",SV_bedpe_file,". Ignoring and moving on.")
       SV_bedpe_file <- NULL
@@ -158,6 +160,8 @@ genomeChart <- function(outfilename,
   plotx <- 1.8
   ploty <- 1
   debug_grid_gap <- 0.1
+  debug_grid_tick <- 0.01
+  msgtextscaling <- 0.5
   
   placePanel <- function(where,width,height){
     par(fig = c(where[1]/plotx,
@@ -187,6 +191,10 @@ genomeChart <- function(outfilename,
     gridy <- seq(0,ploty,debug_grid_gap)
     abline(v = gridx,col="grey",lty = 3)
     abline(h = gridy,col="grey",lty = 3)
+    tickx <- seq(0,plotx,debug_grid_tick)
+    ticky <- seq(0,ploty,debug_grid_tick)
+    for(gy in gridy) for(xi in tickx) lines(c(xi,xi),c(gy-0.004,gy+0.004),col="grey")
+    for(gx in gridx) for(yi in ticky) lines(c(gx-0.004,gx+0.004),c(yi,yi),col="grey")
     text(x = gridx[1:(length(gridx)-1)]+0.007,y = 0.01,
          labels = gridx[1:(length(gridx)-1)],col = "grey",cex=0.5,adj = 0)
     text(x = 0.007,y = gridy[1:(length(gridy)-1)]+0.01,
@@ -209,54 +217,99 @@ genomeChart <- function(outfilename,
              genome.v = genome.v)
   if(debug) drawDebugBox(1)
   
-  # par(fig = c(0.48,0.7,0.73,0.94),new=TRUE)
+  # subs catalogue
   placePanel(where = c(0.96,0.73),width = 0.44,height = 0.21)
-  plotSubsSignatures(sbs_obj$catalogue,
-                     textscaling = 0.6)
+  if(!is.null(sbs_obj$catalogue)){
+    plotSubsSignatures(sbs_obj$catalogue,
+                       textscaling = 0.6)
+  }else{
+    plotMessage(msg = "SBS catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(2)
   
-  # par(fig = c(0.48,0.7,0.55,0.76),new=TRUE)
+  # kataegis SBS catalogue
   placePanel(where = c(0.96,0.55),width = 0.44,height = 0.21)
-  plotSubsSignatures(kataegisSBScatalogue_all,
-                     textscaling = 0.6)
+  if(!is.null(kataegisSBScatalogue_all)){
+    plotSubsSignatures(kataegisSBScatalogue_all,
+                       textscaling = 0.6)
+  }else{
+    plotMessage(msg = "kataegis SBS catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(3)
   
-  # par(fig = c(0.48,0.7,0.37,0.58),new=TRUE)
+  # SV clusters SBS catalogue
   placePanel(where = c(0.96,0.37),width = 0.44,height = 0.21)
-  plotSubsSignatures(clusteringSBScatalogue_all,
-                     textscaling = 0.6)
+  if(!is.null(clusteringSBScatalogue_all)){
+    plotSubsSignatures(clusteringSBScatalogue_all,
+                       textscaling = 0.6)
+  }else{
+    plotMessage(msg = "SV clusters SBS catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(4)
   
-  # par(fig = c(0.68,0.9,0.68,0.94),new=TRUE)
-  placePanel(where = c(1.36,0.68),width = 0.44,height = 0.26)
-  plotRearrSignatures(sv_obj$rearr_catalogue,
-                      textscaling = 0.6,
-                      mar = c(3.8, 3, 2, 1))
+  # SV catalogue
+  placePanel(where = c(1.35,0.68),width = 0.44,height = 0.26)
+  if(!is.null(sv_obj$rearr_catalogue)){
+    plotRearrSignatures(sv_obj$rearr_catalogue,
+                        textscaling = 0.6,
+                        mar = c(3.8, 3, 2, 1))
+  }else{
+    plotMessage(msg = "SV catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(5)
   
-  # par(fig = c(0.69,0.88,0.48,0.69),new=TRUE)
+  # SV junctions catalogue
   placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
-  plotJunctionsCatalogues(sv_obj$junctions_catalogue,
-                          textscaling = 0.6,
-                          mar = c(2, 3, 2, 1))
+  if(!is.null(sv_obj$junctions_catalogue)){
+    plotJunctionsCatalogues(sv_obj$junctions_catalogue,
+                            textscaling = 0.6,
+                            mar = c(2, 3, 2, 1))
+  }else{
+    plotMessage(msg = "SV junctions catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(6)
   
-  # par(fig = c(0.45,0.8,0.02,0.22),new=TRUE)
-  placePanel(where = c(1,0.02),width = 0.75,height = 0.2)
-  plotCopyNumbers(sv_df = CNV_table,
-                  sample_name = sample_name,
-                  plottitle = "Copy Number Variations",
-                  genome.v = genome.v,
-                  mar = c(1.5,2.5,2,1),
-                  textscaling = 0.6)
+  # CN plot
+  placePanel(where = c(1,0.02),width = 0.78,height = 0.21)
+  if(!is.null(CNV_table)){
+    plotCopyNumbers(sv_df = CNV_table,
+                    sample_name = sample_name,
+                    plottitle = "Copy Number Variations",
+                    genome.v = genome.v,
+                    mar = c(1.5,2.5,2,1),
+                    textscaling = 0.6)
+  }else{
+    plotMessage(msg = "copy number data\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(7)
   
+  # indels classification
   placePanel(where = c(0.98,0.22),width = 0.4,height = 0.18)
-  plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
-                         textscaling = 0.6,
-                         mar = c(2,4,2,1))
+  if(!is.null(indels_obj$count_proportion)){
+    plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
+                           textscaling = 0.6,
+                           mar = c(2,4,2,1))
+  }else{
+    plotMessage(msg = "Indels\nnot available",
+                textscaling = msgtextscaling)
+  }
+
   if(debug) drawDebugBox(8)
   
+  placePanel(where = c(1.49,0.35),width = 0.21,height = 0.105)
+  plotCNVlegend(textscaling = 0.5)
+  if(debug) drawDebugBox(9)
+  
+  placePanel(where = c(1.55,0.25),width = 0.14,height = 0.1)
+  plotClustersLegend(textscaling = 0.5)
+  if(debug) drawDebugBox(9)
+
   # close the file
   dev.off()
   
@@ -273,6 +326,16 @@ genomeChart <- function(outfilename,
   returnObj$clusteringSBScatalogue_all <- clusteringSBScatalogue_all
   return(returnObj)
   
+}
+
+plotMessage <- function(msg,textscaling = 1){
+  par(mar=c(0,0,0,0))
+  plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+  text(x = 0.5,
+       y = 0.5,
+       adj = 0.5,
+       labels=msg,
+       cex=textscaling)
 }
 
 getSBSCatalogueColours <- function(){
@@ -323,6 +386,16 @@ getKellyColours <- function(){
                     '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC'))
 }
 
+getClustersColours <- function(){
+  kelly_colors <- getKellyColours()
+  kataegis_region_colour <- kelly_colors[3]
+  SVcluster_region_colour <- kelly_colors[3]
+  svcols <- list()
+  svcols$kataegis_region_colour <- kataegis_region_colour
+  svcols$SVcluster_region_colour <- SVcluster_region_colour
+  return(svcols)
+}
+
 plotIndelsClassSummary <- function(indels_stats,
                                    textscaling = 1,
                                    mar = c(3,6,2,2)){
@@ -342,6 +415,113 @@ plotIndelsClassSummary <- function(indels_stats,
           cex.names = textscaling*0.7,
           border = NA,
           cex.main=textscaling)
+}
+
+plotCNVlegend <- function(textscaling = 1){
+  # get colours and ranges
+  CNVcolours <- getCNColoursAndRanges()
+  
+  # plot parameters
+  leftmarginblocks <- 1
+  xgapmarginblocks <- 3
+  rightmarginblocks <- 1
+  topmarginblocks <- 3
+  bottommarginblocks <- 3
+  nxblocks <- length(CNVcolours$coloursTotalCN) + length(CNVcolours$coloursMinorCN) + leftmarginblocks + xgapmarginblocks + rightmarginblocks
+  nyblocks <- topmarginblocks + bottommarginblocks + 1
+  
+  # plot it
+  par(mar=c(0,0,0,0))
+  plot(NULL,xlim = c(0,nxblocks),ylim = c(0,nyblocks),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+  
+  # total CN legend (gain)
+  text(x = leftmarginblocks + length(CNVcolours$coloursTotalCN)/2,
+       y = bottommarginblocks + 2.5,
+       labels = "Gain\n(Total CN)",
+       cex = textscaling)
+  
+  for(i in 1:length(CNVcolours$coloursTotalCN)){
+    rect(xleft = leftmarginblocks + (i-1),
+         ybottom = bottommarginblocks,
+         xright = leftmarginblocks + i,
+         ytop = bottommarginblocks+1,
+         col = CNVcolours$coloursTotalCN[i],
+         border = NA)
+    if(i < length(CNVcolours$coloursTotalCN)){
+      cnlow <- CNVcolours$boundariesTotalCN[i]
+      cnhigh <- CNVcolours$boundariesTotalCN[i+1]-1
+      if(cnlow < cnhigh){
+        textlabel <- paste0(cnlow," - ",cnhigh)
+      }else if(cnlow==cnhigh){
+        textlabel <- cnlow
+      }
+    }else{
+      textlabel <- paste0("\u2265 ",CNVcolours$boundariesTotalCN[i])
+    }
+    
+    text(x = leftmarginblocks + (i-1) + 0.5,
+         y = bottommarginblocks - 0.5,srt = 90,adj = 1,
+         labels = textlabel,
+         cex = textscaling)
+  }
+  
+  # minor CN legend (LOH)
+  leftstart <- leftmarginblocks + length(CNVcolours$coloursTotalCN) + xgapmarginblocks
+  
+  text(x = leftstart + length(CNVcolours$coloursMinorCN)/2,
+       y = bottommarginblocks + 2.5,
+       labels = "LOH\n(Minor CN)",
+       cex = textscaling)
+  
+  for(i in 1:length(CNVcolours$coloursMinorCN)){
+    rect(xleft = leftstart + (i-1),
+         ybottom = bottommarginblocks,
+         xright = leftstart + i,
+         ytop = bottommarginblocks+1,
+         col = CNVcolours$coloursMinorCN[i],
+         border = NA)
+    if(i < length(CNVcolours$coloursMinorCN)){
+      cnlow <- CNVcolours$boundariesMinorCN[i]
+      cnhigh <- CNVcolours$boundariesMinorCN[i+1]-1
+      if(cnlow < cnhigh){
+        textlabel <- paste0(cnlow," - ",cnhigh)
+      }else if(cnlow==cnhigh){
+        textlabel <- cnlow
+      }
+    }else{
+      textlabel <- paste0("\u2265 ",CNVcolours$boundariesMinorCN[i])
+    }
+    
+    text(x = leftstart + (i-1) + 0.5,
+         y = bottommarginblocks - 0.5,srt = 90,adj = 1,
+         labels = textlabel,
+         cex = textscaling)
+  }
+}
+
+plotClustersLegend <- function(textscaling=1){
+  svcols <- getClustersColours()
+  kataegis_region_colour <- svcols$kataegis_region_colour
+  SVcluster_region_colour <- svcols$SVcluster_region_colour
+  # plot it
+  par(mar=c(0,0,0,0))
+  plot(NULL,xlim = c(0,7),ylim = c(0,5),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
+  # kataegis
+  lines(x=c(0.5,2.5),
+        y=c(3,3),
+        col=svcols$kataegis_region_colour,
+        lwd=1)
+  lines(x=c(0.5,1.5),
+        y=c(3,3),
+        col=svcols$kataegis_region_colour,
+        lwd=2)
+  text(x=3,y=3,labels="kataegis",cex=textscaling,adj=0)
+  # svclusters
+  lines(x=c(2,1,1,2),
+        y=c(1.1,1.1,1.9,1.9),
+        col=svcols$SVcluster_region_colour,
+        lwd=2)
+  text(x=3,y=1.5,labels="SV clusters",cex=textscaling,adj=0)
 }
 
 
@@ -386,8 +566,9 @@ plotCircos <- function(snvs_classified,
   sv_colours <- getSVClassColours()
   
   # clusters colours
-  kataegis_region_colour <- kelly_colors[3]
-  SVcluster_region_colour <- kelly_colors[3]
+  svcols <- getClustersColours()
+  kataegis_region_colour <- svcols$kataegis_region_colour
+  SVcluster_region_colour <- svcols$SVcluster_region_colour
                              
   if(!is.null(snvs_classified)){
     if(nrow(snvs_classified)>0){
