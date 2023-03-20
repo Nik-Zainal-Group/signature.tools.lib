@@ -1,7 +1,24 @@
-
+#' genomeChartSV
+#' 
+#' Plotting of somatic variants using the circlize R package. This plot focuses
+#' on structural variants (SVs or rearrangements). Clusters of SVs, if any, are
+#' shown on the plot using a different colour for each cluster. If SNVs are
+#' available, SNVs within the SV clusters are identified and used to build an
+#' SNV mutational catalogue of these localised variants. Moreover, if the bedpe
+#' file of the SVs contains data about non-templated insertions and micro-homology
+#' deletions at breakpoint junctions then the SV junction catalogue is also
+#' built and shown.
+#' 
+#' @param outfilename file where the figure should be plotted. This also determines the file type of the output, use either pdf (recommended) or png
+#' @param SV_bedpe_file name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'	and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.
+#' @param SNV_vcf_file name of the vcf file containing the SNVs
+#' @param SNV_tab_file name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.
+#' @param plot_title title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.
+#' @param genome.v genome version to use, either hg19 or hg38
+#' @return all computed results, like catalogues and clustering regions, will be returned
 #' @export
-genomeChartSV <- function(SV_bedpe_file,
-                          outfilename,
+genomeChartSV <- function(outfilename,
+                          SV_bedpe_file,
                           SNV_vcf_file = NULL,
                           SNV_tab_file = NULL,
                           PEAK.FACTOR = 10,

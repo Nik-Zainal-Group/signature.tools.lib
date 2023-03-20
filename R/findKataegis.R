@@ -1,3 +1,13 @@
+#' find kataegis
+#' 
+#' Given a table with a list of single nucleotide variants (SNVs) this function
+#' identifies groups of SNVs that are narrowly clustered together, and that are
+#' likely part of a kataegis. An annotated table of SNVs and a list of kataegis
+#' regions are returned.
+#' 
+#' @param snvs_table table listing the single nucleotide variants to use. Necessary column names are: chr, position, REF, ALT.
+#' @param sample_name name of sample
+#' @return kataegis regions and annotated SNVs
 #' @export
 findKataegis <- function(snvs_table,
                          sample_name){

@@ -536,6 +536,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
 #' @param mar set the option par(mar=mar)
 #' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
 #' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
+#' @param textscaling scale the text of the plot, default is 1
 #' @export
 plotSubsSignatures <- function(signature_data_matrix,
                                output_file = NULL,
@@ -738,6 +739,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
 #' @param mar set the option par(mar=mar)
 #' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
 #' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
+#' @param textscaling scale the text of the plot (default is 1)
 #' @export
 plotRearrSignatures <-function(signature_data_matrix,
                                output_file = NULL,
