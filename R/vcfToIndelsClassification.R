@@ -194,7 +194,7 @@ indelsToCountAndProportion <- function(all.indels.table, sampleIDs) {
       colnames(complex.samples ) <- c('sample', 'complex')
       rownames(complex.samples) <- complex.samples$sample
     } else {
-      complex.samples <- data.frame(sample=sampleIDs, ins=0)
+      complex.samples <- data.frame(sample=sampleIDs, complex=0)
       rownames(complex.samples) <- sampleIDs
     }
     

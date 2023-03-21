@@ -109,8 +109,8 @@ genomeChart <- function(outfilename,
   if(!is.null(SV_bedpe_file)){
     if (file.exists(SV_bedpe_file)){
       sv_obj <- bedpeToRearrCatalogue(sv_bedpe = readTable(file = SV_bedpe_file))
-      colnames(sv_obj$rearr_catalogue) <- paste0(sample_name," - SV catalogue")
-      colnames(sv_obj$junctions_catalogue) <- paste0(sample_name," - SV junctions catalogue")
+      colnames(sv_obj$rearr_catalogue) <- "SV catalogue"
+      if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junctions catalogue"
     }else{
       message("[warning genomeChart] SV_bedpe_file file not found: ",SV_bedpe_file,". Ignoring and moving on.")
       SV_bedpe_file <- NULL
@@ -130,7 +130,7 @@ genomeChart <- function(outfilename,
                                  genome.v = genome.v)
     colnames(sbs_obj$muts)[c(1,2,4,5)] <- c("chr","position","REF","ALT")
     snvs_classified <- calcIntermutDist(sbs_obj$muts)
-    colnames(sbs_obj$catalogue) <- paste0(sample_name," - SBS catalogue")
+    colnames(sbs_obj$catalogue) <- "SBS catalogue"
   }
   
   # check SBS catalogues in SV clustering regions
@@ -144,6 +144,7 @@ genomeChart <- function(outfilename,
                                                        genome.v = genome.v)
     clustering_regions_sbs_catalogues <- resSBSinSVclusters$clustering_regions_sbs_catalogues
     clusteringSBScatalogue_all <- resSBSinSVclusters$clusteringSBScatalogue_all
+    colnames(clusteringSBScatalogue_all) <- "SNVs in SV clusters"
     snvs_table <- resSBSinSVclusters$snvs_table
   }
   
@@ -160,7 +161,7 @@ genomeChart <- function(outfilename,
       resSBSkataegis <- tabToSNVcatalogue(subs = snvs_kataegis,
                                           genome.v = genome.v)
       kataegisSBScatalogue_all <- resSBSkataegis$catalogue
-      colnames(kataegisSBScatalogue_all) <- paste0(sample_name," - SNVs in kataegis")
+      colnames(kataegisSBScatalogue_all) <- "SNVs in kataegis"
     }
   }
   
@@ -336,6 +337,8 @@ genomeChart <- function(outfilename,
   
   # also I can return all the data/info obtained
   returnObj <- NULL
+  returnObj$sample_name <- sample_name
+  returnObj$genomev <- genome.v
   returnObj$snvs_table <- snvs_table
   returnObj$snvs_classified <- snvs_classified
   returnObj$sbs_obj <- sbs_obj
@@ -593,7 +596,7 @@ plotCircos <- function(snvs_classified,
                              
   if(!is.null(snvs_classified)){
     if(nrow(snvs_classified)>0){
-      if(!startsWith(snvs_classified$chr[1],"chr")){
+      if(!startsWith(as.character(snvs_classified$chr[1]),"chr")){
         snvs_classified$chr <- paste0("chr",snvs_classified$chr)
       }
     }
@@ -601,7 +604,7 @@ plotCircos <- function(snvs_classified,
   
   if(!is.null(kataegis_regions)){
     if(nrow(kataegis_regions)>0){
-      if(!startsWith(kataegis_regions$chr[1],"chr")){
+      if(!startsWith(as.character(kataegis_regions$chr[1]),"chr")){
         kataegis_regions$chr <- paste0("chr",kataegis_regions$chr)
       }
     }
@@ -609,7 +612,7 @@ plotCircos <- function(snvs_classified,
   
   if(!is.null(indels_table)){
     if(nrow(indels_table)>0){
-      if(!startsWith(indels_table$chr[1],"chr")){
+      if(!startsWith(as.character(indels_table$chr[1]),"chr")){
         indels_table$chr <- paste0("chr",indels_table$chr)
       }
     }
@@ -617,7 +620,7 @@ plotCircos <- function(snvs_classified,
   
   if(!is.null(CNV_table)){
     if(nrow(CNV_table)>0){
-      if(!startsWith(CNV_table$Chromosome[1],"chr")){
+      if(!startsWith(as.character(CNV_table$Chromosome[1]),"chr")){
         CNV_table$Chromosome <- paste0("chr",CNV_table$Chromosome)
       }
     }
@@ -625,7 +628,7 @@ plotCircos <- function(snvs_classified,
   
   if(!is.null(sv_bedpe)){
     if(nrow(sv_bedpe)>0){
-      if(!startsWith(sv_bedpe$chrom1[1],"chr")){
+      if(!startsWith(as.character(sv_bedpe$chrom1[1]),"chr")){
         sv_bedpe$chrom1 <- paste0("chr",sv_bedpe$chrom1)
         sv_bedpe$chrom2 <- paste0("chr",sv_bedpe$chrom2)
       }
@@ -633,7 +636,7 @@ plotCircos <- function(snvs_classified,
   }
   
   if(!is.null(clustering_regions)) {
-    if(!startsWith(clustering_regions$chr[1],"chr")){
+    if(!startsWith(as.character(clustering_regions$chr[1]),"chr")){
       clustering_regions$chr <- paste0("chr",clustering_regions$chr)
     }
   }
@@ -799,9 +802,9 @@ plotCircos <- function(snvs_classified,
   # draw SV links
   if(!is.null(sv_bedpe)){
     for(j in 1:nrow(sv_bedpe)){
-      circlize::circos.link(sector.index1 = sv_bedpe$chrom1[j],
+      circlize::circos.link(sector.index1 = as.character(sv_bedpe$chrom1[j]),
                             point1 = sv_bedpe$start1[j],
-                            sector.index2 = sv_bedpe$chrom2[j],
+                            sector.index2 = as.character(sv_bedpe$chrom2[j]),
                             point2 = sv_bedpe$start2[j],
                             col = sv_colours[sv_bedpe$svclass[j]],
                             rou = circlize::get_most_inside_radius() + 0.005)

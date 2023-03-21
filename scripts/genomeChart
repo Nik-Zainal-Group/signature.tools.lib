@@ -1,0 +1,143 @@
+#!/usr/bin/env Rscript
+
+library(getopt)
+
+how_to <- function(){
+  message(" ")
+  message("This script runs the genomeChart function of the signature.tools.lib R package.")
+  message(" ")
+  message("Run this script as follows:")
+  message(" ")
+  message("genomeChart [OPTIONS]")
+  message(" ")
+  message("Available options:")
+  message("  -i, --input=INPUTTABLE    Tab separate input table with the list of files for")
+  message("                              each sample. Columns of INPUTTABLE should be:")
+  message("                              sample, SNV_vcf_files, SNV_tab_files,")
+  message("                              Indels_vcf_files, Indels_tab_files, CNV_tab_files,")
+  message("                              SV_bedpe_files. Note that only one column of")
+  message("                              SNV_vcf_files and SNV_tab_files and of Indels_vcf_files")
+  message("                              and Indels_tab_files are necessary")
+  message("  -o, --outdir=OUTDIR       Name of the output directory. If omitted a name will")
+  message("                              be given automatically.")
+  message("  -e, --genomev=GENOMEV     Genome version to be used: hg19, hg38 or mm10. If not")
+  message("                              specified GENOMEV=hg19.")
+  message("  -h, --help                Show this explanation.")
+  message(" ")
+}
+
+# get options, using the spec as defined by the enclosed list.
+# we read the options from the default: commandArgs(TRUE).
+spec = matrix(c(
+  'input',         'i', 1, "character",
+  'help',          'h', 0, "logical",
+  'outdir',        'o', 1, "character",
+  'genomev',       'e', 1, "character"
+), byrow=TRUE, ncol=4)
+
+# collect the options
+opt = getopt(spec)
+
+# variables to set
+input_table_file <- NULL
+input_table <- NULL
+outdir <- NULL
+genomev <- NULL
+
+# if help was asked for print a friendly message
+# and exit with a zero error code
+if ( !is.null(opt$help) ) {
+  how_to()
+  q(status=0,save = "no")
+}
+
+if (is.null(opt$input)) {
+  message("[error genomeChart script] Missing INPUTTABLE. Quit.\n")
+  how_to()
+  q(status=1,save = "no")
+}else{
+  input_table_file <- opt$input
+}
+
+if (is.null(opt$outdir)) {
+  message("[info genomeChart script] Setting output directory to \"genomeCharts/\".\n")
+  outdir <- "genomeCharts/"
+}else{
+  outdir <- opt$outdir
+}
+
+if (is.null(opt$genomev)) {
+  message("[info genomeChart script] Setting genome version to \"hg19\".\n")
+  genomev <- "hg19"
+}else{
+  genomev <- opt$genomev
+}
+
+# prepare output directory and load input_table
+dir.create(outdir,showWarnings = FALSE,recursive = TRUE)
+
+#retrieve samples and file names to be used from the files table
+if(file.exists(input_table_file)){
+  input_table <- read.table(file = input_table_file,
+                            sep = "\t",
+                            header = TRUE,
+                            check.names = FALSE,
+                            stringsAsFactors = FALSE)
+}else{
+  message("[error genomeChart script] input table ",input_table_file," not found.")
+  q(status=1,save = "no")
+}
+
+# extract filenames from input_table and plot
+if (!("sample" %in% colnames(input_table))){
+  message("[error genomeChart script] \"sample\" column missing in input table ",input_table_file,".")
+  q(status=1,save = "no")
+}
+
+for (i in 1:nrow(input_table)){
+  #initialise input variables
+  sample_name <- input_table$sample[i]
+  
+  message("[info genomeChart script] plotting genomeChart for ",sample_name,", ",i," of ",nrow(input_table))
+  
+  SNV_vcf_file <- NULL
+  SNV_tab_file <- NULL
+  Indels_vcf_file <- NULL
+  Indels_tab_file <- NULL
+  CNV_tab_file <- NULL
+  SV_bedpe_file <- NULL
+  
+  #read input file lists
+  if ("SNV_vcf_files" %in% colnames(input_table)) {
+    SNV_vcf_file <- input_table$SNV_vcf_files[i]
+  }
+  if ("SNV_tab_files" %in% colnames(input_table)) {
+    SNV_tab_file <- input_table$SNV_tab_files[i]
+  }
+  if ("Indels_vcf_files" %in% colnames(input_table)) {
+    Indels_vcf_file <- input_table$Indels_vcf_files[i]
+  }
+  if ("Indels_tab_files" %in% colnames(input_table)) {
+    Indels_tab_file <- input_table$Indels_tab_files[i]
+  }
+  if ("CNV_tab_files" %in% colnames(input_table)) {
+    CNV_tab_file <- input_table$CNV_tab_files[i]
+  }
+  if ("SV_bedpe_files" %in% colnames(input_table)) {
+    SV_bedpe_file <- input_table$SV_bedpe_files[i]
+  }
+  
+  resgc <- signature.tools.lib::genomeChart(outfilename = paste0(outdir,"/",sample_name,"_genomeChart.pdf"),
+                                            sample_name = sample_name,
+                                            SNV_vcf_file = SNV_vcf_file,
+                                            SNV_tab_file = SNV_tab_file,
+                                            Indels_vcf_file = Indels_vcf_file,
+                                            Indels_tab_file = Indels_tab_file,
+                                            CNV_tab_file = CNV_tab_file,
+                                            SV_bedpe_file = SV_bedpe_file,
+                                            plot_title = NULL,
+                                            runKataegis = TRUE,
+                                            genome.v = genomev,
+                                            debug = FALSE)
+  save(file = paste0(outdir,"/",sample_name,"_genomeChart.rData"),resgc)
+}

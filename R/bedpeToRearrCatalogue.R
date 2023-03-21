@@ -56,7 +56,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
       sv_bedpe <- sv_bedpe[sv_bedpe$sample==samplechoice,,drop=F]
       message("[warning bedpeToRearrCatalogue] bedpeToRearrCatalogue sample column should have only one sample name, however multiple sample names were detected: ",
               paste(tmpsamplenames,collapse = ", "),". Trying to fix this by using only the sample with the largest number of rearrangements (",samplechoice,"). ",
-              "This fix should work if there are a few rearrangements from the germline sample, so all we would do is to remove the germline sample name and variants",
+              "This fix should work if there are a few rearrangements from the germline sample, so all we would do is to remove the germline sample name and variants ",
               "while keeping all the tumour sample variants.")
     }
   }
@@ -97,21 +97,23 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   }else{
 
     all_sv_annotated <- NULL
+    clustering_regions <- NULL
   }
   
   #now compute the catalogue (this takes care of the 0 SVs case)
   rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
   # get the junctions catalogue too (this takes care of the 0 SVs case)
   junctions_catalogue <- build_junctions_catalogue(sv_bedpe)
-  colnames(junctions_catalogue) <- colnames(rearr_catalogue)
+  if(!is.null(junctions_catalogue)) colnames(junctions_catalogue) <- colnames(rearr_catalogue)
 
   # return all results
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
   return_list$junctions_catalogue <- junctions_catalogue
   return_list$annotated_bedpe <- all_sv_annotated
-  if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
-
+  if(!is.null(clustering_regions)){
+    if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
+  }
   return(return_list)
 }
 
