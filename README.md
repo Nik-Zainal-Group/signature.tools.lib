@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.4.0
+
+- ```genomeChart``` and ```genomeChartSV``` functions added, as well as a ```genomeChart``` command line script.
+
 2.3.0
 
 - Added FitMS common signature tiers T1-T3. T1 fits organ-specific signatures, T2 fits the corresponding reference signatures. T2 is useful in organs where there are mixed organ-specific signatures (e.g. SBS1+18), so that the signatures composing the mix can be fitted separately (e.g. SBS1 and SBS18 instead of SBS1+18). T3 is a combination of T1 and T2, where organ-specific signatures are used and only the mixed signatures are replaced with the corresponding reference signatures
@@ -161,7 +165,10 @@ This is the full list of R package dependencies:
     BSgenome, 
     readr,
     doRNG,
-    combinat
+    combinat,
+    limSolve,
+    getopt,
+    circlize
 ```
 
 We have noticed that the ```NNLM``` package is frequently unavailable to download automatically
@@ -333,6 +340,8 @@ Function for data visualisation:
 somatic variants across the genome, organised in a circle. Variants
 plotted are single nucleotide variations (SNV), small insertions and
 deletions (indels), copy number variations (CNV) and rearrangements.
+- **```genomeChart(...)```**: complete rewrite of the ```genomePlot```
+function using the ```circlize``` R package
 - **```plotSignatures(...)```**: this function will plot signatures or
 catalogues trying to identify the appropriate mutation type (SNV, DNV, SV...)
 from the input row names.
@@ -370,6 +379,8 @@ Currently available scripts are:
 
 - **signatureFit**: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
 - **hrDetect**: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
+- **genomeChart**: visualisation of somatic variants using a circle diagram and other graphs like mutational catalogues.
+
 
 You can find user manuals for these command line scripts with detailed
 explanation of parameters and examples in the ```userManuals``` folder.
