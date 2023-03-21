@@ -134,7 +134,7 @@ how_to <- function(){
   message("  -n, --nparallel=NPARALLEL Number of parallel CPUs to be used")
   message("  -f, --nbootFit=NBOOTFIT   Number of bootstrap to be used in signature fit. If")
   message("                              not specified NBOOTFIT=100.")
-  message("  -g, --genomeplot          Request to plot genomeplots for each sample, which")
+  message("  -g, --genomechart         Request to plot genomeCharts for each sample, which")
   message("                              show all the mutations on a circle plot.")
   message("  -r, --randomSeed=SEED     Specify a random seed to obtain always the same")
   message("                              identical results.")
@@ -148,7 +148,7 @@ spec = matrix(c(
   'input',         'i', 1, "character",
   'help',          'h', 0, "logical",
   'bootstrap',     'b', 0, "logical",
-  'genomeplot',    'g', 0, "logical",
+  'genomechart',    'g', 0, "logical",
   'outdir',        'o', 1, "character",
   'snvsigversion', 's', 1, "character",
   'svsigversion',  'S', 1, "character",
@@ -191,10 +191,10 @@ if ( !is.null(opt$bootstrap) ) {
 }else{
   bootstrap_scores <- FALSE
 }
-if ( !is.null(opt$genomeplot) ) {
-  genomeplot <- TRUE
+if ( !is.null(opt$genomechart) ) {
+  genomechart <- TRUE
 }else{
-  genomeplot <- FALSE
+  genomechart <- FALSE
 }
 
 if ( is.null(opt$input ) ) {
@@ -491,31 +491,58 @@ if(!is.null(hrdet_res)){
                                     hrdetect_res = hrdet_res)
     }
 
-    #genomeplots
-    if(genomeplot){
-      if(!is.null(SNV_vcf_files)){
-        dir.create(paste0(outdir,"/genomeplots/"),showWarnings = FALSE,recursive = TRUE)
-        for (s in samples) {
-          SNV_vcf_file <- SNV_vcf_files[s]
-          if(!is.null(SNV_vcf_file)){
-            if(is.na(SNV_vcf_files[s])) SNV_vcf_file <- NULL
-          }
-          if(!is.null(SNV_vcf_file)){
-            message("[info hrDetect script] generating genomeplot for ",s,"...")
-            genomePlot(subsVcf.file = SNV_vcf_file,
-                       indelsVcf.file = Indels_vcf_files[s],
-                       cnvsTab.file = CNV_tab_files[s],
-                       rearrBedpe.file = SV_bedpe_files[s],
-                       sampleID = s,
-                       genome.v = genomev,
-                       out_path = paste0(outdir,"/genomeplots/"))
-          }else{
-            message("[warning hrDetect script] skipping genomeplot for ",s," because of missing SNV VCF file.")
-          }
+    #genomecharts
+    if(genomechart){
+      dir.create(paste0(outdir,"/genomecharts/"),showWarnings = FALSE,recursive = TRUE)
+      
+      for (i in 1:nrow(input_t)){
+        #initialise input variables
+        sample_name <- input_t$sample[i]
+        
+        message("[info hrDetect script] plotting genomeChart for ",sample_name,", ",i," of ",nrow(input_t))
+        
+        SNV_vcf_file <- NULL
+        SNV_tab_file <- NULL
+        Indels_vcf_file <- NULL
+        Indels_tab_file <- NULL
+        CNV_tab_file <- NULL
+        SV_bedpe_file <- NULL
+        
+        #read input file lists
+        if ("SNV_vcf_files" %in% colnames(input_t)) {
+          SNV_vcf_file <- input_t$SNV_vcf_files[i]
         }
-      }else{
-        message("[warning hrDetect script] skipping plotting genomeplots because of missing SNV VCF files.")
+        if ("SNV_tab_files" %in% colnames(input_t)) {
+          SNV_tab_file <- input_t$SNV_tab_files[i]
+        }
+        if ("Indels_vcf_files" %in% colnames(input_t)) {
+          Indels_vcf_file <- input_t$Indels_vcf_files[i]
+        }
+        if ("Indels_tab_files" %in% colnames(input_t)) {
+          Indels_tab_file <- input_t$Indels_tab_files[i]
+        }
+        if ("CNV_tab_files" %in% colnames(input_t)) {
+          CNV_tab_file <- input_t$CNV_tab_files[i]
+        }
+        if ("SV_bedpe_files" %in% colnames(input_t)) {
+          SV_bedpe_file <- input_t$SV_bedpe_files[i]
+        }
+        
+        resgc <- genomeChart(outfilename = paste0(outdir,"/genomecharts/",sample_name,"_genomeChart.pdf"),
+                             sample_name = sample_name,
+                             SNV_vcf_file = SNV_vcf_file,
+                             SNV_tab_file = SNV_tab_file,
+                             Indels_vcf_file = Indels_vcf_file,
+                             Indels_tab_file = Indels_tab_file,
+                             CNV_tab_file = CNV_tab_file,
+                             SV_bedpe_file = SV_bedpe_file,
+                             plot_title = NULL,
+                             runKataegis = TRUE,
+                             genome.v = genomev,
+                             debug = FALSE)
+        save(file = paste0(outdir,"/genomecharts/",sample_name,"_genomeChart.rData"),resgc)
       }
+      
     }
     message("[info hrDetect script] done!")
   }else{

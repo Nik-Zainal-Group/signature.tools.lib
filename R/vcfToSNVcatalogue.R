@@ -63,7 +63,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   nmutsloaded <- nrow(vcf_data)
   
   # check if there are mutations at all
-  if(nrow(nmutsloaded)==0){
+  if(nmutsloaded==0){
     # return early an empty catalogue
     result <- list()
     result$catalogue <- as.data.frame(matrix(0,nrow = 96,ncol = 1,dimnames = list(mut.order,"catalogue")),stringsAsFactors = F)
