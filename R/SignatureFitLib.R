@@ -550,11 +550,14 @@ objSimAnnelaingFunction <- function(x, xsample, xsignature){
 
 #' @export
 plotExposures <- function(exposures,
+                          cossimModelVScatalogue = NULL,
                           output_file=NULL){
 
   plotMatrix(dataMatrix = exposures,
              output_file = output_file,
-             ndigitsafterzero = 0)
+             ndigitsafterzero = 0,
+             sideVector = cossimModelVScatalogue,
+             sideVectorLabel = "cosine similarity to catalogue")
 }
 
 #' Export Signature Fit with bootstrap to JSON

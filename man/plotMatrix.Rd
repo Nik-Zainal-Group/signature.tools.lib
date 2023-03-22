@@ -12,7 +12,12 @@ plotMatrix(
   cex.numbers = 0.7,
   title = NULL,
   circlesColBasic = "#A1CAF1",
-  circlesColHighlight = "#F6A600"
+  circlesColHighlight = "#F6A600",
+  sideVector = NULL,
+  sideVectorLabel = NULL,
+  sideVectorColours = c("#cf0000", "#F38400", "#8DB600"),
+  sideVectorThresholds = c(0.8, 0.9),
+  sideVectorNdigitsafterzero = 2
 )
 }
 \arguments{
@@ -29,6 +34,22 @@ plotMatrix(
 \item{circlesColBasic}{colour used for the circles}
 
 \item{circlesColHighlight}{colour used for the circles that pass the thresholdMark}
+
+\item{sideVector}{optional vector that should be of the same length as the number of columns of dataMatrix.
+Leave NULL to omit. If specified, the values will be plotted on the left, leaving a gap from the main plotted
+matrix and using sideVectorLabel as the label for this column, as well as the colours in sideVectorColours}
+
+\item{sideVectorLabel}{label to be used when sideVector is specified}
+
+\item{sideVectorColours}{colours to be used for the sideVector circles. This vector should be one element
+longer than sideVectorThresholds}
+
+\item{sideVectorThresholds}{boundaries for using the sideVectorColours according to the values of sideVector.
+Values need to be increasing. For example, values of sideVector lower than sideVectorThresholds[1] will be 
+coloured sideVectorColours[1], and values greater than sideVectorThresholds[length(sideVectorThresholds)] 
+will be coloured sideVectorColours[length(sideVectorThresholds)+1]}
+
+\item{sideVectorNdigitsafterzero}{similar to ndigitsafterzero, but only affects sideVector values}
 }
 \description{
 This function plots a matrix of values. Data is visualised as circles scaled with respect to the

@@ -565,7 +565,13 @@ Fit <- function(catalogues,
   fitRes$catalogues <- catalogues
   fitRes$signatures <- signatures
   fitRes$method <- method
+  
+  reconstructed <- as.matrix(signatures) %*% fitRes$exposures
+  cossim_catalogueVSmodel <- sapply(1:ncol(reconstructed),function(i) cos_sim(catalogues[,i],reconstructed[,i]))
+  names(cossim_catalogueVSmodel) <- colnames(catalogues)
+  
   fitRes$exposures <- t(rbind(fitRes$exposures,unassigned=fitRes$unassigned_muts))
+  fitRes$cossim_catalogueVSmodel <- cossim_catalogueVSmodel
 
   if(!is.null(randomSeed)) fitRes$randomSeed <- randomSeed
   fitRes$nparallel <- nparallel
@@ -621,6 +627,7 @@ fitMerge <- function(resObj,
   rareSigChoice <- list()
   exposures_merge <- matrix(0,ncol = ncol(resObj$commonSignatures)+ncol(resObj$rareSignatures)+1,nrow = ncol(resObj$catalogues),
                             dimnames = list(colnames(resObj$catalogues),c(colnames(resObj$commonSignatures),colnames(resObj$rareSignatures),"unassigned")))
+  cossim_merge <- c()
   bootstrap_exposures_samples <- list()
   for (i in 1:ncol(resObj$catalogues)){
     # i <- 1
@@ -652,12 +659,16 @@ fitMerge <- function(resObj,
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$bootstrap_exposures_samples[[1]]
+      # collect cos sim
+      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$cossim_catalogueVSmodel)
     }else{
       if(forceCommon) rareSigChoice[[currentSample]] <- "commonOnly"
       selectedExp <- t(resObj$samples[[currentSample]]$fitCommonOnly$exposures)
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
+      # collect cos sim
+      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitCommonOnly$cossim_catalogueVSmodel)
     }
   }
 
@@ -683,6 +694,7 @@ fitMerge <- function(resObj,
   }else{
     resObj$bootstrap_exposures_samples <- NULL
   }
+  resObj$cossim_catalogueVSmodel <- cossim_merge
 
   return(resObj)
 }
@@ -998,6 +1010,17 @@ getArcCoordinates <- function(fromAngle,
 #' @param cex.numbers scale the text used for the numbers in the matrix
 #' @param circlesColBasic colour used for the circles
 #' @param circlesColHighlight colour used for the circles that pass the thresholdMark
+#' @param sideVector optional vector that should be of the same length as the number of columns of dataMatrix.
+#' Leave NULL to omit. If specified, the values will be plotted on the left, leaving a gap from the main plotted
+#' matrix and using sideVectorLabel as the label for this column, as well as the colours in sideVectorColours
+#' @param sideVectorLabel label to be used when sideVector is specified
+#' @param sideVectorColours colours to be used for the sideVector circles. This vector should be one element
+#' longer than sideVectorThresholds
+#' @param sideVectorThresholds boundaries for using the sideVectorColours according to the values of sideVector.
+#' Values need to be increasing. For example, values of sideVector lower than sideVectorThresholds[1] will be 
+#' coloured sideVectorColours[1], and values greater than sideVectorThresholds[length(sideVectorThresholds)] 
+#' will be coloured sideVectorColours[length(sideVectorThresholds)+1]
+#' @param sideVectorNdigitsafterzero similar to ndigitsafterzero, but only affects sideVector values
 #' @export
 plotMatrix <- function(dataMatrix,
                        output_file = NULL,
@@ -1006,21 +1029,43 @@ plotMatrix <- function(dataMatrix,
                        cex.numbers = 0.7,
                        title = NULL,
                        circlesColBasic = "#A1CAF1",
-                       circlesColHighlight = "#F6A600"){
+                       circlesColHighlight = "#F6A600",
+                       sideVector = NULL,
+                       sideVectorLabel = NULL,
+                       sideVectorColours = c("#cf0000","#F38400","#8DB600"),
+                       sideVectorThresholds = c(0.8,0.9),
+                       sideVectorNdigitsafterzero = 2){
+  
+  useSideVector <- FALSE
+  
+  if(!is.null(sideVector)){
+    if(!(length(sideVector)==ncol(dataMatrix))){
+      message("[warning plotMatrix] sideVector length does not match dataMatrix number of columns. Ignoring sideVector and moving on.")
+      sideVector <- NULL
+    }else{
+      useSideVector <- TRUE
+      sideVector[is.na(sideVector)] <- 0
+    }
+  }
 
   maxncharSigs <- max(sapply(rownames(dataMatrix),nchar))
+  if(useSideVector){
+    if(!is.null(sideVectorLabel)){
+      maxncharSigs <- max(maxncharSigs,nchar(sideVectorLabel))
+    }
+  }
   maxncharSamples <- max(sapply(colnames(dataMatrix),nchar))
   mar1 <- 0.6*maxncharSigs+1.2
   mar2 <- 0.6*maxncharSamples+1.2
   mar3 <- 2
   mar4 <- 2
-  width <- 0.5 + 0.3*nrow(dataMatrix) + 0.125*maxncharSamples
+  width <- 0.5 + 0.3*(nrow(dataMatrix) + ifelse(useSideVector,2,0)) + 0.125*maxncharSamples
   height <- 0.5 + 0.3*ncol(dataMatrix) + 0.125*maxncharSigs
   if(!is.null(output_file)) cairo_pdf(filename = output_file,width = width,height = height)
   par(mfrow=c(1,1))
   par(mar=c(mar1,mar2,mar3,mar4))
 
-  plot(1, type="n", xlab="", ylab="", xlim=c(0.5,nrow(dataMatrix)+0.5), ylim=c(ncol(dataMatrix)+0.5,0.5),
+  plot(1, type="n", xlab="", ylab="", xlim=c(ifelse(useSideVector,-1.5,0.5),nrow(dataMatrix)+0.5), ylim=c(ncol(dataMatrix)+0.5,0.5),
        xaxt = 'n', yaxt = 'n',bty = 'n',xaxs="i",yaxs="i")
   abline(h=1:ncol(dataMatrix),lty=3,col="lightgrey",lwd=3)
   abline(v=1:nrow(dataMatrix),lty=3,col="lightgrey",lwd=3)
@@ -1045,6 +1090,37 @@ plotMatrix <- function(dataMatrix,
     }
   }
   for(i in 1:ncol(toPlot)) text(y = rep(i,nrow(toPlot)), x = 1:nrow(toPlot),labels = toPlot[,i],cex = cex.numbers)
+  
+  if(useSideVector){
+    getColour <- function(val,coloursScale,boundariesScale){
+      found <- FALSE
+      z <- 1
+      if(val<boundariesScale[z]) found <- TRUE
+      while (!found & z<length(boundariesScale)) {
+        if(val >= boundariesScale[z] & val < boundariesScale[z+1]){
+          found <- TRUE
+        }
+        z <- z + 1
+      }
+      if(val>=boundariesScale[length(boundariesScale)]) z <- length(boundariesScale) + 1
+      return(coloursScale[z])
+    }
+    
+    abline(v=-1,lty=3,col="lightgrey",lwd=3)
+    if(!is.null(sideVectorLabel)) axis(1,labels = sideVectorLabel,at = -1,las=2,lwd = 0,lwd.ticks = 1,cex.axis = 1)
+    circleDimSideVector <- sideVector/max(sideVector)*5
+    for(i in 1:length(circleDimSideVector)){
+      drawCircle(radius = circleDimSideVector[i]/10,
+                 position = c(-1,i),
+                 col = getColour(val = sideVector[i],
+                                 coloursScale = sideVectorColours,
+                                 boundariesScale = sideVectorThresholds),
+                 border = NA)
+    }
+    sideVectorText <- sprintf(paste0("%.",sideVectorNdigitsafterzero,"f"),sideVector)
+    text(y = 1:length(sideVector), x = -1,labels = sideVectorText,cex = cex.numbers)
+  }
+  
   if(!is.null(title)) title(main = title)
   if(!is.null(output_file)) dev.off()
 }
@@ -1170,22 +1246,27 @@ plotFit <- function(fitObj,
   exposuresProp[sums_exp==0,] <- 0
 
   # #plot and save exposures
-  # sums_exp <- apply(fitObj$catalogues, 2, sum)
-  # exposures <- rbind(fitObj$exposures,fitObj$unassigned_muts)
-  # rownames(exposures)[nrow(exposures)] <- "unassigned"
-  # denominator <- matrix(sums_exp,nrow = nrow(exposures),ncol = ncol(exposures),byrow = TRUE)
-  # exposuresProp <- (exposures/denominator*100)
-  # # case of empty catalogues
-  # exposuresProp[,sums_exp==0] <- 0
-
   file_table_exp <- paste0(outdir,"exposures.tsv")
-  # change to pdf later
+  # plot to pdf
   file_plot_exp <- paste0(outdir,"exposures.pdf")
   file_plot_expProp <- paste0(outdir,"exposures_prop.pdf")
-  plotMatrix(as.data.frame(t(fitObj$exposures)),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plotMatrix(as.data.frame(t(exposuresProp)),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(t(fitObj$exposures)),
+             output_file = file_plot_exp,
+             ndigitsafterzero = 0,
+             sideVector = fitObj$cossim_catalogueVSmodel,
+             sideVectorLabel = "cosine similarity")
+  plotMatrix(as.data.frame(t(exposuresProp)),
+             output_file = file_plot_expProp,
+             ndigitsafterzero = 0,
+             sideVector = fitObj$cossim_catalogueVSmodel,
+             sideVectorLabel = "cosine similarity")
 
   write.table(fitObj$exposures,file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  cossimdf <- as.data.frame(fitObj$cossim_catalogueVSmodel)
+  colnames(cossimdf) <- "cossim_catalogueVSmodel"
+  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSmodel.tsv"),
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 
   #provide a series of plots for each sample
@@ -1435,9 +1516,22 @@ plotFitMS <- function(fitMSobj,
   file_plot_exp <- paste0(outdir,"exposures.pdf")
   file_plot_expProp <- paste0(outdir,"exposures_prop.pdf")
   file_table_exp <- paste0(outdir,"exposures.tsv")
-  plotMatrix(as.data.frame(t(fitMSobj$exposures)),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plotMatrix(as.data.frame(t(exposuresProp)),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  plotMatrix(as.data.frame(t(fitMSobj$exposures)),
+             output_file = file_plot_exp,
+             ndigitsafterzero = 0,
+             sideVector = fitMSobj$cossim_catalogueVSmodel,
+             sideVectorLabel = "cosine similarity")
+  plotMatrix(as.data.frame(t(exposuresProp)),
+             output_file = file_plot_expProp,
+             ndigitsafterzero = 0,
+             sideVector = fitMSobj$cossim_catalogueVSmodel,
+             sideVectorLabel = "cosine similarity")
   write.table(fitMSobj$exposures,file = file_table_exp,
+              sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  cossimdf <- as.data.frame(fitMSobj$cossim_catalogueVSmodel)
+  colnames(cossimdf) <- "cossim_catalogueVSmodel"
+  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSmodel.tsv"),
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 
   # now for each sample plot the chosen solution and the alternative solutions
