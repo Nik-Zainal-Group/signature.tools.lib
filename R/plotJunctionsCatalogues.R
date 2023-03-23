@@ -24,11 +24,23 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
   #                      The columns are the signatures, while the rows are the 32 features
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
-  nt_col = rgb(228,26,28, maxColorValue = 255)
-  mh_col = rgb(77,175,74, maxColorValue =255)
-  other_col = rgb(152,78,163, maxColorValue =255)
+  # nt_col = rgb(228,26,28, maxColorValue = 255)
+  # mh_col = rgb(77,175,74, maxColorValue =255)
+  # other_col = rgb(152,78,163, maxColorValue =255)
+  
+  # nt_col = "#F3C300"
+  # mh_col = "#F38400"
+  # other_col = "#C2B280"
+  
+  nt_col = "#875692"
+  mh_col = "#BE0032"
+  other_col = "#C2B280"
+  
+  # nt_col = "#A1CAF1"
+  # mh_col = "#0067A5"
+  # other_col = "#C2B280"
   non_clust_col = rgb(240,240,240, maxColorValue =255)
-  rearr.colours <- rep(c(rep(nt_col,3),rep(mh_col,3),other_col),2)
+  rearr.colours <- rep(c(rep(nt_col,3),other_col,rep(mh_col,3)),2)
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
   if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
   
@@ -51,7 +63,7 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
     sizes <- c("1-3",
                "4-10",
                ">10")
-    sizes_names <- c(rep(sizes,2),"",rep(sizes,2),"")
+    sizes_names <- rep(c(rev(sizes),"",sizes),2)
     for (pos in 1:ncol(tmpmatrix)){
       if(is.null(mar)){
         par(mar=c(8,3,2,1))
@@ -71,13 +83,7 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
                      cex.main = 0.9*textscaling,
                      border = 0,
                      space = 0.1)
-      # axis(1,
-      #      las=2,
-      #      at=pos,
-      #      lab=sizes_names,
-      #      col = "transparent",
-      #      line = 1*textscaling,
-      #      cex.axis = 0.8*textscaling)
+
       #save old plot coordinates
       op <- par("usr")
       #set new coordinates
@@ -88,8 +94,7 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
       xsep = 0.202
       start1_text <- 0.11
       tr_size <- 0.059
-      #rect(0.1, 0.1, 0.2, 0.2,col = "blue",lwd = 0)
-      #rect(0.1, 0.1, 0.11, 0.11,col = "red",lwd = 0)
+
       stop <- start1
       for(i in 1:2){
         start <- stop
@@ -97,13 +102,13 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
         rect(start, -0.14, stop, -0.02,col = nt_col,lwd = 0,border = NA)
         text(x = start+0.5*xsep,y = -0.08,"nti",col = "white",cex = textscaling)
         start <- stop
-        stop <- start + xsep
-        rect(start, -0.14, stop, -0.02,col = mh_col,lwd = 0,border = NA)
-        text(x = start+0.5*xsep,y = -0.08,"mhd",col = "white",cex = textscaling)
-        start <- stop
         stop <- start + tr_size
         rect(start, -0.14, stop, -0.02,col = other_col,lwd = 0,border = NA)
         text(x = start+0.5*tr_size,y = -0.08,"o",col = "white",cex = textscaling)
+        start <- stop
+        stop <- start + xsep
+        rect(start, -0.14, stop, -0.02,col = mh_col,lwd = 0,border = NA)
+        text(x = start+0.5*xsep,y = -0.08,"mhd",col = "white",cex = textscaling)
       }
       xsep2 <- 2*xsep+tr_size
       rect(start1, -0.26, start1+xsep2, -0.14,col = "black",lwd = 0,border = NA)

@@ -50,13 +50,15 @@ plotCopyNumbers <- function(sv_df,
     return(NULL)
   }
 
-
+  displace <- 0.05
+  barheight <- 0.1
   highestCN <- min(max(sv_df$total.copy.number.inTumour)+1,6) 
   maxCoord <- sum(as.numeric(chromosome_lengths))
-  plot(NA,xlim=c(0,maxCoord),ylim=c(0-0.15,highestCN+0.25),main=plottitle,cex.main=0.8,
+  plot(NA,xlim=c(0,maxCoord),ylim=c(0-0.3,highestCN+0.6),main=plottitle,cex.main=0.8,
        ylab = "Copy Numbers",xlab = "",xaxt="n",xaxs="i",yaxs="i",mgp=c(1.5,0.6,0),mar=mar,
        cex = textscaling,cex.lab = textscaling, cex.main = textscaling,cex.axis = textscaling,las = 2)
   # abline(v=maxCoord)
+  for(i in 0:floor(highestCN)) lines(x=c(0,maxCoord),y=c(i,i),col="lightgrey",lty=3,lwd=0.5)
   for (i in 1:length(chromosome_lengths)){
     chrom_name <- chrom_names[i]
     tmpChrom <- sv_df[sv_df$Chromosome==chrom_name,]
@@ -69,16 +71,16 @@ plotCopyNumbers <- function(sv_df,
       for (j in 1:nrow(tmpChrom)){
         if(tmpChrom$total.copy.number.inTumour[j]<7){
           rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
-               ybottom = tmpChrom$total.copy.number.inTumour[j],
-               ytop = tmpChrom$total.copy.number.inTumour[j]+0.1,col = totalCNcolour,border = totalCNcolour)
+               ybottom = tmpChrom$total.copy.number.inTumour[j]+displace,
+               ytop = tmpChrom$total.copy.number.inTumour[j]+displace+barheight,col = totalCNcolour,border = totalCNcolour)
         }else{
           rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
-               ybottom = 6.1,
-               ytop = 6.2,col = outofrangeCNcolour,border = outofrangeCNcolour)
+               ybottom = 6 + 4*displace+barheight,
+               ytop = 6 + 4*displace+2*barheight,col = outofrangeCNcolour,border = outofrangeCNcolour)
         }     
         rect(xleft = startCoord+tmpChrom$chromStart[j],xright = startCoord+tmpChrom$chromEnd[j],
-             ybottom = tmpChrom$minor.copy.number.inTumour[j]-0.1,
-             ytop = tmpChrom$minor.copy.number.inTumour[j],col = minorCNcolour,border = minorCNcolour)
+             ybottom = tmpChrom$minor.copy.number.inTumour[j]-displace-barheight,
+             ytop = tmpChrom$minor.copy.number.inTumour[j]-displace,col = minorCNcolour,border = minorCNcolour)
       }
     }
     # add highlight regions
@@ -102,7 +104,7 @@ plotCopyNumbers <- function(sv_df,
   }
   text(x=maxCoord/2,y=-2*textscaling,labels = "chromosomes",cex = textscaling)
   par(xpd=FALSE)
-  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c("green","red","purple"),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.3),cex=textscaling*0.8)
+  legend("topleft",legend = c("Minor","Total","Total>6"),fill = c(minorCNcolour,totalCNcolour,outofrangeCNcolour),border = rep("white",3),bty = "n",horiz = TRUE,xpd = TRUE,inset = c(0,-0.3),cex=textscaling*0.8)
   if(!is.null(filename)) dev.off()
 
 }                                                                                                           

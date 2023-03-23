@@ -325,9 +325,12 @@ classifyRearrangementsFromBedpe <- function(sv_bedpe){
 
 build_junctions_catalogue <- function(annotated_bedpe){
   
+  sizes <- c("_1-3",
+             "_4-10",
+             "_>10")
   junctions_catalogue_channels <- paste(rep(c("clustered","non-clustered"),each=7),
-                                        rep(c(rep("_non-templated",3),rep("_homologous",3),"_other"),2),
-                                        rep(c(rep(c("_1-3","_4-10","_>10"),2),""),2),sep = "")
+                                        rep(c(rep("_non-templated",3),"_other",rep("_homologous",3)),2),
+                                        rep(c(rev(sizes),"",sizes),2),sep = "")
   junctions_catalogue <- data.frame(sample=rep(0,length(junctions_catalogue_channels)),
                                     row.names = junctions_catalogue_channels,
                                     stringsAsFactors = F)

@@ -304,7 +304,10 @@ genomeChart <- function(outfilename,
                     plottitle = "Copy Number Variations",
                     genome.v = genome.v,
                     mar = c(1.5,2.5,2,1),
-                    textscaling = 0.6)
+                    textscaling = 0.6,
+                    minorCNcolour = "#F08080FF",
+                    totalCNcolour = "#9ACD32E6",
+                    outofrangeCNcolour = "#604E97")
   }else{
     plotMessage(msg = "copy number data\nnot available",
                 textscaling = msgtextscaling)
@@ -412,8 +415,8 @@ getKellyColours <- function(){
 
 getClustersColours <- function(){
   kelly_colors <- getKellyColours()
-  kataegis_region_colour <- kelly_colors[3]
-  SVcluster_region_colour <- kelly_colors[3]
+  kataegis_region_colour <- kelly_colors[7]
+  SVcluster_region_colour <- kelly_colors[7]
   svcols <- list()
   svcols$kataegis_region_colour <- kataegis_region_colour
   svcols$SVcluster_region_colour <- SVcluster_region_colour
