@@ -110,7 +110,7 @@ genomeChart <- function(outfilename,
     if (file.exists(SV_bedpe_file)){
       sv_obj <- bedpeToRearrCatalogue(sv_bedpe = readTable(file = SV_bedpe_file))
       colnames(sv_obj$rearr_catalogue) <- "SV catalogue"
-      if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junctions catalogue"
+      if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junction catalogue"
     }else{
       message("[warning genomeChart] SV_bedpe_file file not found: ",SV_bedpe_file,". Ignoring and moving on.")
       SV_bedpe_file <- NULL
@@ -130,7 +130,7 @@ genomeChart <- function(outfilename,
                                  genome.v = genome.v)
     colnames(sbs_obj$muts)[c(1,2,4,5)] <- c("chr","position","REF","ALT")
     snvs_classified <- calcIntermutDist(sbs_obj$muts)
-    colnames(sbs_obj$catalogue) <- "SBS catalogue"
+    colnames(sbs_obj$catalogue) <- "SNV catalogue"
   }
   
   # check SBS catalogues in SV clustering regions
@@ -245,7 +245,7 @@ genomeChart <- function(outfilename,
     plotSubsSignatures(sbs_obj$catalogue,
                        textscaling = 0.6)
   }else{
-    plotMessage(msg = "SBS catalogue\nnot available",
+    plotMessage(msg = "SNV catalogue\nnot available",
                 textscaling = msgtextscaling)
   }
   if(debug) drawDebugBox(2)
@@ -291,7 +291,7 @@ genomeChart <- function(outfilename,
                             textscaling = 0.6,
                             mar = c(2, 3, 2, 1))
   }else{
-    plotMessage(msg = "SV junctions catalogue\nnot available",
+    plotMessage(msg = "SV junction catalogue\nnot available",
                 textscaling = msgtextscaling)
   }
   if(debug) drawDebugBox(6)
@@ -437,7 +437,7 @@ plotIndelsClassSummary <- function(indels_stats,
           names.arg = plot_labels,
           mar=mar,
           las=2,
-          main = paste0(indels_stats$all.indels," insertions and deletions"),
+          main = paste0(" insertions and deletions\n(",indels_stats$all.indels," Indels)"),
           cex.axis = textscaling*0.7,
           cex.names = textscaling*0.7,
           border = NA,
@@ -464,7 +464,7 @@ plotCNVlegend <- function(textscaling = 1){
   # total CN legend (gain)
   text(x = leftmarginblocks + length(CNVcolours$coloursTotalCN)/2,
        y = bottommarginblocks + 2.5,
-       labels = "Gain\n(Total CN)",
+       labels = "\nTotal CN",
        cex = textscaling)
   
   for(i in 1:length(CNVcolours$coloursTotalCN)){
@@ -497,7 +497,7 @@ plotCNVlegend <- function(textscaling = 1){
   
   text(x = leftstart + length(CNVcolours$coloursMinorCN)/2,
        y = bottommarginblocks + 2.5,
-       labels = "LOH\n(Minor CN)",
+       labels = "\nMinor CN",
        cex = textscaling)
   
   for(i in 1:length(CNVcolours$coloursMinorCN)){
