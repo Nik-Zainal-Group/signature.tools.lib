@@ -60,10 +60,34 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
               "while keeping all the tumour sample variants.")
     }
   }
+  
   #Annotate the bedpe if necessary
-
   if(nrow(sv_bedpe)>0){
-
+    
+    #check whether column svclass is present,
+    #if not, compute it
+    if (! "svclass" %in% colnames(sv_bedpe)){
+      if ("strand1" %in% colnames(sv_bedpe) & "strand2" %in% colnames(sv_bedpe)){
+        sv_bedpe <- classifyRearrangementsFromBedpe(sv_bedpe)
+      }else{
+        message("[error bedpeToRearrCatalogue] cannot classify rearrangements: svclass column missing, and cannot compute it because strand1 and strand2 are missing.")
+        return(NULL)
+      }
+    }
+    
+    # removing SVs shorter than 1kb
+    all_sv_annotated <- sv_bedpe
+    bkdist <- abs(sv_bedpe$start2 - sv_bedpe$start1)
+    sv_bedpe[sv_bedpe$svclass!='translocation',"length"] <- bkdist[sv_bedpe$svclass!='translocation']
+    toberemoved <- sv_bedpe$svclass!='translocation' & bkdist<1e3
+    if(sum(toberemoved)>0){
+      message("[warning bedpeToRearrCatalogue] ignoring rearrangements shorter than 1kb (",sum(toberemoved)," out of ",nrow(all_sv_annotated),")")
+      all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
+      all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
+      sv_bedpe <- sv_bedpe[!toberemoved,]
+    }
+    
+    # now cluster
     clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
                                                         plot.path = NA,
                                                         kmin=kmin,
@@ -74,28 +98,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
     sv_bedpe <- clustering.result$sv_bedpe
     clustering_regions <- clustering.result$clustering_regions
 
-    #check whether column svclass is present,
-    #if not, compute it
-    if (! "svclass" %in% colnames(sv_bedpe)){
-      if ("strand1" %in% colnames(sv_bedpe) & "strand2" %in% colnames(sv_bedpe)){
-        sv_bedpe <- classifyRearrangementsFromBedpe(sv_bedpe)
-      }else{
-        message("cannot classify rearrangements: svclass column missing, and cannot compute it because strand1 and strand2 are missing.")
-      }
-    }
-
-    # remove translocations with length less than 1kb
-    bkdist <- abs(sv_bedpe$start2 - sv_bedpe$start1)
-    sv_bedpe[sv_bedpe$svclass!='translocation',"length"] <- bkdist[sv_bedpe$svclass!='translocation']
-    all_sv_annotated <- sv_bedpe
-    # toberemoved <- sv_bedpe$svclass!='translocation' & bkdist<1e3
-    # all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
-    # all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
-    # sv_bedpe <- sv_bedpe[!toberemoved,]
-
-
   }else{
-
     all_sv_annotated <- NULL
     clustering_regions <- NULL
   }
@@ -104,16 +107,23 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   resSVcat <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
   rearr_catalogue <- resSVcat$SV_catalogue
   sv_bedpe <- resSVcat$updated_sv_bedpe
-  if(nrow(sv_bedpe)>0) all_sv_annotated <- sv_bedpe
+
   # get the junctions catalogue too (this takes care of the 0 SVs case)
   junctions_catalogue <- build_junctions_catalogue(sv_bedpe)
   if(!is.null(junctions_catalogue)) colnames(junctions_catalogue) <- colnames(rearr_catalogue)
+  
+  if(nrow(sv_bedpe)>0){
+    annotated_bedpe <- sv_bedpe
+  }else{
+    annotated_bedpe <- NULL
+  }
 
   # return all results
   return_list <- list()
   return_list$rearr_catalogue <- rearr_catalogue
   return_list$junctions_catalogue <- junctions_catalogue
-  return_list$annotated_bedpe <- all_sv_annotated
+  return_list$annotated_bedpe <- annotated_bedpe
+  return_list$all_sv_annotated <- all_sv_annotated
   if(!is.null(clustering_regions)){
     if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
   }
