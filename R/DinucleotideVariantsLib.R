@@ -165,6 +165,7 @@ tabToDNVcatalogue <- function(muttable) {
   # setup return variables
   DNV_catalogue <- NULL
   DNV_table <- list()
+  annotated_DNVs <- NULL
 
   # now consider the SNV first
   snvSelection <- nchar(muttable$REF)==1 & nchar(muttable$ALT)==1
@@ -192,18 +193,48 @@ tabToDNVcatalogue <- function(muttable) {
     res_dnv <- dnvTabToDNVcatalogue(dnv_table)
     if(is.null(DNV_catalogue)){
       DNV_catalogue <- res_dnv$DNV_catalogue
-      DNV_table <- res_dnv$DNV_table
+      DNV_table[["dnv"]] <- res_dnv$DNV_table
     }else{
       DNV_catalogue <- DNV_catalogue + res_dnv$DNV_catalogue
       DNV_table[["dnv"]]  <- res_dnv$DNV_table
     }
   }
+  
+  annotated_DNVs <- combineDNVtables(DNV_table)
 
   #
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
+  res$annotated_DNVs <- annotated_DNVs
   return(res)
+}
+
+combineDNVtables <- function(DNV_table){
+  annotated_DNVs <- NULL
+  if(length(DNV_table)>0){
+    for (n in names(DNV_table)){
+      if(n=="snv"){
+        annotated_DNVs <- rbind(annotated_DNVs,data.frame(chr=DNV_table[["snv"]]$Chrom,
+                                                          position=DNV_table[["snv"]]$Pos,
+                                                          REF=DNV_table[["snv"]]$dinuc_Ref,
+                                                          ALT=DNV_table[["snv"]]$dinuc_Alt,
+                                                          channelZou=DNV_table[["snv"]]$dinuc_mutation_final,
+                                                          channelAlexandrov=convertDNVchannelFromZouToAlexandrov(DNV_table[["snv"]]$dinuc_mutation_final),
+                                                          stringsAsFactors = F))
+      }else if(n=="dnv"){
+        annotated_DNVs <- rbind(annotated_DNVs,data.frame(chr=DNV_table[["dnv"]]$Chrom,
+                                                          position=DNV_table[["dnv"]]$Pos,
+                                                          REF=DNV_table[["dnv"]]$Ref,
+                                                          ALT=DNV_table[["dnv"]]$Alt,
+                                                          channelZou=DNV_table[["dnv"]]$dinuc_mutation_final,
+                                                          channelAlexandrov=convertDNVchannelFromZouToAlexandrov(DNV_table[["dnv"]]$dinuc_mutation_final),
+                                                          stringsAsFactors = F))
+      }
+    }
+    rownames(annotated_DNVs) <- 1:nrow(annotated_DNVs)
+  }
+  return(annotated_DNVs)
 }
 
 #' VCF to DNV catalogue
@@ -286,6 +317,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   # setup return variables
   DNV_catalogue <- NULL
   DNV_table <- list()
+  annotated_DNVs <- NULL
 
   # now consider the SNV first
   snvSelection <- chroms %in% expected_chroms & nchar(wt)==1 & nchar(mt)==1
@@ -313,17 +345,20 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
     res_dnv <- dnvTabToDNVcatalogue(dnv_table)
     if(is.null(DNV_catalogue)){
       DNV_catalogue <- res_dnv$DNV_catalogue
-      DNV_table <- res_dnv$DNV_table
+      DNV_table[["dnv"]] <- res_dnv$DNV_table
     }else{
       DNV_catalogue <- DNV_catalogue + res_dnv$DNV_catalogue
       DNV_table[["dnv"]]  <- res_dnv$DNV_table
     }
   }
+  
+  annotated_DNVs <- combineDNVtables(DNV_table)
 
   #
   res <- list()
   res$DNV_catalogue <- DNV_catalogue
   res$DNV_table <- DNV_table
+  res$annotated_DNVs <- annotated_DNVs
   return(res)
 }
 
@@ -689,5 +724,31 @@ convertToAlexandrovChannels <- function(dnvCatalogues){
 }
 
 
+convertDNVchannelFromZouToAlexandrov <- function(DNV){
+  AlexandrovChannels <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
+                          "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
+                          "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
+                          "CG>AT","CG>GC","CG>GT","CG>TA","CG>TC","CG>TT",
+                          "CT>AA","CT>AC","CT>AG","CT>GA","CT>GC","CT>GG","CT>TA","CT>TC","CT>TG",
+                          "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
+                          "TA>AT","TA>CG","TA>CT","TA>GC","TA>GG","TA>GT",
+                          "TC>AA","TC>AG","TC>AT","TC>CA","TC>CG","TC>CT","TC>GA","TC>GG","TC>GT",
+                          "TG>AA","TG>AC","TG>AT","TG>CA","TG>CC","TG>CT","TG>GA","TG>GC","TG>GT",
+                          "TT>AA","TT>AC","TT>AG","TT>CA","TT>CC","TT>CG","TT>GA","TT>GC","TT>GG")
+  
+  ZouChannels <- c("AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
+                   "AT>CA","AT>CC","AT>CG","AT>GA","AT>GC","AT>TA",
+                   "CC>AA","CC>AG","CC>AT","CC>GA","CC>GG","CC>GT","CC>TA","CC>TG","CC>TT",
+                   "CG>AT","CG>GC","CG>AC","CG>TA","CG>GA","CG>AA",
+                   "AG>TT","AG>GT","AG>CT","AG>TC","AG>GC","AG>CC","AG>TA","AG>GA","AG>CA",
+                   "GC>AA","GC>AG","GC>AT","GC>CA","GC>CG","GC>TA",
+                   "TA>AT","TA>CG","TA>AG","TA>GC","TA>CC","TA>AC",
+                   "GA>TT","GA>CT","GA>AT","GA>TG","GA>CG","GA>AG","GA>TC","GA>CC","GA>AC",
+                   "CA>TT","CA>GT","CA>AT","CA>TG","CA>GG","CA>AG","CA>TC","CA>GC","CA>AC",
+                   "AA>TT","AA>GT","AA>CT","AA>TG","AA>GG","AA>CG","AA>TC","AA>GC","AA>CC")
+  
+  names(AlexandrovChannels) <- ZouChannels
+  return(AlexandrovChannels[DNV])
+}
 
 

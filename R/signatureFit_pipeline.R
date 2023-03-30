@@ -171,16 +171,13 @@ signatureFit_pipeline <- function(catalogues=NULL,
         res <- vcfToDNVcatalogue(DNV_vcf_files[sample],genome.v = genome.v)
         colnames(res$DNV_catalogue) <- sample
         res$DNV_catalogue <- convertToAlexandrovChannels(res$DNV_catalogue)
-        if(!is.null(res$DNV_table[["snv"]])) res$DNV_table[["snv"]] <- cbind(data.frame(sampleName=rep(sample,nrow(res$DNV_table[["snv"]])),stringsAsFactors = F),res$DNV_table[["snv"]])
-        if(!is.null(res$DNV_table[["dnv"]])) res$DNV_table[["dnv"]] <- cbind(data.frame(sampleName=rep(sample,nrow(res$DNV_table[["dnv"]])),stringsAsFactors = F),res$DNV_table[["dnv"]])
+        if(!is.null(res$annotated_DNVs)) res$annotated_DNVs <- cbind(data.frame(sampleName=rep(sample,nrow(res$annotated_DNVs)),stringsAsFactors = F),res$annotated_DNVs)
         res
       }
       catalogues_mutations <- data.frame(row.names = rownames(cat_list[[1]]$DNV_catalogue),stringsAsFactors = F)
-      annotated_mutations <- list()
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$DNV_catalogue)
-        if(!is.null(cat_list[[i]]$DNV_table[["snv"]])) annotated_mutations[["snv"]] <- rbind(annotated_mutations[["snv"]],cat_list[[i]]$DNV_table[["snv"]])
-        if(!is.null(cat_list[[i]]$DNV_table[["dnv"]])) annotated_mutations[["dnv"]] <- rbind(annotated_mutations[["dnv"]],cat_list[[i]]$DNV_table[["dnv"]])
+        if(!is.null(cat_list[[i]]$annotated_DNVs)) annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_DNVs)
       }
 
     }else if(!is.null(DNV_tab_files)){
@@ -193,16 +190,13 @@ signatureFit_pipeline <- function(catalogues=NULL,
         res <- tabToDNVcatalogue(muts)
         colnames(res$DNV_catalogue) <- sample
         res$DNV_catalogue <- convertToAlexandrovChannels(res$DNV_catalogue)
-        if(!is.null(res$DNV_table[["snv"]])) res$DNV_table[["snv"]] <- cbind(data.frame(sampleName=rep(sample,nrow(res$DNV_table[["snv"]])),stringsAsFactors = F),res$DNV_table[["snv"]])
-        if(!is.null(res$DNV_table[["dnv"]])) res$DNV_table[["dnv"]] <- cbind(data.frame(sampleName=rep(sample,nrow(res$DNV_table[["dnv"]])),stringsAsFactors = F),res$DNV_table[["dnv"]])
+        if(!is.null(res$annotated_DNVs)) res$annotated_DNVs <- cbind(data.frame(sampleName=rep(sample,nrow(res$annotated_DNVs)),stringsAsFactors = F),res$annotated_DNVs)
         res
       }
       catalogues_mutations <- data.frame(row.names = rownames(cat_list[[1]]$DNV_catalogue),stringsAsFactors = F)
-      annotated_mutations <- list()
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$DNV_catalogue)
-        if(!is.null(cat_list[[i]]$DNV_table[["snv"]])) annotated_mutations[["snv"]] <- rbind(annotated_mutations[["snv"]],cat_list[[i]]$DNV_table[["snv"]])
-        if(!is.null(cat_list[[i]]$DNV_table[["dnv"]])) annotated_mutations[["dnv"]] <- rbind(annotated_mutations[["dnv"]],cat_list[[i]]$DNV_table[["dnv"]])
+        if(!is.null(cat_list[[i]]$annotated_DNVs)) annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_DNVs)
       }
 
     }else if(!is.null(SV_bedpe_files)){
@@ -228,10 +222,10 @@ signatureFit_pipeline <- function(catalogues=NULL,
         reslist
       }
       catalogues_mutations <- data.frame(row.names = rownames(cat_list[[1]]$rearr_catalogue),stringsAsFactors = F)
-      bedpecolumns <- c("chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample","svclass","id", "is.clustered", "length")
+      bedpecolumns <- c("chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample","svclass","id", "is.clustered", "length","catalogue.label")
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$rearr_catalogue)
-        annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
+        if(!is.null(cat_list[[i]]$annotated_bedpe)) annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
         if(!is.null(cat_list[[i]]$clustering_regions)) clustering_regions_mutations <- rbind(clustering_regions_mutations,cat_list[[i]]$clustering_regions)
       }
     }
@@ -358,7 +352,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       signature_version <- "RefSigv1"
     }
     if(fit_method=="FitMS" & mtype_catalogues=="rearr"){
-      message("[warning signatureFit_pipeline] FitMS does not support rearrangement sigantures yet, ",
+      message("[warning signatureFit_pipeline] FitMS does not support rearrangement signatures yet, ",
               "switching to fit_method=Fit")
       fit_method <- "Fit"
     }
@@ -591,6 +585,11 @@ signatureFit_pipeline <- function(catalogues=NULL,
                   randomSeed = randomSeed,
                   verbose = verbose)
     fitRes$commonSignatureTier <- commonSignatureTier
+    if(!is.null(annotated_mutations)){
+      returnObj$annotated_mutations <- assignSignatureProbabilityToMutations(sampleMutations = returnObj$annotated_mutations,
+                                                                             sampleSigsExposures = fitRes$exposures,
+                                                                             signatures = fitRes$signatures)
+    }
   }else if(fit_method=="FitMS"){
     message("[info signatureFit_pipeline] all set, running FitMS.")
     fitRes <- FitMS(catalogues = catalogues,
@@ -615,6 +614,13 @@ signatureFit_pipeline <- function(catalogues=NULL,
                     nparallel = nparallel,
                     randomSeed = randomSeed,
                     verbose = verbose)
+    if(!is.null(annotated_mutations)){
+      usesigs <- fitRes$commonSignatures
+      if(!is.null(fitRes$rareSignatures)) usesigs <- cbind(usesigs,fitRes$rareSignatures)
+      returnObj$annotated_mutations <- assignSignatureProbabilityToMutations(sampleMutations = returnObj$annotated_mutations,
+                                                                             sampleSigsExposures = fitRes$exposures,
+                                                                             signatures = usesigs)
+    }
   }else{
     message("[error signatureFit_pipeline] unknown fit_method ",fit_method,".")
     return(returnObj)

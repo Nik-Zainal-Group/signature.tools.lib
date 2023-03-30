@@ -88,10 +88,10 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
     bkdist <- abs(sv_bedpe$start2 - sv_bedpe$start1)
     sv_bedpe[sv_bedpe$svclass!='translocation',"length"] <- bkdist[sv_bedpe$svclass!='translocation']
     all_sv_annotated <- sv_bedpe
-    toberemoved <- sv_bedpe$svclass!='translocation' & bkdist<1e3
-    all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
-    all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
-    sv_bedpe <- sv_bedpe[!toberemoved,]
+    # toberemoved <- sv_bedpe$svclass!='translocation' & bkdist<1e3
+    # all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
+    # all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
+    # sv_bedpe <- sv_bedpe[!toberemoved,]
 
 
   }else{
@@ -101,7 +101,10 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   }
   
   #now compute the catalogue (this takes care of the 0 SVs case)
-  rearr_catalogue <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  resSVcat <- prepare.rearr.catalogue_fromAnnotatedBedpe(sv_bedpe)
+  rearr_catalogue <- resSVcat$SV_catalogue
+  sv_bedpe <- resSVcat$updated_sv_bedpe
+  if(nrow(sv_bedpe)>0) all_sv_annotated <- sv_bedpe
   # get the junctions catalogue too (this takes care of the 0 SVs case)
   junctions_catalogue <- build_junctions_catalogue(sv_bedpe)
   if(!is.null(junctions_catalogue)) colnames(junctions_catalogue) <- colnames(rearr_catalogue)
@@ -253,6 +256,8 @@ prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
 
   all_catalogues <- as.data.frame(matrix(nrow = length(catalogue.labels),ncol = 0))
   rownames(all_catalogues) <- catalogue.labels
+  
+  updated_sv_bedpe <- NULL
 
   if (nrow(sv_bedpe)>0){
     for (sample_name in unique(sv_bedpe$sample)){
@@ -280,11 +285,12 @@ prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
         label3[ sample.rearrs$svclass!='translocation' & sample.rearrs$bkdist>1e7 ] <- '_>10Mb'
 
         sample.rearrs$catalogue.label <- paste0(label1, label2, label3)
+        updated_sv_bedpe <- rbind(updated_sv_bedpe,sample.rearrs)
 
-        sample.table <- as.data.frame(table( sample.rearrs$catalogue.label),drop=FALSE)
-        rownames(sample.table ) <- sample.table$Var
+        sample.table <- as.data.frame(table(sample.rearrs$catalogue.label),drop=FALSE)
+        rownames(sample.table) <- sample.table$Var
 
-        rearr_catalogue <-  sample.table [as.character(catalogue.labels), 'Freq',drop=FALSE ]
+        rearr_catalogue <-  sample.table[as.character(catalogue.labels), 'Freq',drop=FALSE ]
 
       }
 
@@ -298,8 +304,14 @@ prepare.rearr.catalogue_fromAnnotatedBedpe <- function(sv_bedpe) {
   }else{
     all_catalogues <- as.data.frame(matrix(0,nrow = length(catalogue.labels),ncol = 1))
     rownames(all_catalogues) <- catalogue.labels
+    updated_sv_bedpe <- sv_bedpe
   }
-  all_catalogues
+  
+  returnObj <- list()
+  returnObj$SV_catalogue <- all_catalogues
+  returnObj$updated_sv_bedpe <- updated_sv_bedpe
+  return(returnObj)
+  
 }
 
 
