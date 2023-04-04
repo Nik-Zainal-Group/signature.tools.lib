@@ -23,7 +23,9 @@ signatureFit_pipeline(
   nboot = 200,
   exposureFilterType = "fixedThreshold",
   threshold_percent = 5,
+  threshold_nmuts = 10,
   giniThresholdScaling = 10,
+  giniThresholdScaling_nmuts = 50,
   multiStepMode = "errorReduction",
   threshold_p.value = 0.05,
   commonSignatureTier = "T1",
@@ -76,9 +78,13 @@ signatureFit_pipeline(
 
 \item{exposureFilterType}{use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling}
 
-\item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered}
+\item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.}
 
-\item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature}
+\item{threshold_nmuts}{threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.}
+
+\item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.}
+
+\item{giniThresholdScaling_nmuts}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.}
 
 \item{multiStepMode}{this is a FitMS parameter. Use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".}
 

@@ -106,11 +106,29 @@ how_to <- function(){
   message("  -p, --thresholdperc=THRPERC")
   message("                            THRPERC is a threshold in percentage of total mutations")
   message("                              in a sample, only exposures larger than THRPERC are")
-  message("                              considered. If not specified THRPERC=5.")
+  message("                              considered. If not specified THRPERC=5. Set THRPERC")
+  message("                              to -1 to deactivate.")
+  message("  -P, --thresholdnmuts=THRNMUTS")
+  message("                            THRPERC is a threshold in number of mutations")
+  message("                              in a sample, only exposures larger than THRNMUTS are")
+  message("                              considered. If not specified THRNMUTS=10. Set THRNMUTS")
+  message("                              to -1 to deactivate.")
   message("  -d, --giniscaling=GINISCALING")
   message("                            GINISCALING is a scaling factor for the threshold type")
   message("                              giniScaledThreshold, which is based on the Gini score")
-  message("                              of a signature. If not specified GINISCALING=10.")
+  message("                              of a signature. If not specified GINISCALING=10. The")
+  message("                              threshold is computed as (1-Gini(signature))*GINISCALING,")
+  message("                              and will be used as a percentage of mutations in a sample")
+  message("                              that the exposure of \"signature\" need to be larger than.")
+  message("                              Set GINISCALING to -1 to deactivate.")
+  message("  -D, --giniscalingnmuts=GINISCALINGNMUTS")
+  message("                            GINISCALINGNMUTS is a scaling factor for the threshold type")
+  message("                              giniScaledThreshold, which is based on the Gini score")
+  message("                              of a signature. If not specified GINISCALINGNMUTS=50. The")
+  message("                              threshold is computed as (1-Gini(signature))*GINISCALINGNMUTS,")
+  message("                              and will be used as number of mutations in a sample")
+  message("                              that the exposure of \"signature\" need to be larger than.")
+  message("                              Set GINISCALINGNMUTS to -1 to deactivate.")
   message("  -u, --thresholdpval=THRPVAL")
   message("                            THRPVAL is a p-value to determine whether an exposure")
   message("                              is above the THRPERC or the threshold calculated with")
@@ -226,7 +244,9 @@ spec = matrix(c(
   'optmethod',          'M', 1, "character",
   'filtertype',         't', 1, "character",
   'thresholdperc',      'p', 1, "double",
+  'thresholdnmuts',     'P', 1, "double",
   'giniscaling',        'd', 1, "double",
+  'giniscalingnmuts',   'D', 1, "double",
   'thresholdpval',      'u', 1, "double",
   'fitmsmode',          'a', 1, "character",
   'commonsigtier',      'q', 1, "character",
@@ -434,10 +454,22 @@ if ( !is.null(opt$thresholdperc) ) {
   thresholdperc <- 5
 }
 
+if ( !is.null(opt$thresholdnmuts) ) {
+  thresholdnmuts <- opt$thresholdnmuts
+}else{
+  thresholdnmuts <- 10
+}
+
 if ( !is.null(opt$giniscaling) ) {
   giniscaling <- opt$giniscaling
 }else{
   giniscaling <- 10
+}
+
+if ( !is.null(opt$giniscalingnmuts) ) {
+  giniscalingnmuts <- opt$giniscalingnmuts
+}else{
+  giniscalingnmuts <- 50
 }
 
 if ( !is.null(opt$thresholdpval) ) {
@@ -551,7 +583,9 @@ pipelineRes <- signatureFit_pipeline(catalogues=catalogues,
                                   nboot = nboots,
                                   exposureFilterType = filtertype,
                                   threshold_percent = thresholdperc,
+                                  threshold_nmuts = thresholdnmuts,
                                   giniThresholdScaling = giniscaling,
+                                  giniThresholdScaling_nmuts = giniscalingnmuts,
                                   multiStepMode = fitmsmode,
                                   threshold_p.value = thresholdpval,
                                   commonSignatureTier = commonsigtier,

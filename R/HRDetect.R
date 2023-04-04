@@ -100,8 +100,10 @@
 #' dataset that was used to extract the signatures. So in general we advise to use Tier 2 (T2) signatures, which extend the rare signature to a wider number of rare signatures.
 #' @param optimisation_method can be KLD (KL divergence), NNLS (non-negative least squares) or SA (simulated annealing)
 #' @param exposureFilterTypeFit use either fixedThreshold or giniScaledThreshold as exposure filter in signature fit. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percentFit will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScalingFit
-#' @param giniThresholdScalingFit scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature
-#' @param threshold_percentFit threshold in percentage of total mutations in a sample for when exposureFilterTypeFit="fixedThreshold". Only exposures larger than or equal to the threshold are considered, the others are set to zero
+#' @param giniThresholdScalingFit scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScalingFit, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.
+#' @param giniThresholdScaling_nmutsFit scaling factor for when exposureFilterTypeFit="giniScaledThreshold", which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmutsFit, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.
+#' @param threshold_percentFit threshold in percentage of total mutations in a sample for when exposureFilterTypeFit="fixedThreshold". Only exposures larger than or equal to the threshold are considered, the others are set to zero. Set it to -1 to deactivate.
+#' @param threshold_nmutsFit threshold in number of mutations in a sample for when exposureFilterTypeFit="fixedThreshold". Only exposures larger than or equal to the threshold are considered, the others are set to zero. Set it to -1 to deactivate.
 #' @param bootstrapSignatureFit set to TRUE to compute bootstrap signature fits, otherwise FALSE will compute a single fit. If a sample has a low number of mutations, then the bootstrap procedure can alter the catalogue a lot, in which case a single fit is advised
 #' @param nbootFit number of bootstraps to use, more bootstraps more accurate results
 #' @param threshold_p.valueFit p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
@@ -144,7 +146,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               optimisation_method = "KLD",
                               exposureFilterTypeFit = "fixedThreshold",
                               giniThresholdScalingFit = 10,
+                              giniThresholdScaling_nmutsFit = 50,
                               threshold_percentFit = 5,
+                              threshold_nmutsFit = 10,
                               bootstrapSignatureFit = TRUE,
                               nbootFit=100,
                               threshold_p.valueFit = 0.05,
@@ -342,7 +346,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                              useBootstrap = bootstrapSignatureFit,
                                              exposureFilterType = exposureFilterTypeFit,
                                              threshold_percent = threshold_percentFit,
+                                             threshold_nmuts = threshold_nmutsFit,
                                              giniThresholdScaling = giniThresholdScalingFit,
+                                             giniThresholdScaling_nmuts = giniThresholdScaling_nmutsFit,
                                              nboot = nbootFit,
                                              rareSignatureTier = SNV_rareSignatureTier,
                                              maxRareSigsPerSample = SNV_maxRareSigs,
@@ -475,7 +481,9 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                             useBootstrap = bootstrapSignatureFit,
                                             exposureFilterType = exposureFilterTypeFit,
                                             threshold_percent = threshold_percentFit,
+                                            threshold_nmuts = threshold_nmutsFit,
                                             giniThresholdScaling = giniThresholdScalingFit,
+                                            giniThresholdScaling_nmuts = giniThresholdScaling_nmutsFit,
                                             nboot = nbootFit,
                                             nparallel = nparallel,
                                             randomSeed = randomSeed)
@@ -868,7 +876,11 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res$parameters$SNV_signature_names <- SNV_signature_names
   res$parameters$SV_signature_names <- SV_signature_names
   res$parameters$optimisation_method <- optimisation_method
+  res$parameters$exposureFilterTypeFit <- exposureFilterTypeFit
   res$parameters$threshold_percentFit <- threshold_percentFit
+  res$parameters$threshold_nmutsFit <- threshold_nmutsFit
+  res$parameters$giniThresholdScalingFit <- giniThresholdScalingFit
+  res$parameters$giniThresholdScaling_nmutsFit <- giniThresholdScaling_nmutsFit
   res$parameters$bootstrapSignatureFit <- bootstrapSignatureFit
   res$parameters$nbootFit <- nbootFit
   res$parameters$threshold_p.valueFit <- threshold_p.valueFit

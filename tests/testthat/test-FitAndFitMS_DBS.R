@@ -1,4 +1,4 @@
-context("testing functions Fit and FitMS (DBS), should take a few seconds")
+context("testing functions Fit and FitMS (DBS)")
 
 test_that("test that Fit() works on a random matrix, using useBootstrap=FALSE", {
   #test substitutions

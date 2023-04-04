@@ -10,7 +10,9 @@ SignatureFit_withBootstrap(
   nboot = 100,
   exposureFilterType = "fixedThreshold",
   giniThresholdScaling = 10,
+  giniThresholdScaling_nmuts = 50,
   threshold_percent = 5,
+  threshold_nmuts = 10,
   threshold_p.value = 0.05,
   method = "KLD",
   bf_method = "CosSim",
@@ -32,11 +34,15 @@ SignatureFit_withBootstrap(
 
 \item{exposureFilterType}{use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling}
 
-\item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature}
+\item{giniThresholdScaling}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.}
 
-\item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered}
+\item{giniThresholdScaling_nmuts}{scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.}
 
-\item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold}
+\item{threshold_percent}{threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.}
+
+\item{threshold_nmuts}{threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.}
+
+\item{threshold_p.value}{p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower or equal than the threshold}
 
 \item{method}{KLD or NNLS or SA}
 

@@ -182,9 +182,11 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
 #' @param signature_data_matrix signatures, signatures as columns, channels as rows
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
-#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
-#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
-#' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.
+#' @param threshold_nmuts threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.
+#' @param giniThresholdScaling_nmuts scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.
+#' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower or equal than the threshold
 #' @param method KLD or NNLS or SA
 #' @param bf_method bleeding filter method, one of KLD or CosSim, only if bleeding filter is used (alpha>-1)
 #' @param alpha set alpha to -1 to avoid Bleeding Filter
@@ -205,9 +207,11 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
                                        nboot = 100, #number of bootstraps to use, more bootstraps more accurate results
                                        exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                                        giniThresholdScaling = 10,
+                                       giniThresholdScaling_nmuts = 50,
                                        threshold_percent = 5, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
+                                       threshold_nmuts = 10, #threshold in number of mutations in a sample, only exposures larger than threshold are considered
                                        threshold_p.value = 0.05, #p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
-                                       method = "KLD", #KLD or SA, just don't use SA or you will wait forever, expecially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
+                                       method = "KLD", #KLD or SA, just don't use SA or you will wait forever, especially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
                                        bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1
                                        alpha = -1, #set alpha to -1 to avoid Bleeding Filter
                                        verbose=TRUE, #use FALSE to suppress messages
@@ -267,17 +271,28 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   for(i in 1:ncol(cat)) {
     if(sum(cat[,i])>0){
       boots_perc <- samples_list[[colnames(cat)[i]]]/matrix(apply(samples_list[[colnames(cat)[i]]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[colnames(cat)[i]]]),ncol = ncol(samples_list[[colnames(cat)[i]]]))*100
-
+      boots_nmuts <- samples_list[[colnames(cat)[i]]]
 
       if(exposureFilterType=="giniScaledThreshold"){
         sigInvGini <- 1 - apply(signature_data_matrix,2,giniCoeff)
         giniThresholdPerc <- giniThresholdScaling*sigInvGini
+        giniThresholdNMUTS <- giniThresholdScaling_nmuts*sigInvGini
         # set to zero differently for each signature
         p.values <- c()
-        for(j in 1:length(giniThresholdPerc)) p.values <- c(p.values,sum(boots_perc[j,]<=giniThresholdPerc[j])/nboot)
+        for(j in 1:length(giniThresholdPerc)) {
+          pselection <- rep(FALSE,length(boots_perc[j,]))
+          if(giniThresholdScaling >= 0) pselection <- pselection | boots_perc[j,]<=giniThresholdPerc[j]
+          if(giniThresholdScaling_nmuts >= 0) pselection <- pselection | boots_nmuts[j,]<=giniThresholdNMUTS[j]
+          p.values <- c(p.values,sum(pselection)/nboot)
+        }
         names(p.values) <- colnames(signature_data_matrix)
       }else if(exposureFilterType=="fixedThreshold"){
-        p.values <- apply(boots_perc <= threshold_percent,1,sum)/nboot
+        pselection <- matrix(FALSE,ncol = ncol(boots_perc),nrow = nrow(boots_perc),
+                             dimnames = list(rownames(boots_perc),colnames(boots_perc)))
+        if(threshold_percent >= 0) pselection <- pselection | boots_perc <= threshold_percent
+        if(threshold_nmuts >= 0) pselection <- pselection | boots_nmuts <= threshold_nmuts
+        p.values <- apply(pselection,1,sum)/nboot
+        names(p.values) <- colnames(signature_data_matrix)
       }
 
 
@@ -320,7 +335,11 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   res$boot_list <- boot_list
   res$KLD_samples <- KLD_samples
   #need metadata
+  res$exposureFilterType <- exposureFilterType
   res$threshold_percent <- threshold_percent
+  res$threshold_nmuts <- threshold_nmuts
+  res$giniThresholdScaling <- giniThresholdScaling
+  res$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
   res$threshold_p.value <- threshold_p.value
   res$nboots <- nboot
   res$method <- method

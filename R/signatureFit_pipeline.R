@@ -24,8 +24,10 @@
 #' @param useBootstrap set to TRUE to use bootstrap
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
-#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
-#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.
+#' @param threshold_nmuts threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.
+#' @param giniThresholdScaling_nmuts scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.
 #' @param multiStepMode this is a FitMS parameter. Use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".
 #' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 #' when using multiStepMode=constrainedFit
@@ -66,7 +68,9 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                   nboot = 200,
                                   exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                                   threshold_percent = 5,
+                                  threshold_nmuts= 10,
                                   giniThresholdScaling = 10,
+                                  giniThresholdScaling_nmuts = 50,
                                   multiStepMode = "errorReduction", # or "partialNMF", or "errorReduction", or "cossimIncrease"
                                   threshold_p.value = 0.05,
                                   commonSignatureTier = "T1",
@@ -576,7 +580,9 @@ signatureFit_pipeline <- function(catalogues=NULL,
                   signatures = signatures,
                   exposureFilterType = exposureFilterType,
                   giniThresholdScaling = giniThresholdScaling,
+                  giniThresholdScaling_nmuts = giniThresholdScaling_nmuts,
                   threshold_percent = threshold_percent,
+                  threshold_nmuts = threshold_nmuts,
                   method = optimisation_method,
                   useBootstrap = useBootstrap,
                   nboot = nboot,
@@ -601,7 +607,9 @@ signatureFit_pipeline <- function(catalogues=NULL,
                     method = optimisation_method,
                     exposureFilterType = exposureFilterType,
                     threshold_percent = threshold_percent,
+                    threshold_nmuts = threshold_nmuts,
                     giniThresholdScaling = giniThresholdScaling,
+                    giniThresholdScaling_nmuts = giniThresholdScaling_nmuts,
                     multiStepMode = multiStepMode,
                     residualNegativeProp = residualNegativeProp,
                     minResidualMutations = minResidualMutations,

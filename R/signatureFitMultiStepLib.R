@@ -39,8 +39,10 @@
 #' Can be set automatically by specifying the organ parameter and the rareSignatureTier parameter
 #' @param method KLD or NNLS
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
-#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
-#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.
+#' @param threshold_nmuts threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.
+#' @param giniThresholdScaling_nmuts scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.
 #' @param multiStepMode use one of the following: "constrainedFit", "partialNMF", "errorReduction", or "cossimIncrease".
 #' @param residualNegativeProp maximum proportion of mutations (w.r.t. total mutations in a sample) that can be in the negative part of a residual when using the constrained least squares fit
 #' when using multiStepMode=constrainedFit
@@ -72,7 +74,9 @@ FitMS <- function(catalogues,
                   method = "KLD",
                   exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                   threshold_percent = 5,
+                  threshold_nmuts = 10,
                   giniThresholdScaling = 10,
+                  giniThresholdScaling_nmuts = 50,
                   multiStepMode = "errorReduction", # or "partialNMF", or "errorReduction", or "cossimIncrease"
                   residualNegativeProp = 0.003,
                   minResidualMutations = NULL,
@@ -250,32 +254,32 @@ FitMS <- function(catalogues,
 
               # get first fit with all
               quickFitCommon <- Fit(catalogues = currentCatalogue,
-                                      signatures = commonSigsToUse,
-                                      nboot = nboot,
-                                      exposureFilterType = "fixedThreshold",
-                                      giniThresholdScaling = giniThresholdScaling,
-                                      threshold_percent = -1,
-                                      threshold_p.value = threshold_p.value,
-                                      method = method,
-                                      useBootstrap = FALSE,
-                                      nparallel = nparallel,
-                                      randomSeed = randomSeed)
+                                    signatures = commonSigsToUse,
+                                    nboot = nboot,
+                                    exposureFilterType = "fixedThreshold",
+                                    threshold_percent = -1,
+                                    threshold_nmuts = -1,
+                                    threshold_p.value = threshold_p.value,
+                                    method = method,
+                                    useBootstrap = FALSE,
+                                    nparallel = nparallel,
+                                    randomSeed = randomSeed)
 
               quickFit <- list()
               for(j in 1:ncol(rareSigsToUse)){
                 # j <- 1
                 if(verbose) message("[info FitMS] multiStepMode ",multiStepMode,": depth ",depth,", sample ",i," of ",ncol(catalogues)," fitting rare signature ",j," of ",ncol(rareSigsToUse),"")
                 quickFit[[j]] <- Fit(catalogues = currentCatalogue,
-                                       signatures = cbind(commonSigsToUse,rareSigsToUse[,j,drop=F]),
-                                       nboot = nboot,
-                                       exposureFilterType = "fixedThreshold",
-                                       giniThresholdScaling = giniThresholdScaling,
-                                       threshold_percent = -1,
-                                       threshold_p.value = threshold_p.value,
-                                       method = method,
-                                       useBootstrap = FALSE,
-                                       nparallel = nparallel,
-                                       randomSeed = randomSeed)
+                                     signatures = cbind(commonSigsToUse,rareSigsToUse[,j,drop=F]),
+                                     nboot = nboot,
+                                     exposureFilterType = "fixedThreshold",
+                                     threshold_percent = -1,
+                                     threshold_nmuts = -1,
+                                     threshold_p.value = threshold_p.value,
+                                     method = method,
+                                     useBootstrap = FALSE,
+                                     nparallel = nparallel,
+                                     randomSeed = randomSeed)
               }
 
               # commonError <- KLD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
@@ -366,16 +370,18 @@ FitMS <- function(catalogues,
 
     # begin by fitting
     samples[[sampleName]]$fitCommonOnly <- Fit(catalogues = currentCatalogue,
-                                                 signatures = commonSignatures,
-                                                 nboot = nboot,
-                                                 exposureFilterType = exposureFilterType,
-                                                 giniThresholdScaling = giniThresholdScaling,
-                                                 threshold_percent = threshold_percent,
-                                                 threshold_p.value = threshold_p.value,
-                                                 method = method,
-                                                 useBootstrap = useBootstrap,
-                                                 nparallel = nparallel,
-                                                 randomSeed = randomSeed)
+                                               signatures = commonSignatures,
+                                               nboot = nboot,
+                                               exposureFilterType = exposureFilterType,
+                                               giniThresholdScaling = giniThresholdScaling,
+                                               giniThresholdScaling_nmuts = giniThresholdScaling_nmuts,
+                                               threshold_percent = threshold_percent,
+                                               threshold_nmuts = threshold_nmuts,
+                                               threshold_p.value = threshold_p.value,
+                                               method = method,
+                                               useBootstrap = useBootstrap,
+                                               nparallel = nparallel,
+                                               randomSeed = randomSeed)
 
     # now check if I should try to fit some rare signatures as well
     if(i %in% whichSamplesMayHaveRareSigs){
@@ -387,16 +393,18 @@ FitMS <- function(catalogues,
         currentRareSigName <- strsplit(candidateRareSigs[[sampleName]][j],split = ":")[[1]]
         currentRareSig <- rareSignatures[,currentRareSigName,drop=F]
         samples[[sampleName]]$fitWithRare[[paste(currentRareSigName,collapse = ":")]] <- Fit(catalogues = currentCatalogue,
-                                                                                               signatures = cbind(commonSignatures,currentRareSig),
-                                                                                               nboot = nboot,
-                                                                                               exposureFilterType = exposureFilterType,
-                                                                                               giniThresholdScaling = giniThresholdScaling,
-                                                                                               threshold_percent = threshold_percent,
-                                                                                               threshold_p.value = threshold_p.value,
-                                                                                               method = method,
-                                                                                               useBootstrap = useBootstrap,
-                                                                                               nparallel = nparallel,
-                                                                                               randomSeed = randomSeed)
+                                                                                             signatures = cbind(commonSignatures,currentRareSig),
+                                                                                             nboot = nboot,
+                                                                                             exposureFilterType = exposureFilterType,
+                                                                                             giniThresholdScaling = giniThresholdScaling,
+                                                                                             giniThresholdScaling_nmuts = giniThresholdScaling_nmuts,
+                                                                                             threshold_percent = threshold_percent,
+                                                                                             threshold_nmuts = threshold_nmuts,
+                                                                                             threshold_p.value = threshold_p.value,
+                                                                                             method = method,
+                                                                                             useBootstrap = useBootstrap,
+                                                                                             nparallel = nparallel,
+                                                                                             randomSeed = randomSeed)
       }
     }
   }
@@ -413,9 +421,11 @@ FitMS <- function(catalogues,
   resObj$exposureFilterType <- exposureFilterType
   resObj$multiStepMode <- multiStepMode
   resObj$giniThresholdScaling <- giniThresholdScaling
+  resObj$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
   resObj$minErrorReductionPerc <- minErrorReductionPerc
   resObj$minCosSimIncrease <-minCosSimIncrease
   resObj$threshold_percent <- threshold_percent
+  resObj$threshold_nmuts <- threshold_nmuts
   resObj$residualNegativeProp <- residualNegativeProp
   resObj$minResidualMutations <- minResidualMutations
   resObj$minCosSimRareSig <- minCosSimRareSig
@@ -462,8 +472,10 @@ FitMS <- function(catalogues,
 #' @param signatures mutational signatures to bw fitted into the sample catalgues, signatures as columns and channels as rows
 #' @param method KLD or NNLS
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
-#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
-#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature
+#' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.
+#' @param threshold_nmuts threshold in number of mutations in a sample, only exposures larger than threshold are considered.Set it to -1 to deactivate.
+#' @param giniThresholdScaling scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling, and will be used as a percentage of mutations in a sample that the exposure of "signature" need to be larger than. Set it to -1 to deactivate.
+#' @param giniThresholdScaling_nmuts scaling factor for the threshold type giniScaledThreshold, which is based on the Gini score of a signature. The threshold is computed as (1-Gini(signature))*giniThresholdScaling_nmuts, and will be used as number of mutations in a sample that the exposure of "signature" need to be larger than. Set to -1 to deactivate.
 #' @param useBootstrap set to TRUE to use the signature fit with bootstrap method
 #' @param nboot number of bootstraps to use, more bootstraps more accurate results (use only when useBootstrap=TRUE)
 #' @param threshold_p.value p-value to determine whether an exposure is above the threshold_percent.
@@ -481,7 +493,9 @@ Fit <- function(catalogues,
                 signatures,
                 exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                 giniThresholdScaling = 10,
+                giniThresholdScaling_nmuts = 50,
                 threshold_percent = 5,
+                threshold_nmuts = 10,
                 method = "KLD",
                 useBootstrap = FALSE,
                 nboot = 200,
@@ -501,7 +515,9 @@ Fit <- function(catalogues,
                                              nboot = nboot,
                                              exposureFilterType = exposureFilterType,
                                              threshold_percent = threshold_percent,
+                                             threshold_nmuts = threshold_nmuts,
                                              giniThresholdScaling = giniThresholdScaling,
+                                             giniThresholdScaling_nmuts = giniThresholdScaling_nmuts,
                                              threshold_p.value = threshold_p.value,
                                              method = method,
                                              verbose = verbose,
@@ -529,10 +545,19 @@ Fit <- function(catalogues,
     if(exposureFilterType=="giniScaledThreshold"){
       sigInvGini <- 1 - apply(signatures,2,giniCoeff)
       giniThresholdPerc <- giniThresholdScaling*sigInvGini
+      giniThresholdNMUTS <- giniThresholdScaling_nmuts*sigInvGini
       # set to zero differently for each signature
-      for(i in 1:length(giniThresholdPerc)) resFit[i,resFit[i,]/apply(catalogues,2,sum)*100<giniThresholdPerc[i]] <- 0
+      for(i in 1:length(giniThresholdPerc)) {
+        eselection <- rep(FALSE,ncol(resFit))
+        if(giniThresholdScaling >= 0) eselection <- eselection | resFit[i,]/apply(catalogues,2,sum)*100 <= giniThresholdPerc[i]
+        if(giniThresholdScaling_nmuts >= 0) eselection <- eselection | resFit[i,] <= giniThresholdNMUTS[i]
+        resFit[i,eselection] <- 0
+      }
     }else if(exposureFilterType=="fixedThreshold"){
-      resFit[resFit/matrix(apply(catalogues,2,sum),ncol = ncol(resFit),nrow = nrow(resFit),byrow = T)*100<threshold_percent] <- 0
+      eselection <- matrix(FALSE,ncol = ncol(resFit),nrow = nrow(resFit),dimnames = list(rownames(resFit),colnames(resFit)))
+      if(threshold_percent >= 0) eselection <- eselection | resFit/matrix(apply(catalogues,2,sum),ncol = ncol(resFit),nrow = nrow(resFit),byrow = T)*100 <= threshold_percent
+      if(threshold_nmuts >= 0) eselection <- eselection | resFit <= threshold_nmuts
+      resFit[eselection] <- 0
     }
 
     fitRes$exposures <- resFit
@@ -552,14 +577,18 @@ Fit <- function(catalogues,
 
   if(exposureFilterType=="giniScaledThreshold") {
     fitRes$giniThresholdScaling <- giniThresholdScaling
+    fitRes$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
   }else{
     fitRes$giniThresholdScaling <- NULL
+    fitRes$giniThresholdScaling_nmuts <- NULL
   }
 
   if(exposureFilterType=="fixedThreshold"){
     fitRes$threshold_percent <- threshold_percent
+    fitRes$threshold_nmuts <- threshold_nmuts
   }else{
     fitRes$threshold_percent <- NULL
+    fitRes$threshold_nmuts <- NULL
   }
 
   fitRes$catalogues <- catalogues
@@ -567,11 +596,12 @@ Fit <- function(catalogues,
   fitRes$method <- method
   
   reconstructed <- as.matrix(signatures) %*% fitRes$exposures
-  cossim_catalogueVSmodel <- sapply(1:ncol(reconstructed),function(i) cos_sim(catalogues[,i],reconstructed[,i]))
-  names(cossim_catalogueVSmodel) <- colnames(catalogues)
+  cossim_catalogueVSreconstructed <- sapply(1:ncol(reconstructed),function(i) cos_sim(catalogues[,i],reconstructed[,i]))
+  names(cossim_catalogueVSreconstructed) <- colnames(catalogues)
   
   fitRes$exposures <- t(rbind(fitRes$exposures,unassigned=fitRes$unassigned_muts))
-  fitRes$cossim_catalogueVSmodel <- cossim_catalogueVSmodel
+  fitRes$reconstructed_catalogues <- reconstructed
+  fitRes$cossim_catalogueVSreconstructed <- cossim_catalogueVSreconstructed
 
   if(!is.null(randomSeed)) fitRes$randomSeed <- randomSeed
   fitRes$nparallel <- nparallel
@@ -628,6 +658,9 @@ fitMerge <- function(resObj,
   exposures_merge <- matrix(0,ncol = ncol(resObj$commonSignatures)+ncol(resObj$rareSignatures)+1,nrow = ncol(resObj$catalogues),
                             dimnames = list(colnames(resObj$catalogues),c(colnames(resObj$commonSignatures),colnames(resObj$rareSignatures),"unassigned")))
   cossim_merge <- c()
+  reconstructed_merge <- data.frame(row.names = rownames(resObj$catalogues),
+                                    stringsAsFactors = F,
+                                    check.names = F)
   bootstrap_exposures_samples <- list()
   for (i in 1:ncol(resObj$catalogues)){
     # i <- 1
@@ -660,7 +693,9 @@ fitMerge <- function(resObj,
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$bootstrap_exposures_samples[[1]]
       # collect cos sim
-      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$cossim_catalogueVSmodel)
+      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$cossim_catalogueVSreconstructed)
+      # collect reconstructed
+      reconstructed_merge <- cbind(reconstructed_merge,resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$reconstructed_catalogues)
     }else{
       if(forceCommon) rareSigChoice[[currentSample]] <- "commonOnly"
       selectedExp <- t(resObj$samples[[currentSample]]$fitCommonOnly$exposures)
@@ -668,7 +703,9 @@ fitMerge <- function(resObj,
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
       # collect cos sim
-      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitCommonOnly$cossim_catalogueVSmodel)
+      cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitCommonOnly$cossim_catalogueVSreconstructed)
+      # collect reconstructed
+      reconstructed_merge <- cbind(reconstructed_merge,resObj$samples[[currentSample]]$fitCommonOnly$reconstructed_catalogues)
     }
   }
 
@@ -694,7 +731,8 @@ fitMerge <- function(resObj,
   }else{
     resObj$bootstrap_exposures_samples <- NULL
   }
-  resObj$cossim_catalogueVSmodel <- cossim_merge
+  resObj$cossim_catalogueVSreconstructed <- cossim_merge
+  resObj$reconstructed_catalogues <- reconstructed_merge
 
   return(resObj)
 }
@@ -1253,20 +1291,20 @@ plotFit <- function(fitObj,
   plotMatrix(as.data.frame(t(fitObj$exposures)),
              output_file = file_plot_exp,
              ndigitsafterzero = 0,
-             sideVector = fitObj$cossim_catalogueVSmodel,
+             sideVector = fitObj$cossim_catalogueVSreconstructed,
              sideVectorLabel = "cosine similarity")
   plotMatrix(as.data.frame(t(exposuresProp)),
              output_file = file_plot_expProp,
              ndigitsafterzero = 0,
-             sideVector = fitObj$cossim_catalogueVSmodel,
+             sideVector = fitObj$cossim_catalogueVSreconstructed,
              sideVectorLabel = "cosine similarity")
 
   write.table(fitObj$exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
-  cossimdf <- as.data.frame(fitObj$cossim_catalogueVSmodel)
-  colnames(cossimdf) <- "cossim_catalogueVSmodel"
-  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSmodel.tsv"),
+  cossimdf <- as.data.frame(fitObj$cossim_catalogueVSreconstructed)
+  colnames(cossimdf) <- "cossim_catalogueVSreconstructed"
+  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSreconstructed.tsv"),
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 
   #provide a series of plots for each sample
@@ -1519,19 +1557,19 @@ plotFitMS <- function(fitMSobj,
   plotMatrix(as.data.frame(t(fitMSobj$exposures)),
              output_file = file_plot_exp,
              ndigitsafterzero = 0,
-             sideVector = fitMSobj$cossim_catalogueVSmodel,
+             sideVector = fitMSobj$cossim_catalogueVSreconstructed,
              sideVectorLabel = "cosine similarity")
   plotMatrix(as.data.frame(t(exposuresProp)),
              output_file = file_plot_expProp,
              ndigitsafterzero = 0,
-             sideVector = fitMSobj$cossim_catalogueVSmodel,
+             sideVector = fitMSobj$cossim_catalogueVSreconstructed,
              sideVectorLabel = "cosine similarity")
   write.table(fitMSobj$exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
   
-  cossimdf <- as.data.frame(fitMSobj$cossim_catalogueVSmodel)
-  colnames(cossimdf) <- "cossim_catalogueVSmodel"
-  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSmodel.tsv"),
+  cossimdf <- as.data.frame(fitMSobj$cossim_catalogueVSreconstructed)
+  colnames(cossimdf) <- "cossim_catalogueVSreconstructed"
+  write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSreconstructed.tsv"),
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 
   # now for each sample plot the chosen solution and the alternative solutions
