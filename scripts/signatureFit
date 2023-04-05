@@ -457,7 +457,7 @@ if ( !is.null(opt$thresholdperc) ) {
 if ( !is.null(opt$thresholdnmuts) ) {
   thresholdnmuts <- opt$thresholdnmuts
 }else{
-  thresholdnmuts <- 10
+  thresholdnmuts <- -1
 }
 
 if ( !is.null(opt$giniscaling) ) {
@@ -469,7 +469,7 @@ if ( !is.null(opt$giniscaling) ) {
 if ( !is.null(opt$giniscalingnmuts) ) {
   giniscalingnmuts <- opt$giniscalingnmuts
 }else{
-  giniscalingnmuts <- 50
+  giniscalingnmuts <- -1
 }
 
 if ( !is.null(opt$thresholdpval) ) {

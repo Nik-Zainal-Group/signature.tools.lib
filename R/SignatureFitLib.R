@@ -207,9 +207,9 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
                                        nboot = 100, #number of bootstraps to use, more bootstraps more accurate results
                                        exposureFilterType = "fixedThreshold", # or "giniScaledThreshold"
                                        giniThresholdScaling = 10,
-                                       giniThresholdScaling_nmuts = 50,
+                                       giniThresholdScaling_nmuts = -1,
                                        threshold_percent = 5, #threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered
-                                       threshold_nmuts = 10, #threshold in number of mutations in a sample, only exposures larger than threshold are considered
+                                       threshold_nmuts = -1, #threshold in number of mutations in a sample, only exposures larger than threshold are considered
                                        threshold_p.value = 0.05, #p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
                                        method = "KLD", #KLD or SA, just don't use SA or you will wait forever, especially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
                                        bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1

@@ -42,7 +42,10 @@ the most important functions is given below.
 
 2.4.0
 
-- ```genomeChart``` and ```genomeChartSV``` functions added, as well as a ```genomeChart``` command line script.
+- ```genomeChart``` and ```genomeChartSV``` functions added, as well as a ```genomeChart``` command line script
+- ```findKataegis``` function added
+- Introduced signature fit parameters to indicate minimum number of mutations required for exposures (```threshold_nmuts``` and ```giniThresholdScaling_nmuts```)
+- Added function ```assignSignatureProbabilityToMutations```, which estimates the probability that a specific mutation originates from each of the fitter signatures
 
 2.3.0
 

@@ -1,3 +1,11 @@
+#' Assign Signature Probability to Mutations
+#' 
+#' Given an annotated set of mutations and an exposure matrix from signature fit, this function estimates the probability that each mutation generates from each signature.
+#' 
+#' @param sampleMutations list of annotated mutations obtained usually after building catalogues, for example using the functions vcfToSNVcatalogues or bedpeToRearrCatalogues
+#' @param sampleSigsExposures matrix of exposures with only one row (one sample) and the exposures for each signature as columns
+#' @param signatures mutational signatures matrix with the signatures used during signature fitting
+#' @return matrix of mutations with an additional column containing the probabilities in a text format that can be expanded into a matrix using expandColumnToMatrix
 #' @export
 assignSignatureProbabilityToMutations <- function(sampleMutations,
                                                   sampleSigsExposures,
@@ -85,9 +93,14 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
 }
 
 
+#' Expand columns to matrix
+#' 
+#' @param dataTable table containing a column to expand. Each cell to expand will be a list of pairs, where each element of the list is separated by ";" and each pair is separated by ":". Pairs indicate colname and value. For example, if the value in a row is C1:V1;C2:V2;C4:V4, this will be expanded into columns C1, C2, C4 and values for that row V1, V2, V4.   
+#' @param targetColname colname of the column to expand
+#' @return dataTable with expanded column
 #' @export
 expandColumnToMatrix <- function(dataTable,
-                                     targetColname){
+                                 targetColname){
   newcolnames <- c()
   for(i in 1:nrow(dataTable)){
     x <- dataTable[i,targetColname]
