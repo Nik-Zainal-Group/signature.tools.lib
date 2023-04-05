@@ -534,6 +534,13 @@ Fit <- function(catalogues,
     fitRes$bootstrap_exposures_pvalues <- resFitBoot$E_p.values
     fitRes$nboot <- nboot
     fitRes$threshold_p.value <- threshold_p.value
+    # save also the bootstrap exposure correlations
+    if(ncol(signatures)>1){
+      fitRes$bootstrap_exposure_correlations <- list()
+      for(p in names(fitRes$bootstrap_exposures_samples)){
+        fitRes$bootstrap_exposure_correlations[[p]] <- suppressWarnings(cor(t(fitRes$bootstrap_exposures_samples[[p]]),method = "spearman"))
+      }
+    }
 
   }else{
     resFit <- SignatureFit(cat =catalogues,
@@ -662,6 +669,7 @@ fitMerge <- function(resObj,
                                     stringsAsFactors = F,
                                     check.names = F)
   bootstrap_exposures_samples <- list()
+  bootstrap_exposure_correlations <- list()
   for (i in 1:ncol(resObj$catalogues)){
     # i <- 1
     currentSample <- colnames(resObj$catalogues)[i]
@@ -692,6 +700,9 @@ fitMerge <- function(resObj,
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$bootstrap_exposures_samples[[1]]
+      if(resObj$useBootstrap & ncol(resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$signatures)>1){
+        bootstrap_exposure_correlations[[currentSample]] <- resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$bootstrap_exposure_correlations[[1]]
+      }
       # collect cos sim
       cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitWithRare[[selectedSig]]$cossim_catalogueVSreconstructed)
       # collect reconstructed
@@ -702,6 +713,9 @@ fitMerge <- function(resObj,
       exposures_merge[currentSample,rownames(selectedExp)] <- selectedExp
       # collect bootstraps
       if(resObj$useBootstrap) bootstrap_exposures_samples[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposures_samples[[1]]
+      if(resObj$useBootstrap & ncol(resObj$samples[[currentSample]]$fitCommonOnly$signatures)>1){
+        bootstrap_exposure_correlations[[currentSample]] <- resObj$samples[[currentSample]]$fitCommonOnly$bootstrap_exposure_correlations[[1]]
+      }
       # collect cos sim
       cossim_merge <- c(cossim_merge,resObj$samples[[currentSample]]$fitCommonOnly$cossim_catalogueVSreconstructed)
       # collect reconstructed
@@ -728,6 +742,7 @@ fitMerge <- function(resObj,
       bootstrap_exposures[[i]] <- current_subs
     }
     resObj$bootstrap_exposures <- bootstrap_exposures
+    resObj$bootstrap_exposure_correlations <- bootstrap_exposure_correlations
   }else{
     resObj$bootstrap_exposures_samples <- NULL
   }
@@ -1410,7 +1425,7 @@ plotFit <- function(fitObj,
 
       if(ncol(fitObj$signatures)>1){
         #5 top correlated signatures
-        res.cor <- suppressWarnings(cor(t(fitObj$bootstrap_exposures_samples[[p]]),method = "spearman"))
+        res.cor <- fitObj$bootstrap_exposure_correlations[[p]]
         # save it
         writeTable(t = res.cor,file = paste0(outdir,"signatureFit_",p,"of",howmanyplots,"_",currentSample,"_Bootstrap_Correlation.tsv"))
 
@@ -1520,10 +1535,20 @@ plotFitMS <- function(fitMSobj,
   }else{
     infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value="NULL",stringsAsFactors = F))
   }
+  if(!is.null(fitMSobj$threshold_nmuts)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_nmuts",value=fitMSobj$threshold_nmuts,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_nmuts",value="NULL",stringsAsFactors = F))
+  }
   if(!is.null(fitMSobj$giniThresholdScaling)){
     infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value=fitMSobj$giniThresholdScaling,stringsAsFactors = F))
   }else{
     infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitMSobj$giniThresholdScaling_nmuts)){
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling_nmuts",value=fitMSobj$giniThresholdScaling_nmuts,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling_nmuts",value="NULL",stringsAsFactors = F))
   }
   infoTable <- rbind(infoTable,data.frame(parameter="useBootstrap",value=ifelse(fitMSobj$useBootstrap,"TRUE","FALSE"),stringsAsFactors = F))
   if(!is.null(fitMSobj$nboot)){
@@ -1680,7 +1705,9 @@ tableToJSON <- function(tab,
 
     for(j in 1:nrow(tab)){
       rname <- rownames(tab)[j]
-      cat(indent,"\t\t\"",rname,"\": ",tab[j,i],sep = "")
+      val <- tab[j,i]
+      if(is.na(val)) val <- "null"
+      cat(indent,"\t\t\"",rname,"\": ",val,sep = "")
       if(j<nrow(tab)){
         cat(",\n")
       }else{
@@ -1742,10 +1769,20 @@ fitToJSON <- function(fitObj,
   }else{
     cat(indent,"\t\"threshold_percent\": null,\n",sep = "")
   }
+  if(!is.null(fitObj$threshold_nmuts)){
+    cat(indent,"\t\"threshold_nmuts\": ",fitObj$threshold_nmuts,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_nmuts\": null,\n",sep = "")
+  }
   if(!is.null(fitObj$giniThresholdScaling)){
     cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
   }else{
     cat(indent,"\t\"giniThresholdScaling\": null,\n",sep = "")
+  }
+  if(!is.null(fitObj$giniThresholdScaling_nmuts)){
+    cat(indent,"\t\"giniThresholdScaling_nmuts\": ",fitObj$giniThresholdScaling_nmuts,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"giniThresholdScaling_nmuts\": null,\n",sep = "")
   }
   cat(indent,"\t\"useBootstrap\": ",ifelse(fitObj$useBootstrap,"true","false"),",\n",sep = "")
   if(!is.null(fitObj$nboot)){
@@ -1764,9 +1801,13 @@ fitToJSON <- function(fitObj,
   cat(",\n")
   tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
   cat(",\n")
+  tableToJSON(fitObj$reconstructed_catalogues,tablename = "reconstructed_catalogues",nindent = nindent + 1)
+  cat(",\n")
   vectorToJSON(fitObj$unassigned_muts,"unassigned_muts",nindent = nindent + 1)
   cat(",\n")
   vectorToJSON(fitObj$unassigned_muts_perc,"unassigned_muts_perc",nindent = nindent + 1)
+  cat(",\n")
+  vectorToJSON(fitObj$cossim_catalogueVSreconstructed,"cossim_catalogueVSreconstructed",nindent = nindent + 1)
   cat(",\n")
   if(all(!is.null(fitObj$bootstrap_exposures_samples))){
     cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
@@ -1778,6 +1819,18 @@ fitToJSON <- function(fitObj,
     cat(indent,"\t}",sep = "")
   }else{
     cat(indent,"\t\"bootstrap_exposures_samples\": null",sep = "")
+  }
+  cat(",\n")
+  if(all(!is.null(fitObj$bootstrap_exposure_correlations)) & ncol(fitObj$signatures)>1){
+    cat(indent,"\t\"bootstrap_exposure_correlations\": {\n",sep = "")
+    for (i in 1:length(fitObj$bootstrap_exposure_correlations)) {
+      tableToJSON(fitObj$bootstrap_exposure_correlations[[i]],tablename = names(fitObj$bootstrap_exposure_correlations)[i],nindent = nindent + 2)
+      if(i<length(fitObj$bootstrap_exposure_correlations)) cat(",")
+      cat("\n")
+    }
+    cat(indent,"\t}",sep = "")
+  }else{
+    cat(indent,"\t\"bootstrap_exposure_correlations\": null",sep = "")
   }
   cat(",\n")
   if(all(!is.null(fitObj$bootstrap_exposures_pvalues))){
@@ -1854,10 +1907,20 @@ fitMStoJSON <- function(fitObj,
   }else{
     cat(indent,"\t\"threshold_percent\": null,\n",sep = "")
   }
+  if(!is.null(fitObj$threshold_nmuts)){
+    cat(indent,"\t\"threshold_nmuts\": ",fitObj$threshold_nmuts,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"threshold_nmuts\": null,\n",sep = "")
+  }
   if(!is.null(fitObj$giniThresholdScaling)){
     cat(indent,"\t\"giniThresholdScaling\": ",fitObj$giniThresholdScaling,",\n",sep = "")
   }else{
     cat(indent,"\t\"giniThresholdScaling\": null,\n",sep = "")
+  }
+  if(!is.null(fitObj$giniThresholdScaling_nmuts)){
+    cat(indent,"\t\"giniThresholdScaling_nmuts\": ",fitObj$giniThresholdScaling_nmuts,",\n",sep = "")
+  }else{
+    cat(indent,"\t\"giniThresholdScaling_nmuts\": null,\n",sep = "")
   }
   cat(indent,"\t\"useBootstrap\": ",ifelse(fitObj$useBootstrap,"true","false"),",\n",sep = "")
   if(!is.null(fitObj$nboot)){
@@ -1956,6 +2019,10 @@ fitMStoJSON <- function(fitObj,
   cat(",\n")
   tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
   cat(",\n")
+  tableToJSON(fitObj$reconstructed_catalogues,tablename = "reconstructed_catalogues",nindent = nindent + 1)
+  cat(",\n")
+  vectorToJSON(fitObj$cossim_catalogueVSreconstructed,"cossim_catalogueVSreconstructed",nindent = nindent + 1)
+  cat(",\n")
   if(all(!is.null(fitObj$bootstrap_exposures_samples))){
     cat(indent,"\t\"bootstrap_exposures_samples\": {\n",sep = "")
     for (i in 1:length(fitObj$bootstrap_exposures_samples)) {
@@ -1966,6 +2033,22 @@ fitMStoJSON <- function(fitObj,
     cat(indent,"\t}",sep = "")
   }else{
     cat(indent,"\t\"bootstrap_exposures_samples\": null",sep = "")
+  }
+  cat(",\n")
+  if(all(!is.null(fitObj$bootstrap_exposure_correlations))){
+    if(length(fitObj$bootstrap_exposure_correlations)>0){
+      cat(indent,"\t\"bootstrap_exposure_correlations\": {\n",sep = "")
+      for (i in 1:length(fitObj$bootstrap_exposure_correlations)) {
+        tableToJSON(fitObj$bootstrap_exposure_correlations[[i]],tablename = names(fitObj$bootstrap_exposure_correlations)[i],nindent = nindent + 2)
+        if(i<length(fitObj$bootstrap_exposure_correlations)) cat(",")
+        cat("\n")
+      }
+      cat(indent,"\t}",sep = "")
+    }else{
+      cat(indent,"\t\"bootstrap_exposure_correlations\": null",sep = "")
+    }
+  }else{
+    cat(indent,"\t\"bootstrap_exposure_correlations\": null",sep = "")
   }
   cat(",\n")
 
