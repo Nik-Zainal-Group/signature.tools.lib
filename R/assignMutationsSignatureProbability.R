@@ -32,7 +32,7 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
     channel_column <- "catalogue.label"
   }else{
     channel_column <- "channel"
-    if(verbose) message("[info assignMutationsSignatureProbability] signatures mutation type unrecognised (are you using costum channels?) ",
+    if(verbose) message("[info assignMutationsSignatureProbability] signatures mutation type not recognised (are you using custom channels?) ",
                         "Attempting to use column \"channel\" in sampleMutations to match mutations with rownames of the signatures table. ",
                         "You can suppress this message using verbose=FALSE.")
   }

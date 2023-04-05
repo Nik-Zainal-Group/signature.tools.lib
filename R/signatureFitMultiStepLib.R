@@ -1255,10 +1255,20 @@ plotFit <- function(fitObj,
   }else{
     infoTable <- rbind(infoTable,data.frame(parameter="threshold_percent",value="NULL",stringsAsFactors = F))
   }
+  if(!is.null(fitObj$threshold_nmuts)){
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_nmuts",value=fitObj$threshold_nmuts,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="threshold_nmuts",value="NULL",stringsAsFactors = F))
+  }
   if(!is.null(fitObj$giniThresholdScaling)){
     infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value=fitObj$giniThresholdScaling,stringsAsFactors = F))
   }else{
     infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling",value="NULL",stringsAsFactors = F))
+  }
+  if(!is.null(fitObj$giniThresholdScaling_nmuts)){
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling_nmuts",value=fitObj$giniThresholdScaling_nmuts,stringsAsFactors = F))
+  }else{
+    infoTable <- rbind(infoTable,data.frame(parameter="giniThresholdScaling_nmuts",value="NULL",stringsAsFactors = F))
   }
   infoTable <- rbind(infoTable,data.frame(parameter="useBootstrap",value=ifelse(fitObj$useBootstrap,"TRUE","FALSE"),stringsAsFactors = F))
   if(!is.null(fitObj$nboot)){
@@ -1274,7 +1284,8 @@ plotFit <- function(fitObj,
   # save it
   writeTable(t = infoTable,file = paste0(outdir,"infoTable.tsv"),row.names = F)
 
-  reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
+  # reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
+  reconstructed <- fitObj$reconstructed_catalogues
 
   #plot and save exposures
   sums_exp <- apply(fitObj$exposures,1,sum)
@@ -1326,7 +1337,7 @@ plotFit <- function(fitObj,
       sigMatrix <- cbind(sigMatrix,reconstructed[,p,drop=FALSE])
       sigMatrix <- cbind(sigMatrix,fitObj$catalogues[,p,drop=FALSE] - reconstructed[,p,drop=FALSE])
       addToTitle <- c(addToTitle,
-                      paste0("Model (CosSim ",cos_sim,")"),
+                      paste0("Reconstructed (CosSim ",cos_sim,")"),
                       paste0("Difference (Unassigned ",unassigned_mut,"%)"))
     }
     colnames(sigMatrix) <- paste0(colnames(sigMatrix)," ",addToTitle)
@@ -1340,13 +1351,30 @@ plotFit <- function(fitObj,
       #4 bootstraps
       consensusCol <- "#BE0032"
       thresholdCol <- "#8DB600"
+      threshold_nmutsCol <- "#875692"
       bootsCol <- "#A1CAF1"
 
-      thresholdText <- ""
+      thresholdText_prop <- NULL
+      thresholdText_nmuts <- NULL
+      nthresholds <- 0
       if(fitObj$exposureFilterType=="fixedThreshold"){
-        thresholdText <- paste0("threshold=",fitObj$threshold_percent,"%")
+        if(fitObj$threshold_percent >= 0){
+          thresholdText_prop <- paste0("threshold %=",fitObj$threshold_percent,"%")
+          nthresholds <- nthresholds + 1
+        }
+        if(fitObj$threshold_nmuts >= 0){
+          thresholdText_nmuts <- paste0("threshold nmuts=",fitObj$threshold_nmuts," muts")
+          nthresholds <- nthresholds + 1
+        }
       }else if(fitObj$exposureFilterType=="giniScaledThreshold") {
-        thresholdText <- paste0("threshold=(1-Gini)*",fitObj$giniThresholdScaling)
+        if(fitObj$giniThresholdScaling >= 0){
+          thresholdText_prop <- paste0("threshold %=(1-Gini)*",fitObj$giniThresholdScaling,"%")
+          nthresholds <- nthresholds + 1
+        }
+        if(fitObj$giniThresholdScaling_nmuts >= 0){
+          thresholdText_nmuts <- paste0("threshold nmuts=(1-Gini)*",fitObj$giniThresholdScaling_nmuts," muts")
+          nthresholds <- nthresholds + 1
+        }
       }
 
       maxnchar <- max(sapply(colnames(fitObj$signatures),nchar))
@@ -1360,20 +1388,24 @@ plotFit <- function(fitObj,
       par(mfrow=c(1,1))
       par(mar=c(mar1,mar2,mar3,mar4))
       boxplot(t(fitObj$bootstrap_exposures_samples[[p]]),las=3,cex.axes=0.9,
-              ylab="n mutations",
+              ylab="n mutations",col="white",
               ylim=c(0,max(fitObj$bootstrap_exposures_samples[[p]])),cex.main = 0.9,border="#848482",
-              main=paste0("Exposures, of ",rownames(fitObj$exposures)[p],"\n",thresholdText,", p-value=",fitObj$threshold_p.value,", n=",fitObj$nboot))
+              main=paste0("Exposures, of ",rownames(fitObj$exposures)[p],"\n","p-value=",fitObj$threshold_p.value,", n=",fitObj$nboot))
       if(fitObj$exposureFilterType=="fixedThreshold"){
-        abline(h=fitObj$threshold_percent/100*sum(fitObj$catalogues[,p,drop=FALSE]),col=thresholdCol,lwd = 2)
+        if(fitObj$threshold_percent >= 0) abline(h=fitObj$threshold_percent/100*sum(fitObj$catalogues[,p,drop=FALSE]),col=thresholdCol,lwd = 2)
+        if(fitObj$threshold_nmuts >= 0) abline(h=fitObj$threshold_nmuts,col=threshold_nmutsCol,lwd = 2)
       }else if(fitObj$exposureFilterType=="giniScaledThreshold") {
         sigInvGini <- 1 - apply(fitObj$signatures,2,giniCoeff)
         giniThresholdPerc <- fitObj$giniThresholdScaling*sigInvGini
         giniThreshold <- giniThresholdPerc/100*sum(fitObj$catalogues[,p,drop=FALSE])
-        for(si in 1:length(giniThreshold)) lines(x = c(si-0.5,si+0.5),y = rep(giniThreshold[si],2),col=thresholdCol,lwd = 2)
+        giniThresholdNMUTS <- fitObj$giniThresholdScaling_nmuts*sigInvGini
+        if(fitObj$giniThresholdScaling >= 0) for(si in 1:length(giniThreshold)) lines(x = c(si-0.5,si+0.5),y = rep(giniThreshold[si],2),col=thresholdCol,lwd = 2)
+        if(fitObj$giniThresholdScaling_nmuts >= 0) for(si in 1:length(giniThresholdNMUTS)) lines(x = c(si-0.5,si+0.5),y = rep(giniThresholdNMUTS[si],2),col=threshold_nmutsCol,lwd = 2)
       }
       points(1:(length(fitObj$exposures[p,])-1),fitObj$exposures[p,1:(ncol(fitObj$exposures)-1)],col=consensusCol,pch = 16)
-      legend(x="topleft",legend = c("consensus exposures"),col = consensusCol,pch = 16,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE)
-      legend(x="topright",legend = c("threshold"),col = thresholdCol,lty = 1,cex = 0.9,bty = "n",inset = c(0,-0.14),xpd = TRUE,lwd = 2)
+      legend(x="topleft",legend = c("consensus exposures"),col = consensusCol,pch = 16,cex = 0.8,bty = "n",inset = c(0,-0.13),xpd = TRUE)
+      if(!is.null(thresholdText_prop)) legend(x="topright",legend = thresholdText_prop,col = thresholdCol,lty = 1,cex = 0.8,bty = "n",inset = c(0,-0.13),xpd = TRUE,lwd = 2)
+      if(!is.null(thresholdText_nmuts)) legend(x="topright",legend = thresholdText_nmuts,col = threshold_nmutsCol,lty = 1,cex = 0.8,bty = "n",inset = c(0,ifelse(nthresholds==1,-0.13,-0.2)),xpd = TRUE,lwd = 2)
       dev.off()
 
       if(ncol(fitObj$signatures)>1){
