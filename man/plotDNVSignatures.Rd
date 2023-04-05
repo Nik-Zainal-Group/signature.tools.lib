@@ -12,7 +12,8 @@ plotDNVSignatures(
   add_to_titles = NULL,
   mar = NULL,
   howManyInOnePage = 100,
-  ncolumns = 1
+  ncolumns = 1,
+  textscaling = 1
 )
 }
 \arguments{

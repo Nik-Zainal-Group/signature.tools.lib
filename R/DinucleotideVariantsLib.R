@@ -415,7 +415,8 @@ plotDNVSignatures <- function(signature_data_matrix,
                               add_to_titles = NULL,
                               mar=NULL,
                               howManyInOnePage=100,
-                              ncolumns=1){
+                              ncolumns=1,
+                              textscaling=1){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
 
@@ -510,10 +511,12 @@ plotDNVSignatures <- function(signature_data_matrix,
               #names.arg = row.names(tmpmatrix),
               names.arg = xlabels,
               col=rearr.colours,
+              cex.axis = textscaling,
               beside = TRUE,
-              cex.main = 0.9,
+              cex.main = 0.9*textscaling,
               las=2,
-              cex.names = 1,border = NA,space = 0.2)
+              cex.names = textscaling,
+              border = NA,space = 0.2)
       par(xpd=TRUE)
       par(usr = c(0, 1, 0, 1))
       recttop <- -0.092
@@ -522,17 +525,17 @@ plotDNVSignatures <- function(signature_data_matrix,
       endfinal <- 0.963
       gap <- (endfinal-start1)/nrow(tmpmatrix)
       xpos2 <- start1 - gap/2 + 1:length(xlabels2)*gap
-      text(x=xpos2,y = -0.04,label = xlabels2,srt=90,cex = 0.3)
+      text(x=xpos2,y = -0.04,label = xlabels2,srt=90,cex = 0.3*textscaling)
       for (i in 1:length(mypalette)) {
         end1 <- start1+gap*muttypeslength[i]
         rect(start1, rectbottom, end1, recttop,col = mypalette[i],lwd = 0,border = NA)
-        text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5)
+        text(x =start1+(end1-start1)/2,y = -0.15,labels = muttypes[i],col = "black",font = 2,cex = 0.5*textscaling)
         start1 <- end1
       }
 
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 1.5)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5*textscaling)
     if(!is.null(output_file)) dev.off()
   }
 }

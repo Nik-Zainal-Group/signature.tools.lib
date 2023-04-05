@@ -37,6 +37,7 @@ genomeChart <- function(outfilename,
   # set up some variables
   snvs_table <- NULL
   sbs_obj <- NULL
+  dbs_obj <- NULL
   indels_obj <- NULL
   CNV_table <- NULL
   sv_obj <- NULL
@@ -133,6 +134,12 @@ genomeChart <- function(outfilename,
     colnames(sbs_obj$catalogue) <- "SNV catalogue"
   }
   
+  # get DBS catalogue if possible
+  if(!is.null(snvs_table)){
+    dbs_obj <- tabToDNVcatalogue(muttable = snvs_table)
+    colnames(dbs_obj$DNV_catalogue) <- "DNV catalogue"
+  }
+  
   # check SBS catalogues in SV clustering regions
   clustering_regions_sbs_catalogues <- NULL
   clusteringSBScatalogue_all <- NULL
@@ -199,7 +206,7 @@ genomeChart <- function(outfilename,
   }else if(plottype=="png"){
     png(filename = outfilename,width = 2100*plotx,height = 2100*ploty,res = 300)
   }else{
-    message("[error genomeChartSV] incorrect file type: ",plottype,". ",
+    message("[error genomeChart] incorrect file type: ",plottype,". ",
             "Please end your file name with .pdf or .png")
     return(NULL)
   }
@@ -297,7 +304,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(6)
   
   # CN plot
-  placePanel(where = c(1,0.02),width = 0.78,height = 0.21)
+  placePanel(where = c(1,0.01),width = 0.78,height = 0.21)
   if(!is.null(CNV_table)){
     plotCopyNumbers(sv_df = CNV_table,
                     sample_name = sample_name,
@@ -315,7 +322,8 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(7)
   
   # indels classification
-  placePanel(where = c(0.98,0.22),width = 0.4,height = 0.18)
+  # placePanel(where = c(0.98,0.22),width = 0.4,height = 0.18)
+  placePanel(where = c(1.39,0.3),width = 0.4,height = 0.18)
   if(!is.null(indels_obj$count_proportion)){
     plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
                            textscaling = 0.6,
@@ -324,16 +332,29 @@ genomeChart <- function(outfilename,
     plotMessage(msg = "Indels\nnot available",
                 textscaling = msgtextscaling)
   }
-
   if(debug) drawDebugBox(8)
   
-  placePanel(where = c(1.49,0.35),width = 0.21,height = 0.105)
-  plotCNVlegend(textscaling = 0.5)
+  # dnvs catalogue
+  # placePanel(where = c(1.35,0.27),width = 0.44,height = 0.21)
+  placePanel(where = c(0.95,0.19),width = 0.47,height = 0.21)
+  if(!is.null(dbs_obj$DNV_catalogue)){
+    plotDNVSignatures(convertToAlexandrovChannels(dbs_obj$DNV_catalogue),
+                       textscaling = 0.6)
+  }else{
+    plotMessage(msg = "DNV catalogue\nnot available",
+                textscaling = msgtextscaling)
+  }
   if(debug) drawDebugBox(9)
   
-  placePanel(where = c(1.55,0.25),width = 0.14,height = 0.1)
+  # placePanel(where = c(0.77,0.06),width = 0.21,height = 0.105)
+  placePanel(where = c(1.55,0.21),width = 0.21,height = 0.105)
+  plotCNVlegend(textscaling = 0.5)
+  if(debug) drawDebugBox(10)
+  
+  # placePanel(where = c(0.08,0.06),width = 0.14,height = 0.1)
+  placePanel(where = c(1.41,0.22),width = 0.14,height = 0.1)
   plotClustersLegend(textscaling = 0.5)
-  if(debug) drawDebugBox(9)
+  if(debug) drawDebugBox(11)
 
   # close the file
   dev.off()
@@ -345,6 +366,7 @@ genomeChart <- function(outfilename,
   returnObj$snvs_table <- snvs_table
   returnObj$snvs_classified <- snvs_classified
   returnObj$sbs_obj <- sbs_obj
+  returnObj$dbs_obj <- dbs_obj
   returnObj$kataegis_regions <- kataegis_regions
   returnObj$indels_obj <- indels_obj
   returnObj$CNV_table <- CNV_table
