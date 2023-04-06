@@ -422,6 +422,11 @@ FitMS <- function(catalogues,
   resObj$multiStepMode <- multiStepMode
   resObj$giniThresholdScaling <- giniThresholdScaling
   resObj$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
+  if(exposureFilterType=="giniScaledThreshold"){
+    resObj$giniThresholdsTable <- getGiniThresholds(signatures = cbind(commonSignatures,rareSignatures),
+                                                    giniThresholdScaling = giniThresholdScaling,
+                                                    giniThresholdScaling_nmuts = giniThresholdScaling_nmuts)
+  }
   resObj$minErrorReductionPerc <- minErrorReductionPerc
   resObj$minCosSimIncrease <-minCosSimIncrease
   resObj$threshold_percent <- threshold_percent
@@ -581,22 +586,15 @@ Fit <- function(catalogues,
   fitRes$useBootstrap <- useBootstrap
   fitRes$exposureFilterType <- exposureFilterType
 
-
+  fitRes$giniThresholdScaling <- giniThresholdScaling
+  fitRes$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
   if(exposureFilterType=="giniScaledThreshold") {
-    fitRes$giniThresholdScaling <- giniThresholdScaling
-    fitRes$giniThresholdScaling_nmuts <- giniThresholdScaling_nmuts
-  }else{
-    fitRes$giniThresholdScaling <- NULL
-    fitRes$giniThresholdScaling_nmuts <- NULL
+    fitRes$giniThresholdsTable <- getGiniThresholds(signatures = signatures,
+                                                    giniThresholdScaling = giniThresholdScaling,
+                                                    giniThresholdScaling_nmuts = giniThresholdScaling_nmuts)
   }
-
-  if(exposureFilterType=="fixedThreshold"){
-    fitRes$threshold_percent <- threshold_percent
-    fitRes$threshold_nmuts <- threshold_nmuts
-  }else{
-    fitRes$threshold_percent <- NULL
-    fitRes$threshold_nmuts <- NULL
-  }
+  fitRes$threshold_percent <- threshold_percent
+  fitRes$threshold_nmuts <- threshold_nmuts
 
   fitRes$catalogues <- catalogues
   fitRes$signatures <- signatures
@@ -882,6 +880,41 @@ giniCoeff <- function(x){
     }
   }
   return((sumxdiff)/(2*(length(x)^2)*meanx))
+}
+
+
+#' Get Gini Thresholds
+#' 
+#' Given a matrix of mutational signatures and Gini threshold scaling factors,
+#' return the value of the thresholds.
+#' 
+#' @param signatures matrix of mutational signatures, with signatures as columns and channels as rows
+#' @param giniThresholdScaling scaling factor for relative threshold (percentage of mutations)
+#' @param giniThresholdScaling_nmuts scaling factor for absolute threshold (number of mutations)
+#' @export
+getGiniThresholds <- function(signatures,
+                              giniThresholdScaling,
+                              giniThresholdScaling_nmuts,
+                              verbose=TRUE){
+  # check if there is anything to do
+  nthresholds <- sum(c(giniThresholdScaling,giniThresholdScaling_nmuts)>=0)
+  if(nthresholds==0){
+    if(verbose) message("[warning getGiniThresholds] no threshold scaling factor is >= zero (all appear disabled), nothing to return.")
+    return(NULL)
+  }
+  # get 1 - Gini values
+  invGini <- 1 - apply(signatures,2,giniCoeff)
+  # setup return obj
+  giniThresholds <- NULL
+  if(giniThresholdScaling >= 0){
+    giniThresholds <- rbind(giniThresholds,t(data.frame(`giniThreshold.percent` = invGini*giniThresholdScaling,
+                                                        check.rows = F,check.names = F,stringsAsFactors = F)))
+  }
+  if(giniThresholdScaling_nmuts >= 0){
+    giniThresholds <- rbind(giniThresholds,t(data.frame(`giniThreshold.nmuts` = invGini*giniThresholdScaling_nmuts,
+                                                        check.rows = F,check.names = F,stringsAsFactors = F)))
+  }
+  return(t(giniThresholds))
 }
 
 
@@ -1298,6 +1331,10 @@ plotFit <- function(fitObj,
   }
   # save it
   writeTable(t = infoTable,file = paste0(outdir,"infoTable.tsv"),row.names = F)
+  
+  if(!is.null(fitObj$giniThresholdsTable)){
+    writeTable(t = fitObj$giniThresholdsTable,file = paste0(outdir,"giniThresholdsTable.tsv"),row.names = T)
+  }
 
   # reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
   reconstructed <- fitObj$reconstructed_catalogues
@@ -1564,6 +1601,10 @@ plotFitMS <- function(fitMSobj,
 
   # save it
   writeTable(t = infoTable,file = paste0(outdir,"infoTable.tsv"),row.names = F)
+  
+  if(!is.null(fitMSobj$giniThresholdsTable)){
+    writeTable(t = fitMSobj$giniThresholdsTable,file = paste0(outdir,"giniThresholdsTable.tsv"),row.names = T)
+  }
 
   # now plot some generic info
   if(length(fitMSobj$whichSamplesMayHaveRareSigs)>0){
@@ -1799,6 +1840,12 @@ fitToJSON <- function(fitObj,
   cat(",\n")
   tableToJSON(fitObj$signatures,tablename = "signatures",nindent = nindent + 1)
   cat(",\n")
+  if(!is.null(fitObj$giniThresholdsTable)){
+    tableToJSON(fitObj$giniThresholdsTable,tablename = "giniThresholdsTable",nindent = nindent + 1)
+    cat(",\n")
+  }else{
+    cat(indent,"\t\"giniThresholdsTable\": null,\n",sep = "")
+  }
   tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
   cat(",\n")
   tableToJSON(fitObj$reconstructed_catalogues,tablename = "reconstructed_catalogues",nindent = nindent + 1)
@@ -2017,6 +2064,12 @@ fitMStoJSON <- function(fitObj,
   cat(",\n")
   tableToJSON(fitObj$rareSignatures,tablename = "rareSignatures",nindent = nindent + 1)
   cat(",\n")
+  if(!is.null(fitObj$giniThresholdsTable)){
+    tableToJSON(fitObj$giniThresholdsTable,tablename = "giniThresholdsTable",nindent = nindent + 1)
+    cat(",\n")
+  }else{
+    cat(indent,"\t\"giniThresholdsTable\": null,\n",sep = "")
+  }
   tableToJSON(t(fitObj$exposures),tablename = "exposures",nindent = nindent + 1)
   cat(",\n")
   tableToJSON(fitObj$reconstructed_catalogues,tablename = "reconstructed_catalogues",nindent = nindent + 1)
