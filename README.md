@@ -31,7 +31,7 @@ can be caused by exposure to mutagens, such as chemicals present in
 cigarettes, or defects in DNA repair pathways, such as homologous
 recombination repair.
 
-The package supports hg19 and hg38 as well as mm10. It provides our
+The package supports reference genomes hg19, hg38 and mm10. It provides our
 latest algorithms for signature fit and extraction, as well as various
 utility functions and the HRDetect pipeline. The list and description of
 the most important functions is given below.
@@ -45,7 +45,7 @@ the most important functions is given below.
 - ```genomeChart``` and ```genomeChartSV``` functions added, as well as a ```genomeChart``` command line script
 - ```findKataegis``` function added
 - Introduced signature fit parameters to indicate minimum number of mutations required for exposures (```threshold_nmuts``` and ```giniThresholdScaling_nmuts```)
-- Added function ```assignSignatureProbabilityToMutations```, which estimates the probability that a specific mutation originates from each of the fitter signatures
+- Added function ```assignSignatureProbabilityToMutations```, which estimates the probability that a specific mutation originates from each of the fitted signatures
 
 2.3.0
 
@@ -152,7 +152,6 @@ This is the full list of R package dependencies:
     foreach,
     doParallel,
     lpSolve,
-    ggplot2,
     methods,
     cluster,
     stats,
