@@ -282,7 +282,6 @@ FitMS <- function(catalogues,
                                      randomSeed = randomSeed)
               }
 
-              # commonError <- KLD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(quickFitCommon$exposures))
               commonError <- MAD(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(t(quickFitCommon$exposures[,1:(ncol(quickFitCommon$exposures)-1),drop=F])))
               commonCosSim <- cos_sim(currentCatalogue,as.matrix(commonSigsToUse) %*% as.matrix(t(quickFitCommon$exposures[,1:(ncol(quickFitCommon$exposures)-1),drop=F])))
               if(depth==1){
@@ -1336,7 +1335,6 @@ plotFit <- function(fitObj,
     writeTable(t = fitObj$giniThresholdsTable,file = paste0(outdir,"giniThresholdsTable.tsv"),row.names = T)
   }
 
-  # reconstructed <- round(as.matrix(fitObj$signatures) %*% t(fitObj$exposures[,1:(ncol(fitObj$exposures)-1),drop=F]))
   reconstructed <- fitObj$reconstructed_catalogues
 
   #plot and save exposures
@@ -1489,7 +1487,6 @@ plotFit <- function(fitObj,
         abline(v=seq(0-extrabit,1+extrabit,length.out = ncol(fitObj$signatures)+1),col="grey",lty=2)
         axis(2,at = seq(0,1,length.out = ncol(fitObj$signatures)),labels = colnames(fitObj$signatures),las=1,cex.lab=0.8)
         axis(1,at = seq(0,1,length.out = ncol(fitObj$signatures)),labels = colnames(fitObj$signatures),las=2,cex.lab=0.8)
-        # draw_legend(col,1.25,1.3,0,1,1.2)
         draw_legend(col,1+4*extrabit,1+4.5*extrabit,0,1,1+3*extrabit)
         dev.off()
 

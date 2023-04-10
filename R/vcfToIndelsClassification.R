@@ -27,11 +27,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   }
 
   # read only chr seqnames from VCF, not contigs
-  #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
   gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  # if (genome.v=="hg38" || genome.v=="mm10") {
-  #   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
-  # }
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
@@ -100,9 +96,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
     min.position <- BiocGenerics::start(indel.data)
     max.position <- BiocGenerics::start(indel.data) + indel.length 
     indel.chr <- as.character(GenomeInfoDb::seqnames(indel.data))
-    # if (genomeSeq@provider_version=="mm10"){
-    #   indel.chr <- paste('chr',indel.chr,sep='')
-    # }
+
     if (genome.v=="hg38" || genome.v=="mm10") {
       if(length(intersect(indel.chr,expected_chroms))==0) indel.chr <- paste0("chr",indel.chr)
     }

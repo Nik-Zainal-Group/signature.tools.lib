@@ -226,9 +226,6 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   }
 
   if (nparallel > 1){
-    # library(foreach)
-    # library(doParallel)
-    # library(doMC)
     doParallel::registerDoParallel(nparallel)
     if(!is.null(randomSeed)){
       doRNG::registerDoRNG(randomSeed)
@@ -301,15 +298,8 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
       E_p.values[,i] <- p.values
 
       median_mut_perc <- median_mut/sum(median_mut)*100
-      # plot(median_mut_perc)
-      # abline(h=5)
       median_mut_perc[p.values > threshold_p.value] <- 0
-      #below rescaling, not sure whether to use it or not. If not I have something like a residual
-      # median_mut_perc <- median_mut_perc/sum(median_mut_perc)*100
       median_mut <- median_mut_perc/100*sum(cat[,i])
-      # boxplot(t(samples_list[[1]]))
-      # points(1:10,E[,1],col="red")
-      # points(1:10,median_mut,col="green")
       E_median_filtered[,i] <- median_mut
       KLD_samples <- c(KLD_samples,KLD(cat[,i,drop=FALSE],as.matrix(signature_data_matrix) %*% E_median_filtered[,i,drop=FALSE]))
     }else{
@@ -398,7 +388,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
                                        doRound = TRUE, #round the exposures to the closest integer
                                        nparallel=1, #to use parallel specify >1
                                        n_sa_iter = 500){  #only used if  method = "SA"
-  # outdir <- "../results/sigfitbootstraptests/"
+
   dir.create(outdir,recursive = TRUE,showWarnings = FALSE)
 
   #begin by computing the sigfit bootstrap
@@ -432,7 +422,6 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
 #alpha is the max cosine similarity that can be lost
 bleedingFilter <- function(e, sig,  sample, alpha){
   ## Compute the cosine similarity between the current solution and the catalogue
-  #sim_smpl <- computeSimSample(e, sample, sig)
   sim_smpl <- as.matrix(sig) %*% e
   val <- cos_sim(sample, sim_smpl)
 
@@ -456,7 +445,6 @@ bleedingFilter <- function(e, sig,  sample, alpha){
           e2 <- e
           e2[j] <- e2[j]+e2[i]
           e2[i] <- 0
-          #sim_smpl <- computeSimSample(e2, sample, sig)
           sim_smpl <- as.matrix(sig) %*% e2
           sim_m[i,j] <- cos_sim(sample, sim_smpl)
         }
@@ -485,7 +473,6 @@ bleedingFilter <- function(e, sig,  sample, alpha){
 #alpha is the max ratio of KLD that can be lost (e.g. 0.01 is 1% of original KLD)
 bleedingFilterKLD <- function(e, sig,  sample, alpha){
   ## Compute the cosine similarity between the current solution and the catalogue
-  #sim_smpl <- computeSimSample(e, sample, sig)
   sim_smpl <- as.matrix(sig) %*% e
   val <- KLD(sample, sim_smpl)
   alpha <- alpha*val
@@ -510,7 +497,6 @@ bleedingFilterKLD <- function(e, sig,  sample, alpha){
           e2 <- e
           e2[j] <- e2[j]+e2[i]
           e2[i] <- 0
-          #sim_smpl <- computeSimSample(e2, sample, sig)
           sim_smpl <- as.matrix(sig) %*% e2
           sim_m[i,j] <- KLD(sample, sim_smpl)
         }
@@ -554,18 +540,6 @@ objSimAnnelaingFunction <- function(x, xsample, xsignature){
   }
   sum(abs(xsample-sim_smpl))
 }
-
-## Given the exposure and the probability matrix compute the Catalogue
-# computeSimSample <- function(x, xsample, xsignature){
-#   sim_smpl <- rep(0, length(xsample))
-#   for(i in 1:ncol(xsignature)){
-#     sim_smpl  <- sim_smpl+(xsignature[,i]*x[i])
-#   }
-#   return(sim_smpl)
-# }
-
-
-
 
 #' @export
 plotExposures <- function(exposures,
@@ -802,16 +776,15 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   exposuresProp[,sums_exp==0] <- 0
 
   file_table_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".tsv")
-  file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".jpg")
-  file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.jpg")
+  file_plot_exp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,".pdf")
+  file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.pdf")
 
-  plotCosSimMatrix(as.data.frame(exposures),output_file = file_plot_exp,ndigitsafterzero = 0)
-  plotCosSimMatrix(as.data.frame(exposuresProp),output_file = file_plot_expProp,ndigitsafterzero = 0)
+  plotExposures(exposures = exposures,output_file = file_plot_exp)
+  plotExposures(exposures = exposuresProp,output_file = file_plot_exp)
   write.table(exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 
   #provide a series of plots for each sample
-  #plot_nrows <- ncol(cat)
   rows_ordered_from_best <- order(res$KLD_samples)
   plot_nrows <- 2
   plot_ncol <- 4
@@ -838,7 +811,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           #2 reconstructed
           plotSubsSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
-          #plotSubsSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
           plotSubsSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="rearr"){
@@ -848,7 +820,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           #2 reconstructed
           plotRearrSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(12,3,5,2))
           #3 difference
-          #plotRearrSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(12,3,5,2))
           plotRearrSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(12,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="generic"){
@@ -858,7 +829,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           #2 reconstructed
           plotGenericSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
-          #plotGenericSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
           plotGenericSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }else if(type_of_mutations=="dnv"){
@@ -868,7 +838,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           #2 reconstructed
           plotDNVSignatures(signature_data_matrix = reconstructed_with_median[,i,drop=FALSE],add_to_titles = "Model",mar=c(6,3,5,2))
           #3 difference
-          #plotDNVSignatures(signature_data_matrix = cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference, ",percentdiff,"%"),mar=c(6,3,5,2))
           plotDNVSignatures(signature_data_matrix = res$cat[,i,drop=FALSE] - reconstructed_with_median[,i,drop=FALSE],add_to_titles = paste0("Difference\n(CosSim ",cos_sim,", Unassigned ",unassigned_mut,"%)"),mar=c(6,3,5,2),plot_sum = FALSE)
         }
       }
@@ -902,7 +871,6 @@ plot_SignatureFit_withBootstrap <- function(outdir,
           draw_legend(col,1.25,1.3,0,1)
 
           #6 some correlation plots
-          #pos <- which(max(abs(res.cor_triangular))==abs(res.cor_triangular),arr.ind = TRUE)
           vals <- res.cor_triangular[order(abs(res.cor_triangular),decreasing = TRUE)]
           for (j in 1:(nplots-5)){
             pos <- which(vals[j]==res.cor_triangular,arr.ind = TRUE)
@@ -910,18 +878,14 @@ plot_SignatureFit_withBootstrap <- function(outdir,
             plot(res$samples_list[[i]][pos[1],],res$samples_list[[i]][pos[2],],
                  xlab = colnames(res$signature_data_matrix)[pos[1]],
                  ylab = colnames(res$signature_data_matrix)[pos[2]],
-                 # ylim = c(0,max(res$samples_list[[i]][pos[2],])),
-                 # xlim = c(0,max(res$samples_list[[i]][pos[1],]))
                  main=mainpar,col="blue",pch = 16)
 
           }
-          #sig.pca <- prcomp(t(res$samples_list[[i]]),center = TRUE,scale. = TRUE)
         }
       }
     }
     dev.off()
   }
-  # res$E_median_filtered[,i,drop=FALSE]
 
 }
 

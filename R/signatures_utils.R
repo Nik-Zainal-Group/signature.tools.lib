@@ -112,9 +112,6 @@ computeCorrelation_parallel <- function(x,nparallel=1,parallel=FALSE){
   rownames(out) <- colnames(x)
   #correlation matrix is symmetric
   if (parallel){
-    # library(foreach)
-    # library(doParallel)
-    # library(doMC)
     doParallel::registerDoParallel(nparallel)
     par_res <- foreach::foreach(i=2:ncol(x)) %dopar% {
       current_res <- c()
@@ -171,9 +168,7 @@ withinClusterCosSim <- function(clustering,distMatrix,parallel){
         #start from 1*combinations and subtract the dists
         sumCosSim <- combinations
         for(j in 1:(nSamples-1)){
-          #for(w in (j+1):(nSamples)){
           sumCosSim <- sumCosSim - sum(distMatrix[samplesInCluster[j],samplesInCluster[1:nSamples > j]])
-          #}
         }
         meanCosSim <- sumCosSim/combinations
       }
@@ -189,9 +184,7 @@ withinClusterCosSim <- function(clustering,distMatrix,parallel){
       #start from 1*combinations and subtract the dists
       sumCosSim <- combinations
       for(j in 1:(nSamples-1)){
-        #for(w in (j+1):(nSamples)){
         sumCosSim <- sumCosSim - sum(distMatrix[samplesInCluster[j],samplesInCluster[1:nSamples > j]])
-        #}
       }
       res <- c(res,sumCosSim/combinations)
     }
@@ -344,9 +337,6 @@ plotOverallMetrics <- function(overall_metrics,whattoplot,overall_metrics_file,g
     pos <- whattoplot[i]
     lines(overall_metrics$nsig,overall_metrics[,pos],type="l",col=colours_list[i],lwd = 2)
   }
-  # lines(overall_metrics$nsig,overall_metrics$proportion.tooSimilar.Signatures,type="l",col="brown",lwd = 2)
-  # legend("right", c("norm.Error","ave.CosSim.hclust","ave.CosSim.PAM","ave.SilWid.hclust","ave.SilWid.PAM","cophenetic.corr.hclust","prop.tooSimilar.Sig"), xpd = TRUE, horiz = FALSE, inset = c(-0.45,-0.4),lty = rep(1,7),
-  #        bty = "n", col = c("black","red","green","blue","purple","orange","brown"),lwd = 2, cex = 0.9)
   legend("right", c("norm.Error","norm.Error (orig. cat.)",colnames(overall_metrics)[whattoplot]), xpd = TRUE, horiz = FALSE, inset = c(-0.45,-0.4),lty = c(1,2,rep(1,length(whattoplot))),
          bty = "n", col = c("black","black",colours_list[1:length(whattoplot)]),lwd = 2, cex = 0.9)
   dev.off()
@@ -368,9 +358,6 @@ findMedoidsHclust <- function(distMatrix,cut_res){
       }
       medoids_hclust <- c(medoids_hclust,names(which.min(current_cluster)[1]))
     }
-    #message(names(which.min(current_cluster)))
-    #message(nInCluster)
-    #message(medoids_hclust)
   }
   return(medoids_hclust)
 }
@@ -547,8 +534,7 @@ plotSubsSignatures <- function(signature_data_matrix,
                                howManyInOnePage=100,
                                ncolumns=1,
                                textscaling=1){
-  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
-  # plotcolours <- c("blue","black","red","gray","green","pink")
+
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
                    rgb(0,0,0,maxColorValue = 255),
                    rgb(230,47,41,maxColorValue = 255),
@@ -610,7 +596,6 @@ plotSubsSignatures <- function(signature_data_matrix,
       textposx <- 0.04+seq(8,88,16)/104
       text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2,cex = textscaling)
       text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2,cex = textscaling)
-      #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
       par(xpd=FALSE)
     }
     title(main = overall_title,outer = TRUE,cex.main = 1.5*textscaling)
@@ -626,8 +611,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
                                           overall_title = "",
                                           add_to_titles = NULL,
                                           mar=NULL){
-  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
-  # plotcolours <- c("blue","black","red","gray","green","pink")
+
   plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
                    rgb(0,0,0,maxColorValue = 255),
                    rgb(230,47,41,maxColorValue = 255),
@@ -652,12 +636,6 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
   }
   muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
   xlabels <- rep("",96)
-  # xlabels[8] <- "C > A"
-  # xlabels[24] <- "C > G"
-  # xlabels[40] <- "C > T"
-  # xlabels[56] <- "T > A"
-  # xlabels[72] <- "T > C"
-  # xlabels[88] <- "T > G"
   for (pos in 1:ncol(signature_data_matrix)){
     ylimit <- c(0,max(signature_data_matrix[,pos],mean_matrix[,pos]+sd_matrix[,pos]))
     title <- colnames(signature_data_matrix)[pos]
@@ -665,13 +643,13 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," SNVs)")
     barplot(signature_data_matrix[,pos],
             main = title,
-            #names.arg = row.names(signature_data_matrix),
             names.arg = xlabels,
             col=rearr.colours,
             beside = TRUE,
             ylim = ylimit,
             las=2,
             cex.main = 0.9,
+            border = NA,
             cex.names = 1)
     par(xpd=TRUE)
     par(usr = c(0, 1, 0, 1))
@@ -691,22 +669,15 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
     par(xpd=FALSE)
     barCenters <- barplot(mean_matrix[,pos],
                           main = "mean and sd of cluster",
-                          #names.arg = row.names(signature_data_matrix),
                           names.arg = xlabels,
                           col=rearr.colours,
-                          #border = NA,
                           beside = TRUE,
                           ylim = ylimit,
                           las=2,
                           cex.main = 0.9,
                           cex.names = 1,border = NA,space = 0.2)
-    # segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
-    #          mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
     segments(barCenters, mean_matrix[,pos], barCenters,
              mean_matrix[,pos] + sd_matrix[,pos], lwd = 1)
-    # arrows(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
-    #        mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
-    #        code = 3, length = 0.05)
     par(xpd=TRUE)
     par(usr = c(0, 1, 0, 1))
     recttop <- -0.02
@@ -751,16 +722,12 @@ plotRearrSignatures <-function(signature_data_matrix,
                                ncolumns=1,
                                textscaling = 1){
   #This function plots a set of signatures in a single file, three signatures for each row.
-  #signature_data_matrix is a data frame that contains the rearrangement signatures.
-  #                      The columns are the signatures, while the rows are the 32 features
-  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
   transloc_col = rgb(152,78,163, maxColorValue =255)
   non_clust_col = rgb(240,240,240, maxColorValue =255)
-  #rearr.colours <- c(rep("darkblue",16),rep("red",16))
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
   npages <- ceiling(ncol(signature_data_matrix)/howManyInOnePage)
   if(!is.null(output_file)) rootoutput_file <- substr(output_file,1,nchar(output_file)-4)
@@ -807,13 +774,6 @@ plotRearrSignatures <-function(signature_data_matrix,
                      cex.main = 0.9*textscaling,
                      border = 0,
                      space = 0.1)
-      # axis(1,
-      #      las=2,
-      #      at=pos,
-      #      lab=sizes_names,
-      #      col = "transparent",
-      #      line = 1*textscaling,
-      #      cex.axis = 0.8*textscaling)
       #save old plot coordinates
       op <- par("usr")
       #set new coordinates
@@ -824,8 +784,6 @@ plotRearrSignatures <-function(signature_data_matrix,
       xsep = 0.145
       start1_text <- 0.11
       tr_size <- 0.03
-      #rect(0.1, 0.1, 0.2, 0.2,col = "blue",lwd = 0)
-      #rect(0.1, 0.1, 0.11, 0.11,col = "red",lwd = 0)
       stop <- start1
       for(i in 1:2){
         start <- stop
@@ -875,16 +833,12 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
                                           add_to_titles = NULL,
                                           mar=NULL){
   #This function plots a set of signatures in a single file, three signatures for each row.
-  #signature_data_matrix is a data frame that contains the rearrangement signatures.
-  #                      The columns are the signatures, while the rows are the 32 features
-  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,22),"...") else x)
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
   del_col = rgb(228,26,28, maxColorValue = 255)
   td_col = rgb(77,175,74, maxColorValue =255)
   inv_col  = rgb(55,126,184, maxColorValue = 255)
   transloc_col = rgb(152,78,163, maxColorValue =255)
   non_clust_col = rgb(240,240,240, maxColorValue =255)
-  #rearr.colours <- c(rep("darkblue",16),rep("red",16))
   rearr.colours <- rep(c(rep(del_col,5),rep(td_col,5),rep(inv_col,5),transloc_col),2)
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
@@ -905,10 +859,8 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
   rearrAxis <- function(barCenters,sizes_names){
     axis(1,
          las=2,
-         #hadj=0.5,
          at=barCenters,
          lab=sizes_names,
-         #mgp=c(3,2,0),
          col = "transparent",
          line = 1,
          cex.axis = 0.8)
@@ -922,8 +874,6 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     xsep = 0.145
     start1_text <- 0.11
     tr_size <- 0.03
-    #rect(0.1, 0.1, 0.2, 0.2,col = "blue",lwd = 0)
-    #rect(0.1, 0.1, 0.11, 0.11,col = "red",lwd = 0)
     stop <- start1
     for(i in 1:2){
       start <- stop
@@ -966,12 +916,10 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     barCenters <- barplot(signature_data_matrix[,pos],
                           main = title,
                           names.arg = NA,
-                          #names.arg = sizes_names,
                           col=rearr.colours,
                           beside = FALSE,
                           las=2,
                           cex.names = 0.8,
-                          #mgp=c(3,2,0),
                           border = 0,
                           ylim = ylimit,
                           cex.main = 0.9,
@@ -979,52 +927,22 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     rearrAxis(barCenters,sizes_names)
     barCenters <- barplot(mean_matrix[,pos],
                           main = "mean and sd of cluster",
-                          #names.arg = row.names(signature_data_matrix),
                           names.arg = NA,
                           col=rearr.colours,
-                          #border = NA,
                           beside = FALSE,
                           ylim = ylimit,
                           cex.main = 0.9,
                           las=2,
                           border = 0,
                           space = 0.1)
-    # segments(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
-    #          mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
     segments(barCenters, mean_matrix[,pos], barCenters,
              mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5)
-    # arrows(barCenters, mean_matrix[,pos] - sd_matrix[,pos], barCenters,
-    #        mean_matrix[,pos] + sd_matrix[,pos], lwd = 1.5, angle = 90,
-    #        code = 3, length = 0.05)
     rearrAxis(barCenters,sizes_names)
   }
   title(main = overall_title,outer = TRUE,cex.main = 1.5)
   if(!is.null(output_file)) dev.off()
 }
 
-
-plotCosSimMatrix <- function(CosSimMatrix,output_file,dpi=300,xlabel = "",ylabel = "",thresholdMark = 0.9,extraWidth = 500,extraHeight = 500,ndigitsafterzero = 2){
-  # library("ggplot2")
-
-  # Set up the vectors
-  signatures.names <- colnames(CosSimMatrix)
-  sample.names <- row.names(CosSimMatrix)
-
-  # Create the data frame
-  df <- expand.grid(sample.names,signatures.names)
-  df$value <- unlist(CosSimMatrix)
-  df$labels <- sprintf(paste0("%.",ndigitsafterzero,"f"), df$value)
-  df$labels[df$value==0] <- ""
-
-  #Plot the Data (500+150*nsamples)x1200
-  g <- ggplot2::ggplot(df, ggplot2::aes(Var1, Var2)) + ggplot2::geom_point(ggplot2::aes(size = value, colour = value>thresholdMark)) + ggplot2::theme_bw() + ggplot2::xlab(xlabel) + ggplot2::ylab(ylabel)
-  g <- g + ggplot2::scale_size_continuous(range=c(0,10)) + ggplot2::geom_text(ggplot2::aes(label = labels))
-  g + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, size=14),
-            axis.text.y = ggplot2::element_text(vjust = 1, size=14)) + ggplot2::theme(legend.position="none")
-  w <- (extraWidth+150*length(sample.names))/dpi
-  h <- (extraHeight+150*length(signatures.names))/dpi
-  ggplot2::ggsave(filename = output_file,dpi = dpi,height = h,width = w,limitsize = FALSE)
-}
 
 #' plotCosSimSignatures
 #'
@@ -1063,8 +981,6 @@ plotCosSimSignatures <- function(sig1,sig2,output_file = NULL,
 #' @return the list of signatures identified
 #' @export
 findClosestCOSMIC30 <- function(sigs,threshold){
-  #load COSMIC30
-  # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   #compute cos sim matrix
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
@@ -1095,8 +1011,6 @@ findClosestCOSMIC30 <- function(sigs,threshold){
 #' @return the list of signatures identified
 #' @export
 findClosestCOSMIC30andCombinations <- function(sigs,threshold){
-  #load COSMIC30
-  # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   ncols30 <- length(cosmic30)
   colnames(cosmic30) <- 1:ncols30
   for(i in 1:(ncols30-1)){
@@ -1133,8 +1047,6 @@ findClosestCOSMIC30andCombinations <- function(sigs,threshold){
 #' @return the list of signatures identified and corresponding similarities
 #' @export
 findClosestCOSMIC30_withSimilarity <- function(sigs){
-  #load COSMIC30
-  # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   #compute cos sim matrix
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
@@ -1163,8 +1075,6 @@ findClosestCOSMIC30_withSimilarity <- function(sigs){
 #' @return the list of signatures identified and corresponding similarities
 #' @export
 findClosestCOSMIC30andCombinations_withSimilarity <- function(sigs){
-  #load COSMIC30
-  # cosmic30 <- read.table("../data/COSMIC_signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   ncols30 <- length(cosmic30)
   colnames(cosmic30) <- 1:ncols30
   for(i in 1:(ncols30-1)){
@@ -1195,8 +1105,6 @@ findClosestCOSMIC30andCombinations_withSimilarity <- function(sigs){
 #signatures N1 and N2 are unknown signatures (N for not found), based on the fact
 #that no similarity >=threshold was found with the Rearr Sigs from Breast 560 study
 findClosestRearrSigsBreast560 <- function(sigs,threshold){
-  #load RS.Breast560
-  # RS.Breast560 <- read.table("../data/rearrangement.signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   #compute cos sim matrix
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
@@ -1218,8 +1126,6 @@ findClosestRearrSigsBreast560 <- function(sigs,threshold){
 #means that Rearrangement (R) signatures 1, 3 and 5 were found, while
 #the corrsponding similarities to those signatures are 0.94, 0.85 and 0.7
 findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
-  #load RS.Breast560
-  # RS.Breast560 <- read.table("../data/rearrangement.signatures.txt", sep="\t", header=T, as.is=T, check.names = FALSE)
   #compute cos sim matrix
   cos_sim_df <- data.frame()
   for (s in colnames(sigs)){
@@ -1245,11 +1151,6 @@ findClosestRearrSigsBreast560_withSimilarity <- function(sigs){
 #' @return KL-Divergence
 #' @export
 KLD <- function(m1,m2){
-  # print(sessionInfo())
-  # print(m1)
-  # print(m2)
-  # m1 <- as.vector(as.matrix(cat))
-  # m2 <- as.vector(as.matrix(m2))
   m1[m1==0] <- .Machine$double.eps
   m2[m2==0] <- .Machine$double.eps
   return(sum(m1*(log(m1)-log(m2)) - m1 + m2))
@@ -1328,21 +1229,6 @@ readTable <- function(file){
   read.table(file = file,sep = "\t",check.names = FALSE,header = TRUE,stringsAsFactors = FALSE)
 }
 
-#function to add shadowtext.
-#Copied from https://github.com/cran/TeachingDemos/blob/master/R/shadowtext.R
-#author: Greg Snow <538280@gmail.com>
-shadowtext <- function(x, y=NULL, labels, col='white', bg='black',
-                       theta= seq(pi/4, 2*pi, length.out=8), r=0.1, ... ) {
-
-  xy <- xy.coords(x,y)
-  xo <- r*strwidth('A')
-  yo <- r*strheight('A')
-
-  for (i in theta) {
-    text( xy$x + cos(i)*xo, xy$y + sin(i)*yo, labels, col=bg, ... )
-  }
-  text(xy$x, xy$y, labels, col=col, ... )
-}
 
 #' getOrganSignatures
 #'

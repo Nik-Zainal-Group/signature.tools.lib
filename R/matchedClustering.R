@@ -32,9 +32,6 @@ matchedClustering <- function(distMatrix,ns,maxMatch=TRUE,parallel=FALSE,nparall
     }
     nruns*(nruns-1)/2 - (nruns-i+1)*(nruns-i)/2 + j - i
   }
-  # get_from_match_tables <- function(i,j){
-  #   match_tables[[from_coord_to_list(i,j)]]
-  # }
   if(!parallel){
     for (i in 1:(nruns-1)){
       for (j in (i+1):nruns){
@@ -54,10 +51,6 @@ matchedClustering <- function(distMatrix,ns,maxMatch=TRUE,parallel=FALSE,nparall
       }
     }
   }else{
-    # library(NMF)
-    # library(foreach)
-    # library(doParallel)
-    # library(doMC)
     doParallel::registerDoParallel(nparallel)
     #run initialisation in parallel!
     res_list <- foreach::foreach(i=1:(nruns-1)) %dopar%{

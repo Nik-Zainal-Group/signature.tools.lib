@@ -100,7 +100,6 @@ plotCopyNumbers <- function(sv_df,
   if(!is.null(highlightRegions)){
     rect(xleft = 0,xright = maxCoord,ytop = -0.15,ybottom = -0.75)
     if(!is.null(highlightText)) text(x=2*-10^8,y=-0.05,labels = highlightText,cex = 0.8*textscaling,col = highlightColour,pos = 1)
-    # text(x=2*-10^8,y=-1.2,labels = nrow(HRDLOHregions),cex = 0.8,col = "brown")
   }
   text(x=maxCoord/2,y=-2*textscaling,labels = "chromosomes",cex = textscaling)
   par(xpd=FALSE)

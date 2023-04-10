@@ -130,11 +130,6 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   return(return_list)
 }
 
-
-# source('../lib/pcf/fastPCF.R')
-# source('../lib/pcf/extract.kat.regions.R')
-# source('../lib/utils/calcIntermutDist.R')
-
 # this is used for per-sample clustering of both single-base substitutions and rearrangement breakpoints
 
 rearrangement.clustering_bedpe <- function(sv_bedpe,
@@ -209,13 +204,10 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
   for (chrom in unique(sample.bps$chr)) { # loop over chromosomes
 
     sample.bps.flag <- sample.bps$chr==chrom #   breakpoints on a current chromosome
-    # sample.bps.chrom <- sample.bps[sample.bps.flag,]
-    # sample.bps.chrom <- sample.bps.chrom[order(sample.bps.chrom$position),]
     #
     if (sum(sample.bps.flag )>MIN.BPS ) { # if there are enough breakpoints on a chromosome to run pcf
 
       data.points <- sample.bps$intermut.dist[sample.bps.flag]
-      # data.points <- sample.bps.chrom$intermut.dist
 
       res = exactPcf(data.points, kmin, gamma, T)
 

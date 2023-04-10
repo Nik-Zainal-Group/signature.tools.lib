@@ -85,8 +85,6 @@ dnvTabToTNVcatalogue <- function(dnvtab){
         chromsubs$trinuc_Alt <- sapply(1:nrow(chromsubs),function(i) paste0(chromsubs$Alt[i],substr(chromsubs$Alt_nextDNV[i],2,2)))
         chromsubs$trinuc_mutation <- paste0(chromsubs$trinuc_Ref,">",chromsubs$trinuc_Alt)
         # get reverse complement
-        # chromsubs$trinuc_Ref_rc <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(chromsubs$dinuc_Ref)))
-        # chromsubs$trinuc_Alt_rc <- as.character(Biostrings::reverseComplement(Biostrings::DNAStringSet(chromsubs$dinuc_Alt)))
         chromsubs$trinuc_Ref_rc <- sapply(1:nrow(chromsubs),function(i) flip(chromsubs$trinuc_Ref[i]))
         chromsubs$trinuc_Alt_rc <- sapply(1:nrow(chromsubs),function(i) flip(chromsubs$trinuc_Alt[i]))
         chromsubs$trinuc_mutation_rc <- paste0(chromsubs$trinuc_Ref_rc,">",chromsubs$trinuc_Alt_rc)

@@ -234,7 +234,7 @@ genomeChart <- function(outfilename,
   }
   plot(NULL,xlim = c(0,1),ylim = c(0,1),main="",type="n",xaxt="n",yaxt="n",xlab="",ylab="",bty="n",xaxs="i",yaxs="i")
   title(main = plot_title,adj = 0)
-  # par(fig = c(0,0.5,0,1),new=TRUE)
+  
   placePanel(where = c(0,0),width = 1,height = 1)
   plotCircos(snvs_classified = snvs_classified,
              kataegis_regions = kataegis_regions,
@@ -322,7 +322,6 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(7)
   
   # indels classification
-  # placePanel(where = c(0.98,0.22),width = 0.4,height = 0.18)
   placePanel(where = c(1.39,0.3),width = 0.4,height = 0.18)
   if(!is.null(indels_obj$count_proportion)){
     plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
@@ -335,7 +334,6 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(8)
   
   # dnvs catalogue
-  # placePanel(where = c(1.35,0.27),width = 0.44,height = 0.21)
   placePanel(where = c(0.95,0.19),width = 0.47,height = 0.21)
   if(!is.null(dbs_obj$DNV_catalogue)){
     plotDNVSignatures(convertToAlexandrovChannels(dbs_obj$DNV_catalogue),
@@ -346,12 +344,10 @@ genomeChart <- function(outfilename,
   }
   if(debug) drawDebugBox(9)
   
-  # placePanel(where = c(0.77,0.06),width = 0.21,height = 0.105)
   placePanel(where = c(1.55,0.21),width = 0.21,height = 0.105)
   plotCNVlegend(textscaling = 0.5)
   if(debug) drawDebugBox(10)
   
-  # placePanel(where = c(0.08,0.06),width = 0.14,height = 0.1)
   placePanel(where = c(1.41,0.22),width = 0.14,height = 0.1)
   plotClustersLegend(textscaling = 0.5)
   if(debug) drawDebugBox(11)

@@ -1051,13 +1051,11 @@ plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_o
           cex.lab=1.5,
           cex.names = 1.5)
   abline(a=0.7,b=0,col="red")
-  #text(x = -0.05,y = 0.75,labels = "0.7",col = "red")
   matrix_to_plot <- t(hrdetect_output[reorder,col_needed])
 
   par(mar=c(8,6,1,4))
   barplot(height = matrix_to_plot,
           beside = TRUE,
-          #names.arg = row.names(hrdetect_res),
           names.arg = rownames(hrdetect_output)[reorder],
           las = 3,
           legend.text = c("deletion with MH",
@@ -1102,7 +1100,6 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
   par(xpd=FALSE)
   bp <- barplot(height = hrdetect_output$Probability[reorder],
                 names.arg = "",
-                #las = 2,
                 main = paste0("HRDetect probability score"),
                 ylim = c(0,1),
                 border = 0,
@@ -1115,7 +1112,6 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
     rect(start, -0.1, start+1, -0.02,col = plot_colours[start+1],lwd = 0)
     start <- start + 1
   }
-  # legend("bottom",c("BRCA1","BRCA2","BRCA1 Meth","BRCA2.note","BRCA1/MUTYH","PALB2"),inset=c(0,-0.2), horiz = TRUE, col=c("red","blue","green","purple","orange","yellow"),bty = "n", cex = 0.7,lwd=5)
   par(xpd=FALSE)
   dev.off()
 }
@@ -1160,7 +1156,6 @@ plot_HRDetect_BootstrapScores <- function(outdir,
   }
 
   o <- order(hrdetect_res$hrdetect_output[,"Probability"],decreasing = TRUE)
-  # jpeg(filename = paste0(outdir,"/HRDetect_bootstrap.jpg"),width = pwidth,height = pheight,res = pres)
   cairo_pdf(filename = paste0(outdir,"/HRDetect_bootstrap.pdf"),width = pwidth,height = pheight,pointsize = pointsize)
   par(mar=mar)
   boxplot(hrdetect_res$hrdetect_bootstrap_table, xaxt="n", yaxt="n",ylim = c(0,1),border="white",col="white")
@@ -1243,9 +1238,7 @@ plot_HRDetect_Contributions <- function(file_name,
                                  "Substitution Sig. 8"),fill =legend_colors,border = NA,
          cex = 1,bty = "n",xpd = TRUE)
   title(main=paste0(par_title), cex.main=1.3)
-  # abline(a=0.7,b=0,col="red",lty = 2)
   lines(x=c(xpos[1]-gap/2,xpos[length(xpos)]+gap/2),y=c(0.7,0.7),col="red",lty = 2)
-  # text(x = 0.75*nrow(hrdetect_output),y = 0.77,labels = "classification threshold",col = "red",cex = 1.5)
   matrix_to_plot <- t(hrdetect_output[reorder,col_needed])
 
   mar1 <- 0.65*maxncharSamples+1.2
@@ -1253,23 +1246,12 @@ plot_HRDetect_Contributions <- function(file_name,
   mar3 <- 1
   mar4 <- 15
   mar=c(mar1,mar2,mar3,mar4)
-  # par(mar=c(10,7,1,15))
   par(mar=mar)
   barplot(height = matrix_to_plot,
           beside = TRUE,
-          #names.arg = row.names(hrdetect_res),
           names.arg = rownames(hrdetect_output)[reorder],border = NA,
           las = 2,
-          # legend.text = c("deletion with MH",
-          #                 "Substitution Sig. 3",
-          #                 "Rearrangement Sig. 3",
-          #                 "Rearrangement Sig. 5",
-          #                 "HRD-LOH score",
-          #                 "Substitution Sig. 8"),
-          # args.legend = list(x ='bottom', bty='n', inset=c(0,-1.0),horiz=TRUE,cex=0.9),
-          # ylim = c(min(matrix_to_plot)*1.1,max(matrix_to_plot)*1.1),
           ylim = c(min(-1,min(matrix_to_plot)),max(1,max(matrix_to_plot))),
-          # col=c("blue","red","black","green","orange","yellow"),
           col=legend_colors,
           ylab = "BRCA1/BRCA2\n def. contribution",
           cex.axis = 1.2,

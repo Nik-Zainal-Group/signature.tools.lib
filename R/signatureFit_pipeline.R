@@ -212,7 +212,6 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
         reslist <- bedpeToRearrCatalogue(sv_bedpe)
         if(!is.null(reslist$clustering_regions)) reslist$clustering_regions$sample <- sample
-        # res <- reslist$rearr_catalogue
         # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
         resncol <- ncol(reslist$rearr_catalogue)
         if(resncol>1){
@@ -407,14 +406,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
               }
             }
           }else if(mtype_catalogues == "rearr"){
-            # message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
-            #         "switching to signature_version=RefSigv1")
-            # signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
-            # if(commonSignatureTier=="T2"){
-            #   # need to convert
-            #   convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
-            #   signatures <- RefSigv1_rearr[,convertedNames,drop=F]
-            # }
+            # ---
           }else{
             message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
                     "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
@@ -429,9 +421,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         }else if(mtype_catalogues == c("DNV")){
           signatures <- referenceSignaturesDBSv1.01
         }else if(mtype_catalogues == c("rearr")){
-          # message("[warning signatureFit_pipeline] rearrangements RefSig mutational signatures only available in RefSigv1, ",
-          #         "switching to signature_version=RefSigv1")
-          # signatures <- RefSigv1_rearr
+          # --- 
         }else{
           message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
                   "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
@@ -470,14 +460,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
             }
 
           }else if(mtype_catalogues == "DNV"){
-            # message("[warning signatureFit_pipeline] DNV RefSig mutational signatures only available in RefSigv2, ",
-            #         "switching to signature_version=RefSigv2")
-            # signatures <- getOrganSignatures(organ = organ,version = 2,typemut = mtype_catalogues)
-            # if(commonSignatureTier=="T2"){
-            #   # need to convert
-            #   convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
-            #   signatures <- referenceSignaturesDBSv1.01[,convertedNames,drop=F]
-            # }
+            # ---
           }else{
             message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
                     "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
@@ -490,9 +473,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         if(mtype_catalogues == c("subs")){
           signatures <- RefSigv1_subs
         }else if(mtype_catalogues == c("DNV")){
-          # message("[warning signatureFit_pipeline] DBS RefSig mutational signatures only available in RefSigv2, ",
-          #         "switching to signature_version=RefSigv2")
-          # signatures <- referenceSignaturesDBSv1.01
+          # ---
         }else if(mtype_catalogues == c("rearr")){
           signatures <- RefSigv1_rearr
         }else{

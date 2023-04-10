@@ -27,21 +27,11 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
   }
   
   # read only chr seqnames from VCF, not contigs
-  #gr <- GenomicRanges::GRanges(GenomeInfoDb::Seqinfo(genome=genome.v))
-  # gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
-  # if (genome.v=="hg38" || genome.v=="mm10") {
-  #   GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
-  # }
   vcf_seqnames <- unique(indel.data$chr) 
   if (genome.v=="hg38" | genome.v=="mm10" | genome.v=="canFam3") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) indel.data$chr <- paste0("chr",indel.data$chr)
   }
   indel.data <- indel.data[indel.data$chr %in% expected_chroms,]
-  # if(tools:::.BioC_version_associated_with_R_version()<3.5){
-  #   gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
-  # }else{
-  #   gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
-  # }
   
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq,genome.v)
@@ -90,9 +80,6 @@ prepare.indel.df_tabversion <- function(indel.data,genomeSeq,genome.v) {
     min.position <- indel.data$position
     max.position <- indel.data$position + indel.length 
     indel.chr <- as.character(indel.data$chr)
-    # if (genomeSeq@provider_version=="mm10"){
-    #   indel.chr <- paste('chr',indel.chr,sep='')
-    # }
 
     extend5 = min.position-indel.length-25;
     extend3 = max.position + indel.length+25;

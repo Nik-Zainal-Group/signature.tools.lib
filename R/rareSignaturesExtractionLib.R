@@ -99,9 +99,6 @@ rareSignatureExtraction <- function(outfileRoot,
     if(usensigs>1) signames <- paste0(signames,letters[1:usensigs])
     colnames(rareSignatures) <- signames
 
-    #listofsignatures[[paste0("rare",rarecounter)]] <- rareSignatures
-    #listofsamples[[paste0("rare",rarecounter)]] <- colnames(currentSamples)
-
     samplesMissed <- c()
     if(checkForMissed){
       residualPositiveUnseen <- residuals[,setdiff(colnames(residuals),unexpl_samples),drop=F]
@@ -109,8 +106,6 @@ rareSignatureExtraction <- function(outfileRoot,
       resCorr <- computeCorrelationOfTwoSetsOfSigs(residualPositiveUnseen,rareSignatures)
       whichSimilar <- rownames(resCorr)[which(resCorr>=0.95)]
       if(length(whichSimilar)>0){
-        #plotDNVSignatures(R[,whichSimilar,drop=F])
-        #plotDNVSignatures(catalogue_full[,whichSimilar,drop=F])
         samplesMissed <- whichSimilar
         message("[info rareSignatureExtraction] ",signames," recovered missed samples: ",paste(whichSimilar,collapse = ", "))
       }
@@ -250,7 +245,6 @@ finaliseCommonRareSignatureExposures <- function(outfileRoot,
       newsigcount <- newsigcount + ncol(newsigs)
 
       newrows <- matrix(FALSE,nrow = ncol(newsigs),ncol = ncol(sigfitmask),dimnames = list(colnames(newsigs),colnames(sigfitmask)))
-      # sigfitmaskCommonOnly <- rbind(sigfitmaskCommonOnly,newrows)
       newrows[,newsigssamples] <- TRUE
       sigfitmask <- rbind(sigfitmask,newrows)
     }

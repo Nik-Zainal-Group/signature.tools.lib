@@ -375,7 +375,6 @@ plot_allsample_Dinucleotides_profile <- function(muttype_catalogue,colnum,h,w,ou
   library(ggplot2)
   pdf(file=outputname, onefile=TRUE,width=w,height=h)
   p <- ggplot(data=muts_basis_melt, aes(x=MutationType, y=count,fill=Ref,width=0.5))+ geom_bar(position="dodge", stat="identity")+xlab("Dinucleotide mutation type")+ylab("")
-  #  p <- p+coord_cartesian(ylim=c(0, max(muttype_freq[,"freq"])))
   p <- p+scale_x_discrete(limits = as.character(muttype_catalogue$MutationType))
   p <- p+scale_fill_manual(values=mypalette)
   p <- p+theme(axis.text.x=element_text(angle=90, vjust=0.5,size=5,colour = "black"),
@@ -508,7 +507,6 @@ plotDNVSignatures <- function(signature_data_matrix,
 
       b <- barplot(tmpmatrix[,pos],
               main = title,
-              #names.arg = row.names(tmpmatrix),
               names.arg = xlabels,
               col=rearr.colours,
               cex.axis = textscaling,
@@ -549,7 +547,6 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
                                          add_to_titles = NULL,
                                          mar=NULL){
   if(!is.null(output_file)) plottype <- substr(output_file,nchar(output_file)-2,nchar(output_file))
-  # colnames(signature_data_matrix) <- sapply(colnames(signature_data_matrix),function(x) if (nchar(x)>30) paste0(substr(x,1,23),"...") else x)
 
   mutationTypesZou <- c("AA>CC","AA>CG","AA>CT","AA>GC","AA>GG","AA>GT","AA>TC","AA>TG","AA>TT",
                         "AC>CA","AC>CG","AC>CT","AC>GA","AC>GG","AC>GT","AC>TA","AC>TG","AC>TT",
@@ -632,7 +629,6 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
 
     b <- barplot(signature_data_matrix[,pos],
                  main = title,
-                 #names.arg = row.names(signature_data_matrix),
                  names.arg = xlabels,
                  col=rearr.colours,
                  beside = TRUE,
@@ -658,7 +654,6 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
 
     barCenters <- barplot(mean_matrix[,pos],
                          main = title,
-                         #names.arg = row.names(signature_data_matrix),
                          names.arg = xlabels,
                          col=rearr.colours,
                          beside = TRUE,

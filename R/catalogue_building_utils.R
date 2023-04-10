@@ -286,7 +286,7 @@ merge.with.order <- function(x,y, ..., sort = T, keep_order)
   {
     data.frame(DATA, id... = seq_len(nrow(DATA)))
   }
-  # add.id.column.to.data(data.frame(x = rnorm(5), x2 = rnorm(5)))
+  
   order.by.id...and.remove.it <- function(DATA)
   {
     # gets in a data.frame with the "id..." column.  Orders by it and returns it
@@ -296,9 +296,6 @@ merge.with.order <- function(x,y, ..., sort = T, keep_order)
     ss_c <- colnames(DATA) != "id..."
     DATA[ss_r, ss_c]		
   }
-  
-  # tmp <- function(x) x==1; 1	# why we must check what to do if it is missing or not...
-  # tmp()
   
   if(!missing(keep_order))
   {

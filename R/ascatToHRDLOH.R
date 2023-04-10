@@ -20,8 +20,6 @@ ascatToHRDLOH <- function(ascat.data,SAMPLE.ID,return.loc=FALSE){
   # Dominik's code BEGIN
   #----------------------
   # load ASCAT NGS profile
-  # ascat.data <- read.table(ASCAT.PATH,header=FALSE, sep=',')
-  # names(ascat.data ) <- c('seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour')
   ascat.data2 <- data.frame(SampleID=rep(SAMPLE.ID,nrow(ascat.data )),
                             Chromosome=ascat.data$Chromosome,
                             Start=ascat.data$chromStart,

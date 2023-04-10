@@ -115,8 +115,6 @@ evaluatePerformanceExposuresList <- function(true_exposures,
   }
 
   # combine tables
-  # perfColNames <- c()
-  # perfTableNames <- c()
   perfTables <- list()
   for (g in groupNames) {
     for (n in names(perfList[[g]])){
@@ -235,13 +233,7 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
     # message("[warning evaluateSignatureSimilarity] number of estimated signatures and truth signatures is not the same. Eliminating least similar signatures until same number is reached.")
     if (ncol(estimated_signatures)>ncol(true_signatures)){
       # need to remove estimated signatures
-      # minsigdist <- apply(distMatrix,1,min)
       ndiff <- ncol(estimated_signatures)-ncol(true_signatures)
-      # for (i in 1:ndiff){
-      #   ni <- which.max(minsigdist)
-      #   minsigdist <- minsigdist[-ni]
-      #   distMatrix <- distMatrix[-ni,]
-      # }
       # add dummy variables
       dummynames <- (1:ndiff)+ncol(true_signatures)
       distMatrix <- cbind(distMatrix,matrix(data = 1,
@@ -252,13 +244,7 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
 
     }else if (ncol(estimated_signatures)<ncol(true_signatures)){
       # need to remove true_signatures signatures
-      # minsigdist <- apply(distMatrix,2,min)
       ndiff <- ncol(true_signatures)-ncol(estimated_signatures)
-      # for (i in 1:ndiff){
-      #   ni <- which.max(minsigdist)
-      #   minsigdist <- minsigdist[-ni]
-      #   distMatrix <- distMatrix[,-ni]
-      # }
       # add dummy variables
       dummynames <- (1:ndiff)+ncol(estimated_signatures)
       distMatrix <- rbind(distMatrix,matrix(data = 1,
@@ -278,10 +264,6 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
   unmatched <- matchCS < 0.85
   matchCS[unmatched] <- NA
 
-  # check unmatched
-  # unmatched_estimated <- setdiff(colnames(estimated_signatures),rownames(distMatrix))
-  # unmatched_truth <- setdiff(colnames(true_signatures),colnames(distMatrix))
-
   #return the match
   res <- list()
   res$matchTable <- data.frame(`estimated signatures`=rownames(distMatrix),
@@ -298,19 +280,6 @@ evaluatePerformanceSignatureSimilarity <- function(true_signatures,
     whereToRemove <- res$matchTable[,"estimated signatures"] %in% dummynames
     res$matchTable[whereToRemove,"estimated signatures"] <- NA
   }
-
-  # add other signatures unmatched
-  # if(length(unmatched_estimated)>0){
-  #   res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=unmatched_estimated,
-  #                                                     `matched true signatures`=rep(NA,length(unmatched_estimated)),
-  #                                                     `cosine similarity`=rep(NA,length(unmatched_estimated)),
-  #                                                     stringsAsFactors = F,check.names = F))
-  # }else if (length(unmatched_truth)>0){
-  #   res$matchTable <- rbind(res$matchTable,data.frame(`estimated signatures`=rep(NA,length(unmatched_truth)),
-  #                                                     `matched true signatures`=unmatched_truth,
-  #                                                     `cosine similarity`=rep(NA,length(unmatched_truth)),
-  #                                                     stringsAsFactors = F,check.names = F))
-  # }
 
   res$minCosSim <- min(matchCS,na.rm = T)
   res$averageCosSim <- mean(matchCS,na.rm = T)
