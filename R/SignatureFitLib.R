@@ -780,7 +780,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   file_plot_expProp <- paste0(outdir,"SigFit_withBootstrap_Exposures_m",res$method,"_bfm",res$bf_method,"_alpha",res$alpha,"_tr",res$threshold_percent,"_p",res$threshold_p.value,"_prop.pdf")
 
   plotExposures(exposures = exposures,output_file = file_plot_exp)
-  plotExposures(exposures = exposuresProp,output_file = file_plot_exp)
+  plotExposures(exposures = exposuresProp,output_file = file_plot_expProp)
   write.table(exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
 

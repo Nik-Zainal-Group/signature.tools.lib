@@ -23,7 +23,6 @@ Imports:
     foreach,
     doParallel,
     lpSolve,
-    ggplot2,
     methods,
     cluster,
     stats,
