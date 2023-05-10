@@ -97,8 +97,10 @@ genomeChartSV <- function(outfilename,
                genome.v = genome.v)
   par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
   plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
-  par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
-  plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
+  if(!is.null(sv_obj$junctions_catalogue)){
+    par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
+    plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
+  }
   if(!is.null(clusteringSBScatalogue_all)){
     par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
     plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
@@ -181,7 +183,7 @@ plotCircosSV <- function(sv_bedpe,
                     '#2B3D26', '#222222', '#F2F3F4', '#CCCCCC')
   
   if(nrow(sv_bedpe)>0){
-    if(!startsWith(sv_bedpe$chrom1[1],"chr")){
+    if(!startsWith(as.character(sv_bedpe$chrom1[1]),"chr")){
       sv_bedpe$chrom1 <- paste0("chr",sv_bedpe$chrom1)
       sv_bedpe$chrom2 <- paste0("chr",sv_bedpe$chrom2)
     }
@@ -195,7 +197,7 @@ plotCircosSV <- function(sv_bedpe,
     }else{
       clustering_regions$colour <- kelly_colors[1:nrow(clustering_regions)]
     }
-    if(!startsWith(clustering_regions$chr[1],"chr")){
+    if(!startsWith(as.character(clustering_regions$chr[1]),"chr")){
       clustering_regions$chr <- paste0("chr",clustering_regions$chr)
     }
   }
