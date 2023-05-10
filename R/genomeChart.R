@@ -263,7 +263,7 @@ genomeChart <- function(outfilename,
     plotSubsSignatures(kataegisSBScatalogue_all,
                        textscaling = 0.6)
   }else{
-    plotMessage(msg = "kataegis SBS catalogue\nnot available",
+    plotMessage(msg = "kataegis SNV catalogue\nnot available",
                 textscaling = msgtextscaling)
   }
   if(debug) drawDebugBox(3)
@@ -274,7 +274,7 @@ genomeChart <- function(outfilename,
     plotSubsSignatures(clusteringSBScatalogue_all,
                        textscaling = 0.6)
   }else{
-    plotMessage(msg = "SV clusters SBS catalogue\nnot available",
+    plotMessage(msg = "SV clusters SNV catalogue\nnot available",
                 textscaling = msgtextscaling)
   }
   if(debug) drawDebugBox(4)

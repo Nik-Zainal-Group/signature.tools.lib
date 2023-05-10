@@ -38,6 +38,8 @@ genomeChartSV <- function(outfilename,
   sv_obj <- bedpeToRearrCatalogue(sv_bedpe = sv_bedpe,
                                   kmin = kmin,
                                   PEAK.FACTOR = PEAK.FACTOR)
+  colnames(sv_obj$rearr_catalogue) <- "SV catalogue"
+  if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junction catalogue"
   
   sample_name <- unique(sv_obj$annotated_bedpe$sample)
   
@@ -69,12 +71,16 @@ genomeChartSV <- function(outfilename,
                                                        genome.v = genome.v)
     clustering_regions_sbs_catalogues <- resSBSinSVclusters$clustering_regions_sbs_catalogues
     clusteringSBScatalogue_all <- resSBSinSVclusters$clusteringSBScatalogue_all
+    colnames(clusteringSBScatalogue_all) <- "SNVs in SV clusters"
     snvs_table <- resSBSinSVclusters$snvs_table
   }
   
   # time to plot, outfilename needs to be specified
   plottype <- substr(outfilename, nchar(outfilename) - 2, nchar(outfilename))
   dir.create(dirname(outfilename),showWarnings = F,recursive = T)
+  
+  # plot parameters
+  msgtextscaling <- 0.5
   
   # open the file
   if(plottype=="pdf"){
@@ -95,15 +101,27 @@ genomeChartSV <- function(outfilename,
   plotCircosSV(sv_bedpe = sv_obj$annotated_bedpe,
                clustering_regions = sv_obj$clustering_regions,
                genome.v = genome.v)
+  
+  # SV catalogue
   par(fig = c(0.65,0.98,0.5,0.9),new=TRUE)
   plotRearrSignatures(sv_obj$rearr_catalogue,textscaling = 0.6)
+  
+  # SV junction catalogue
+  par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
   if(!is.null(sv_obj$junctions_catalogue)){
-    par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
     plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.6)
+  }else{
+    plotMessage(msg = "SV junction catalogue\nnot available",
+                textscaling = msgtextscaling)
   }
+  
+  # SBS catalogue of SNVs in SV clusters
+  par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
   if(!is.null(clusteringSBScatalogue_all)){
-    par(fig = c(0.65,0.98,0.17,0.37),new=TRUE)
     plotSubsSignatures(clusteringSBScatalogue_all,textscaling = 0.6)
+  }else{
+    plotMessage(msg = "SV clusters SNV catalogue\nnot available",
+                textscaling = msgtextscaling)
   }
   # close the file
   dev.off()
