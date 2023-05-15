@@ -1,0 +1,154 @@
+#!/usr/bin/env Rscript
+
+library(getopt)
+library(signature.tools.lib)
+
+how_to <- function(){
+  message(" ")
+  message("This script selects FitMS solutions according to a given selection criteria,")
+  message("and also allows for manual selection of solutions.")
+  message(" ")
+  message("Run this script as follows:")
+  message(" ")
+  message("solutionSelectionForFitMS [OPTIONS]")
+  message(" ")
+  message("Available options:")
+  message("  -i, --infile=IFILE        Name of the input rData file. The required IFILE is")
+  message("                              an rData file containing an R object obtained from")
+  message("                              running FitMS and saved using the saveFitToFile")
+  message("                              function, or obtained using the signatureFit")
+  message("                              command line script.")
+  message("  -o, --outdir=OUTDIR       Name of the output directory. This directory will")
+  message("                              contain the new plots, as well as a fitData.rData file")
+  message("                              with the updated object loaded from IFILE.")
+  message("                              If omitted OUTDIR=solutionSelectionOutput.")
+  message("  -t, --selectiontable=STABLE")
+  message("                            Name of tab separated file. There should be no column")
+  message("                              names. The first column should contain the names")
+  message("                              of the samples where the solution should be manually")
+  message("                              changed, while the second column should contain the")
+  message("                              name of the solution to use, which could be the name")
+  message("                              of a signature, or a list of signature names separated")
+  message("                              by the : character, or the text \"common\".")
+  message("  -c, --selectioncriteria=SELCRIT")
+  message("                            SELCRIT can be either MaxCosSim or MinError, default is MaxCosSim.")
+  message("  -J, --writejson           Write the updated signature fit object to a JSON file,")
+  message("                              which will save all fit results and options used.")
+  message("  -h, --help                Show this explanation.")
+  message(" ")
+}
+
+
+# get options, using the spec as defined by the enclosed list.
+# we read the options from the default: commandArgs(TRUE).
+spec = matrix(c(
+  'help',               'h', 0, "logical",
+  'infile',             'i', 1, "character",
+  'outdir',             'o', 1, "character",
+  'selectiontable',     't', 1, "character",
+  'selectioncriteria',  'c', 1, "character",
+  'writejson',          'J', 0, "logical"
+), byrow=TRUE, ncol=4)
+
+# collect the options
+opt = getopt(spec)
+
+# check options
+
+# if help was asked for, print a friendly message and quit
+if ( !is.null(opt$help) ) {
+  how_to()
+  q(status=0,save = "no")
+}
+
+fitMSobj <- NULL
+outdir <- "solutionSelectionOutput"
+selectiontable <- NULL
+forceRareSigChoice <- NULL
+selectioncriteria <- NULL
+
+# Load the input rData file
+if(!is.null(opt$infile)){
+  if(file.exists(opt$infile)){
+    fitMSobj <- loadFitFromFile(opt$infile)
+  }else{
+    message("[error solutionSelectionForFitMS script] infile file does not exist: ",opt$infile)
+    q(status=1,save = "no")
+  }
+}else{
+  message("[warning solutionSelectionForFitMS script] infile not specified, nothing to do. Use -h option for help.")
+  q(status=1,save = "no")
+}
+
+# outdir
+if(!is.null(opt$outdir)){
+  # check that it ends with /
+  if(!endsWith(opt$outdir,"/")) opt$outdir <- paste0(opt$outdir,"/")
+  # just check we are not overlapping the same data
+  indir <- paste0(dirname(opt$infile),"/")
+  if(opt$outdir!=indir){
+    outdir <- opt$outdir
+  }else{
+    message("[error solutionSelectionForFitMS script] output directory and input directory appear to be the same, ",
+            "please change outdir to avoid overwriting existing files.")
+    q(status=1,save = "no")
+  }
+}
+dir.create(outdir,showWarnings = F,recursive = T)
+
+# selection criteria
+if (!is.null(opt$selectioncriteria)) {
+  selectioncriteria <- opt$selectioncriteria
+}else{
+  selectioncriteria <- "MaxCosSim"
+}
+
+# write JSON
+if ( !is.null(opt$writejson) ) {
+  writeJSON <- TRUE
+}else{
+  writeJSON <- FALSE
+}
+
+# selection table
+if(!is.null(opt$selectiontable)){
+  if(file.exists(opt$selectiontable)){
+    selectiontable <- read.table(file = opt$selectiontable,
+                                 header = F,
+                                 sep = "\t",
+                                 row.names = 1,
+                                 stringsAsFactors = F,
+                                 check.names = F)
+    forceRareSigChoice <- selectiontable[,1]
+    names(forceRareSigChoice) <- rownames(selectiontable)
+  }else{
+    message("[error solutionSelectionForFitMS script] selectiontable file does not exist: ",opt$selectiontable)
+    q(status=1,save = "no")
+  }
+}
+
+# update the selection
+fitMSobj_updated <- fitMerge(resObj = fitMSobj,
+                             rareCandidateSelectionCriteria = selectioncriteria,
+                             forceRareSigChoice = forceRareSigChoice)
+
+# save fit to file
+message("[info solutionSelectionForFitMS script] saving fit to file...")
+saveFitToFile(fitObj = fitMSobj_updated,
+              filename = paste0(outdir,"fitData.rData"))
+
+# plot fit results
+message("[info solutionSelectionForFitMS script] plotting fit...")
+plotFitResults(fitObj = fitMSobj_updated,
+               outdir = outdir)
+
+if(writeJSON){
+  message("[info solutionSelectionForFitMS script] saving fit to JSON...")
+  writeFitResultsToJSON(fitObj = fitMSobj_updated,
+                        filename = paste0(outdir,"fitData.json"))
+}
+
+# done!
+message("[info solutionSelectionForFitMS script] done!")
+q(status = 0,save = "no")
+

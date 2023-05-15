@@ -602,19 +602,23 @@ pipelineRes <- signatureFit_pipeline(catalogues=catalogues,
                                   verbose = verbose)
 
 if(!is.null(pipelineRes$fitResults)){
-  message("[info signatureFit script] saving fit to file...")
   # save fit to file
+  message("[info signatureFit script] saving fit to file...")
   saveFitToFile(fitObj = pipelineRes$fitResults,
                 filename = paste0(outdir,"fitData.rData"))
-  message("[info signatureFit script] plotting fit...")
+  
   # plot fit results
+  message("[info signatureFit script] plotting fit...")
   plotFitResults(fitObj = pipelineRes$fitResults,
                  outdir = outdir)
+  
   if(writeJSON){
     message("[info signatureFit script] saving fit to JSON...")
     writeFitResultsToJSON(fitObj = pipelineRes$fitResults,
                           filename = paste0(outdir,"fitData.json"))
   }
+}else{
+  message("[warning signatureFit script] no fit results obtained. Use -h option for help.")
 }
 
 if(!is.null(pipelineRes$catalogues)){

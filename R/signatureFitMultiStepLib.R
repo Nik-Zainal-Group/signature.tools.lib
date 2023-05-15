@@ -461,7 +461,7 @@ FitMS <- function(catalogues,
 #'
 #' This function provides basic signature fit functionalities.
 #' Fit a given set of mutational signatures into mutational catalogues to estimate
-#' the activty/exposure of each of the given signatures in the catalogues.
+#' the activity/exposure of each of the given signatures in the catalogues.
 #'
 #' This is a standard interface to signature fit functions with/without bootstrap. The object returned by this
 #' function can be passed to the plotFit() function for automated plotting of the results.
@@ -624,7 +624,7 @@ Fit <- function(catalogues,
 #' highest cosine similarity or lowest error (mean absolute difference of channels) and returns
 #' an updated object with a summary exposures composed by each selected fit solution for each sample.
 #'
-#' The choise of rare signature can be changed using the parameter forceRareSigChoice.
+#' The choice of rare signature can be changed using the parameter forceRareSigChoice.
 #'
 #' @param resObj result object obtained from the FitMS function
 #' @param rareCandidateSelectionCriteria MaxCosSim or MinError. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
