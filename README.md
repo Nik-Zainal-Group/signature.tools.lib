@@ -377,9 +377,10 @@ at once using the ```evaluatePerformanceExposuresList``` function.
 
 ## Command line scripts
 
-We provide command line scripts, which can
-be used instead of writing your own R code. You can find these scripts in
-the ```scripts``` directory.
+We provide some command line scripts, which can
+be used instead of writing your own R code.
+Make sure you have installed `signature.tools.lib` before attempting to run them.
+You can find these scripts in the ```scripts``` directory.
 
 Currently available scripts are:
 

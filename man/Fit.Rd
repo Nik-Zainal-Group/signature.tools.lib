@@ -57,7 +57,7 @@ returns the activities/exposures of the signatures in the given sample and other
 \description{
 This function provides basic signature fit functionalities.
 Fit a given set of mutational signatures into mutational catalogues to estimate
-the activty/exposure of each of the given signatures in the catalogues.
+the activity/exposure of each of the given signatures in the catalogues.
 }
 \details{
 This is a standard interface to signature fit functions with/without bootstrap. The object returned by this

@@ -34,5 +34,5 @@ fit the sample reasonably well. This function selects the best rare signature fo
 highest cosine similarity or lowest error (mean absolute difference of channels) and returns
 an updated object with a summary exposures composed by each selected fit solution for each sample.
 
-The choise of rare signature can be changed using the parameter forceRareSigChoice.
+The choice of rare signature can be changed using the parameter forceRareSigChoice.
 }
