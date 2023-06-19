@@ -274,11 +274,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
   }
 
-  if(tools:::.BioC_version_associated_with_R_version()<3.5){
-    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms))
-  }else{
-    gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
-  }
+  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
 
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10") {

@@ -3,19 +3,20 @@ Title: signature.tools.lib
 Version: 2.4.1
 Authors@R: person("Andrea", "Degasperi", email = "ad923@cam.ac.uk", role = c("aut", "cre"))
 Description: R package with useful functions for mutational signatures analysis.
-Depends: R (>= 3.2.1)
+Depends: R (>= 4.0.0)
 License: see LICENCE file
 Encoding: UTF-8
 LazyData: true
 biocViews: 
 Remotes:
     linxihui/NNLM
+Suggests:
+    BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome.Cfamiliaris.UCSC.canFam3,
 Imports: 
     VariantAnnotation,
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Hsapiens.1000genomes.hs37d5,
-    BSgenome.Mmusculus.UCSC.mm10,
-    BSgenome.Cfamiliaris.UCSC.canFam3,
     SummarizedExperiment,
     BiocGenerics,
     GenomeInfoDb,
