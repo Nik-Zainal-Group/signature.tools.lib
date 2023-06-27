@@ -409,7 +409,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
             # ---
           }else{
             message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
-                    "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                    "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
             return(returnObj)
           }
         }
@@ -424,7 +424,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
           # --- 
         }else{
           message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures for signature_version RefSigv2. ",
-                  "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                  "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
           return(returnObj)
         }
       }
@@ -463,7 +463,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
             # ---
           }else{
             message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
-                    "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                    "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
             return(returnObj)
           }
         }
@@ -478,7 +478,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
           signatures <- RefSigv1_rearr
         }else{
           message("[error signatureFit_pipeline] mutation type ",mtype_catalogues," not available for automatic selection of signatures. ",
-                  "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                  "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
           return(returnObj)
         }
       }
@@ -494,7 +494,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
           signatures <- cosmic30
         }else{
           message("[error signatureFit_pipeline] using COSMICv2 signatures for ",mtype_catalogues," currenty not supported. ",
-                  "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                  "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
           return(returnObj)
         }
 
@@ -511,7 +511,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
           signatures <- COSMIC_v3.2_SBS_GRCh37
         }else{
           message("[error signatureFit_pipeline] using COSMICv2 signatures for ",mtype_catalogues," currenty not supported. ",
-                  "Please provide your own signatures using the signatures_file parameter, and also rare_signatures_file if using FitMS.")
+                  "Please provide your own signatures using the signatures parameter, and also rare_signatures if using FitMS.")
           return(returnObj)
         }
       }
