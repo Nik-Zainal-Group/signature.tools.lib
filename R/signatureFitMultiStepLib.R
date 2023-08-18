@@ -1708,7 +1708,9 @@ vectorToJSON <- function(v,
     cat("{\n",sep = "")
     for (i in 1:length(v)) {
       cat(indent,"\t\"",names(v)[i],"\": ",sep = "")
-      if(typeof(v[i])=="double"){
+      if(is.na(v[i])){
+        cat("null",sep = "")
+      }else if(typeof(v[i])=="double"){
         cat(v[i],sep = "")
       }else if (typeof(v[i])=="character"){
         cat("\"",v[i],"\"",sep = "")
@@ -1720,7 +1722,9 @@ vectorToJSON <- function(v,
   }else{
     cat("[",sep = "")
     for (i in 1:length(v)) {
-      if(typeof(v[i])=="double"){
+      if(is.na(v[i])){
+        cat("null",sep = "")
+      }else if(typeof(v[i])=="double"){
         cat(v[i],sep = "")
       }else if (typeof(v[i])=="character"){
         cat("\"",v[i],"\"",sep = "")
