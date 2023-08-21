@@ -109,7 +109,7 @@ how_to <- function(){
   message("                              considered. If not specified THRPERC=5. Set THRPERC")
   message("                              to -1 to deactivate.")
   message("  -P, --thresholdnmuts=THRNMUTS")
-  message("                            THRPERC is a threshold in number of mutations")
+  message("                            THRNMUTS is a threshold in number of mutations")
   message("                              in a sample, only exposures larger than THRNMUTS are")
   message("                              considered. If not specified THRNMUTS=10. Set THRNMUTS")
   message("                              to -1 to deactivate.")
@@ -632,7 +632,8 @@ if(!is.null(pipelineRes$catalogues)){
 if(!is.null(pipelineRes$annotated_mutations) & writeAnnotations){
   message("[info signatureFit script] writing annotated mutations...")
   writeTable(t = pipelineRes$annotated_mutations,
-             file = paste0(outdir,"annotated_mutations.tsv"))
+             file = paste0(outdir,"annotated_mutations.tsv"),
+             row.names = FALSE)
 }
 
 message("[info signatureFit script] done!")

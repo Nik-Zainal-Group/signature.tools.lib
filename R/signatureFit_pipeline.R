@@ -211,7 +211,8 @@ signatureFit_pipeline <- function(catalogues=NULL,
         sv_bedpe <- read.table(SV_bedpe_files[sample],sep = "\t",header = TRUE,
                                stringsAsFactors = FALSE,check.names = FALSE,comment.char = "")
         reslist <- bedpeToRearrCatalogue(sv_bedpe)
-        if(!is.null(reslist$clustering_regions)) reslist$clustering_regions$sample <- sample
+        if(!is.null(reslist$clustering_regions)) reslist$clustering_regions$sampleName <- sample
+        if(!is.null(reslist$annotated_bedpe)) reslist$annotated_bedpe <-  cbind(data.frame(sampleName=rep(sample,nrow(reslist$annotated_bedpe)),stringsAsFactors = F),reslist$annotated_bedpe)
         # check that only one catalogue is generated. If not, take the one with more mutatations and raise a warning
         resncol <- ncol(reslist$rearr_catalogue)
         if(resncol>1){
@@ -225,7 +226,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
         reslist
       }
       catalogues_mutations <- data.frame(row.names = rownames(cat_list[[1]]$rearr_catalogue),stringsAsFactors = F)
-      bedpecolumns <- c("chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample","svclass","id", "is.clustered", "length","catalogue.label")
+      bedpecolumns <- c("sampleName","chrom1", "start1", "end1", "chrom2", "start2", "end2" , "sample","svclass","id", "is.clustered", "length","catalogue.label")
       for(i in 1:length(cat_list)){
         catalogues_mutations <- cbind(catalogues_mutations,cat_list[[i]]$rearr_catalogue)
         if(!is.null(cat_list[[i]]$annotated_bedpe)) annotated_mutations <- rbind(annotated_mutations,cat_list[[i]]$annotated_bedpe[,bedpecolumns,drop=F])
@@ -572,11 +573,8 @@ signatureFit_pipeline <- function(catalogues=NULL,
                   randomSeed = randomSeed,
                   verbose = verbose)
     fitRes$commonSignatureTier <- commonSignatureTier
-    if(!is.null(annotated_mutations)){
-      returnObj$annotated_mutations <- assignSignatureProbabilityToMutations(sampleMutations = returnObj$annotated_mutations,
-                                                                             sampleSigsExposures = fitRes$exposures,
-                                                                             signatures = fitRes$signatures)
-    }
+    signaturesUsed <- fitRes$signatures
+
   }else if(fit_method=="FitMS"){
     message("[info signatureFit_pipeline] all set, running FitMS.")
     fitRes <- FitMS(catalogues = catalogues,
@@ -603,16 +601,24 @@ signatureFit_pipeline <- function(catalogues=NULL,
                     nparallel = nparallel,
                     randomSeed = randomSeed,
                     verbose = verbose)
-    if(!is.null(annotated_mutations)){
-      usesigs <- fitRes$commonSignatures
-      if(!is.null(fitRes$rareSignatures)) usesigs <- cbind(usesigs,fitRes$rareSignatures)
-      returnObj$annotated_mutations <- assignSignatureProbabilityToMutations(sampleMutations = returnObj$annotated_mutations,
-                                                                             sampleSigsExposures = fitRes$exposures,
-                                                                             signatures = usesigs)
-    }
+      signaturesUsed <- fitRes$commonSignatures
+      if(!is.null(fitRes$rareSignatures)) signaturesUsed <- cbind(signaturesUsed,fitRes$rareSignatures)
+
   }else{
     message("[error signatureFit_pipeline] unknown fit_method ",fit_method,".")
     return(returnObj)
+  }
+  
+  # check if we can annotate the mutations with signature probability
+  if(!is.null(returnObj$annotated_mutations)){
+    annotated_mutations <- NULL
+    for(sampleName in colnames(catalogues)){
+      annotated_mutations <- rbind(annotated_mutations,
+                                   assignSignatureProbabilityToMutations(sampleMutations = returnObj$annotated_mutations[returnObj$annotated_mutations$sampleName==sampleName,,drop=F],
+                                                                         sampleSigsExposures = fitRes$exposures[sampleName,,drop=F],
+                                                                         signatures = signaturesUsed))
+    }
+    returnObj$annotated_mutations <- annotated_mutations
   }
 
   message("[info signatureFit_pipeline] signatureFit pipeline completed!")
