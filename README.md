@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.4.2
+
+- minor fixes and improvements
+
 2.4.1
 
 - added command line script ```solutionSelectionForFitMS```, for manual selection of alternative FitMS solutions
