@@ -1374,14 +1374,86 @@ getCOSMICSignatures <- function(version="latest",typemut="subs",verbose = TRUE){
 }
 
 
+# # store before converting
+# exposures_organSpecific_subs <- exposures_subs
+# # if RefSigv2 was used, there may be some SBS sigs in the names
+# sbssigs <- rownames(exposures_subs)[grepl(rownames(exposures_subs),pattern = "^SBS")]
+# if(length(sbssigs)>0){
+#   exposures_subs_toconvert <- exposures_subs[setdiff(rownames(exposures_subs),sbssigs),,drop=F]
+#   exposures_subs_sbs <- exposures_subs[sbssigs,,drop=F]
+#   exposures_subs_converted <- convertExposuresFromOrganToRefSigs(exposures_subs_toconvert,typemut = "subs")
+#   exposures_subs_converted <- exposures_subs_converted[apply(exposures_subs_converted, 1,sum)>0,,drop=FALSE]
+#   exposures_subs <- rbind(exposures_subs_converted,exposures_subs_sbs)
+# }else{
+#   exposures_subs <- convertExposuresFromOrganToRefSigs(exposures_subs,typemut = "subs")
+#   exposures_subs <- exposures_subs[apply(exposures_subs, 1,sum)>0,,drop=FALSE]
+# }
+
+#' convertExposuresFromOrganToRefSigsIfAny
+#'
+#' This function inspects an exposure matrix, and converts organ-specific signature exposures into reference signature exposures if it finds any.
+#' If the exposure matrix contains reference signature exposures to start with, then reference signature exposures are merged if possible.
+#' The function will detect the version of the signatures automatically.
+#'
+#' @param typemut either subs, DNV or rearr
+#' @param expMatrix exposures matrix obatined from fitting organ-specific signatures
+#' @return exposure matrix with converted signatures, or unaltered exposure matrix if organ-specific signatures where not found
+#' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
+#' @export
+convertExposuresFromOrganToRefSigsIfAny <- function(expMatrix,typemut="subs"){
+  # check for organ-specific signatures and pick the correct conversion matrix
+  organSpecificSignatures <- NULL
+  conversionMatrix <- NULL
+  if(typemut=="subs"){
+    if(any(rownames(expMatrix) %in% rownames(conversion_matrix_subs))){
+      organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversion_matrix_subs))
+      conversionMatrix <- conversion_matrix_subs
+    }else if(any(rownames(expMatrix) %in% rownames(conversionMatrixSBSv2.03))){
+      organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversionMatrixSBSv2.03))
+      conversionMatrix <- conversionMatrixSBSv2.03
+    }
+  }else if(typemut=="rearr"){
+    organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversion_matrix_rearr))
+    conversionMatrix <- conversion_matrix_rearr
+  }else if(typemut=="DNV"){
+    organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversionMatrixDBSv1.01))
+    conversionMatrix <- conversionMatrixDBSv1.01
+  }
+  
+  # if no organ-specific signatures were found, that's great, just end early
+  if(is.null(organSpecificSignatures)) return(expMatrix)
+  
+  # now, let's say that we found something, we need to convert
+  exposures_to_convert <- expMatrix[organSpecificSignatures,,drop=F]
+  exposures_converted <- t(conversionMatrix[rownames(exposures_to_convert),]) %*% as.matrix(exposures_to_convert)
+  exposures_converted <- exposures_converted[apply(exposures_converted, 1,sum)>0,,drop=FALSE]
+  
+  # now let's see if there are some leftover signatures to append
+  if(nrow(expMatrix)>length(organSpecificSignatures)){
+    leftoversigs <- setdiff(rownames(expMatrix),organSpecificSignatures)
+    # check if some converted refsigs overlap with leftover signatures
+    overlapsigs <- intersect(leftoversigs,rownames(exposures_converted))
+    if(length(overlapsigs)>0){
+      exposures_converted[overlapsigs,] <- exposures_converted[overlapsigs,] + expMatrix[overlapsigs,]
+      leftoversigs <- setdiff(leftoversigs,overlapsigs)
+    }
+    # now add everything together
+    if(length(leftoversigs)>0){
+      exposures_converted <- rbind(exposures_converted,expMatrix[leftoversigs,])
+    }
+  }
+  
+  return(exposures_converted)
+}
+
 #' convertExposuresFromOrganToRefSigs
 #'
 #' This function converts the exposures matrix obtained from fitting organ-specific signatures into reference signatures exposures.
 #' The function will detect the version of the signatures automatically.
 #'
 #' @param typemut either subs, DNV or rearr
-#' @param expMatrix exposures matrix obatined from fitting organ-specific signatures
-#' @return exposure matrix converted in reference signatures exposures
+#' @param expMatrix exposures matrix obtained from fitting organ-specific signatures, with samples as columns and organ-specific signature names as row names. Must contain only organ-specific signature exposures
+#' @return exposure matrix converted in reference signatures exposures, or NULL if expMatrix doesn't contain only organ-specific signatures or typemut is unknown
 #' @references A. Degasperi, T. D. Amarante, J. Czarnecki, S. Shooter, X. Zou, D. Glodzik, S. Morganella, A. S. Nanda, C. Badja, G. Koh, S. E. Momen, I. Georgakopoulos-Soares, J. M. L. Dias, J. Young, Y. Memari, H. Davies, S. Nik-Zainal. A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies, Nature Cancer, https://doi.org/10.1038/s43018-020-0027-5, 2020.
 #' @export
 convertExposuresFromOrganToRefSigs <- function(expMatrix,typemut="subs"){

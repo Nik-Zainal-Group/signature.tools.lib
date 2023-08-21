@@ -7,12 +7,12 @@
 convertExposuresFromOrganToRefSigs(expMatrix, typemut = "subs")
 }
 \arguments{
-\item{expMatrix}{exposures matrix obatined from fitting organ-specific signatures}
+\item{expMatrix}{exposures matrix obtained from fitting organ-specific signatures, with samples as columns and organ-specific signature names as row names. Must contain only organ-specific signature exposures}
 
 \item{typemut}{either subs, DNV or rearr}
 }
 \value{
-exposure matrix converted in reference signatures exposures
+exposure matrix converted in reference signatures exposures, or NULL if expMatrix doesn't contain only organ-specific signatures or typemut is unknown
 }
 \description{
 This function converts the exposures matrix obtained from fitting organ-specific signatures into reference signatures exposures.
