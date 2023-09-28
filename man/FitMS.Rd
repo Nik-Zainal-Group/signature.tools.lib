@@ -38,7 +38,7 @@ FitMS(
 
 \item{organ}{#automatically sets the commonSignatures and rareSignatures parameters, which can be left as NULL. The following organs are available:
 "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "Myeloid",
-"NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus"}
+"NET", "Oral_Oropharyngeal", "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". Alternatively, set this to "Other" to use a curated set of common and rare signatures. For SBS the "Other" common signatures set contains: SBS1, SBS2, SBS3, SBS5, SBS8, SBS13, SBS17 and SBS18.}
 
 \item{commonSignatureTier}{is either T1, T2 or T3. The default option is T1. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use the corresponding reference signatures. In general, T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. GEL-Ovary_common_SBS1+18, while T2 might be more suitable for when such mixed signatures are present, so that each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single GEL-Ovary_common_SBS1+18. T3 is an intermediate option between T1 and T2, where only the mixed organ signatures are replaced with the corresponding reference signatures.}
 

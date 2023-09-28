@@ -80,7 +80,7 @@
 #' @param Indels_tab_files list of file names corresponding to Indels TAB files to be used to classify Indels and compute the proportion of indels at micro-homology. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should only contain indels (no SNV) and should already be filtered according to the user preference, as all indels in the file will be used and no filter will be applied. Each File contains indels from a single sample and the following minimal columns: chr, position, REF, ALT.
 #' @param CNV_tab_files list of file names corresponding to CNV TAB files (similar to ASCAT format) to be used to compute the HRD-LOH index. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a header in the first line with the following columns: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_files list of file names corresponding to SV (Rearrangements) BEDPE files to be used to construct 32-channel rearrangement catalogues. This should be a named vector, where the names indicate the sample name, so that each file can be matched to the corresponding row in the data_matrix input. The files should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes)..
-#' @param organ when using RefSigv1 or RefSigv2 as SNV_signature_version, organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". If a certain organ is not available for either SNV or Sv signatures, or if the organ parameter is unspecified, then the pipeline will attempt to use the corresponding reference signatures instead, and SNV_signature_names and/or SV_signature_names can be used to specify a subset of signature names.
+#' @param organ when using RefSigv1 or RefSigv2 as SNV_signature_version, organ-specific signatures will be used. Use one of the following organs: "Biliary", "Bladder", "Bone_SoftTissue", "Breast", "Cervix" (v1 only), "CNS", "Colorectal", "Esophagus", "Head_neck", "Kidney", "Liver", "Lung", "Lymphoid", "NET" (v2 only), "Oral_Oropharyngeal" (v2 only), "Ovary", "Pancreas", "Prostate", "Skin", "Stomach", "Uterus". If a certain organ is not available for either SNV or SV signatures, or if the organ parameter is unspecified, then the pipeline will attempt to use the corresponding reference signatures instead, and SNV_signature_names and/or SV_signature_names can be used to specify a subset of signature names. Alternatively, try to set this to "Other" to use a curated set of signatures.
 #' @param SNV_signature_version version of single base substitution signatures to use, either "COSMICv2", "COSMICv3.2", "RefSigv1" (Degasperi et al. 2020, Nature Cancer) or "RefSigv2" (Degasperi et al. 2022, Science)
 #' @param SV_signature_version version of rearrangement signatures to use, only "RefSigv1" (Degasperi et al. 2020, Nature Cancer) currently available
 #' @param SNV_signature_names when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SNV_signature_version option
@@ -321,9 +321,13 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       if(!is.null(organ)){
         # check if the organ is available
         organsigs <- getOrganSignatures(organ = organ,version = "1",typemut = "subs",verbose = FALSE)
-        if(ncol(organsigs)==0){
-          message("[warning HRDetect_pipeline] SNV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SNV_signature_names to specify a subset of reference signatures to use.")
+        if(is.null(organsigs)){
           organ <- NULL
+        }else if(ncol(organsigs)==0){
+          organ <- NULL
+        }
+        if(is.null(organ)){
+          message("[warning HRDetect_pipeline] SNV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SNV_signature_names to specify a subset of reference signatures to use.")
         }
       }
     }
@@ -451,9 +455,13 @@ HRDetect_pipeline <- function(data_matrix=NULL,
       if(!is.null(organ)){
         # check if the organ is available
         organsigs <- getOrganSignatures(organ = organ,version = "1",typemut = "rearr",verbose = FALSE)
-        if(ncol(organsigs)==0){
-          message("[warning HRDetect_pipeline] SV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SV_signature_names to specify a subset of reference signatures to use.")
+        if(is.null(organsigs)){
           organ <- NULL
+        }else if(ncol(organsigs)==0){
+          organ <- NULL
+        }
+        if(is.null(organ)){
+          message("[warning HRDetect_pipeline] SV organ-specific signatures not available for ",organ,", version RefSigv1, trying to fix this by switching to use the reference signatures instead. Please use SV_signature_names to specify a subset of reference signatures to use.")
         }
       }
     }
