@@ -7,7 +7,7 @@
 plot_HRDLOH_HRDetect_Contributions(file_name, HRDLOH_index, hrdetect_output)
 }
 \arguments{
-\item{file_name}{name of the output file (jpg)}
+\item{file_name}{name of the output file (jpg or png)}
 
 \item{HRDLOH_index}{HRD index score}
 

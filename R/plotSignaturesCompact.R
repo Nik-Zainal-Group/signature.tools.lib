@@ -3,7 +3,7 @@
 #' Function to plot one or more substitution signatures or catalogues. Minimal compact plot without labels and axis.
 #'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", "png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param add_to_titles text to be added to the titles of each catalogue plot
@@ -43,6 +43,8 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*600,height = nplotrows*280,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*600,height = nplotrows*280,res = 220)
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*6,height = nplotrows*2.8,pointsize = 26)
       }
@@ -92,7 +94,7 @@ plotSubsSignaturesCompact <- function(signature_data_matrix,
 #' Function to plot one or more DNV signatures or catalogues.  Minimal compact plot without labels and axis.
 #'
 #' @param signature_data_matrix matrix of signatures or catalogues, signatures as columns and channels as rows. You can use either Zou or Alexandrov Style and the function will recognise the rownames and plot accordingly
-#' @param output_file set output file, should end with ".jpg" of ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", "png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param add_to_titles text to be added to the titles of each catalogue plot
@@ -179,6 +181,8 @@ plotDNVSignaturesCompact <- function(signature_data_matrix,
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*600,height = nplotrows*280,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*600,height = nplotrows*280,res = 220)
       }else if (plottype=="pdf"){
         pdf(output_file,width = ncolumns*6,height = nplotrows*2.8,pointsize = 26)
       }

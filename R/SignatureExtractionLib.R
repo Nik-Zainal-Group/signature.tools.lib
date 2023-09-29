@@ -834,7 +834,7 @@ SignatureExtraction <- function(cat, #matrix with samples as columns and channel
 
     for (cl in clustering_list){
 
-      overall_metrics_file <- paste0(outFilePath,"Sigs_OverallMetrics_",group,"_nboots",nboots,cl,".jpg")
+      overall_metrics_file <- paste0(outFilePath,"Sigs_OverallMetrics_",group,"_nboots",nboots,cl,".png")
       if(cl==""){
         whattoplot <- whattoplot_final
       }else if(cl=="_HC"){

@@ -19,7 +19,7 @@ plotRearrSignatures(
 \arguments{
 \item{signature_data_matrix}{matrix of signatures, signatures as columns and channels as rows}
 
-\item{output_file}{set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.}
+\item{output_file}{set output file, should end with ".jpg", ".png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.}
 
 \item{plot_sum}{whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.}
 

@@ -7,7 +7,7 @@
 plot_HRDetect_overall(file_name, hrdetect_output)
 }
 \arguments{
-\item{file_name}{name of the output file (jpg)}
+\item{file_name}{name of the output file (jpg or png)}
 
 \item{hrdetect_output}{output of HRDetect, containing contributions of each feature}
 }

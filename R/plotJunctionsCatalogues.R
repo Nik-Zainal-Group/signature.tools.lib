@@ -3,7 +3,7 @@
 #' Function to plot one or more junctions catalogues.
 #'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", "png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
@@ -55,6 +55,8 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
     if(!is.null(output_file)){
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*8,height = nplotrows*5+0.5,pointsize = 26)
       }

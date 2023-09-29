@@ -278,8 +278,8 @@ maxBetweenClustersCosSim <- function(clustering,distMatrix,parallel){
 }
 
 plotHierarchicalCluster <- function(fit_clust,outFilePath,group,ns,nboots){
-  output_file <- paste0(outFilePath,"Sigs_Cluster_Average_",group,"_ns",ns,"_nboots",nboots,".jpg")
-  jpeg(output_file,width = 12*nboots*ns,height = 500,res = 80)
+  output_file <- paste0(outFilePath,"Sigs_Cluster_Average_",group,"_ns",ns,"_nboots",nboots,".png")
+  png(output_file,width = 12*nboots*ns,height = 500,res = 80)
   plot(fit_clust)
   abline(a=0.1,b=0,col="red")
   dev.off()
@@ -289,8 +289,8 @@ plotHierarchicalCluster <- function(fit_clust,outFilePath,group,ns,nboots){
 plotWithinClusterCosSim <- function(cosSimHClust,cosSimPAM,cosSimMC,outFilePath,group,ns,nboots){
   dists <- c(cosSimHClust,cosSimPAM,cosSimMC)
   clustermethod <- c(rep("hclust",length(cosSimHClust)),rep("pam",length(cosSimPAM)),rep("MC",length(cosSimMC)))
-  output_file <- paste0(outFilePath,"Sigs_WithinClusterCosSim_",group,"_ns",ns,"_nboots",nboots,".jpg")
-  jpeg(output_file,width = 600,height = 500,res = 100)
+  output_file <- paste0(outFilePath,"Sigs_WithinClusterCosSim_",group,"_ns",ns,"_nboots",nboots,".png")
+  png(output_file,width = 600,height = 500,res = 100)
   boxplot(dists ~ clustermethod, lwd = 2, ylab = 'mean Cosine Similarity',xlab = 'method',
           main = paste0("Within Cluster Cosine Similarity\n",group,", nSig=",ns))
   stripchart( dists ~ clustermethod, vertical = TRUE,
@@ -301,8 +301,8 @@ plotWithinClusterCosSim <- function(cosSimHClust,cosSimPAM,cosSimMC,outFilePath,
 plotWithinClusterSilWidth <- function(sil_hclust,sil_pam,sil_MC,outFilePath,group,ns,nboots){
   dists <- c(sil_hclust$clus.avg.widths,sil_pam$clus.avg.widths,sil_MC$clus.avg.widths)
   clustermethod <- c(rep("hclust",length(sil_hclust$clus.avg.widths)),rep("pam",length(sil_pam$clus.avg.widths)),rep("MC",length(sil_pam$clus.avg.widths)))
-  output_file <- paste0(outFilePath,"Sigs_WithinClusterSilWidth_",group,"_ns",ns,"_nboots",nboots,".jpg")
-  jpeg(output_file,width = 600,height = 500,res = 100)
+  output_file <- paste0(outFilePath,"Sigs_WithinClusterSilWidth_",group,"_ns",ns,"_nboots",nboots,".png")
+  png(output_file,width = 600,height = 500,res = 100)
   boxplot(dists ~ clustermethod, lwd = 2, ylab = 'mean Silhouette Width',xlab = 'method',
           main = paste0("Within Cluster Silhouette Width\n",group,", nSig=",ns))
   stripchart( dists ~ clustermethod, vertical = TRUE,
@@ -312,7 +312,7 @@ plotWithinClusterSilWidth <- function(sil_hclust,sil_pam,sil_MC,outFilePath,grou
 
 
 plotOverallMetrics <- function(overall_metrics,whattoplot,overall_metrics_file,group,nboots,nmfmethod){
-  jpeg(overall_metrics_file,width = 800,height = 500,res = 100)
+  png(overall_metrics_file,width = 800,height = 500,res = 100)
   par(mar = c(5, 4, 4, 12),mgp = c(2.5,1,0))
   if(nmfmethod=="lee"){
     max_error <- max(overall_metrics$ave.RMSE,overall_metrics$ave.RMSE.orig)
@@ -393,7 +393,7 @@ computePropTooSimilar <- function(distMatrix,saved_nmf_runs,ns){
 #' Function to plot one or more signatures or catalogues with an arbitrary number of channels. Channel names will not be plotted and all channels will be plotted as bars of the same colour.
 #'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", "png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
@@ -422,6 +422,8 @@ plotGenericSignatures <- function(signature_data_matrix,
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*400,res = 190)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*800,height = nplotrows*400,res = 190)
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*8,height = nplotrows*4+0.5,pointsize = 26)
       }
@@ -466,6 +468,8 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*400,res = 190)
+    }else if(plottype=="png"){
+      png(output_file,width = 2*800,height = nplotrows*400,res = 190)
     }else if (plottype=="pdf"){
       pdf(output_file,width = 2*8,height = nplotrows*4+0.5,pointsize = 26)
     }
@@ -516,7 +520,7 @@ plotGenericSignatures_withMeanSd <- function(signature_data_matrix,
 #' Function to plot one or more substitution signatures or catalogues.
 #'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", ".png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param add_to_titles text to be added to the titles of each catalogue plot
@@ -556,6 +560,8 @@ plotSubsSignatures <- function(signature_data_matrix,
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*8,height = nplotrows*3+0.5,pointsize = 26)
       }
@@ -624,6 +630,8 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*300,res = 220)
+    }else if(plottype=="png"){
+      png(output_file,width = 2*800,height = nplotrows*300,res = 220)
     }else if(plottype=="pdf"){
       pdf(output_file,width = 2*8,height = nplotrows*3+0.5,pointsize = 26)
     }
@@ -704,7 +712,7 @@ plotSubsSignatures_withMeanSd <- function(signature_data_matrix,
 #' Function to plot one or more rearrangement signatures or catalogues.
 #'
 #' @param signature_data_matrix matrix of signatures, signatures as columns and channels as rows
-#' @param output_file set output file, should end with ".jpg" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", ".png" or ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param mar set the option par(mar=mar)
@@ -743,6 +751,8 @@ plotRearrSignatures <-function(signature_data_matrix,
     if(!is.null(output_file)){
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*800,height = nplotrows*500,res = 220)
       }else if(plottype=="pdf"){
         pdf(output_file,width = ncolumns*8,height = nplotrows*5+0.5,pointsize = 26)
       }
@@ -762,7 +772,7 @@ plotRearrSignatures <-function(signature_data_matrix,
       }
       title <- colnames(tmpmatrix)[pos]
       if (!is.null(add_to_titles)) title <- paste0(title," ",tmpadd[pos])
-      if (plot_sum) title <- paste0(title,"\n(",sum(tmpmatrix[,pos])," SVs)")
+      if (plot_sum) title <- paste0(title,"\n(",round(sum(tmpmatrix[,pos]))," SVs)")
       pos <- barplot(tmpmatrix[,pos],
                      main = title,
                      names.arg = NA,
@@ -844,6 +854,8 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
   if(!is.null(output_file)) {
     if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*500,res = 220)
+    }else if(plottype=="png"){
+      png(output_file,width = 2*800,height = nplotrows*500,res = 220)
     }else if (plottype=="pdf"){
       pdf(output_file,width = 2*8,height = nplotrows*5+0.5,pointsize = 26)
     }
@@ -912,7 +924,7 @@ plotRearrSignatures_withMeanSd <-function(signature_data_matrix,
     }
     title <- colnames(signature_data_matrix)[pos]
     if (!is.null(add_to_titles)) title <- paste0(title," ",add_to_titles[pos])
-    if (plot_sum) title <- paste0(title,"\n(",sum(signature_data_matrix[,pos])," SVs)")
+    if (plot_sum) title <- paste0(title,"\n(",round(sum(signature_data_matrix[,pos]))," SVs)")
     barCenters <- barplot(signature_data_matrix[,pos],
                           main = title,
                           names.arg = NA,

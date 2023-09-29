@@ -7,14 +7,14 @@
 exposureDistributionBarplot(fileout = NULL, catalogue, exposures)
 }
 \arguments{
-\item{fileout}{if specified, generate a plot, otherwise no plot is generated}
+\item{fileout}{if specified, generate a plot, otherwise no plot is generated, use extension png or jpg}
 
 \item{catalogue}{original catalogue, channels as rows and samples as columns}
 
 \item{exposures}{exposures/activities of signatures in each sample. Signatures as rows, samples as columns}
 }
 \value{
-list with to objects: the matrix of the distribution of the signatures in the samples and the hierachical clustering object
+list with to objects: the matrix of the distribution of the signatures in the samples and the hierarchical clustering object
 }
 \description{
 Given a catalogue of samples and an exposures table, compute the relative amount of each signature

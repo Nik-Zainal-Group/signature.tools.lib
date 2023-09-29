@@ -358,44 +358,13 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   return(res)
 }
 
-# Plot the double substitution profiles for all samples
-plot_allsample_Dinucleotides_profile <- function(muttype_catalogue,colnum,h,w,outputname){
-
-  muttype_catalogue$MutationType <- rownames(muttype_catalogue)
-  muttype_catalogue$Ref <- substr(muttype_catalogue$MutationType,1,2)
-
-  muts_basis_melt <- data.table::melt(muttype_catalogue,id=c("MutationType","Ref"))
-  names(muts_basis_melt) <- c("MutationType","Ref","sample","count")
-
-  mypalette <- c("#e6194b","#3cb44b","#ffe119","#0082c8","#f58231","#911eb4","#46f0f0","#f032e6","#d2f53c","#fabebe")
-  library(ggplot2)
-  pdf(file=outputname, onefile=TRUE,width=w,height=h)
-  p <- ggplot(data=muts_basis_melt, aes(x=MutationType, y=count,fill=Ref,width=0.5))+ geom_bar(position="dodge", stat="identity")+xlab("Dinucleotide mutation type")+ylab("")
-  p <- p+scale_x_discrete(limits = as.character(muttype_catalogue$MutationType))
-  p <- p+scale_fill_manual(values=mypalette)
-  p <- p+theme(axis.text.x=element_text(angle=90, vjust=0.5,size=5,colour = "black"),
-               axis.text.y=element_text(size=10,colour = "black"),
-               axis.title.x = element_text(size=15),
-               axis.title.y = element_text(size=15),
-               plot.title = element_text(size=10),
-               panel.grid.minor.x=element_blank(),
-               panel.grid.major.x=element_blank(),
-               panel.grid.major.y = element_blank(),
-               panel.grid.minor.y = element_blank(),
-               panel.background = element_rect(fill = "white"),
-               panel.border = element_rect(colour = "black", fill=NA))
-  p <- p+facet_wrap(~sample,ncol=colnum,scales = "free")
-  print(p)
-  dev.off()
-}
-
 
 #' Plot Dinucleotide Variant Signatures or Catalogues
 #'
 #' Function to plot one or more DNV signatures or catalogues.
 #'
 #' @param signature_data_matrix matrix of signatures or catalogues, signatures as columns and channels as rows. You can use either Zou or Alexandrov Style and the function will recognise the rownames and plot accordingly
-#' @param output_file set output file, should end with ".jpg" of ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
+#' @param output_file set output file, should end with ".jpg", ".png" of ".pdf". If output_file==null, output will not be to a file, but will still run the plot functions. The option output_file==null can be used to add this plot to a larger output file.
 #' @param plot_sum whether the sum of the channels should be plotted. If plotting signatures this should be FALSE, but if plotting sample catalogues, this can be set to TRUE to display the number of mutations in each sample.
 #' @param overall_title set the overall title of the plot
 #' @param add_to_titles text to be added to the titles of each catalogue plot
@@ -482,6 +451,8 @@ plotDNVSignatures <- function(signature_data_matrix,
     if(!is.null(output_file)) {
       if(plottype=="jpg"){
         jpeg(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
+      }else if(plottype=="png"){
+        png(output_file,width = ncolumns*800,height = nplotrows*300,res = 220)
       }else if (plottype=="pdf"){
         pdf(output_file,width = ncolumns*8,height = nplotrows*3+0.5,pointsize = 26)
       }
@@ -601,7 +572,9 @@ plotDNVSignatures_withMeanSd <- function(signature_data_matrix,
 
   nplotrows <- ncol(signature_data_matrix)
   if(!is.null(output_file)) {
-    if(plottype=="jpg"){
+    if(plottype=="png"){
+      png(output_file,width = 2*800,height = nplotrows*300,res = 220)
+    }else if(plottype=="jpg"){
       jpeg(output_file,width = 2*800,height = nplotrows*300,res = 220)
     }else if (plottype=="pdf"){
       pdf(output_file,width = 2*8,height = nplotrows*3+0.5,pointsize = 26)

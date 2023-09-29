@@ -995,11 +995,13 @@ applyHRDetectDavies2017 <- function(data_matrix,features_names=c("del.mh.prop","
 #'
 #' Function for plotting HRDetect results and contributions to HRDetect score.
 #'
-#' @param file_name name of the output file (jpg)
+#' @param file_name name of the output file (jpg or png)
 #' @param HRDLOH_index HRD index score
 #' @param hrdetect_output output of HRDetect, containing contributions of each feature
 #' @export
 plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_output){
+  
+  plottype <- substr(file_name,nchar(file_name)-2,nchar(file_name))
 
   col_needed <- c("del.mh.prop", "SNV3", "SV3", "SV5", "hrd", "SNV8")
 
@@ -1008,10 +1010,21 @@ plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_o
   reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
   nsamples <- nrow(hrdetect_output)
   contributions <- hrdetect_output
-  jpeg(filename = file_name,
-       width = max(200+80*nsamples,2400),
-       height = 1200,
-       res = 200)
+  if(plottype=="jpg"){
+    jpeg(filename = file_name,
+         width = max(200+80*nsamples,2400),
+         height = 1200,
+         res = 200)
+  }else if(plottype=="png"){
+    png(filename = file_name,
+        width = max(200+80*nsamples,2400),
+        height = 1200,
+        res = 200)
+  }else{
+    message("[error plot_HRDLOH_HRDetect_Contributions] unsupported plot file extension ",plottype,". Please use jpg or png.")
+    return(NULL)
+  }
+
   par(mfrow=c(1,1))
   mat <- matrix(c(1,2,3),ncol = 1)
   layout(mat, c(1), c(0.8,0.65,1))
@@ -1064,10 +1077,12 @@ plot_HRDLOH_HRDetect_Contributions <- function(file_name,HRDLOH_index,hrdetect_o
 #'
 #' Overall plot of scores obtained from HRDetect.
 #'
-#' @param file_name name of the output file (jpg)
+#' @param file_name name of the output file (jpg or png)
 #' @param hrdetect_output output of HRDetect, containing contributions of each feature
 #' @export
 plot_HRDetect_overall <- function(file_name,hrdetect_output){
+  
+  plottype <- substr(file_name,nchar(file_name)-2,nchar(file_name))
 
   hrdetect_output <- as.data.frame(hrdetect_output)
 
@@ -1076,10 +1091,21 @@ plot_HRDetect_overall <- function(file_name,hrdetect_output){
 
   reorder <- order(hrdetect_output$Probability,decreasing = TRUE)
   plot_colours <- plot_colours[reorder]
-  jpeg(filename = file_name,
-       width = 1500,
-       height = 900,
-       res = 200)
+  if(plottype=="jpg"){
+    jpeg(filename = file_name,
+         width = 1500,
+         height = 900,
+         res = 200)
+  }else if(plottype=="png"){
+    png(filename = file_name,
+         width = 1500,
+         height = 900,
+         res = 200)
+  }else{
+    message("[error plot_HRDetect_overall] unsupported plot file extension ",plottype,". Please use jpg or png.")
+    return(NULL)
+  }
+
   par(xpd=FALSE)
   bp <- barplot(height = hrdetect_output$Probability[reorder],
                 names.arg = "",

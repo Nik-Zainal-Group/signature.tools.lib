@@ -684,11 +684,11 @@ export_SignatureFit_withBootstrap_to_JSON <- function(outdir,res){
 #' in each sample and the unassigned mutations. Also cluster the samples with hierarchical clustering
 #' with average linkage and order the samples according to the clustering. Optionally, plot to file.
 #'
-#' @param fileout if specified, generate a plot, otherwise no plot is generated
+#' @param fileout if specified, generate a plot, otherwise no plot is generated, use extension png or jpg
 #' @param catalogue original catalogue, channels as rows and samples as columns
 #' @param exposures exposures/activities of signatures in each sample. Signatures as rows, samples as columns
 #' @keywords unexplained samples
-#' @return list with to objects: the matrix of the distribution of the signatures in the samples and the hierachical clustering object
+#' @return list with to objects: the matrix of the distribution of the signatures in the samples and the hierarchical clustering object
 #' @export
 #' @examples
 #' res <- SignatureFit_withBootstrap(cat = catalogue,
@@ -699,6 +699,9 @@ export_SignatureFit_withBootstrap_to_JSON <- function(outdir,res){
 #' distribution_object <- exposureDistributionBarplot(catalogue=catalogue,
 #'                   exposures=res$E_median_filtered)
 exposureDistributionBarplot <- function(fileout=NULL,catalogue,exposures){
+  
+  if(!is.null(fileout)) plottype <- substr(fileout,nchar(fileout)-2,nchar(fileout))
+  
   total_mut_in_exp <- apply(exposures,2,sum)
   total_mut_in_cat <- apply(catalogue,2,sum)
   unassigned_mut <- total_mut_in_cat - total_mut_in_exp
@@ -715,12 +718,22 @@ exposureDistributionBarplot <- function(fileout=NULL,catalogue,exposures){
                     'F6A600', 'B3446C', 'DCD300', '882D17', '8DB600', '654522', 'E25822', '2B3D26','CCCCCC','CCCCCC','CCCCCC')
   kelly_colors <- paste0("#",kelly_colors)
   if(!is.null(fileout)){
-    jpeg(filename = fileout,width = max(1800,200+ncol(exposures)*3),height = 1000,res = 200)
-    par(mar=c(4,4,3,5),mgp=c(1.5,0.5,0))
-    barplot(plot_matrix,col = c(kelly_colors[1:nrow(exposures)],"grey"),
-            border = NA,ylab = "% of mutation",xlab = "samples",xaxt="n",space=0)
-    legend(x="topright",title = "Signatures",legend = c(rownames(exposures),"other"),fill = c(kelly_colors[1:nrow(exposures)],"grey"),bty = "n",inset = c(-0.08,0),xpd = TRUE)
-    dev.off()
+    doPlot <- TRUE
+    if(plottype=="jpg"){
+      jpeg(filename = fileout,width = max(1800,200+ncol(exposures)*3),height = 1000,res = 200)
+    }else if(plottype=="png"){
+      png(filename = fileout,width = max(1800,200+ncol(exposures)*3),height = 1000,res = 200)
+    }else{
+      message("[warning exposureDistributionBarplot] unsupported plot file extension ",plottype,". Plot not generated. Please use jpg or png.")
+      doPlot <- FALSE
+    }
+    if(doPlot){
+      par(mar=c(4,4,3,5),mgp=c(1.5,0.5,0))
+      barplot(plot_matrix,col = c(kelly_colors[1:nrow(exposures)],"grey"),
+              border = NA,ylab = "% of mutation",xlab = "samples",xaxt="n",space=0)
+      legend(x="topright",title = "Signatures",legend = c(rownames(exposures),"other"),fill = c(kelly_colors[1:nrow(exposures)],"grey"),bty = "n",inset = c(-0.08,0),xpd = TRUE)
+      dev.off()
+    }
   }
   res <- list()
   res$distribution_matrix <- plot_matrix
@@ -794,7 +807,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
   dir.create(plotsdir,recursive = TRUE,showWarnings = FALSE)
   for(p in 1:howmanyplots){
     current_samples <- p
-    jpeg(filename = paste0(plotsdir,"sigfit_bootstrap_",p,"of",howmanyplots,".jpg"),
+    png(filename = paste0(plotsdir,"sigfit_bootstrap_",p,"of",howmanyplots,".png"),
          width = 640*(plot_ncol),
          height = 480*plot_nrows,
          res = 150)
