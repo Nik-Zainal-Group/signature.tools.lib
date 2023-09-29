@@ -153,6 +153,7 @@ genomeChart <- function(outfilename,
     clusteringSBScatalogue_all <- resSBSinSVclusters$clusteringSBScatalogue_all
     colnames(clusteringSBScatalogue_all) <- "SNVs in SV clusters"
     snvs_table <- resSBSinSVclusters$snvs_table
+    
   }
   
   # run the kataegis algorithm if requested
@@ -360,10 +361,10 @@ genomeChart <- function(outfilename,
   returnObj$sample_name <- sample_name
   returnObj$genomev <- genome.v
   returnObj$snvs_table <- snvs_table
-  returnObj$snvs_classified <- snvs_classified
   returnObj$sbs_obj <- sbs_obj
   returnObj$dbs_obj <- dbs_obj
   returnObj$kataegis_regions <- kataegis_regions
+  returnObj$kataegisSBScatalogue_all <- kataegisSBScatalogue_all
   returnObj$indels_obj <- indels_obj
   returnObj$CNV_table <- CNV_table
   returnObj$sv_obj <- sv_obj
