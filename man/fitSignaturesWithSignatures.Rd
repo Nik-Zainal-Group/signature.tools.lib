@@ -21,7 +21,7 @@ fitSignaturesWithSignatures(
 
 \item{max_combinations}{maximum number of signatures_to_use to be used as a linear combination to fit each signatures_to_fit}
 
-\item{sig_min_contrib}{minimum % of contribution that a signatures_to_use should have to a linear combination when matching a signature in signatures_to_fit}
+\item{sig_min_contrib}{minimum percentage of contribution that a signatures_to_use should have to a linear combination when matching a signature in signatures_to_fit}
 
 \item{minsim}{minimum cosine similarity between a signatures_to_fit and a match, where a match is either a signature in signatures_to_use or a linear combination of signatures in signatures_to_use}
 

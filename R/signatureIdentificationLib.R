@@ -1,5 +1,3 @@
-
-
 #' fitSignaturesWithSignatures
 #' 
 #' This function attempts to reconstruct a set of signatures (signatures_to_fit) using
@@ -13,7 +11,7 @@
 #' @param signatures_to_fit matrix with the mutational signatures that need to be identified/fitted. Each column has a signature and each row corresponds to a mutational channel. Columns need to sum to 1.
 #' @param signatures_to_use matrix of mutational signatures to be used as a reference and that will be fitted/combined to match the signatures_to_fit. Each column has a signature and each row corresponds to a mutational channel. Columns need to sum to 1.
 #' @param max_combinations maximum number of signatures_to_use to be used as a linear combination to fit each signatures_to_fit
-#' @param sig_min_contrib minimum % of contribution that a signatures_to_use should have to a linear combination when matching a signature in signatures_to_fit
+#' @param sig_min_contrib minimum percentage of contribution that a signatures_to_use should have to a linear combination when matching a signature in signatures_to_fit
 #' @param minsim minimum cosine similarity between a signatures_to_fit and a match, where a match is either a signature in signatures_to_use or a linear combination of signatures in signatures_to_use
 #' @param max_from_each_class maximum number of matches to consider in each class, where the class indicates the number of signatures in a linear combination. If there are more matches in the class than the maximum specified, then the matches with the highest cosine similarity will be reported
 #' @param nparallel how many parallel cpus to use
