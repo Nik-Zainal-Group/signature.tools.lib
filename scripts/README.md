@@ -1,25 +1,18 @@
-# signature.tools.lib Scripts
+# signature.tools.lib scripts
 
 ## Introduction
 
 This folder includes scripts to perform analysis using the R package ```signature.tools.lib```
 in unix command line style, without having to write R code.
 
-## signatureFit
+Currently available scripts are:
 
-For the help on how to use this script type:
+- **signatureFit**: mutational signatures analysis using Fit or FitMS. This is a wrapper for the ```signatureFit_pipeline``` R function.
+- **hrDetect**: HRDetect pipeline script. This is a wrapper for the ```HRDetect_pipeline``` R function.
+- **genomeChart**: visualisation of somatic variants using a circle diagram and other graphs like mutational catalogues.
+- **solutionSelectionForFitMS**: change selection criteria for FitMS alternative rare signature solutions and/or select solutions manually.
 
-```
-./signatureFit -h
-```
-
-## hrDetect
-
-For the help on how to use this script type:
-
-```
-./hrDetect -h
-```
+You can use the flag ```-h``` to access a list of options for each script, for example ```hrDetect -h```.
 
 ### Install in your PATH
 
@@ -42,8 +35,22 @@ You can add the above line to your ```~/.bashrc``` file so you don't have to typ
 Then, you can simply copy the files:
 
 ```
-cp signatureFit ~/bin/signatureFit
-cp hrDetect ~/bin/hrDetect
+cd /path/to/where/you/downloaded/signature.tools.lib/scripts/
+cp signatureFit ~/bin/
+cp hrDetect ~/bin/
+cp genomeChart ~/bin/
+cp solutionSelectionForFitMS ~/bin/
+```
+
+Alternatively, you can create a symbolic link:
+
+```
+cd ~/bin/
+ln -s /path/to/where/you/downloaded/signature.tools.lib/scripts/signatureFit
+ln -s /path/to/where/you/downloaded/signature.tools.lib/scripts/hrDetect
+ln -s /path/to/where/you/downloaded/signature.tools.lib/scripts/genomeChart
+ln -s /path/to/where/you/downloaded/signature.tools.lib/scripts/solutionSelectionForFitMS
 ```
 
 You should now have the scripts working anywhere in your command line.
+
