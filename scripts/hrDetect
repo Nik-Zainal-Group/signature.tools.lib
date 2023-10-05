@@ -514,7 +514,7 @@ if(!is.null(hrdet_res)){
                                        hrdetect_output = hrdet_res$hrdetect_output)
 
     message("[info hrDetect script] plotting HRDetect overall plot...")
-    plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.jpg"),
+    plot_HRDetect_overall(file_name = paste0(outdir,"/HRDetect_overall.png"),
                           hrdetect_output = hrdet_res$hrdetect_output)
 
     if (!is.null(hrdet_res$q_5_50_95)) {
