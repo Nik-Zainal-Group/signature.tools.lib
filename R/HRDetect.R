@@ -763,7 +763,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
             tmp_data_matrix[colnames(current_subs),"SNV8"] <- 0
 
             # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
-            if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & bn=="fit_subs" & SNV_commonSignatureTier=="T1"){
+            if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & bn=="fit_subs" & (SNV_commonSignatureTier=="T1" |  & SNV_commonSignatureTier=="T3"){
               # convert if there is anything to convert
               current_subs <- convertExposuresFromOrganToRefSigsIfAny(current_subs,typemut = "subs")
             }else if(bn=="custom_fit_subs"){
@@ -807,7 +807,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
             tmp_data_matrix[colnames(current_rearr),"SV5"] <- 0
 
             # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
-            if((SV_signature_version=="RefSigv1") & !is.null(organ) & bn=="fit_rearr" & SV_commonSignatureTier=="T1"){
+            if((SV_signature_version=="RefSigv1") & !is.null(organ) & bn=="fit_rearr" & (SV_commonSignatureTier=="T1" | SV_commonSignatureTier=="T3")){
               # convert if there is anything to convert
               current_rearr <- convertExposuresFromOrganToRefSigsIfAny(current_rearr,typemut = "rearr")
             }else if(bn=="custom_fit_rearr"){
