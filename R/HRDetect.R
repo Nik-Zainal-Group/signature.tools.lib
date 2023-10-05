@@ -386,7 +386,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     # if SNV RefSigv1 or RefSigv2 are used AND organ is not null, then we need to convert to reference signatures
     if((SNV_signature_version=="RefSigv1" | SNV_signature_version=="RefSigv2") & !is.null(organ) & (SNV_commonSignatureTier=="T1" | SNV_commonSignatureTier=="T3")){
       # convert if there is anything to convert
-      exposures_organSpecific_subs <- convertExposuresFromOrganToRefSigsIfAny(exposures_subs,typemut = "subs")
+      exposures_organSpecific_subs <- exposures_subs
+      exposures_subs <- convertExposuresFromOrganToRefSigsIfAny(exposures_subs,typemut = "subs")
     }
 
     # update the data_matrix
@@ -514,7 +515,8 @@ HRDetect_pipeline <- function(data_matrix=NULL,
     # if SV RefSigv1 are used AND organ is not null, then we need to convert to reference signatures
     if((SV_signature_version=="RefSigv1") & !is.null(organ) & (SV_commonSignatureTier == "T1" | SV_commonSignatureTier == "T3")){
       # convert if there is anything to convert
-      exposures_organSpecific_rearr <- convertExposuresFromOrganToRefSigsIfAny(exposures_rearr,typemut = "rearr")
+      exposures_organSpecific_rearr <- exposures_rearr
+      exposures_rearr <- convertExposuresFromOrganToRefSigsIfAny(exposures_rearr,typemut = "rearr")
     }
 
     # update the data_matrix
