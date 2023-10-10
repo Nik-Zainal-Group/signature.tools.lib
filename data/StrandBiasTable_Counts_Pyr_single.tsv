@@ -1,0 +1,9 @@
+genomeversion	biastype	biassubtype	C	T
+hg19	transcription	uts	271178903	400129718
+hg19	transcription	ts	282442976	366974096
+hg19	replication	leading	497273822	704946116
+hg19	replication	lagging	490960518	721289765
+hg38	transcription	uts	270200871	398925560
+hg38	transcription	ts	281378106	366015136
+hg38	replication	leading	497545513	705400670
+hg38	replication	lagging	491204232	721751762

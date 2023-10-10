@@ -67,6 +67,11 @@ COSMIC_v3.2_DBS_GRCh37 <- readTable("data/COSMIC_v3.2_DBS_GRCh37.tsv")
 rownames(COSMIC_v3.2_DBS_GRCh37) <- COSMIC_v3.2_DBS_GRCh37$Type
 COSMIC_v3.2_DBS_GRCh37 <- COSMIC_v3.2_DBS_GRCh37[,-1,drop=F]
 
+
+strandBiasTable <- read.table("data/StrandBiasTable.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+strandBiasCounts_single <- read.table("data/StrandBiasTable_Counts_Pyr_single.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+strandBiasCounts_tri <- read.table("data/StrandBiasTable_Counts_Pyr_tri.tsv", sep="\t", header=T, as.is=T, check.names = FALSE)
+
 usethis::use_data(RS.Breast560,
                   cosmic30,
                   chrominfo,
@@ -87,6 +92,9 @@ usethis::use_data(RS.Breast560,
                   RefSigv1_rearr,
                   COSMIC_v3.2_SBS_GRCh37,
                   COSMIC_v3.2_DBS_GRCh37,
+                  strandBiasTable,
+                  strandBiasCounts_single,
+                  strandBiasCounts_tri,
                   internal = TRUE,
                   overwrite = TRUE)
 
