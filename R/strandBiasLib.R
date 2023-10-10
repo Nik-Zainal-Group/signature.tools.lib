@@ -200,7 +200,10 @@ plotStrandBiasResults <- function(biasResObj,
   biasType <- list()
   biasType[[bias_ratios[1]]] <- "transcription"
   biasType[[bias_ratios[2]]] <- "replication"
-  gap <- max(abs(biasResObj$bias_results_single_ratios[,2:3] - 1))*1.2
+  
+  dataToConsider <- as.matrix(biasResObj$bias_results_single_ratios[,2:3])
+  dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
+  gap <- max(abs(dataToConsider - 1),na.rm = T)*1.2
   biasYLabels <- list()
   for(br in bias_ratios) {
     # br <- bias_ratios[1]
@@ -218,13 +221,15 @@ plotStrandBiasResults <- function(biasResObj,
   for(br in bias_ratios){
     usetitle <- biasTitles[[br]]
     if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
-    plot(x = biasResObj$bias_results_single_ratios[,br],
+    dataToPlot <- as.matrix(biasResObj$bias_results_single_ratios[,br])
+    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+    plot(x = dataToPlot,
          y = nrow(biasResObj$bias_results_single_ratios):1,
          pch = 16,
          col = kelly_colors[3],
          yaxt='n',
          main= usetitle,
-         xlim = c(1-gap,1+gap),xlab = paste0("ratio ",br),ylab = "")
+         xlim = c(max(0,1-gap),1+gap),xlab = paste0("ratio ",br),ylab = "")
     points(x=rep(biasResObj$bias_expected_single_ratios[,br],each=3),
            y=nrow(biasResObj$bias_results_single_ratios):1,
            col = kelly_colors[4],
@@ -264,7 +269,9 @@ plotStrandBiasResults <- function(biasResObj,
     # bt <- bias_types[1]
     usetitle <- biasTitles[[bt]]
     if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
-    bp <- barplot(height = as.matrix(biasResObj$bias_results_tri[biasResObj$bias_results_tri$biastype==bt,3:ncol(biasResObj$bias_results_tri)]),
+    dataToPlot <- as.matrix(biasResObj$bias_results_tri[biasResObj$bias_results_tri$biastype==bt,3:ncol(biasResObj$bias_results_tri)])
+    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+    bp <- barplot(height = dataToPlot,
                   beside = T,
                   border = NA,
                   main= usetitle,
