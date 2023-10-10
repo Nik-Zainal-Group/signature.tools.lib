@@ -72,7 +72,18 @@ sampleStrandBias <- function(snv_table,
       if(genomev=="hg19") table_slice$chr <- substr(table_slice$chr,4,10)
       table_slice <- table_slice[table_slice$chr %in% expected_chroms,,drop=F]
       # let's see which mutations are in these locations
-      tmp_snv_table <- snv_table[sapply(1:nrow(snv_table),function(x) any(snv_table[x,"chr"]==table_slice$chr & snv_table[x,"position"]>=table_slice$start & snv_table[x,"position"]<=table_slice$end)),,drop=F]
+
+      tmp_snv_table <- NULL
+      
+      chroms <- unique(snv_table$chr)
+      for (chr in chroms){
+        # chr <- chroms[1]
+        chrom_snv_table <- snv_table[snv_table$chr==chr,,drop=F]
+        chrom_table_slice <- table_slice[table_slice$chr==chr,,drop=F]
+        if(nrow(chrom_table_slice)>0 & nrow(chrom_snv_table)>0){
+          tmp_snv_table <- rbind(tmp_snv_table,chrom_snv_table[sapply(1:nrow(chrom_snv_table),function(x) any(chrom_snv_table[x,"chr"]==chrom_table_slice$chr & chrom_snv_table[x,"position"]>=chrom_table_slice$start & chrom_snv_table[x,"position"]<=chrom_table_slice$end)),,drop=F])
+        }
+      }
       
       muts_single <- table(paste0(tmp_snv_table$REF,">",tmp_snv_table$ALT))
       muts_5p <- as.character(BSgenome::getSeq(genomeSeq,
