@@ -81,7 +81,7 @@ sampleStrandBias <- function(snv_table,
         chrom_snv_table <- snv_table[snv_table$chr==chr,,drop=F]
         chrom_table_slice <- table_slice[table_slice$chr==chr,,drop=F]
         if(nrow(chrom_table_slice)>0 & nrow(chrom_snv_table)>0){
-          tmp_snv_table <- rbind(tmp_snv_table,chrom_snv_table[sapply(1:nrow(chrom_snv_table),function(x) any(chrom_snv_table[x,"chr"]==chrom_table_slice$chr & chrom_snv_table[x,"position"]>=chrom_table_slice$start & chrom_snv_table[x,"position"]<=chrom_table_slice$end)),,drop=F])
+          tmp_snv_table <- rbind(tmp_snv_table,chrom_snv_table[sapply(1:nrow(chrom_snv_table),function(x) any(chrom_snv_table[x,"position"]>=chrom_table_slice$start & chrom_snv_table[x,"position"]<=chrom_table_slice$end)),,drop=F])
         }
       }
       
