@@ -116,8 +116,12 @@ sampleStrandBias <- function(snv_table,
   returnObj$bias_results_tri <- bias_results_tri
   returnObj$bias_results_single_ratios <- biasCountsToRatios(bias_results_single)
   returnObj$bias_results_tri_ratios <- biasCountsToRatios(bias_results_tri)
+  returnObj$bias_results_single_prop <- biasCountsToProportions(bias_results_single)
+  returnObj$bias_results_tri_prop <- biasCountsToProportions(bias_results_tri)
   returnObj$bias_expected_single_ratios <- biasCountsToRatios(strandBiasCounts_single_gv)
   returnObj$bias_expected_tri_ratios <- biasCountsToRatios(strandBiasCounts_tri_gv)
+  returnObj$bias_expected_single_prop <- biasCountsToProportions(strandBiasCounts_single_gv)
+  returnObj$bias_expected_tri_prop <- biasCountsToProportions(strandBiasCounts_tri_gv)
   
   return(returnObj)
 }
@@ -173,6 +177,161 @@ biasCountsToRatios <- function(bias_counts_table){
   return(resultTable)
 }
 
+biasCountsToProportions <- function(bias_counts_table){
+  bias_types <- unique(bias_counts_table$biastype)
+  features <- colnames(bias_counts_table)[3:ncol(bias_counts_table)]
+  resultTable <- data.frame(features,
+                            stringsAsFactors = F,
+                            check.names = F)
+  for(bt in bias_types){
+    # bt <- bias_types[1]
+    bias_subtypes <- unique(bias_counts_table$biassubtype[bias_counts_table$biastype==bt])
+    sumCounts <- apply(bias_counts_table[bias_counts_table$biastype==bt,3:ncol(bias_counts_table)],2,sum)
+    resultTable[,paste0(bias_subtypes[1],".prop")] <- unlist(bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[1],3:ncol(bias_counts_table)]/sumCounts)
+    resultTable[,paste0(bias_subtypes[2],".prop")] <- unlist(bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[2],3:ncol(bias_counts_table)]/sumCounts)
+    
+  }
+  return(resultTable)
+}
+
+
+#' combine Transcription and Replication strand bias results
+#'
+#' This function combines the transcription/replication strand bias results obtained
+#' using the sampleStrandBias function. For example, sampleStrandBias can be run multiple times
+#' and each result object added to a named list, and then the list used as input for
+#' the combineStrandBiasResults function. Results from multiple samples will then be
+#' combined to obtain statistics such as average, standard deviation and p-value to
+#' determine whether the bias is significant.
+#'
+#' @param biasResObjList R list object containing a list of strand bias result objects, each obtained using the using the sampleStrandBias function. This should be a named list, for example each element name could be a sample name.
+#' @export
+#' @examples
+#' biasResObjList <- list()
+#' biasResObjList[["sample1"]] <- sampleStrandBias(sample1_snvs)
+#' biasResObjList[["sample2"]] <- sampleStrandBias(sample2_snvs)
+#' biasResObjList[["sample3"]] <- sampleStrandBias(sample3_snvs)
+#' res <- combineStrandBiasResults(biasResObjList)
+combineStrandBiasResults <- function(biasResObjList){
+  sample_names <- names(biasResObjList)
+  # set up variables
+  ratios <- c("uts/ts","leading/lagging")
+  proportions <- c("uts.prop","leading.prop")
+  mutations <- c("single","tri")
+  # initialise tables
+  bias_tables <- list()
+  tmpTable <- list()
+  tmpTable[[mutations[1]]] <- biasResObjList[[sample_names[1]]]$bias_results_single_ratios[,1,drop=F]
+  tmpTable[[mutations[2]]] <- biasResObjList[[sample_names[2]]]$bias_results_tri_ratios[,1,drop=F]
+  for (mut in mutations) {
+    # mut <- mutations[1]
+    for (coln in c(ratios,proportions)) {
+      # coln <- ratios[1]
+      bias_tables[[paste0(coln,"_",mut)]] <- cbind(tmpTable[[mut]],data.frame(matrix(0,
+                                                                                     nrow = nrow(tmpTable[[mut]]),
+                                                                                     ncol = length(sample_names),
+                                                                                     dimnames = list(1:nrow(tmpTable[[mut]]),sample_names)),
+                                                                              stringsAsFactors = F,check.names = F))
+    }
+  }
+  
+  # save the expected values for later
+  sn <- sample_names[1]
+  expected_values <- list()
+  for (mut in mutations) {
+    # mut <- mutations[1]
+    for (ratio in ratios) {
+      # ratio <- ratios[1]
+      if(mut=="single"){
+        expected_values[[paste0(ratio,"_",mut)]] <- rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_ratios")]][,ratio],each=3)
+      }else{
+        expected_values[[paste0(ratio,"_",mut)]] <- c(rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_ratios")]][1:16,ratio],3),
+                                                      rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_ratios")]][17:32,ratio],3))
+      }
+      names(expected_values[[paste0(ratio,"_",mut)]]) <- biasResObjList[[sn]][[paste0("bias_results_",mut,"_ratios")]][,"features"]
+    }
+    for (prop in proportions) {
+      # prop <- proportions[1]
+      if(mut=="single"){
+        expected_values[[paste0(prop,"_",mut)]] <- rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_prop")]][,prop],each=3)
+      }else{
+        expected_values[[paste0(prop,"_",mut)]] <- c(rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_prop")]][1:16,prop],3),
+                                                     rep(biasResObjList[[sn]][[paste0("bias_expected_",mut,"_prop")]][17:32,prop],3))
+      }
+      names(expected_values[[paste0(prop,"_",mut)]]) <- biasResObjList[[sn]][[paste0("bias_results_",mut,"_prop")]][,"features"]
+    }
+  }
+  
+  # fill in the tables
+  for (sn in sample_names){
+    # sn <- sample_names[1]
+    for (mut in mutations) {
+      # mut <- mutations[1]
+      for (ratio in ratios) {
+        # ratio <- ratios[1]
+        bias_tables[[paste0(ratio,"_",mut)]][,sn] <- biasResObjList[[sn]][[paste0("bias_results_",mut,"_ratios")]][,ratio]
+        # replace Inf and NaN with NA
+        posreplace <- is.nan(bias_tables[[paste0(ratio,"_",mut)]][,sn]) | is.infinite(bias_tables[[paste0(ratio,"_",mut)]][,sn])
+        if(any(posreplace)) bias_tables[[paste0(ratio,"_",mut)]][posreplace,sn] <- NA
+      }
+      for (prop in proportions) {
+        # prop <- proportions[1]
+        bias_tables[[paste0(prop,"_",mut)]][,sn] <- biasResObjList[[sn]][[paste0("bias_results_",mut,"_prop")]][,prop]
+        # replace Inf and NaN with NA
+        posreplace <- is.nan(bias_tables[[paste0(prop,"_",mut)]][,sn]) | is.infinite(bias_tables[[paste0(prop,"_",mut)]][,sn])
+        if(any(posreplace)) bias_tables[[paste0(prop,"_",mut)]][posreplace,sn] <- NA
+      }
+    }
+  }
+  
+  # now compute the summary tables as well and calculate p-values
+  summary_tables <- list()
+  for(tn in names(bias_tables)){
+    # tn <- names(bias_tables)[1]
+    
+    dataTable <- bias_tables[[tn]]
+    
+    meanvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,mean,na.rm=TRUE)
+    medianvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,median,na.rm=TRUE)
+    sdvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,sd,na.rm=TRUE)
+    
+    pvalue <- c()
+    for(i in 1:nrow(dataTable)){
+      tmpData <- unlist(dataTable[i,2:ncol(dataTable)])
+      navail <- sum(!is.na(tmpData))
+      if(navail>1){
+        if(sdvalue[i]!=0){
+          res_t <- t.test(x=tmpData,
+                          mu = expected_values[[tn]][i])
+          pvalue <- c(pvalue,res_t$p.value)
+        }else{
+          pvalue <- c(pvalue,NA)
+        }
+      }else{
+        pvalue <- c(pvalue,NA)
+      }
+    }
+     
+    summary_tables[[tn]] <- data.frame(mean=meanvalue,
+                                       median=medianvalue,
+                                       sd=sdvalue,
+                                       pvalue=pvalue,
+                                       row.names = dataTable$features,
+                                       stringsAsFactors = F,
+                                       check.names = F)
+  }
+
+  # return everything
+  returnObj <- list()
+  returnObj$bias_tables <- bias_tables
+  returnObj$summary_tables <- summary_tables
+  returnObj$expected_values <- expected_values
+  
+  return(returnObj)
+}
+
+
+
 #' plot Transcription and Replication strand bias results
 #'
 #' This function plots the transcription/replication strand bias results obtained
@@ -181,6 +340,8 @@ biasCountsToRatios <- function(bias_counts_table){
 #' @param biasResObj R list object containing the results from the sampleStrandBias function call
 #' @param filename pdf file name to save the plots to file
 #' @param addToTitle text to be added in each plot title, useful for example to add the name of a sample
+#' @param pointsize change the pointsize of the plot
+#' @param textscaling change the scaling of some text
 #' @export
 plotStrandBiasResults <- function(biasResObj,
                             filename=NULL,
@@ -215,8 +376,8 @@ plotStrandBiasResults <- function(biasResObj,
     strwidth(x,units = "inch",ps = par(ps=pointsize))
   }))
   
-  if(!is.null(filename)) cairo_pdf(filename = filename,width = 9+maxlabelwidth*2,height = 5,pointsize = pointsize)
-  par(mfrow=c(1,2),cex=1)
+  if(!is.null(filename)) cairo_pdf(filename = filename,width = 9+maxlabelwidth*2,height = 10,pointsize = pointsize)
+  par(mfrow=c(2,2),cex=1)
   par(mai=c(1,0.3+maxlabelwidth,0.6,0.2))
   for(br in bias_ratios){
     usetitle <- biasTitles[[br]]
@@ -229,7 +390,10 @@ plotStrandBiasResults <- function(biasResObj,
          col = kelly_colors[3],
          yaxt='n',
          main= usetitle,
-         xlim = c(max(0,1-gap),1+gap),xlab = paste0("ratio ",br),ylab = "")
+         xlim = c(max(0,1-gap),1+gap),
+         ylim = c(0.5,nrow(dataToPlot)+0.5),
+         xlab = paste0("ratio ",br),
+         ylab = "")
     points(x=rep(biasResObj$bias_expected_single_ratios[,br],each=3),
            y=nrow(biasResObj$bias_results_single_ratios):1,
            col = kelly_colors[4],
@@ -237,6 +401,51 @@ plotStrandBiasResults <- function(biasResObj,
     axis(side = 2,at = nrow(biasResObj$bias_results_single_ratios):1,
          labels = biasYLabels[[br]],las=1)
     abline(v=1,lty=2)
+    legend(x="topright",legend = c("observed","expected"),
+           horiz = TRUE,xpd = T,inset = c(0,-0.09),
+           fill = kelly_colors[3:4],border = F,bty = 'n')
+  }
+  
+  bias_proportions <- c("uts.prop","leading.prop")
+  biasTitles <- list()
+  biasTitles[[bias_proportions[1]]] <- "Transcription bias"
+  biasTitles[[bias_proportions[2]]] <- "Replication bias"
+  biasType <- list()
+  biasType[[bias_proportions[1]]] <- "transcription"
+  biasType[[bias_proportions[2]]] <- "replication"
+  biasXLabels <- list()
+  biasXLabels[[bias_proportions[1]]] <- "uts proportion (1 - ts)"
+  biasXLabels[[bias_proportions[2]]] <- "leading proportion (1 - lagging)"
+  # biasYLabels <- list()
+  biasYLabels[["uts.prop"]] <- biasYLabels[["uts/ts"]]
+  biasYLabels[["leading.prop"]] <- biasYLabels[["leading/lagging"]]
+  
+  dataToConsider <- as.matrix(biasResObj$bias_results_single_prop[,2:5])
+  dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
+  gap <- max(abs(dataToConsider - 0.5),na.rm = T)*1.2
+  
+  for(bp in bias_proportions){
+    usetitle <- biasTitles[[bp]]
+    if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
+    dataToPlot <- as.matrix(biasResObj$bias_results_single_prop[,bp])
+    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+    plot(x = dataToPlot,
+         y = nrow(biasResObj$bias_results_single_prop):1,
+         pch = 16,
+         col = kelly_colors[3],
+         yaxt='n',
+         main= usetitle,
+         xlim = c(0.5-gap,0.5+gap),
+         ylim = c(0.5,nrow(dataToPlot)+0.5),
+         xlab = biasXLabels[[bp]],
+         ylab = "")
+    points(x=rep(biasResObj$bias_expected_single_prop[,bp],each=3),
+           y=nrow(biasResObj$bias_results_single_prop):1,
+           col = kelly_colors[4],
+           pch = 17)
+    axis(side = 2,at = nrow(biasResObj$bias_results_single_prop):1,
+         labels = biasYLabels[[bp]],las=1)
+    abline(v=0.5,lty=2)
     legend(x="topright",legend = c("observed","expected"),
            horiz = TRUE,xpd = T,inset = c(0,-0.09),
            fill = kelly_colors[3:4],border = F,bty = 'n')

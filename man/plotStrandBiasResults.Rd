@@ -18,6 +18,10 @@ plotStrandBiasResults(
 \item{filename}{pdf file name to save the plots to file}
 
 \item{addToTitle}{text to be added in each plot title, useful for example to add the name of a sample}
+
+\item{pointsize}{change the pointsize of the plot}
+
+\item{textscaling}{change the scaling of some text}
 }
 \description{
 This function plots the transcription/replication strand bias results obtained
