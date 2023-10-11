@@ -122,6 +122,7 @@ sampleStrandBias <- function(snv_table,
   returnObj$bias_expected_tri_ratios <- biasCountsToRatios(strandBiasCounts_tri_gv)
   returnObj$bias_expected_single_prop <- biasCountsToProportions(strandBiasCounts_single_gv)
   returnObj$bias_expected_tri_prop <- biasCountsToProportions(strandBiasCounts_tri_gv)
+  returnObj$result_type <- "single_sample"
   
   return(returnObj)
 }
@@ -326,6 +327,7 @@ combineStrandBiasResults <- function(biasResObjList){
   returnObj$bias_tables <- bias_tables
   returnObj$summary_tables <- summary_tables
   returnObj$expected_values <- expected_values
+  returnObj$result_type <- "combined_samples"
   
   return(returnObj)
 }
@@ -335,7 +337,7 @@ combineStrandBiasResults <- function(biasResObjList){
 #' plot Transcription and Replication strand bias results
 #'
 #' This function plots the transcription/replication strand bias results obtained
-#' using the sampleStrandBias function.
+#' using the sampleStrandBias function, or the combineStrandBiasResults function.
 #'
 #' @param biasResObj R list object containing the results from the sampleStrandBias function call
 #' @param filename pdf file name to save the plots to file
@@ -348,6 +350,14 @@ plotStrandBiasResults <- function(biasResObj,
                             addToTitle=NULL,
                             pointsize=12,
                             textscaling=1){
+  if(is.null(biasResObj$result_type)){
+    message("[error plotStrandBiasResults] result_type missing in biasResObj input object.")
+    return(NULL)
+  }else if(!biasResObj$result_type %in% c("single_sample","combined_samples")){
+    message("[error plotStrandBiasResults] result_type ",biasResObj$result_type," invalid in biasResObj input object.")
+    return(NULL)
+  }
+  
   # plot
   kelly_colors <- c('F3C300', '875692', 'F38400', 'A1CAF1', 'BE0032', 
                     'C2B280', '848482', '008856', 'E68FAC', '0067A5', 'F99379', '604E97', 
@@ -362,49 +372,92 @@ plotStrandBiasResults <- function(biasResObj,
   biasType[[bias_ratios[1]]] <- "transcription"
   biasType[[bias_ratios[2]]] <- "replication"
   
-  dataToConsider <- as.matrix(biasResObj$bias_results_single_ratios[,2:3])
-  dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
-  gap <- max(abs(dataToConsider - 1),na.rm = T)*1.2
-  biasYLabels <- list()
-  for(br in bias_ratios) {
-    # br <- bias_ratios[1]
-    totalMuts <- apply(biasResObj$bias_results_single[biasResObj$bias_results_single$biastype==biasType[[br]],3:ncol(biasResObj$bias_results_single)],2,sum,simplify = T)
-    biasYLabels[[br]] <- paste0(biasResObj$bias_results_single_ratios$features," (",totalMuts,")")
+  # determine the x gap and ylabels
+  if(biasResObj$result_type=="single_sample"){
+    dataToConsider <- as.matrix(biasResObj$bias_results_single_ratios[,2:3])
+    dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
+    gap <- max(abs(dataToConsider - 1),na.rm = T)*1.2
+    
+    biasYLabels <- list()
+    for(br in bias_ratios) {
+      # br <- bias_ratios[1]
+      totalMuts <- apply(biasResObj$bias_results_single[biasResObj$bias_results_single$biastype==biasType[[br]],3:ncol(biasResObj$bias_results_single)],2,sum,simplify = T)
+      biasYLabels[[br]] <- paste0(biasResObj$bias_results_single_ratios$features," (",totalMuts,")")
+    }
+  }else if(biasResObj$result_type=="combined_samples"){
+    gap1 <- max(abs(biasResObj$bias_tables$`uts/ts_single`[,2:ncol(biasResObj$bias_tables$`uts/ts_single`)] - 1),na.rm = T)*1.2
+    gap2 <- max(abs(biasResObj$bias_tables$`leading/lagging_single`[,2:ncol(biasResObj$bias_tables$`leading/lagging_single`)] - 1),na.rm = T)*1.2
+    gap <- max(gap1,gap2)
+    
+    biasYLabels <- list()
+    for(br in bias_ratios) {
+      # br <- bias_ratios[1]
+      biasYLabels[[br]] <- biasResObj$bias_tables$`leading/lagging_single`$features
+    }
   }
-  
+    
   maxlabelwidth <- max(sapply(unlist(biasYLabels),function(x){
     strwidth(x,units = "inch",ps = par(ps=pointsize))
   }))
-  
+    
   if(!is.null(filename)) cairo_pdf(filename = filename,width = 9+maxlabelwidth*2,height = 10,pointsize = pointsize)
   par(mfrow=c(2,2),cex=1)
   par(mai=c(1,0.3+maxlabelwidth,0.6,0.2))
   for(br in bias_ratios){
     usetitle <- biasTitles[[br]]
     if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
-    dataToPlot <- as.matrix(biasResObj$bias_results_single_ratios[,br])
-    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
-    plot(x = dataToPlot,
-         y = nrow(biasResObj$bias_results_single_ratios):1,
-         pch = 16,
-         col = kelly_colors[3],
-         yaxt='n',
-         main= usetitle,
-         xlim = c(max(0,1-gap),1+gap),
-         ylim = c(0.5,nrow(dataToPlot)+0.5),
-         xlab = paste0("ratio ",br),
-         ylab = "")
-    points(x=rep(biasResObj$bias_expected_single_ratios[,br],each=3),
-           y=nrow(biasResObj$bias_results_single_ratios):1,
-           col = kelly_colors[4],
-           pch = 17)
-    axis(side = 2,at = nrow(biasResObj$bias_results_single_ratios):1,
+    if(biasResObj$result_type=="single_sample"){
+      dataToPlot <- as.matrix(biasResObj$bias_results_single_ratios[,br])
+      dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+      plot(x = dataToPlot,
+           y = 1:nrow(dataToPlot),
+           pch = 16,
+           col = kelly_colors[3],
+           yaxt='n',
+           main= usetitle,
+           xlim = c(max(0,1-gap),1+gap),
+           ylim = c(nrow(dataToPlot)+0.5,0.5),
+           xlab = paste0("ratio ",br),
+           ylab = "")
+      points(x=rep(biasResObj$bias_expected_single_ratios[,br],each=3),
+             y=1:nrow(biasResObj$bias_results_single_ratios),
+             col = kelly_colors[4],
+             pch = 17)
+      # axis(side = 2,at = nrow(biasResObj$bias_results_single_ratios):1,
+      #      labels = biasYLabels[[br]],las=1)
+    }else if(biasResObj$result_type=="combined_samples"){
+      dataToPlot <- biasResObj$bias_tables[[paste0(br,"_single")]][,2:ncol(biasResObj$bias_tables[[paste0(br,"_single")]])]
+      boxplot(x = t(dataToPlot),
+              horizontal=TRUE,
+              col="white",
+              main= usetitle,
+              xlim = c(nrow(dataToPlot)+0.5,0.5),
+              ylim = c(max(0,1-gap),1+gap),
+              xlab = paste0("ratio ",br),
+              ylab = "",
+              yaxt='n')
+      for(i in 1:nrow(dataToPlot)){
+        rowdata <- unlist(dataToPlot[i,])
+        rowdata <- rowdata[order(rowdata)]
+        ydisplacement <- 0.3/(ncol(dataToPlot)-1)*((ncol(dataToPlot)-1):0) - 0.15
+        points(x=rowdata,
+               y=rep(i,ncol(dataToPlot))+ydisplacement,
+               col = kelly_colors[3],
+               pch = 16)
+      }
+      points(x=biasResObj$expected_values[[paste0(br,"_single")]],
+             y=1:nrow(dataToPlot),
+             col = kelly_colors[4],
+             pch = 17)
+    }
+    axis(side = 2,at = 1:nrow(dataToPlot),
          labels = biasYLabels[[br]],las=1)
     abline(v=1,lty=2)
     legend(x="topright",legend = c("observed","expected"),
            horiz = TRUE,xpd = T,inset = c(0,-0.09),
            fill = kelly_colors[3:4],border = F,bty = 'n')
   }
+
   
   bias_proportions <- c("uts.prop","leading.prop")
   biasTitles <- list()
@@ -420,30 +473,62 @@ plotStrandBiasResults <- function(biasResObj,
   biasYLabels[["uts.prop"]] <- biasYLabels[["uts/ts"]]
   biasYLabels[["leading.prop"]] <- biasYLabels[["leading/lagging"]]
   
-  dataToConsider <- as.matrix(biasResObj$bias_results_single_prop[,2:5])
-  dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
-  gap <- max(abs(dataToConsider - 0.5),na.rm = T)*1.2
-  
+  if(biasResObj$result_type=="single_sample"){
+    dataToConsider <- as.matrix(biasResObj$bias_results_single_prop[,2:5])
+    dataToConsider[is.nan(dataToConsider) | is.infinite(dataToConsider)] <- NA
+    gap <- max(abs(dataToConsider - 0.5),na.rm = T)*1.2
+  }else if(biasResObj$result_type=="combined_samples"){
+    gap1 <- max(abs(biasResObj$bias_tables$uts.prop_single[,2:ncol(biasResObj$bias_tables$uts.prop_single)] - 0.5),na.rm = T)*1.2
+    gap2 <- max(abs(biasResObj$bias_tables$leading.prop_single[,2:ncol(biasResObj$bias_tables$leading.prop_single)] - 0.5),na.rm = T)*1.2
+    gap <- max(gap1,gap2)
+  }
   for(bp in bias_proportions){
+    # bp <- bias_proportions[1]
     usetitle <- biasTitles[[bp]]
     if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
-    dataToPlot <- as.matrix(biasResObj$bias_results_single_prop[,bp])
-    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
-    plot(x = dataToPlot,
-         y = nrow(biasResObj$bias_results_single_prop):1,
-         pch = 16,
-         col = kelly_colors[3],
-         yaxt='n',
-         main= usetitle,
-         xlim = c(0.5-gap,0.5+gap),
-         ylim = c(0.5,nrow(dataToPlot)+0.5),
-         xlab = biasXLabels[[bp]],
-         ylab = "")
-    points(x=rep(biasResObj$bias_expected_single_prop[,bp],each=3),
-           y=nrow(biasResObj$bias_results_single_prop):1,
-           col = kelly_colors[4],
-           pch = 17)
-    axis(side = 2,at = nrow(biasResObj$bias_results_single_prop):1,
+    if(biasResObj$result_type=="single_sample"){
+      dataToPlot <- as.matrix(biasResObj$bias_results_single_prop[,bp])
+      dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+      plot(x = dataToPlot,
+           y = 1:nrow(biasResObj$bias_results_single_prop),
+           pch = 16,
+           col = kelly_colors[3],
+           yaxt='n',
+           main= usetitle,
+           xlim = c(0.5-gap,0.5+gap),
+           ylim = c(nrow(dataToPlot)+0.5,0.5),
+           xlab = biasXLabels[[bp]],
+           ylab = "")
+      points(x=rep(biasResObj$bias_expected_single_prop[,bp],each=3),
+             y=1:nrow(biasResObj$bias_results_single_prop),
+             col = kelly_colors[4],
+             pch = 17)
+    }else if(biasResObj$result_type=="combined_samples"){
+      dataToPlot <- biasResObj$bias_tables[[paste0(bp,"_single")]][,2:ncol(biasResObj$bias_tables[[paste0(bp,"_single")]])]
+      boxplot(x = t(dataToPlot),
+              horizontal=TRUE,
+              col="white",
+              main= usetitle,
+              xlim = c(nrow(dataToPlot)+0.5,0.5),
+              ylim = c(0.5-gap,0.5+gap),
+              xlab = biasXLabels[[bp]],
+              ylab = "",
+              yaxt='n')
+      for(i in 1:nrow(dataToPlot)){
+        rowdata <- unlist(dataToPlot[i,])
+        rowdata <- rowdata[order(rowdata)]
+        ydisplacement <- 0.3/(ncol(dataToPlot)-1)*((ncol(dataToPlot)-1):0) - 0.15
+        points(x=rowdata,
+               y=rep(i,ncol(dataToPlot))+ydisplacement,
+               col = kelly_colors[3],
+               pch = 16)
+      }
+      points(x=biasResObj$expected_values[[paste0(bp,"_single")]],
+             y=1:nrow(dataToPlot),
+             col = kelly_colors[4],
+             pch = 17)
+    }
+    axis(side = 2,at = 1:nrow(dataToPlot),
          labels = biasYLabels[[bp]],las=1)
     abline(v=0.5,lty=2)
     legend(x="topright",legend = c("observed","expected"),
@@ -452,61 +537,63 @@ plotStrandBiasResults <- function(biasResObj,
   }
   if(!is.null(filename)) dev.off()
   
-  # second plot, the 96 channel bias plots
-  filename_96bars <- NULL
-  if(!is.null(filename)) {
-    filename_96bars <- paste0(substr(filename,1,nchar(filename)-4),"_96bars.pdf")
-  }
-  
-  bias_types <- c("transcription","replication")
-  biasTitles <- list()
-  biasTitles[[bias_types[1]]] <- "Transcription bias"
-  biasTitles[[bias_types[2]]] <- "Replication bias"
-  
-  plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
-                   rgb(0,0,0,maxColorValue = 255),
-                   rgb(230,47,41,maxColorValue = 255),
-                   rgb(208,207,207,maxColorValue = 255),
-                   rgb(169,212,108,maxColorValue = 255),
-                   rgb(238,205,204,maxColorValue = 255))
-  muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
-  
-  if(!is.null(filename_96bars)) cairo_pdf(filename = filename_96bars,width = 10,height = 8,pointsize = pointsize)
-  par(mfrow=c(2,1),cex=1)
-  par(mai=c(1,0.8,0.6,0.2))
-  for(bt in bias_types){
-    # bt <- bias_types[1]
-    usetitle <- biasTitles[[bt]]
-    if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
-    dataToPlot <- as.matrix(biasResObj$bias_results_tri[biasResObj$bias_results_tri$biastype==bt,3:ncol(biasResObj$bias_results_tri)])
-    dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
-    bp <- barplot(height = dataToPlot,
-                  beside = T,
-                  border = NA,
-                  main= usetitle,
-                  ylab = "mutations",
-                  names.arg = rep("",ncol(biasResObj$bias_results_tri)-2),
-                  col = kelly_colors[1:2])
-    legend(x="topright",legend = biasResObj$bias_results_tri$biassubtype[biasResObj$bias_results_tri$biastype==bt],
-           horiz = TRUE,xpd = T,inset = c(0.05,-0.15),
-           fill = kelly_colors[1:2],border = F,bty = 'n')
-    par(xpd=TRUE)
-    par(usr = c(0, 1, 0, 1))
-    recttop <- -0.02
-    rectbottom <- -0.16
-    start1 <- 0.035
-    gap <- 0.155
-    rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
-    rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
-    rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
-    rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
-    rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
-    rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
-    textposx <- 0.04+seq(8,88,16)/104
-    text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2,cex = textscaling)
-    text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2,cex = textscaling)
-    par(xpd=FALSE)
+  if(biasResObj$result_type=="single_sample"){
+    # second plot, the 96 channel bias plots
+    filename_96bars <- NULL
+    if(!is.null(filename)) {
+      filename_96bars <- paste0(substr(filename,1,nchar(filename)-4),"_96bars.pdf")
+    }
     
+    bias_types <- c("transcription","replication")
+    biasTitles <- list()
+    biasTitles[[bias_types[1]]] <- "Transcription bias"
+    biasTitles[[bias_types[2]]] <- "Replication bias"
+    
+    plotcolours <- c(rgb(5,195,239,maxColorValue = 255),
+                     rgb(0,0,0,maxColorValue = 255),
+                     rgb(230,47,41,maxColorValue = 255),
+                     rgb(208,207,207,maxColorValue = 255),
+                     rgb(169,212,108,maxColorValue = 255),
+                     rgb(238,205,204,maxColorValue = 255))
+    muttypes <- c("C>A","C>G","C>T","T>A","T>C","T>G")
+    
+    if(!is.null(filename_96bars)) cairo_pdf(filename = filename_96bars,width = 10,height = 8,pointsize = pointsize)
+    par(mfrow=c(2,1),cex=1)
+    par(mai=c(1,0.8,0.6,0.2))
+    for(bt in bias_types){
+      # bt <- bias_types[1]
+      usetitle <- biasTitles[[bt]]
+      if (!is.null(addToTitle)) usetitle <- paste0(usetitle,addToTitle)
+      dataToPlot <- as.matrix(biasResObj$bias_results_tri[biasResObj$bias_results_tri$biastype==bt,3:ncol(biasResObj$bias_results_tri)])
+      dataToPlot[is.nan(dataToPlot) | is.infinite(dataToPlot)] <- NA
+      bp <- barplot(height = dataToPlot,
+                    beside = T,
+                    border = NA,
+                    main= usetitle,
+                    ylab = "mutations",
+                    names.arg = rep("",ncol(biasResObj$bias_results_tri)-2),
+                    col = kelly_colors[1:2])
+      legend(x="topright",legend = biasResObj$bias_results_tri$biassubtype[biasResObj$bias_results_tri$biastype==bt],
+             horiz = TRUE,xpd = T,inset = c(0.05,-0.15),
+             fill = kelly_colors[1:2],border = F,bty = 'n')
+      par(xpd=TRUE)
+      par(usr = c(0, 1, 0, 1))
+      recttop <- -0.02
+      rectbottom <- -0.16
+      start1 <- 0.035
+      gap <- 0.155
+      rect(start1, rectbottom, start1+gap, recttop,col = plotcolours[1],border = NA)
+      rect(start1+gap, rectbottom, start1+2*gap, recttop,col = plotcolours[2],border = NA)
+      rect(start1+2*gap, rectbottom, start1+3*gap, recttop,col = plotcolours[3],border = NA)
+      rect(start1+3*gap, rectbottom, start1+4*gap, recttop,col = plotcolours[4],border = NA)
+      rect(start1+4*gap, rectbottom, start1+5*gap, recttop,col = plotcolours[5],border = NA)
+      rect(start1+5*gap, rectbottom, start1+6*gap, recttop,col = plotcolours[6],border = NA)
+      textposx <- 0.04+seq(8,88,16)/104
+      text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2,cex = textscaling)
+      text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2,cex = textscaling)
+      par(xpd=FALSE)
+      
+    }
+    if(!is.null(filename_96bars)) dev.off()
   }
-  if(!is.null(filename_96bars)) dev.off()
 }

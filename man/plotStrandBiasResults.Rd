@@ -25,5 +25,5 @@ plotStrandBiasResults(
 }
 \description{
 This function plots the transcription/replication strand bias results obtained
-using the sampleStrandBias function.
+using the sampleStrandBias function, or the combineStrandBiasResults function.
 }
