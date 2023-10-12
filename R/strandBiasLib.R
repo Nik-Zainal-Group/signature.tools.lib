@@ -85,28 +85,31 @@ sampleStrandBias <- function(snv_table,
         }
       }
       
-      muts_single <- table(paste0(tmp_snv_table$REF,">",tmp_snv_table$ALT))
-      muts_5p <- as.character(BSgenome::getSeq(genomeSeq,
-                                               names=tmp_snv_table$chr,
-                                               start=tmp_snv_table$position-1,
-                                               end=tmp_snv_table$position-1))
-      muts_3p <- as.character(BSgenome::getSeq(genomeSeq,
-                                               names=tmp_snv_table$chr,
-                                               start=tmp_snv_table$position+1,
-                                               end=tmp_snv_table$position+1))
-      muts_tri <- table(paste0(muts_5p,"[",tmp_snv_table$REF,">",tmp_snv_table$ALT,"]",muts_3p))
-      
-      # add the counts accordingly
-      current_muts <- intersect(names(muts_single),pyr_muts)
-      if(length(current_muts)>0) bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] <- bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] + muts_single[current_muts]
-      current_muts <- setdiff(names(muts_single),pyr_muts)
-      if(length(current_muts)>0) bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] <- bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] + muts_single[current_muts]
-      
-      current_muts <- intersect(names(muts_tri),pyr_trimuts)
-      if(length(current_muts)>0) bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] <- bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] + muts_tri[current_muts]
-      current_muts <- setdiff(names(muts_tri),pyr_trimuts)
-      if(length(current_muts)>0) bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] <- bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] + muts_tri[current_muts]
-      
+      if(nrow(tmp_snv_table)>0){
+        muts_single <- table(paste0(tmp_snv_table$REF,">",tmp_snv_table$ALT))
+        muts_5p <- as.character(BSgenome::getSeq(genomeSeq,
+                                                 names=tmp_snv_table$chr,
+                                                 start=tmp_snv_table$position-1,
+                                                 end=tmp_snv_table$position-1))
+        muts_3p <- as.character(BSgenome::getSeq(genomeSeq,
+                                                 names=tmp_snv_table$chr,
+                                                 start=tmp_snv_table$position+1,
+                                                 end=tmp_snv_table$position+1))
+        muts_tri <- table(paste0(muts_5p,"[",tmp_snv_table$REF,">",tmp_snv_table$ALT,"]",muts_3p))
+        
+        # add the counts accordingly
+        current_muts <- intersect(names(muts_single),pyr_muts)
+        if(length(current_muts)>0) bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] <- bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] + muts_single[current_muts]
+        current_muts <- setdiff(names(muts_single),pyr_muts)
+        if(length(current_muts)>0) bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] <- bias_results_single[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] + muts_single[current_muts]
+        
+        current_muts <- intersect(names(muts_tri),pyr_trimuts)
+        if(length(current_muts)>0) bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] <- bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==bst,current_muts] + muts_tri[current_muts]
+        current_muts <- setdiff(names(muts_tri),pyr_trimuts)
+        if(length(current_muts)>0) bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] <- bias_results_tri[bias_results_single$biastype==bt & bias_results_single$biassubtype==setdiff(bias_subtypes[[bt]],bst),sapply(current_muts,toPyrMutation,simplify = T,USE.NAMES = F)] + muts_tri[current_muts]
+        
+      }
+
     }
   }
   
