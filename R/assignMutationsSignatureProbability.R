@@ -69,10 +69,10 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
     sampleMutations$sigsProb <- rep("",nrow(sampleMutations))
   }else{
     # scale sigs according to exposures
-    weightedSigs <- matrix(sampleSigsExposures,
-                           ncol = length(sampleSigsExposures),
+    weightedSigs <- matrix(as.matrix(sampleSigsExposures),
+                           ncol = ncol(sampleSigsExposures),
                            nrow = nrow(signatures),
-                           byrow = T) * signatures
+                           byrow = T) * as.matrix(signatures)
     # normalise by row to get channel probabilities
     channelProbs <-  as.matrix(weightedSigs/matrix(apply(weightedSigs,1,sum),
                                                    ncol = ncol(weightedSigs),
