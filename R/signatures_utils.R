@@ -1425,11 +1425,15 @@ convertExposuresFromOrganToRefSigsIfAny <- function(expMatrix,typemut="subs"){
       conversionMatrix <- conversionMatrixSBSv2.03
     }
   }else if(typemut=="rearr"){
-    organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversion_matrix_rearr))
-    conversionMatrix <- conversion_matrix_rearr
+    if(any(rownames(expMatrix) %in% rownames(conversion_matrix_rearr))){
+      organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversion_matrix_rearr))
+      conversionMatrix <- conversion_matrix_rearr
+    }
   }else if(typemut=="DNV"){
-    organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversionMatrixDBSv1.01))
-    conversionMatrix <- conversionMatrixDBSv1.01
+    if(any(rownames(expMatrix) %in% rownames(conversionMatrixDBSv1.01))){
+      organSpecificSignatures <- intersect(rownames(expMatrix),rownames(conversionMatrixDBSv1.01))
+      conversionMatrix <- conversionMatrixDBSv1.01
+    }
   }
   
   # if no organ-specific signatures were found, that's great, just end early
