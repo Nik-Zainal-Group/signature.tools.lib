@@ -84,19 +84,24 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
       message("[warning bedpeToRearrCatalogue] ignoring rearrangements shorter than 1kb (",sum(toberemoved)," out of ",nrow(all_sv_annotated),")")
       all_sv_annotated[toberemoved,"FILTER"] <- "length<1e3"
       all_sv_annotated[!toberemoved,"FILTER"] <- "PASS"
-      sv_bedpe <- sv_bedpe[!toberemoved,]
+      sv_bedpe <- sv_bedpe[!toberemoved,,drop=F]
     }
     
-    # now cluster
-    clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
-                                                        plot.path = NA,
-                                                        kmin=kmin,
-                                                        kmin.samples=1,
-                                                        gamma.sdev=25,
-                                                        PEAK.FACTOR=PEAK.FACTOR,
-                                                        thresh.dist=NA)
-    sv_bedpe <- clustering.result$sv_bedpe
-    clustering_regions <- clustering.result$clustering_regions
+    if(nrow(sv_bedpe)>0){
+      # now cluster
+      clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
+                                                          plot.path = NA,
+                                                          kmin=kmin,
+                                                          kmin.samples=1,
+                                                          gamma.sdev=25,
+                                                          PEAK.FACTOR=PEAK.FACTOR,
+                                                          thresh.dist=NA)
+      sv_bedpe <- clustering.result$sv_bedpe
+      clustering_regions <- clustering.result$clustering_regions
+    }else{
+      clustering_regions <- NULL
+    }
+
 
   }else{
     all_sv_annotated <- NULL
