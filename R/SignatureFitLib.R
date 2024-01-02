@@ -24,7 +24,7 @@ SignatureFit <- function(cat, #catalogue, patients as columns, channels as rows
                          method = "KLD", #KLD or NNLS or SA
                          bf_method = "CosSim", #KLD or CosSim
                          alpha = -1, #set alpha to -1 to avoid Bleeding Filter
-                         doRound = TRUE, #round the exposures to the closest integer
+                         doRound = FALSE, #round the exposures to the closest integer
                          verbose = TRUE, #use FALSE to suppress messages
                          n_sa_iter = 500,
                          showDeprecated = TRUE){
@@ -224,6 +224,13 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   if(!is.null(randomSeed)){
     set.seed(randomSeed)
   }
+  
+  # if a catalogue contains less than 1 mutations then we can't run bootstraps
+  nmuts_catalogues <- apply(cat, 2, sum)
+  if(any(nmuts_catalogues<1)){
+    message("[error SignatureFit_withBootstrap] cannot run bootstraps on catalogues with less than 1 mutations, nothing to run.")
+    return(NULL)
+  }
 
   if (nparallel > 1){
     doParallel::registerDoParallel(nparallel)
@@ -312,7 +319,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   names(KLD_samples) <- colnames(cat)
 
   #unassigned mutations
-  reconstructed_with_median <- round(as.matrix(signature_data_matrix) %*% as.matrix(E_median_filtered))
+  reconstructed_with_median <- as.matrix(signature_data_matrix) %*% as.matrix(E_median_filtered)
   unassigned_muts <- sapply(1:ncol(reconstructed_with_median),function(i) sum(cat[,i,drop=FALSE]) - sum(reconstructed_with_median[,i,drop=FALSE]))
   names(unassigned_muts) <- colnames(cat)
 
@@ -385,7 +392,7 @@ SignatureFit_withBootstrap_Analysis <- function(outdir, #output directory for th
                                        method = "KLD", #KLD or SA, just don't use SA or you will wait forever, expecially with many bootstraps. SA is ~1000 times slower than KLD or NNLS
                                        bf_method = "CosSim", #KLD or CosSim, only used if alpha != -1
                                        alpha = -1, #set alpha to -1 to avoid Bleeding Filter
-                                       doRound = TRUE, #round the exposures to the closest integer
+                                       doRound = FALSE, #round the exposures to the closest integer
                                        nparallel=1, #to use parallel specify >1
                                        n_sa_iter = 500){  #only used if  method = "SA"
 
@@ -776,7 +783,7 @@ plot_SignatureFit_withBootstrap <- function(outdir,
     par(xpd=FALSE)
   }
 
-  reconstructed_with_median <- round(as.matrix(res$signature_data_matrix) %*% res$E_median_filtered)
+  reconstructed_with_median <- as.matrix(res$signature_data_matrix) %*% res$E_median_filtered
 
 
   #plot and save exposures

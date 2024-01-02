@@ -91,6 +91,13 @@ FitMS <- function(catalogues,
                   nparallel = 1,
                   randomSeed = NULL,
                   verbose = FALSE){
+  
+  # if a catalogue contains less than 1 mutations then we can't run bootstraps
+  nmuts_catalogues <- apply(catalogues, 2, sum)
+  if(useBootstrap & any(nmuts_catalogues<1)){
+    message("[warning FitMS] cannot run bootstraps on catalogues with less than 1 mutations, setting useBootstrap=FALSE.")
+    useBootstrap <- FALSE
+  }
 
   # check type of mutations
   typeofmuts <- getTypeOfMutationsFromChannels(catalogues)
@@ -510,9 +517,16 @@ Fit <- function(catalogues,
   # initialise return object
   fitRes <- list()
   fitRes$fitAlgorithm <- "Fit"
+  
+  # if a catalogue contains less than 1 mutations then we can't run bootstraps
+  nmuts_catalogues <- apply(catalogues, 2, sum)
+  if(useBootstrap & any(nmuts_catalogues<1)){
+    message("[warning Fit] cannot run bootstraps on catalogues with less than 1 mutations, setting useBootstrap=FALSE.")
+    useBootstrap <- FALSE
+  }
 
   if(useBootstrap){
-
+    
     # compute the full results
     resFitBoot <- SignatureFit_withBootstrap(cat = catalogues,
                                              signature_data_matrix = signatures,
@@ -529,7 +543,7 @@ Fit <- function(catalogues,
                                              nparallel = nparallel,
                                              randomSeed = randomSeed,
                                              showDeprecated = F)
-
+    
     fitRes$exposures <- resFitBoot$E_median_filtered
     fitRes$unassigned_muts <- apply(catalogues,2,sum) - apply(fitRes$exposures,2,sum)
     fitRes$unassigned_muts_perc <- fitRes$unassigned_muts/apply(catalogues,2,sum)*100

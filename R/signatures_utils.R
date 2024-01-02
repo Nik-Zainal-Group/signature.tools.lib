@@ -13,10 +13,11 @@ generateRandMuts <- function(x){
   colnames(full_r) <- colnames(x)
   row.names(full_r) <- row.names(x)
   for (i in 1:ncol(x)){
-    if(sum(x[,i]>0)){
+    if(sum(x[,i])>=1){
       samples <- sample(1:nrow(x),size = sum(x[,i]),prob = x[,i]/sum(x[,i]),replace = TRUE)
       r <- unlist(lapply(1:nrow(x),function(p) sum(samples==p)))
-    }else{ #no rearrangments found
+    }else{ #there are not enough mutations to sample
+      message("[warning generateRandMuts] Cannot sample mutations for column ",i,", number of mutations is less than 1. The sampled catalogue will be empty.")
       r <- x[,i]
     }
     names(r) <- rownames(x)
