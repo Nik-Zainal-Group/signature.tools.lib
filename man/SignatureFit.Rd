@@ -10,7 +10,7 @@ SignatureFit(
   method = "KLD",
   bf_method = "CosSim",
   alpha = -1,
-  doRound = TRUE,
+  doRound = FALSE,
   verbose = TRUE,
   n_sa_iter = 500,
   showDeprecated = TRUE

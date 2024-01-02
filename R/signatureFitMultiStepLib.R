@@ -480,7 +480,7 @@ FitMS <- function(catalogues,
 #' signature, computed as (1-Gini(signature))*giniThresholdScaling, which will also be a percentage of the mutations in a sample.
 #'
 #' @param catalogues catalogues matrix, samples as columns, channels as rows
-#' @param signatures mutational signatures to bw fitted into the sample catalgues, signatures as columns and channels as rows
+#' @param signatures mutational signatures to be fitted into the sample catalgues, signatures as columns and channels as rows
 #' @param method KLD or NNLS
 #' @param exposureFilterType use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling
 #' @param threshold_percent threshold in percentage of total mutations in a sample, only exposures larger than threshold are considered. Set it to -1 to deactivate.
@@ -1174,8 +1174,14 @@ plotMatrix <- function(dataMatrix,
   toPlot <- dataMatrix
   for(i in 1:ncol(dataMatrix)) toPlot[,i] <- sprintf(paste0("%.",ndigitsafterzero,"f"),dataMatrix[,i])
   toPlot[toPlot=="0" | toPlot=="-0" | toPlot==paste0("0.",paste(rep("0",ndigitsafterzero),collapse = ""))] <- ""
-
-  circleDim <- dataMatrix/max(dataMatrix,na.rm = T)*5
+  
+  if(all(is.na(dataMatrix))){
+    circleDim <- dataMatrix
+    circleDim[,] <- 0
+  }else{
+    circleDim <- dataMatrix/max(dataMatrix,na.rm = T)*5
+  }
+  
 
   for(i in 1:ncol(circleDim)) {
     for(j in 1:nrow(circleDim)){

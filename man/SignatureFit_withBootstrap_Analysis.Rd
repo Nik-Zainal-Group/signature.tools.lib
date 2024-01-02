@@ -15,7 +15,7 @@ SignatureFit_withBootstrap_Analysis(
   method = "KLD",
   bf_method = "CosSim",
   alpha = -1,
-  doRound = TRUE,
+  doRound = FALSE,
   nparallel = 1,
   n_sa_iter = 500
 )

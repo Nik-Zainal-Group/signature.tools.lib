@@ -24,7 +24,7 @@ Fit(
 \arguments{
 \item{catalogues}{catalogues matrix, samples as columns, channels as rows}
 
-\item{signatures}{mutational signatures to bw fitted into the sample catalgues, signatures as columns and channels as rows}
+\item{signatures}{mutational signatures to be fitted into the sample catalgues, signatures as columns and channels as rows}
 
 \item{exposureFilterType}{use either fixedThreshold or giniScaledThreshold. When using fixedThreshold, exposures will be removed based on a fixed percentage with respect to the total number of mutations (threshold_percent will be used). When using giniScaledThreshold each signature will used a different threshold calculated as (1-Gini(signature))*giniThresholdScaling}
 
