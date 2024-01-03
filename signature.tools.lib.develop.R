@@ -128,6 +128,7 @@ devtools::test(pkg = ".",filter = "FitAndFitMS_DBS")
 devtools::test(pkg = ".",filter = "JSONexport")
 devtools::test(pkg = ".",filter = "SignatureFit_pipeline")
 devtools::test(pkg = ".",filter = "matchClustering")
+devtools::test(pkg = ".",filter = "assignSignatureProbabilityToMutations")
 
 
 

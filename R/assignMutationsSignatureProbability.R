@@ -80,6 +80,7 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
                                                    byrow = F))
     
     channelProbs[is.infinite(channelProbs)] <- 0
+    channelProbs[is.nan(channelProbs)] <- 0
     sampleMutations$sigsProb <- rep("",nrow(sampleMutations))
     for(x in mutsChannels){
       probVect <- channelProbs[x,,drop=F]
