@@ -298,6 +298,9 @@ combineStrandBiasResults <- function(biasResObjList){
     meanvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,mean,na.rm=TRUE)
     medianvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,median,na.rm=TRUE)
     sdvalue <- apply(dataTable[,2:ncol(dataTable),drop=F],1,sd,na.rm=TRUE)
+    nvalues <- apply(dataTable[,2:ncol(dataTable),drop=F],1,function(x) sum(!is.na(x)))
+    cvvalues <- sdvalue/meanvalue
+    serrvalues <- sdvalue/sqrt(nvalues)
     
     pvalue <- c()
     for(i in 1:nrow(dataTable)){
@@ -319,6 +322,9 @@ combineStrandBiasResults <- function(biasResObjList){
     summary_tables[[tn]] <- data.frame(mean=meanvalue,
                                        median=medianvalue,
                                        sd=sdvalue,
+                                       cv=cvvalues,
+                                       n=nvalues,
+                                       serr=serrvalues,
                                        pvalue=pvalue,
                                        row.names = dataTable$features,
                                        stringsAsFactors = F,

@@ -1,0 +1,5 @@
+biastype	biassubtype	C>A	C>G	C>T	T>A	T>C	T>G
+transcription	uts	25	5	55	10	59	33
+transcription	ts	26	1	59	5	52	33
+replication	leading	47	7	154	24	119	74
+replication	lagging	72	5	108	32	154	81
