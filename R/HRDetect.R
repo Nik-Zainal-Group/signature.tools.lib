@@ -255,6 +255,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   #initialise hrdetect bootstrap tables
   hrdetect_bootstrap_table <- NULL
   q_5_50_95 <- NULL
+  hrdetect_bootstrap_pvalues <- NULL
   # annotated mutations
   annotated_mutations_subs <- NULL
   annotated_mutations_rearr <- NULL
