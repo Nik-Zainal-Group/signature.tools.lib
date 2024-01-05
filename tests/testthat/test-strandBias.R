@@ -33,6 +33,8 @@ test_that("test sampleStrandBias(), combineStrandBiasResults() and plotStrandBia
   
   # clean up
   unlink("combinedSamples_test_plot_MMR.pdf")
+  unlink("combinedSamples_test_plot_MMR_ratio_replication_bias_meanStErr.pdf")
+  unlink("combinedSamples_test_plot_MMR_ratio_transcription_bias_meanStErr.pdf")
   
   #here goes the test
   expect_true(TRUE)

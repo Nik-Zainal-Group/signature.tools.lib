@@ -605,4 +605,70 @@ plotStrandBiasResults <- function(biasResObj,
     }
     if(!is.null(filename_96bars)) dev.off()
   }
+  
+  if(biasResObj$result_type=="combined_samples"){
+    
+    biases <- c("transcription","replication")
+    for (bb in biases) {
+      # bb <- biases[1]
+      
+      filename_serr <- NULL
+      if(!is.null(filename)) {
+        filename_serr <- paste0(substr(filename,1,nchar(filename)-4),"_ratio_",bb,"_bias_meanStErr.pdf")
+      }
+      
+      if(bb=="transcription"){
+        meanRatio <- biasResObj$summary_tables$`uts/ts_single`$mean
+        serrRatio <- biasResObj$summary_tables$`uts/ts_single`$serr
+        mutations <- rownames(biasResObj$summary_tables$`uts/ts_single`)
+        expected <- biasResObj$expected_values$`uts/ts_single`
+        mainlabel <- paste0("bias to untranscribed strand")
+      }else{
+        meanRatio <- biasResObj$summary_tables$`leading/lagging_single`$mean
+        serrRatio <- biasResObj$summary_tables$`leading/lagging_single`$serr
+        mutations <- rownames(biasResObj$summary_tables$`leading/lagging_single`)
+        expected <- biasResObj$expected_values$`leading/lagging_single`
+        mainlabel <- paste0("bias to leading strand")
+      }
+
+      leftlim <- min(meanRatio-serrRatio)
+      rightlim <- max(meanRatio+serrRatio)
+      
+      barline <- 0.08
+      if(!is.null(filename_serr)) cairo_pdf(filename = filename_serr,width = 6,height = 5)
+      par(mar=c(5,7,3,3))
+      plot(x = expected,
+           y=c(1:length(expected)),
+           # xlim = c(0.5,1.5),
+           xlim = c(leftlim,rightlim),
+           ylim = c(6.5,0.5),
+           xlab = "odd ratio",
+           main = mainlabel,
+           yaxt = 'n',
+           ylab = "",
+           pch = 16,
+           cex=1.5,
+           col = kelly_colors[4])
+      abline(v=1,lty = 2)
+      axis(side = 2,at = c(1:length(meanRatio)),labels = mutations,las=2)
+      
+      for(i in 1:length(meanRatio)){
+        cileft <- meanRatio[i]-serrRatio[i]
+        ciright <- meanRatio[i]+serrRatio[i]
+        lines(x = c(cileft,ciright),y=c(i,i))
+        lines(x = c(cileft,cileft),y=c(i-barline,i+barline))
+        lines(x = c(ciright,ciright),y=c(i-barline,i+barline))
+      }
+      
+      points(x=meanRatio,
+             y=c(1:6),
+             pch = 16,
+             cex=1.5,
+             col = kelly_colors[3])
+      legend(x="topright",pch = 16,col = kelly_colors[4:3],legend = c("expected","observed"),bty = "n",pt.cex=1.5)
+      if(!is.null(filename_serr)) dev.off()
+    }
+    
+
+  }
 }
