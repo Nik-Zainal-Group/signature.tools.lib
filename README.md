@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"/>
 
+2.4.4
+
+- replication and transcription strand bias functions 
+
 2.4.3
 
 - it is now possible to specify ```organ="Other"``` in FitMS and HRDetect pipeline

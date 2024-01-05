@@ -835,6 +835,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
         hrdetect_bootstrap_table <- do.call(rbind,hrdetect_bootstrap_table)
         rownames(hrdetect_bootstrap_table) <- 1:nrow(hrdetect_bootstrap_table)
         q_5_50_95 <- t(apply(hrdetect_bootstrap_table,2,function(x) quantile(x,c(0.05,0.5,0.95))))
+        hrdetect_bootstrap_pvalues <- t(apply(hrdetect_bootstrap_table,2,function(x) sum(x<=0.5)/length(x)))
 
         message("[info HRDetect_pipeline] HRDetect with bootstrap successful!")
 
@@ -886,6 +887,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
   res$indels_classification_table <- indels_classification_table
   res$hrdetect_bootstrap_table <- hrdetect_bootstrap_table
   res$q_5_50_95 <- q_5_50_95
+  res$hrdetect_bootstrap_pvalues <- hrdetect_bootstrap_pvalues
   return(res)
 
 }
