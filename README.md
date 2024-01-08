@@ -20,7 +20,7 @@
   - [Example 05: common and rare signature extraction workflow](#examplese05)
 - [Frequently Asked Questions](#faq)
 
-<a name="intro"/>
+<a name="intro"></a>
 
 ## Introduction to the package
 
@@ -38,7 +38,7 @@ the most important functions is given below.
 
 ## Versions
 
-<a name="version"/>
+<a name="version"></a>
 
 2.4.4
 
@@ -111,7 +111,7 @@ the most important functions is given below.
 
 ## How to cite us
 
-<a name="cite"/>
+<a name="cite"></a>
 
 These are the research articles associated with ```signature.tools.lib```:
 
@@ -123,7 +123,7 @@ More in details, these are the specific signatures and algorithms introduced in 
 - Degasperi et al. 2022, *Science*: RefSig SBS v2, RefSig DBS v1, FitMS
 - Degasperi et al. 2020, *Nature Cancer*: RefSig SBS v1, RefSig Rearrangements (SV) v1, Fit with bootstrap, HRDetect with bootstrap.
 
-<a name="req"/>
+<a name="req"></a>
 
 ## Systems Requirements
 
@@ -193,7 +193,7 @@ We have noticed that the ```NNLM``` package is frequently unavailable to downloa
 during the R installation, so we have changed the installation process to install ```NNLM``` from
 the github repository [linxihui/NNLM](https://github.com/linxihui/NNLM).
 
-<a name="test"/>
+<a name="test"></a>
 
 ## Testing the package
 
@@ -204,7 +204,7 @@ typing from the R environment:
 devtools::test()
 ```
 
-<a name="howtouse"/>
+<a name="howtouse"></a>
 
 ## How to use this package
 
@@ -227,7 +227,7 @@ explanation. To access the documentation you can use the ```?function```
 syntax in R, for each of the functions below. For example, in R or
 RStudio, type ```?HRDetect_pipeline```.
 
-<a name="functions"/>
+<a name="functions"></a>
 
 ## Functions provided by the package
 
@@ -385,7 +385,7 @@ various metrics like sensitivity, specificity, F1 score and so on.
 Multiple matrices of estimated exposures can be compared to the true exposures
 at once using the ```evaluatePerformanceExposuresList``` function.
 
-<a name="scripts"/>
+<a name="scripts"></a>
 
 ## Command line scripts
 
@@ -405,11 +405,11 @@ Currently available scripts are:
 You can find user manuals for these command line scripts with detailed
 explanation of parameters and examples in the ```userManuals``` folder.
 
-<a name="examples"/>
+<a name="examples"></a>
 
 ## Examples
 
-<a name="examplestests"/>
+<a name="examplestests"></a>
 
 ### Test examples
 
@@ -423,7 +423,7 @@ devtools::test()
 
 Moreover, examples of typical workflows are given below.
 
-<a name="examplese01"/>
+<a name="examplese01"></a>
 
 ### Example 01: signature fit and HRDetect
 
@@ -564,7 +564,7 @@ writeTable(res$hrdetect_output,file = "HRDetect_res.tsv")
 Also in this case, you can compare your output with the expected output
 in the ```Example01``` directory.
 
-<a name="examplese02"/>
+<a name="examplese02"></a>
 
 ### Example 02: signature fit of organ-specific signatures
 
@@ -652,7 +652,7 @@ snv_exp <- convertExposuresFromOrganToRefSigs(expMatrix = t(snv_exp[,1:(ncol(snv
 writeTable(snv_exp,"RefSigSubsExposures.tsv")
 ```
 
-<a name="examplese03"/>
+<a name="examplese03"></a>
 
 ### Example 03: signature fit using FitMS
 
@@ -685,7 +685,7 @@ writeFitResultsToJSON(fitObj = subs_fit_res,
 
 A manual for FitMS can be found in the ```userManuals``` folder.
 
-<a name="examplese04"/>
+<a name="examplese04"></a>
 
 ### Example 04: signature fit using signatureFit_pipeline
 
@@ -734,7 +734,7 @@ appropriate plot function, in this case ```plotFitMS```.
 The ```signatureFit``` script that can be found in the ```scripts``` folder is a command line wrapper for the
 ```signatureFit_pipeline``` function.
 
-<a name="examplese05"/>
+<a name="examplese05"></a>
 
 ### Example 05: common and rare signature extraction workflow
 
@@ -841,7 +841,7 @@ resFinalExpo <- finaliseCommonRareSignatureExposures(outfileRoot = paste0(outdir
 
 ## Frequently Asked Questions
 
-<a name="faq"/>
+<a name="faq"></a>
 
 **Can I use your package on my Whole Exome Sequenced data?**
 
