@@ -15,12 +15,16 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
 
   if(genome.v=="hg19"){
     genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
   }else if(genome.v=="hg38"){
     genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
   }else if(genome.v=="mm10"){
     genomeSeq <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
   }else if(genome.v=="canFam3"){
     genomeSeq <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3
+    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
   }
   
   # plots mutation-context for all variants in the vcf file
@@ -52,6 +56,14 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   if(nmutsloaded>nmutstoanalyse){
     message("[tabToSNVcatalogue warning] mutations table contains ",nmutsloaded-nmutstoanalyse," indels, which were ignored.")
   }
+  
+  if (genome.v=="hg38" || genome.v=="mm10") {
+    if(length(intersect(subs$chr,expected_chroms))==0) subs$chr <- paste0("chr",subs$chr)
+  }
+  
+  if(nrow(subs)>0){
+    subs <- subs[subs$chr %in% expected_chroms,,drop=F]
+  }
 
   subs$wt <- subs$REF
   subs$mt <- subs$ALT
@@ -68,21 +80,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
   subs$pyrwt[not.pyr] <- as.character(toPyr(subs$wt[not.pyr]))
   subs$pyrmut[not.pyr] <- as.character(toPyr(subs$mt[not.pyr]))
 
-  # currently we support chromosomes, not contigs
-  if (genome.v=="hg19"){
-    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
-  }else if (genome.v=="hg38"){
-    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
-  }else if (genome.v=="mm10"){
-    expected_chroms <- paste0("chr",c(seq(1:19),"X","Y"))
-  }else if (genome.v=="canFam3"){
-    expected_chroms <- paste0("chr",c(seq(1:38),"X")) 
-  }
-  
-  if (genome.v=="hg38" || genome.v=="mm10") {
-    if(length(intersect(subs$chr,expected_chroms))==0) subs$chr <- paste0("chr",subs$chr)
-  }
-
   muts <- data.frame(chroms=subs$chr, 
                      starts=subs$position, 
                      ends = subs$position, 
@@ -91,7 +88,6 @@ tabToSNVcatalogue <- function(subs, genome.v="hg19") {
                      pyrwt=subs$pyrwt , 
                      pyrmut=subs$pyrmut,
                      stringsAsFactors = FALSE)
-
 
   result<- list()
   result$muts <- muts

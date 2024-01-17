@@ -22,6 +22,9 @@ how_to <- function(){
   message("                              be given automatically.")
   message("  -e, --genomev=GENOMEV     Genome version to be used: hg19, hg38 or mm10. If not")
   message("                              specified GENOMEV=hg19.")
+  message("  -A, --writeannotations    Write the annotated mutations to file. This is off")
+  message("                              by default, because annotated mutations are saved as")
+  message("                              flat text files and may occupy a lot of space.")
   message("  -h, --help                Show this explanation.")
   message(" ")
 }
@@ -29,10 +32,11 @@ how_to <- function(){
 # get options, using the spec as defined by the enclosed list.
 # we read the options from the default: commandArgs(TRUE).
 spec = matrix(c(
-  'input',         'i', 1, "character",
-  'help',          'h', 0, "logical",
-  'outdir',        'o', 1, "character",
-  'genomev',       'e', 1, "character"
+  'input',             'i', 1, "character",
+  'help',              'h', 0, "logical",
+  'writeannotations',  'A', 0, "logical",
+  'outdir',            'o', 1, "character",
+  'genomev',           'e', 1, "character"
 ), byrow=TRUE, ncol=4)
 
 # collect the options
@@ -43,6 +47,7 @@ input_table_file <- NULL
 input_table <- NULL
 outdir <- NULL
 genomev <- NULL
+writeannotations <- FALSE
 
 # if help was asked for print a friendly message
 # and exit with a zero error code
@@ -50,6 +55,8 @@ if ( !is.null(opt$help) ) {
   how_to()
   q(status=0,save = "no")
 }
+
+if (!is.null(opt$writeannotations)) writeannotations <- TRUE
 
 if (is.null(opt$input)) {
   message("[error genomeChart script] Missing INPUTTABLE. Quit.\n")
@@ -140,4 +147,19 @@ for (i in 1:nrow(input_table)){
                                             genome.v = genomev,
                                             debug = FALSE)
   save(file = paste0(outdir,"/",sample_name,"_genomeChart.rData"),resgc)
+  
+  if(writeannotations){
+    if(!is.null(resgc$sbs_obj$muts)) signature.tools.lib::writeTable(resgc$sbs_obj$muts,file = paste0(outdir,"/",sample_name,"_genomeChart_annotatedSNVs.tsv"),row.names = F)
+    if(!is.null(resgc$indels_obj$indels_classified)) signature.tools.lib::writeTable(resgc$indels_obj$indels_classified,file = paste0(outdir,"/",sample_name,"_genomeChart_annotatedIndels.tsv"),row.names = F)
+    if(!is.null(resgc$sv_obj$all_sv_annotated)) signature.tools.lib::writeTable(resgc$sv_obj$all_sv_annotated,file = paste0(outdir,"/",sample_name,"_genomeChart_annotatedSVs.tsv"),row.names = F)
+    if(!is.null(resgc$dbs_obj$annotated_DNVs)) signature.tools.lib::writeTable(resgc$dbs_obj$annotated_DNVs,file = paste0(outdir,"/",sample_name,"_genomeChart_annotatedDNVs.tsv"),row.names = F)
+    if(!is.null(resgc$kataegis_regions)){
+      if(nrow(resgc$kataegis_regions)>0) signature.tools.lib::writeTable(resgc$kataegis_regions,file = paste0(outdir,"/",sample_name,"_genomeChart_kataegisRegions.tsv"),row.names = F)
+    } 
+    if(!is.null(resgc$sv_obj$clustering_regions)) signature.tools.lib::writeTable(resgc$sv_obj$clustering_regions,file = paste0(outdir,"/",sample_name,"_genomeChart_SVclusterRegions.tsv"),row.names = F)
+  }
 }
+
+message("[info genomeChart script] genomeChart script completed!")
+
+
