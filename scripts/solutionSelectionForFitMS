@@ -119,8 +119,8 @@ if(!is.null(opt$selectiontable)){
                                  row.names = 1,
                                  stringsAsFactors = F,
                                  check.names = F)
-    forceRareSigChoice <- selectiontable[,1]
-    names(forceRareSigChoice) <- rownames(selectiontable)
+    forceRareSigChoice <- list()
+    for(i in 1:nrow(selectiontable)) forceRareSigChoice[[rownames(selectiontable)[i]]] <- selectiontable[i,1]
   }else{
     message("[error solutionSelectionForFitMS script] selectiontable file does not exist: ",opt$selectiontable)
     q(status=1,save = "no")
