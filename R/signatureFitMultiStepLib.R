@@ -1387,6 +1387,25 @@ plotFit <- function(fitObj,
   colnames(cossimdf) <- "cossim_catalogueVSreconstructed"
   write.table(cossimdf,file = paste0(outdir,"cossim_catalogueVSreconstructed.tsv"),
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  # some aggregate stats
+  if(nrow(fitObj$exposures)>1){
+    # distribution of consensus exposures across the samples
+    simpleBoxPlot(dataToPlot = fitObj$exposures,
+                  outfile = paste0(outdir,"exposuresAcrossSamplesBoxplot.pdf"),
+                  charttitle = "Exposures across samples",
+                  ylab = "mutations",
+                  plotpoints = TRUE)
+    # proportion of samples with signatures
+    propSamplesTable <- apply(fitObj$exposures>0,2,sum)/nrow(fitObj$exposures)
+    simpleBarChart(dataToPlot = propSamplesTable,
+                   charttitle = "Proportion of samples with signature",
+                   ylim = c(0,1),
+                   ylab="proportion",
+                   outfile = paste0(outdir,"proportionOfSamplesWithSignatures.pdf"))
+    writeTable(data.frame(proportion=propSamplesTable),
+               file = paste0(outdir,"proportionOfSamplesWithSignatures.tsv"))
+  }
 
   #provide a series of plots for each sample
   if(samplesInSubdir){
@@ -1681,6 +1700,25 @@ plotFitMS <- function(fitMSobj,
              sideVectorLabel = "cosine similarity")
   write.table(fitMSobj$exposures,file = file_table_exp,
               sep = "\t",col.names = TRUE,row.names = TRUE,quote = FALSE)
+  
+  # some aggregate stats
+  if(nrow(fitMSobj$exposures)>1){
+    # distribution of consensus exposures across the samples
+    simpleBoxPlot(dataToPlot = fitMSobj$exposures,
+                  outfile = paste0(outdir,"exposuresAcrossSamplesBoxplot.pdf"),
+                  charttitle = "Exposures across samples",
+                  ylab = "mutations",
+                  plotpoints = TRUE)
+    # proportion of samples with signatures
+    propSamplesTable <- apply(fitMSobj$exposures>0,2,sum)/nrow(fitMSobj$exposures)
+    simpleBarChart(dataToPlot = propSamplesTable,
+                   charttitle = "Proportion of samples with signature",
+                   ylim = c(0,1),
+                   ylab="proportion",
+                   outfile = paste0(outdir,"proportionOfSamplesWithSignatures.pdf"))
+    writeTable(data.frame(proportion=propSamplesTable),
+               file = paste0(outdir,"proportionOfSamplesWithSignatures.tsv"))
+  }
   
   cossimdf <- as.data.frame(fitMSobj$cossim_catalogueVSreconstructed)
   colnames(cossimdf) <- "cossim_catalogueVSreconstructed"
@@ -2226,4 +2264,81 @@ loadFitFromFile <- function(filename,verbose=T){
   load(file = filename)
   if(verbose) message("[info loadFitToFile] loaded ",fitObj$fitAlgorithm," object from file ",filename)
   return(fitObj)
+}
+
+
+simpleBoxPlot <- function(dataToPlot,
+                          outfile,
+                          charttitle="",
+                          ylab="",
+                          pointsize=16,
+                          plotpoints=TRUE){
+  # group names
+  groupNames <- colnames(dataToPlot)
+  # get the max size of the labels
+  maxnchar <- max(sapply(groupNames,function(x){
+    strwidth(x,units = "inch",ps = par(ps=pointsize))
+  }))
+  # plotting
+  plotheight <- 4
+  mar1 <- maxnchar+0.5
+  mar2 <- 1.5
+  mar3 <- 1
+  mar4 <- 0.5
+  width <- 0.8*length(groupNames)+mar2+mar4
+  height <- mar3 + mar1 + plotheight
+  cairo_pdf(filename = outfile,width = width,height = height,pointsize = pointsize)
+  par(mai=c(mar1,mar2,mar3,mar4),mgp=c(4,1,0))
+  bxres <- boxplot(dataToPlot,
+                   las=2,
+                   cex.axes=0.9,
+                   lwd = 2,
+                   ylab=ylab,
+                   cex.main = 0.9,
+                   names = groupNames,
+                   col = "#FFFFFF",
+                   border="#848482",
+                   main=charttitle)
+  if(plotpoints){
+    for (pi in 1:ncol(dataToPlot)) {
+      dp <- dataToPlot[,colnames(dataToPlot)[pi]]
+      pointpos <- runif(length(dp),min = 0.2,max = 0.8)-0.5+pi
+      points(pointpos,dp,pch=16,col="#0067A599")
+    }
+  }
+  dev.off()
+}
+
+
+simpleBarChart <- function(dataToPlot,
+                           outfile,
+                           ylim = NULL,
+                           ylab="",
+                           charttitle="",
+                           pointsize=16){
+  # group names
+  groupNames <- names(dataToPlot)
+  # get the max size of the labels
+  maxnchar <- max(sapply(groupNames,function(x){
+    strwidth(x,units = "inch",ps = par(ps=pointsize))
+  }))
+  # plotting
+  plotheight <- 4
+  mar1 <- maxnchar+0.5
+  mar2 <- 1.5
+  mar3 <- 1
+  mar4 <- 0.5
+  width <- 0.8*length(groupNames)+mar2+mar4
+  height <- mar3 + mar1 + plotheight
+  cairo_pdf(filename = outfile,width = width,height = height,pointsize = pointsize)
+  par(mai=c(mar1,mar2,mar3,mar4),mgp=c(4,1,0))
+  barplot(dataToPlot,
+          ylim = ylim,
+          ylab = ylab,
+          col = "#0067A599",
+          border = NA,
+          names.arg = groupNames,
+          las=2,
+          main = charttitle)
+  dev.off()
 }
