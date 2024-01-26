@@ -598,6 +598,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                     nboot = nboot,
                     threshold_p.value = threshold_p.value,
                     maxRareSigsPerSample = maxRareSigsPerSample,
+                    rareCandidateSelectionCriteria = rareCandidateSelectionCriteria,
                     nparallel = nparallel,
                     randomSeed = randomSeed,
                     verbose = verbose)
