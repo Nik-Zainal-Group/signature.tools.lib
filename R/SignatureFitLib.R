@@ -224,13 +224,6 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
   if(!is.null(randomSeed)){
     set.seed(randomSeed)
   }
-  
-  # if a catalogue contains less than 1 mutations then we can't run bootstraps
-  nmuts_catalogues <- apply(cat, 2, sum)
-  if(any(nmuts_catalogues<1)){
-    message("[error SignatureFit_withBootstrap] cannot run bootstraps on catalogues with less than 1 mutations, nothing to run.")
-    return(NULL)
-  }
 
   if (nparallel > 1){
     doParallel::registerDoParallel(nparallel)
@@ -238,13 +231,13 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
       doRNG::registerDoRNG(randomSeed)
     }
     boot_list <- foreach::foreach(j=1:nboot) %dopar% {
-      bootcat <- generateRandMuts(cat)
+      bootcat <- generateRandMuts(cat,verbose = FALSE)
       SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter,showDeprecated = F)
     }
   }else{
     boot_list <- list()
     for(i in 1:nboot){
-      bootcat <- generateRandMuts(cat)
+      bootcat <- generateRandMuts(cat,verbose = FALSE)
       boot_list[[i]] <- SignatureFit(bootcat,signature_data_matrix,method,bf_method,alpha,verbose=verbose,doRound = doRound,n_sa_iter=n_sa_iter,showDeprecated = F)
     }
   }

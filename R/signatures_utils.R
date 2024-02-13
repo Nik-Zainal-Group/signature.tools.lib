@@ -4,10 +4,12 @@
 #------------------------------------------------
 
 #' @importFrom foreach %dopar%
+NULL
 
 ## Generate a random replicate of the cataloge
 # This method guarantees the total number of signatures is unchanged
-generateRandMuts <- function(x){
+generateRandMuts <- function(x,
+                             verbose=TRUE){
   #consider the following method as a replacement
   full_r <- matrix(nrow = dim(x)[1],ncol = dim(x)[2])
   colnames(full_r) <- colnames(x)
@@ -17,7 +19,7 @@ generateRandMuts <- function(x){
       samples <- sample(1:nrow(x),size = sum(x[,i]),prob = x[,i]/sum(x[,i]),replace = TRUE)
       r <- unlist(lapply(1:nrow(x),function(p) sum(samples==p)))
     }else{ #there are not enough mutations to sample
-      message("[warning generateRandMuts] Cannot sample mutations for column ",i,", number of mutations is less than 1. The sampled catalogue will be empty.")
+      if(verbose) message("[warning generateRandMuts] Cannot sample mutations for catalogue in column ",i,", number of mutations is less than 1. Returning the original catalogue.")
       r <- x[,i]
     }
     names(r) <- rownames(x)
