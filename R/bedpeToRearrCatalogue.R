@@ -368,7 +368,7 @@ build_junctions_catalogue <- function(annotated_bedpe){
         channel <- paste0(channelc,typebp)
         if(typebp %in% c("_non-templated","_homologous")){
           bedpecol <- ifelse(typebp=="_non-templated","non-template","micro-homology")
-          currentseqlength <- nchar(annotated_bedpe[annotated_bedpe[,bedpecol]!="." & annotated_bedpe$is.clustered==clustered,bedpecol])
+          currentseqlength <- nchar(annotated_bedpe[annotated_bedpe[,bedpecol]!="." & annotated_bedpe[,bedpecol]!="_" & annotated_bedpe$is.clustered==clustered,bedpecol])
           if(length(currentseqlength)>0){
             currentlengthtable <- table(currentseqlength)
             for(i in 1:length(currentlengthtable)){
@@ -384,7 +384,7 @@ build_junctions_catalogue <- function(annotated_bedpe){
             }
           }
         }else{
-          tmpn <- sum(annotated_bedpe[,"non-template"]=="." &  annotated_bedpe[,"micro-homology"]=="." & annotated_bedpe$is.clustered==clustered)
+          tmpn <- sum(((annotated_bedpe[,"non-template"]=="." &  annotated_bedpe[,"micro-homology"]==".") | (annotated_bedpe[,"non-template"]=="_" &  annotated_bedpe[,"micro-homology"]=="_"))  & annotated_bedpe$is.clustered==clustered)
           junctions_catalogue[channel,"sample"] <- junctions_catalogue[channel,"sample"] + tmpn
         }
       }

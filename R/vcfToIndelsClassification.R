@@ -10,7 +10,9 @@
 #' @export
 #' @examples 
 #' res <- vcfToIndelsClassification("test.indel.vcf.gz","testSample","hg19")
-vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
+vcfToIndelsClassification <- function(indelsVCF.file,
+                                      sampleID,
+                                      genome.v="hg19"){
 
   if(genome.v=="hg19"){
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
@@ -42,6 +44,12 @@ vcfToIndelsClassification <- function(indelsVCF.file,sampleID, genome.v="hg19"){
   
   # load the indel VCF file
   indel.data <- VariantAnnotation::readVcf(indelsVCF.file, genome.v, gr)
+  
+  if(nrow(indel.data)==0){
+    message("[warning vcfToIndelsClassification] no indels founds, nothing to process.")
+    return(NULL)
+  }
+  
   indel.data <- VariantAnnotation::expand(indel.data)
   
   # convert formats, and find context of the indels

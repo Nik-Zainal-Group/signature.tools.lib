@@ -47,6 +47,11 @@ genomeChart <- function(outfilename,
     if (file.exists(SNV_vcf_file)){
       snvs_table <- fromVcfToTable(vcfFilename = SNV_vcf_file,
                                    genome.v = genome.v)
+      if(nrow(snvs_table)==0) {
+        message("[warning genomeChart] SNV_vcf_file ",SNV_vcf_file," contains no valid SNVs. Ignoring and moving on.")
+        snvs_table <- NULL
+        SNV_vcf_file <- NULL
+      }
     }else{
       message("[warning genomeChart] SNV_vcf_file file not found: ",SNV_vcf_file,". Ignoring and moving on.")
       SNV_vcf_file <- NULL
@@ -57,6 +62,11 @@ genomeChart <- function(outfilename,
       if(is.null(snvs_table)){
         snvs_table <- read.table(file = SNV_tab_file,sep = "\t",header = TRUE,
                                  check.names = FALSE,stringsAsFactors = FALSE)
+        if(nrow(snvs_table)==0) {
+          message("[warning genomeChart] SNV_tab_file ",SNV_tab_file," contains no valid SNVs. Ignoring and moving on.")
+          snvs_table <- NULL
+          SNV_tab_file <- NULL
+        }
       }else{
         message("[warning genomeChart] SNV_tab_file ignored because SNVs already loaded from SNV_vcf_file.")
         SNV_tab_file <- NULL
@@ -73,6 +83,10 @@ genomeChart <- function(outfilename,
       indels_obj <- vcfToIndelsClassification(indelsVCF.file = Indels_vcf_file,
                                               sampleID = sample_name,
                                               genome.v = genome.v)
+      if(is.null(indels_obj)){
+        message("[warning genomeChart] Indels_vcf_file ",Indels_vcf_file," contains no valid Indels. Ignoring and moving on.")
+        Indels_vcf_file <- NULL
+      }
     }else{
       message("[warning genomeChart] Indels_vcf_file file not found: ",Indels_vcf_file,". Ignoring and moving on.")
       Indels_vcf_file <- NULL
@@ -85,6 +99,10 @@ genomeChart <- function(outfilename,
                                                                         check.names = FALSE,stringsAsFactors = FALSE),
                                                 sampleID = sample_name,
                                                 genome.v = genome.v)
+        if(is.null(indels_obj)){
+          message("[warning genomeChart] Indels_tab_file ",Indels_tab_file," contains no valid Indels. Ignoring and moving on.")
+          Indels_tab_file <- NULL
+        }
       }else{
         message("[warning genomeChart] Indels_tab_file ignored because Indels already loaded from Indels_vcf_file")
         Indels_tab_file <- NULL

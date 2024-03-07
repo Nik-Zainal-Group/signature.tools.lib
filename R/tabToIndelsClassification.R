@@ -10,7 +10,9 @@
 #' @export
 #' @examples 
 #' res <- tabToIndelsClassification(indel.data,"testSample","hg19")
-tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
+tabToIndelsClassification <- function(indel.data,
+                                      sampleID,
+                                      genome.v="hg19"){
   
   if(genome.v=="hg19"){
     expected_chroms <- paste0(c(seq(1:22),"X","Y"))
@@ -32,6 +34,11 @@ tabToIndelsClassification <- function(indel.data,sampleID, genome.v="hg19"){
     if(length(intersect(vcf_seqnames,expected_chroms))==0) indel.data$chr <- paste0("chr",indel.data$chr)
   }
   indel.data <- indel.data[indel.data$chr %in% expected_chroms,]
+  
+  if(nrow(indel.data)==0){
+    message("[warning tabToIndelsClassification] no indels founds, nothing to process.")
+    return(NULL)
+  }
   
   # convert formats, and find context of the indels
   indel.df <- prepare.indel.df_tabversion(indel.data,genomeSeq,genome.v)
