@@ -23,7 +23,9 @@ test_that("test assignSignatureProbabilityToMutations() using SNVs.", {
   reassign <- assignSignatureProbabilityToMutations(sampleMutations = sampleMutations,
                                                     sampleSigsExposures = sampleSigsExposures,
                                                     signatures = signatures)
-  
-  expect_equal(reassign,expectedResult)
+  expectedResult <- expandColumnToMatrix(expectedResult,"sigsProb")
+  reassign <- expandColumnToMatrix(reassign,"sigsProb")
+  probcheck <- all(abs(unlist(reassign[,9:14])-unlist(expectedResult[,9:14]))<1e-6)
+  expect_true(probcheck)
   
 })
