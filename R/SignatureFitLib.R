@@ -267,7 +267,7 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
 
   for(i in 1:ncol(cat)) {
     if(sum(cat[,i])>0){
-      boots_perc <- samples_list[[colnames(cat)[i]]]/matrix(apply(samples_list[[colnames(cat)[i]]],2,sum),byrow = TRUE,nrow = nrow(samples_list[[colnames(cat)[i]]]),ncol = ncol(samples_list[[colnames(cat)[i]]]))*100
+      boots_perc <- samples_list[[colnames(cat)[i]]]/matrix(sum(cat[,i]),byrow = TRUE,nrow = nrow(samples_list[[colnames(cat)[i]]]),ncol = ncol(samples_list[[colnames(cat)[i]]]))*100
       boots_nmuts <- samples_list[[colnames(cat)[i]]]
 
       if(exposureFilterType=="giniScaledThreshold"){
@@ -297,9 +297,10 @@ SignatureFit_withBootstrap <- function(cat, #catalogue, patients as columns, cha
       E_median_notfiltered[,i] <- median_mut
       E_p.values[,i] <- p.values
 
-      median_mut_perc <- median_mut/sum(median_mut)*100
-      median_mut_perc[p.values > threshold_p.value] <- 0
-      median_mut <- median_mut_perc/100*sum(cat[,i])
+      # median_mut_perc <- median_mut/sum(median_mut)*100
+      # median_mut_perc[p.values > threshold_p.value] <- 0
+      # median_mut <- median_mut_perc/100*sum(cat[,i])
+      median_mut[p.values > threshold_p.value] <- 0
       E_median_filtered[,i] <- median_mut
       KLD_samples <- c(KLD_samples,KLD(cat[,i,drop=FALSE],as.matrix(signature_data_matrix) %*% E_median_filtered[,i,drop=FALSE]))
     }else{
