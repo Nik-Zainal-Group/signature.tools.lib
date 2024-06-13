@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"></a>
 
+2.4.5
+
+- fixes and improvements 
+
 2.4.4
 
 - replication and transcription strand bias functions 
@@ -50,7 +54,7 @@ the most important functions is given below.
 
 2.4.2
 
-- minor fixes and improvements
+- fixes and improvements
 
 2.4.1
 
