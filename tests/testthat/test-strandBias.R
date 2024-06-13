@@ -11,6 +11,27 @@ test_that("test sampleStrandBias()", {
   
 })
 
+test_that("test sampleStrandBias(), plotStrandBiasResults() on single sample", {
+  
+  expectedResult <- readTable("../testthat/strandBias/mmr1_biasTable.tsv")
+  
+  mmr1 <- readTable("../testthat/strandBias/mmr_muts_1.tsv")
+  mmr1_sb <- sampleStrandBias(snv_table = mmr1,genomev = "hg19")
+  
+  plotStrandBiasResults(biasResObj = mmr1_sb,
+                        filename = "singleSample_test_plot_MMR.pdf",
+                        addToTitle = ", SBS44 sample")
+  
+  # clean up
+  unlink("singleSample_test_plot_MMR.pdf")
+  unlink("singleSample_test_plot_MMR_96bars.pdf")
+  unlink("singleSample_test_plot_MMR_oddratio_replication.pdf")
+  unlink("singleSample_test_plot_MMR_oddratio_transcription.pdf")
+  
+  #here goes the test
+  expect_true(TRUE)
+})
+
 test_that("test sampleStrandBias(), combineStrandBiasResults() and plotStrandBiasResults()", {
   
   mmr1 <- readTable("../testthat/strandBias/mmr_muts_1.tsv")

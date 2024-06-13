@@ -125,6 +125,11 @@ sampleStrandBias <- function(snv_table,
   returnObj$bias_expected_tri_ratios <- biasCountsToRatios(strandBiasCounts_tri_gv)
   returnObj$bias_expected_single_prop <- biasCountsToProportions(strandBiasCounts_single_gv)
   returnObj$bias_expected_tri_prop <- biasCountsToProportions(strandBiasCounts_tri_gv)
+  
+  returnObj$bias_results_single_OR <- biasCountsToOddRatios(bias_counts_table = bias_results_single,
+                                                            bias_counts_table_expected = strandBiasCounts_single_gv)
+  returnObj$bias_results_tri_OR <- biasCountsToOddRatios(bias_counts_table = bias_results_tri,
+                                                         bias_counts_table_expected = strandBiasCounts_tri_gv)
   returnObj$result_type <- "single_sample"
   
   return(returnObj)
@@ -194,6 +199,48 @@ biasCountsToProportions <- function(bias_counts_table){
     resultTable[,paste0(bias_subtypes[1],".prop")] <- unlist(bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[1],3:ncol(bias_counts_table)]/sumCounts)
     resultTable[,paste0(bias_subtypes[2],".prop")] <- unlist(bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[2],3:ncol(bias_counts_table)]/sumCounts)
     
+  }
+  return(resultTable)
+}
+
+biasCountsToOddRatios <- function(bias_counts_table,
+                                  bias_counts_table_expected){
+  bias_types <- unique(bias_counts_table$biastype)
+  features <- colnames(bias_counts_table)[3:ncol(bias_counts_table)]
+  resultTable <- data.frame(features,
+                            row.names = features,
+                            stringsAsFactors = F,
+                            check.names = F)
+  for(bt in bias_types){
+    # bt <- bias_types[1]
+    bias_subtypes <- unique(bias_counts_table$biassubtype[bias_counts_table$biastype==bt])
+    colOR <- paste0("OR ",bias_subtypes[1],"/",bias_subtypes[2])
+    colCIlb <- paste0("CIlb ",bias_subtypes[1],"/",bias_subtypes[2])
+    colCIub <- paste0("CIub ",bias_subtypes[1],"/",bias_subtypes[2])
+    colSignificant <- paste0("Significant ",bias_subtypes[1],"/",bias_subtypes[2])
+    resultTable[,colOR] <- NA
+    resultTable[,colCIlb] <- NA
+    resultTable[,colCIub] <- NA
+    resultTable[,colSignificant] <- NA
+    for(f in features){
+      # f <- features[1]
+      if(nchar(f)==3){
+        colBase <- substr(f,1,1)
+      }else if(nchar(f)==7){
+        colBase <- paste(strsplit(f,split = "")[[1]][c(1,3,7)],collapse = "")
+      }
+      
+      expectedScaling <- sum(bias_counts_table[bias_counts_table$biastype==bt,f])/sum(bias_counts_table_expected[bias_counts_table_expected$biastype==bt,colBase])
+      or_res <- oddRatio(observedTrue = bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[1],f],
+                         observedFalse = bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[2],f],
+                         expectedTrue = round(bias_counts_table_expected[bias_counts_table_expected$biastype==bt & bias_counts_table_expected$biassubtype==bias_subtypes[1],colBase]*expectedScaling),
+                         expectedFalse = round(bias_counts_table_expected[bias_counts_table_expected$biastype==bt & bias_counts_table_expected$biassubtype==bias_subtypes[2],colBase]*expectedScaling))
+      resultTable[f,colOR] <- or_res$or
+      resultTable[f,colCIlb] <- or_res$ci[1]
+      resultTable[f,colCIub] <- or_res$ci[2]
+      resultTable[f,colSignificant] <- or_res$ci_different_from_1
+    }
+    # resultTable[,paste0(bias_subtypes[1],"/",bias_subtypes[2])] <- unlist(bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[1],3:ncol(bias_counts_table)]/bias_counts_table[bias_counts_table$biastype==bt & bias_counts_table$biassubtype==bias_subtypes[2],3:ncol(bias_counts_table)])
   }
   return(resultTable)
 }
@@ -604,6 +651,69 @@ plotStrandBiasResults <- function(biasResObj,
       
     }
     if(!is.null(filename_96bars)) dev.off()
+    
+    # odd ratio plots
+    biases <- c("transcription","replication")
+    for (bb in biases) {
+      # bb <- biases[1]
+      
+      filename_oddratio <- NULL
+      if(!is.null(filename)) {
+        filename_oddratio <- paste0(substr(filename,1,nchar(filename)-4),"_oddratio_",bb,".pdf")
+      }
+      
+      if(bb=="transcription"){
+        OR <- biasResObj$bias_results_single_OR$`OR uts/ts`
+        CIlb <- biasResObj$bias_results_single_OR$`CIlb uts/ts`
+        CIub <- biasResObj$bias_results_single_OR$`CIub uts/ts`
+        mutations <- biasResObj$bias_results_single_OR$features
+        mainlabel <- paste0("bias to untranscribed strand")
+        xlabel <- "odd ratio"
+      }else{
+        OR <- biasResObj$bias_results_single_OR$`OR leading/lagging`
+        CIlb <- biasResObj$bias_results_single_OR$`CIlb leading/lagging`
+        CIub <- biasResObj$bias_results_single_OR$`CIub leading/lagging`
+        mutations <- biasResObj$bias_results_single_OR$features
+        mainlabel <- paste0("bias to leading strand")
+        xlabel <- "odd ratio"
+      }
+      
+      leftlim <- min(CIlb)
+      rightlim <- max(CIub)
+      
+      barline <- 0.08
+      if(!is.null(filename_oddratio)) cairo_pdf(filename = filename_oddratio,width = 6,height = 5)
+      par(mar=c(5,7,3,3))
+      plot(x = NULL,
+           # xlim = c(0.5,1.5),
+           xlim = c(leftlim,rightlim),
+           ylim = c(6.5,0.5),
+           xlab = xlabel,
+           main = mainlabel,
+           yaxt = 'n',
+           ylab = "",
+           pch = 16,
+           cex=1.5,
+           col = kelly_colors[4])
+      abline(v=1,lty = 2)
+      axis(side = 2,at = c(1:length(OR)),labels = mutations,las=2)
+      
+      for(i in 1:length(OR)){
+        cileft <- CIlb[i]
+        ciright <- CIub[i]
+        lines(x = c(cileft,ciright),y=c(i,i))
+        lines(x = c(cileft,cileft),y=c(i-barline,i+barline))
+        lines(x = c(ciright,ciright),y=c(i-barline,i+barline))
+      }
+      
+      points(x=OR,
+             y=c(1:6),
+             pch = 16,
+             cex=1.5,
+             col = kelly_colors[3])
+      legend(x="topright",pch = 16,col = kelly_colors[3],legend = c("observed"),bty = "n",pt.cex=1.5)
+      if(!is.null(filename_oddratio)) dev.off()
+    }
   }
   
   if(biasResObj$result_type=="combined_samples"){
@@ -623,12 +733,14 @@ plotStrandBiasResults <- function(biasResObj,
         mutations <- rownames(biasResObj$summary_tables$`uts/ts_single`)
         expected <- biasResObj$expected_values$`uts/ts_single`
         mainlabel <- paste0("bias to untranscribed strand")
+        xlabel <- "ratio untranscribed/transcribed"
       }else{
         meanRatio <- biasResObj$summary_tables$`leading/lagging_single`$mean
         serrRatio <- biasResObj$summary_tables$`leading/lagging_single`$serr
         mutations <- rownames(biasResObj$summary_tables$`leading/lagging_single`)
         expected <- biasResObj$expected_values$`leading/lagging_single`
         mainlabel <- paste0("bias to leading strand")
+        xlabel <- "ratio leading/lagging"
       }
 
       leftlim <- min(meanRatio-serrRatio)
@@ -642,7 +754,7 @@ plotStrandBiasResults <- function(biasResObj,
            # xlim = c(0.5,1.5),
            xlim = c(leftlim,rightlim),
            ylim = c(6.5,0.5),
-           xlab = "odd ratio",
+           xlab = xlabel,
            main = mainlabel,
            yaxt = 'n',
            ylab = "",
@@ -671,4 +783,54 @@ plotStrandBiasResults <- function(biasResObj,
     
 
   }
+}
+
+
+#' Odd Ratio 
+#'
+#' This function computes the odd ratio of observed vs expected events. The odd
+#' ratio (OR) is computed as (observedTrue/observedFalse) x (expectedFalse/expectedTrue),
+#' while the confidence interval (CI) is computed as exp(log(or) + c(-1,1) x 1.96 x
+#' sqrt(1/observedTrue + 1/observedFalse + 1/expectedTrue + 1/expectedFalse)).
+#' If any of the four input values is 0, then a modified Haldane-Anscombe (mHA)
+#' correction is applied, adding 0.5 to all values. The result of the fisher.test
+#' R function is also reported, which uses the Conditional Maximum Likelihood Estimate (CMLE)
+#' and can report slightly different OR and CI
+#'
+#' @param observedTrue count of observed true cases
+#' @param observedFalse count of observed false cases
+#' @param expectedTrue count of expected true cases
+#' @param expectedFalse count of expected false cases
+#' @export
+oddRatio <- function(observedTrue,
+                     observedFalse,
+                     expectedTrue,
+                     expectedFalse){
+  # the Fisher exact function also computes OR and CI, as well as a p-value
+  # these are though estimates obtained using the Conditional Maximum Likelihood Estimate (CMLE) 
+  # so these estimates might differ from the manually calculated OR and CI
+  contingencyMatrix <- matrix(c(observedTrue,observedFalse,expectedTrue,expectedFalse),nrow=2,byrow = TRUE)
+  fisherExactTest_res <- fisher.test(contingencyMatrix,alternative = "two.sided")
+  
+  # modified Haldane-Anscombe (mHA) correction, add 0.5 to all values if 
+  # any value is 0
+  if(observedTrue==0 | observedFalse==0 | expectedTrue==0 | expectedFalse==0){
+    observedTrue <- observedTrue + 0.5
+    observedFalse <- observedFalse + 0.5
+    expectedTrue <- expectedTrue + 0.5
+    expectedFalse <- expectedFalse + 0.5
+  }
+  
+  # compute OR and CI manually
+  or <- (observedTrue/observedFalse)*(expectedFalse/expectedTrue)
+  ci <- exp(log(or) + c(-1,1)*1.96*sqrt(1/observedTrue+1/observedFalse+1/expectedTrue+1/expectedFalse))
+  # below corresponds to two tailed test with 0.05 p-value threshold
+  ci_different_from_1 <- ci[1]>1 | ci[2]<1
+  
+  returnObj <- list()
+  returnObj$or <- or
+  returnObj$ci <- ci
+  returnObj$ci_different_from_1 <- ci_different_from_1
+  returnObj$fisherExactTest_res <- fisherExactTest_res
+  return(returnObj)
 }
