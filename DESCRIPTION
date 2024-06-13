@@ -13,6 +13,7 @@ Remotes:
 Suggests:
     BSgenome.Mmusculus.UCSC.mm10,
     BSgenome.Cfamiliaris.UCSC.canFam3,
+    GenSA
 Imports: 
     VariantAnnotation,
     BSgenome.Hsapiens.UCSC.hg38,
@@ -29,7 +30,6 @@ Imports:
     stats,
     NNLM,
     nnls,
-    GenSA,
     gmp,
     plyr,
     RCircos,
