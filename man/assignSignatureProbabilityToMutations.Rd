@@ -8,6 +8,8 @@ assignSignatureProbabilityToMutations(
   sampleMutations,
   sampleSigsExposures,
   signatures,
+  catalogue = NULL,
+  enableUnassigned = FALSE,
   verbose = TRUE
 )
 }
@@ -17,6 +19,10 @@ assignSignatureProbabilityToMutations(
 \item{sampleSigsExposures}{matrix of exposures with only one row (one sample) and the exposures for each signature as columns}
 
 \item{signatures}{mutational signatures matrix with the signatures used during signature fitting}
+
+\item{catalogue}{sample catalogue, used only if enableUnassigned is true}
+
+\item{enableUnassigned}{if true, probability can be assigned to an unassigned category, rather than a signature. This can lead to structural variants that are classified as unassigned. In practice, the positive part of the difference between catalogue and reconstruction is used as the unassigned signature and the unassigned exposures are also used.}
 }
 \value{
 matrix of mutations with an additional column containing the probabilities in a text format that can be expanded into a matrix using expandColumnToMatrix

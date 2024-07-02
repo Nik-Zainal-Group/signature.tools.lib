@@ -5,11 +5,15 @@
 #' @param sampleMutations list of annotated mutations obtained usually after building catalogues, for example using the functions vcfToSNVcatalogues or bedpeToRearrCatalogues
 #' @param sampleSigsExposures matrix of exposures with only one row (one sample) and the exposures for each signature as columns
 #' @param signatures mutational signatures matrix with the signatures used during signature fitting
+#' @param catalogue sample catalogue, used only if enableUnassigned is true
+#' @param enableUnassigned if true, probability can be assigned to an unassigned category, rather than a signature. This can lead to structural variants that are classified as unassigned. In practice, the positive part of the difference between catalogue and reconstruction is used as the unassigned signature and the unassigned exposures are also used.
 #' @return matrix of mutations with an additional column containing the probabilities in a text format that can be expanded into a matrix using expandColumnToMatrix
 #' @export
 assignSignatureProbabilityToMutations <- function(sampleMutations,
                                                   sampleSigsExposures,
                                                   signatures,
+                                                  catalogue=NULL,
+                                                  enableUnassigned=FALSE,
                                                   verbose=TRUE){
   # some checks
   if(!nrow(sampleSigsExposures)==1){
@@ -27,6 +31,12 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
     message("[error assignMutationsSignatureProbability] sampleSigsExposures contains exposures for signatures ",
             "that are not available in the provided signatures table. Signatures missing: ",
             paste(colnames(sampleSigsExposures)[!sigsAvailable],collapse = ", "),".")
+    return(sampleMutations)
+  }
+  # check that we have a catalogue if enableUnassigned is true
+  if(enableUnassigned & is.null(catalogue)){
+    message("[error assignMutationsSignatureProbability] cannot enable unassigned mutations because the catalogue ",
+            "parameter is NULL. Please rerun providing a catalogue if you would like to enable unassigned mutations.")
     return(sampleMutations)
   }
   
@@ -64,6 +74,20 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
   # use only >0 exp and corresponding signatures
   sampleSigsExposures <- sampleSigsExposures[,sampleSigsExposures[1,]>0,drop=F]
   signatures <- signatures[,colnames(sampleSigsExposures),drop=F]
+  
+  # add new unassigned signature and exposure if requested
+  if(enableUnassigned){
+    reconstructed <- as.matrix(signatures) %*% as.matrix(t(sampleSigsExposures))
+    difference <- catalogue - reconstructed
+    unassigned_muts <- sum(difference)
+    sampleSigsExposures[,"unassigned"] <- unassigned_muts
+    unassigned_sig <- difference
+    unassigned_sig[unassigned_sig<0] <- 0
+    unassigned_sig <- unassigned_sig/sum(unassigned_sig)
+    colnames(unassigned_sig) <- "unassigned"
+    signatures <- cbind(signatures,unassigned_sig)
+  }
+  
   # now if there are no positive exposures the result in compressed format will be an empty string
   if(ncol(sampleSigsExposures)==0){
     sampleMutations$sigsProb <- rep("",nrow(sampleMutations))
