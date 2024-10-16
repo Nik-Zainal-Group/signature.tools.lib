@@ -36,7 +36,7 @@ signatureFit_pipeline(
   minErrorReductionPerc = 15,
   minCosSimIncrease = 0.02,
   maxRareSigsPerSample = 1,
-  rareCandidateSelectionCriteria = "MaxCosSim",
+  rareCandidateSelectionCriteria = "MinError",
   noFit = FALSE,
   nparallel = 1,
   randomSeed = NULL,
@@ -107,7 +107,7 @@ when using multiStepMode=constrainedFit}
 
 \item{maxRareSigsPerSample}{maximum number of rare signatures that should be searched in each sample. In most situations, leaving this at 1 should be enough.}
 
-\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.}
+\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MinError by default. Error is computed as the mean absolute deviation of channels.}
 
 \item{noFit}{if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.}
 

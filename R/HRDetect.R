@@ -109,6 +109,7 @@
 #' @param threshold_p.valueFit p-value to determine whether an exposure is above the threshold_percent. In other words, this is the empirical probability that the exposure is lower than the threshold
 #' @param bootstrapHRDetectScores perform HRDetect score with bootstrap. This requires mutations or catalogues for subs/rearr to compute the bootstrap fit, and indels mutations to bootstrap the indels classification. HRD-LOH can still be provided using the input data_matrix.
 #' @param SNV_maxRareSigs the maximum number of rare substitution signatures allowed in a sample (default SNV_maxRareSigs=1) when using FitMS to fit SNV signatures. FitMS is used if the organ parameter is specified and SNV_signature_version=RefSigv2 (which is the default).
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. The parameter rareCandidateSelectionCriteria is set to MinError by default. Error is computed as the mean absolute deviation of channels.
 #' @param nparallel how many parallel threads to use.
 #' @param randomSeed set an integer random seed
 #' @return return a list that contains $data_matrix (updated input data_matrix with additional computed features), $hrdetect_output (data frame with HRDetect BRCAness Probability and contribution of the features), $SNV_catalogues (input SNV_catalogues updated with additional computed substitution catalogues if any), $SV_catalogues (input SV_catalogues updated with additional computed rearrangement catalogues if any)
@@ -134,6 +135,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                               SV_signature_version="RefSigv1",
                               SNV_signature_names=NULL,
                               SV_signature_names=NULL,
+                              rareCandidateSelectionCriteria="MinError",
                               subs_fit_obj=NULL,
                               rearr_fit_obj=NULL,
                               customNameSNV3=NULL,
@@ -357,6 +359,7 @@ HRDetect_pipeline <- function(data_matrix=NULL,
                                              nboot = nbootFit,
                                              rareSignatureTier = SNV_rareSignatureTier,
                                              maxRareSigsPerSample = SNV_maxRareSigs,
+                                             rareCandidateSelectionCriteria=rareCandidateSelectionCriteria,
                                              nparallel = nparallel,
                                              randomSeed = randomSeed)
 

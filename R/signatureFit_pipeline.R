@@ -39,7 +39,7 @@
 #' @param commonSignatureTier is either T1, T2 or T3. The default option is T1. For each organ, T1 indicates to use the common organ-specific signatures, while T2 indicates to use the corresponding reference signatures. In general, T1 should be more appropriate for organs where there are no mixed organ-specific signatures, e.g. GEL-Ovary_common_SBS1+18, while T2 might be more suitable for when such mixed signatures are present, so that each signature can be fitted, e.g. fitting the two signatures SBS1 and SBS18, instead of a single GEL-Ovary_common_SBS1+18. T3 is an intermediate option between T1 and T2, where only the mixed organ signatures are replaced with the corresponding reference signatures. This parameter affects both the organ signatures used in Fit and the common signatures used in FitMS
 #' @param rareSignatureTier is either T0, T1, T2, T3 or T4. The default option is T2. For each organ, T0 are rare signatures that were observed in the requested organ, including low quality signatures (QC amber and red signatures). T1 are high quality (QC green) rare signatures that were observed in the requested organ. T2-T4 signatures extend the rare signatures set to what has been observed also in other organs. T2 includes all QC green signatures found in other organs, with the additional restriction in the case of SBS that the additional signatures were classified as rare at least twice in Degasperi et al. 2022 Science. T3 includes all QC green signatures (if not SBS, T3=T2). T4 includes all signatures including QC amber and red. In general we advise to use the rare T2 tier.
 #' @param maxRareSigsPerSample maximum number of rare signatures that should be searched in each sample. In most situations, leaving this at 1 should be enough.
-#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MaxCosSim by default. Error is computed as the mean absolute deviation of channels.
+#' @param rareCandidateSelectionCriteria MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. Candidate rare signatures can be manually selected using the function fitMerge. The parameter rareCandidateSelectionCriteria is set to MinError by default. Error is computed as the mean absolute deviation of channels.
 #' @param nparallel to use parallel specify >1
 #' @param noFit if TRUE, terminate the pipeline early without running signature Fit. This is useful if one only wants to generate catalogues from mutation lists.
 #' @param randomSeed set an integer random seed
@@ -81,7 +81,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
                                   minErrorReductionPerc = 15,
                                   minCosSimIncrease = 0.02,
                                   maxRareSigsPerSample = 1,
-                                  rareCandidateSelectionCriteria="MaxCosSim",
+                                  rareCandidateSelectionCriteria="MinError",
                                   noFit = FALSE,
                                   nparallel = 1,
                                   randomSeed = NULL,

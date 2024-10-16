@@ -20,6 +20,7 @@ HRDetect_pipeline(
   SV_signature_version = "RefSigv1",
   SNV_signature_names = NULL,
   SV_signature_names = NULL,
+  rareCandidateSelectionCriteria = "MinError",
   subs_fit_obj = NULL,
   rearr_fit_obj = NULL,
   customNameSNV3 = NULL,
@@ -74,6 +75,8 @@ HRDetect_pipeline(
 \item{SNV_signature_names}{when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SNV_signature_version option}
 
 \item{SV_signature_names}{when organ is not specified, you can use this to specify a list of SNV signature names to select from the set of signatures determined by the SV_signature_version option}
+
+\item{rareCandidateSelectionCriteria}{MaxCosSim or MinError. FitMS parameter. Whenever there is more than one rare signature that passes the multiStepMode criteria, then the best candidate rare signature is automatically selected using the rareCandidateSelectionCriteria. The parameter rareCandidateSelectionCriteria is set to MinError by default. Error is computed as the mean absolute deviation of channels.}
 
 \item{subs_fit_obj}{Fit or FitMS result object. This parameter should be used when the user wants to customise the subs fit outside the HRDetect pipeline. If custom signatures were used, parameters customNameSNV3 and customNameSNV8 can be used to specify which custom signatures correspond to the HRDetect parameters SNV3 and SNV8.}
 
