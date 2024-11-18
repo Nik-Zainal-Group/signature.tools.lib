@@ -130,6 +130,7 @@ devtools::test(pkg = ".",filter = "SignatureFit_pipeline")
 devtools::test(pkg = ".",filter = "matchClustering")
 devtools::test(pkg = ".",filter = "assignSignatureProbabilityToMutations")
 devtools::test(pkg = ".",filter = "strandBias")
+devtools::test(pkg = ".",filter = "mutationContext")
 
 
 
