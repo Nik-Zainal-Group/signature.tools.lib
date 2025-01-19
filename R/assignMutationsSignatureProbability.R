@@ -79,10 +79,12 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
   if(enableUnassigned){
     reconstructed <- as.matrix(signatures) %*% as.matrix(t(sampleSigsExposures))
     difference <- catalogue - reconstructed
-    unassigned_muts <- sum(difference)
+    # the positive part of the difference is the actual profile we are missing
+    positive_difference <- difference
+    positive_difference[positive_difference<0] <- 0
+    unassigned_muts <- sum(positive_difference)
     sampleSigsExposures[,"unassigned"] <- unassigned_muts
-    unassigned_sig <- difference
-    unassigned_sig[unassigned_sig<0] <- 0
+    unassigned_sig <- positive_difference
     unassigned_sig <- unassigned_sig/sum(unassigned_sig)
     colnames(unassigned_sig) <- "unassigned"
     signatures <- cbind(signatures,unassigned_sig)
