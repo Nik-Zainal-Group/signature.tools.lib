@@ -212,10 +212,10 @@ genomeChart <- function(outfilename,
   msgtextscaling <- 0.5
   
   placePanel <- function(where,width,height){
-    par(fig = c(where[1]/plotx,
-                (where[1]+width)/plotx,
-                where[2]/ploty,
-                (where[2]+height)/ploty),
+    par(fig = c(max(where[1]/plotx,0),
+                min((where[1]+width)/plotx,1),
+                max(where[2]/ploty,0),
+                min((where[2]+height)/ploty,1)),
         new=TRUE)
   }
   
@@ -435,6 +435,18 @@ getCNColoursAndRanges <- function(){
 
 getSVClassColours <- function(){
   sv_colours <- c("#1C86EEFF","#EE6A50FF","#006400FF","#595959FF")
+  names(sv_colours) <- c("inversion",
+                         "deletion",
+                         "tandem-duplication",
+                         "translocation")
+  return(sv_colours)
+}
+
+getSVClassColours_SVCatalogue <- function(){
+  sv_colours <- c(rgb(55,126,184, maxColorValue = 255),
+                  rgb(228,26,28, maxColorValue = 255),
+                  rgb(77,175,74, maxColorValue =255),
+                  rgb(152,78,163, maxColorValue =255))
   names(sv_colours) <- c("inversion",
                          "deletion",
                          "tandem-duplication",

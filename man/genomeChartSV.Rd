@@ -6,9 +6,11 @@
 \usage{
 genomeChartSV(
   outfilename,
-  SV_bedpe_file,
+  SV_bedpe_file = NULL,
+  SV_bedpe_table = NULL,
   SNV_vcf_file = NULL,
   SNV_tab_file = NULL,
+  SNV_table = NULL,
   PEAK.FACTOR = 10,
   kmin = 10,
   plot_title = NULL,
@@ -20,9 +22,13 @@ genomeChartSV(
 
 \item{SV_bedpe_file}{name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'    and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.}
 
+\item{SV_bedpe_table}{data frame formatted as in the SV_bedpe_file description}
+
 \item{SNV_vcf_file}{name of the vcf file containing the SNVs}
 
 \item{SNV_tab_file}{name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
+
+\item{SNV_table}{data frame formatted as in the SNV_tab_file description}
 
 \item{plot_title}{title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.}
 
