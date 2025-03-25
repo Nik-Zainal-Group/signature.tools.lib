@@ -128,6 +128,7 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
   return_list$rearr_catalogue <- rearr_catalogue
   return_list$junctions_catalogue <- junctions_catalogue
   return_list$annotated_bedpe <- annotated_bedpe
+  if(all(c("non-template","micro-homology") %in% colnames(annotated_bedpe))) return_list$nImprecise <- sum(annotated_bedpe[,"non-template"]=="_" &  annotated_bedpe[,"micro-homology"]=="_")
   return_list$all_sv_annotated <- all_sv_annotated
   if(!is.null(clustering_regions)){
     if(nrow(clustering_regions)>0) return_list$clustering_regions <- clustering_regions
@@ -384,7 +385,7 @@ build_junctions_catalogue <- function(annotated_bedpe){
             }
           }
         }else{
-          tmpn <- sum(((annotated_bedpe[,"non-template"]=="." &  annotated_bedpe[,"micro-homology"]==".") | (annotated_bedpe[,"non-template"]=="_" &  annotated_bedpe[,"micro-homology"]=="_"))  & annotated_bedpe$is.clustered==clustered)
+          tmpn <- sum((annotated_bedpe[,"non-template"]=="." &  annotated_bedpe[,"micro-homology"]==".") & annotated_bedpe$is.clustered==clustered)
           junctions_catalogue[channel,"sample"] <- junctions_catalogue[channel,"sample"] + tmpn
         }
       }

@@ -165,7 +165,20 @@ genomeChartSV <- function(outfilename,
   # par(fig = c(0.69,0.97,0.23,0.63),new=TRUE)
   placePanel(where = c(0.4,0),width = 0.4,height = 0.4)
   if(!is.null(sv_obj$junctions_catalogue)){
-    plotJunctionsCatalogues(sv_obj$junctions_catalogue,textscaling = 0.55)
+    nImprecise <- NULL
+    if(!is.null(sv_obj$nImprecise)){
+      if(sv_obj$nImprecise>0){
+        nImprecise <- sv_obj$nImprecise
+      }
+    }
+    if(!is.null(nImprecise)){
+      plotJunctionsCatalogues(sv_obj$junctions_catalogue,
+                              textscaling = 0.55,
+                              add_to_titles = paste0("(excluding ",nImprecise," imprecise SVs)"))
+    }else{
+      plotJunctionsCatalogues(sv_obj$junctions_catalogue,
+                              textscaling = 0.55)
+    }
   }else{
     plotMessage(msg = "SV junction catalogue\nnot available",
                 textscaling = msgtextscaling)
