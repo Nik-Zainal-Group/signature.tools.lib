@@ -42,6 +42,11 @@ the most important functions is given below.
 
 2.4.5
 
+- ```plotRegion``` function to plot variants in a given region
+- ```findContextSNV``` function to find the reference context around a set of SNVs
+
+2.4.5
+
 - fixes and improvements 
 
 2.4.4
