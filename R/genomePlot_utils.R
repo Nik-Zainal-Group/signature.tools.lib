@@ -20,6 +20,7 @@ processSubs <- function(subs)
 
 }
 
+#' @exportS3Method NULL
 merge.with.order <- function(x,y, ..., sort = T, keep_order)
 {
 	# this function works just like merge, only that it adds the option to return the merged data.frame ordered by x (1) or by y (2)

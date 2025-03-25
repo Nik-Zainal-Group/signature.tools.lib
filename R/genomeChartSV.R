@@ -134,7 +134,7 @@ genomeChartSV <- function(outfilename,
   }else if(plottype=="png"){
     png(filename = outfilename,width = 2100*plotx,height = 2100*ploty,res = 300)
   }else{
-    message("[error genomeChart] incorrect file type: ",plottype,". ",
+    message("[error genomeChartSV] incorrect file type: ",plottype,". ",
             "Please end your file name with .pdf or .png")
     return(NULL)
   }

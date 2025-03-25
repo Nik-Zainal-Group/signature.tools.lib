@@ -131,6 +131,7 @@ devtools::test(pkg = ".",filter = "matchClustering")
 devtools::test(pkg = ".",filter = "assignSignatureProbabilityToMutations")
 devtools::test(pkg = ".",filter = "strandBias")
 devtools::test(pkg = ".",filter = "mutationContext")
+devtools::test(pkg = ".",filter = "plotRegion")
 
 
 

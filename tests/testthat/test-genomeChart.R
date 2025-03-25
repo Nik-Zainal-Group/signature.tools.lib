@@ -1,6 +1,6 @@
 context("testing genome chart with circlize on subs, indels, CNVs and rearr data")
 
-test_that("test genomeChart() using subs tab, indels vcfs, comma-separated without header copy number, and rearrangment bedpe input file formats", {
+test_that("test genomeChart() using subs tab, indels vcfs, copy number, and rearrangment bedpe input file formats", {
 
   resObj <- genomeChart(outfilename = "test.genomeChart.pdf",
                         SNV_tab_file = "test_hrdetect_1/test_hrdetect_1.snv.simple.txt",
