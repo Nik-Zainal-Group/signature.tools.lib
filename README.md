@@ -40,7 +40,7 @@ the most important functions is given below.
 
 <a name="version"></a>
 
-2.4.5
+2.4.6
 
 - ```plotRegion``` function to plot variants in a given region
 - ```findContextSNV``` function to find the reference context around a set of SNVs
