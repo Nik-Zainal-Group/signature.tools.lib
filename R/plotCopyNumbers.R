@@ -31,6 +31,21 @@ plotCopyNumbers <- function(sv_df,
                             highlightColour = "brown",
                             textscaling = 1,
                             genome.v="hg19"){
+  
+  # some checks
+  if(is.null(sv_df)){
+    return(NULL)
+  }
+  if(nrow(sv_df)==0){
+    return(NULL)
+  }
+  
+  # force to char
+  sv_df$Chromosome <- as.character(sv_df$Chromosome)
+  
+  if(startsWith(sv_df$Chromosome[1],prefix = "chr")){
+    sv_df$Chromosome <- substr(sv_df$Chromosome,start = 4, stop = 30)
+  }
 
   if(!is.null(filename)) cairo_pdf(filename = filename,width = 7,height = 3)
   if(!is.null(mar)) {

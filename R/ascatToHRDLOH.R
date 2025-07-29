@@ -16,10 +16,24 @@
 #' hrd_index <- ascatToHRDLOH(ascat.df,"test_sample")
 ascatToHRDLOH <- function(ascat.data,SAMPLE.ID,return.loc=FALSE){
 
+  # some checks
+  if(is.null(ascat.data)){
+    return(NA)
+  }
+  if(nrow(ascat.data)==0){
+    return(0)
+  }
+  # force to char
+  ascat.data$Chromosome <- as.character(ascat.data$Chromosome)
+  if(startsWith(ascat.data$Chromosome[1],prefix = "chr")){
+    ascat.data$Chromosome <- substr(ascat.data$Chromosome,start = 4, stop = 30)
+  }
+    
   #----------------------
   # Dominik's code BEGIN
   #----------------------
   # load ASCAT NGS profile
+  
   ascat.data2 <- data.frame(SampleID=rep(SAMPLE.ID,nrow(ascat.data )),
                             Chromosome=ascat.data$Chromosome,
                             Start=ascat.data$chromStart,
