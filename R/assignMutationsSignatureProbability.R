@@ -15,6 +15,9 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
                                                   catalogue=NULL,
                                                   enableUnassigned=FALSE,
                                                   verbose=TRUE){
+  # if probabilities cannot be calculated, return the original table with an empty column
+  sampleMutations$sigsProb <- rep("",nrow(sampleMutations))
+  
   # some checks
   if(!nrow(sampleSigsExposures)==1){
     message("[error assignMutationsSignatureProbability] sampleSigsExposures should be a table with one row, ",
@@ -64,11 +67,16 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
   mutsChannels <- unique(sampleMutations[,channel_column,drop=T])
   sigsChannels <- rownames(signatures)
   channelsAvailable <- mutsChannels %in% sigsChannels
-  if(!all(channelsAvailable)){
-    message("[error assignMutationsSignatureProbability] sampleMutations table contains mutation classes that are not among the rownames of the signatures table ",
-            "The channels not found in the signature table are: ",paste(mutsChannels[!channelsAvailable],collapse = ", "),".")
+  if(length(intersect(mutsChannels,sigsChannels))==0){
+    message("[error assignMutationsSignatureProbability] classes in the sampleMutations table do not match the rownames of the signatures table.")
     return(sampleMutations)
   }
+  if(!all(channelsAvailable)){
+    message("[warning assignMutationsSignatureProbability] sampleMutations table contains mutation classes that are not among the rownames of the signatures table. ",
+            "The channels not found in the signature table are: ",paste(mutsChannels[!channelsAvailable],collapse = ", "),". Mutations that ",
+            "are associated with these classes will be ignored.")
+  }
+
   
   # OK now we are ready to calculate the probabilities
   # use only >0 exp and corresponding signatures
@@ -108,7 +116,7 @@ assignSignatureProbabilityToMutations <- function(sampleMutations,
     channelProbs[is.infinite(channelProbs)] <- 0
     channelProbs[is.nan(channelProbs)] <- 0
     sampleMutations$sigsProb <- rep("",nrow(sampleMutations))
-    for(x in mutsChannels){
+    for(x in intersect(mutsChannels,sigsChannels)){
       probVect <- channelProbs[x,,drop=F]
       sampleMutations$sigsProb[sampleMutations[,channel_column]==x] <- paste(paste(colnames(probVect),collapse = ":"),paste(probVect[1,,drop=T],collapse = ":"),sep = ";")
     }

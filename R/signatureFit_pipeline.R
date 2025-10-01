@@ -155,7 +155,7 @@ signatureFit_pipeline <- function(catalogues=NULL,
       cat_list <- foreach::foreach(i=1:length(SNV_tab_files)) %dopar% {
         sample <- names(SNV_tab_files)[i]
         subs <- read.table(file = SNV_tab_files[sample],
-                           sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE)
+                           sep = "\t",header = TRUE,check.names = FALSE,stringsAsFactors = FALSE,tryLogical = FALSE)
         res <- tabToSNVcatalogue(subs,genome.v = genome.v)
         colnames(res$catalogue) <- sample
         res$muts <- cbind(data.frame(sampleName=rep(sample,nrow(res$muts)),stringsAsFactors = F),res$muts)
