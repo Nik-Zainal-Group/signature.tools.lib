@@ -9,7 +9,8 @@ Encoding: UTF-8
 LazyData: true
 biocViews: 
 Remotes:
-    linxihui/NNLM
+    linxihui/NNLM,
+    Nik-Zainal-Group/indelsig.tools.lib
 Suggests:
     BSgenome.Mmusculus.UCSC.mm10,
     BSgenome.Cfamiliaris.UCSC.canFam3,
@@ -42,5 +43,6 @@ Imports:
     combinat,
     limSolve,
     getopt,
+    indelsig.tools.lib,
     circlize
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
