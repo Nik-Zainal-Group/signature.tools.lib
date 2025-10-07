@@ -275,8 +275,12 @@ genomeChart <- function(outfilename,
              genome.v = genome.v)
   if(debug) drawDebugBox(1)
   
+  # move all panels
+  movex <- -0.02
+  movey <- -0.07
+  
   # subs catalogue
-  placePanel(where = c(0.96,0.73),width = 0.44,height = 0.21)
+  placePanel(where = c(0.96+movex,0.73+movey),width = 0.44,height = 0.21)
   if(!is.null(sbs_obj$catalogue)){
     plotSubsSignatures(sbs_obj$catalogue,
                        textscaling = 0.6)
@@ -287,7 +291,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(2)
   
   # kataegis SBS catalogue
-  placePanel(where = c(0.96,0.55),width = 0.44,height = 0.21)
+  placePanel(where = c(0.96+movex,0.55+movey),width = 0.44,height = 0.21)
   if(!is.null(kataegisSBScatalogue_all)){
     plotSubsSignatures(kataegisSBScatalogue_all,
                        textscaling = 0.6)
@@ -298,7 +302,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(3)
   
   # SV clusters SBS catalogue
-  placePanel(where = c(0.96,0.37),width = 0.44,height = 0.21)
+  placePanel(where = c(0.96+movex,0.37+movey),width = 0.44,height = 0.21)
   if(!is.null(clusteringSBScatalogue_all)){
     plotSubsSignatures(clusteringSBScatalogue_all,
                        textscaling = 0.6)
@@ -309,7 +313,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(4)
   
   # SV catalogue
-  placePanel(where = c(1.35,0.68-0.19),width = 0.44,height = 0.26)
+  placePanel(where = c(1.35+movex,0.49+movey),width = 0.44,height = 0.26)
   if(!is.null(sv_obj$rearr_catalogue)){
     plotRearrSignatures(sv_obj$rearr_catalogue,
                         textscaling = 0.6,
@@ -322,7 +326,7 @@ genomeChart <- function(outfilename,
   
   # SV junctions catalogue
   # placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
-  placePanel(where = c(1.74,0.73-0.19),width = 0.38,height = 0.21)
+  placePanel(where = c(1.74+movex,0.54+movey),width = 0.38,height = 0.21)
   if(!is.null(sv_obj$junctions_catalogue)){
     nImprecise <- NULL
     if(!is.null(sv_obj$nImprecise)){
@@ -349,7 +353,7 @@ genomeChart <- function(outfilename,
   
   # CN plot
   # placePanel(where = c(1,0.01),width = 0.78,height = 0.21)
-  placePanel(where = c(1.4,0.29),width = 0.68,height = 0.21)
+  placePanel(where = c(1.4+movex,0.29+movey),width = 0.68,height = 0.21)
   if(!is.null(CNV_table)){
     plotCopyNumbers(sv_df = CNV_table,
                     sample_name = sample_name,
@@ -368,7 +372,7 @@ genomeChart <- function(outfilename,
   
   # indels classification
   # placePanel(where = c(1.39,0.31),width = 0.4,height = 0.18)
-  placePanel(where = c(1.79,0.48+0.25),width = 0.29,height = 0.2)
+  placePanel(where = c(1.79+movex,0.73+movey),width = 0.29,height = 0.2)
   if(!is.null(indels_obj$count_proportion)){
     plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
                            textscaling = 0.6,
@@ -382,11 +386,13 @@ genomeChart <- function(outfilename,
   
   # Indels catalogue 89
   # placePanel(where = c(1.43,0.49),width = 0.58,height = 0.19)
-  placePanel(where = c(1.38,0.49+0.255),width = 0.43,height = 0.19)
+  placePanel(where = c(1.38+movex,0.745+movey),width = 0.43,height = 0.19)
   if(!is.null(indels_obj89)){
     # check for indels filtered out
     nIndelsRemoved <- nrow(indels_obj89$indels_unfiltered) - nrow(indels_obj89$indels_annotated)
-    plotIndelsSignatures89(signature_data_matrix = indels_obj89$catalogues,
+    indelsCatalogue89 <- indels_obj89$catalogues
+    colnames(indelsCatalogue89) <- "Indels Catalogue"
+    plotIndelsSignatures89(signature_data_matrix = indelsCatalogue89,
                            # mar=c(2.8,3.5,4,1),
                            mar=c(1.4,2,2,0.5),
                            add_to_titles = paste0("(",nIndelsRemoved," removed)"),
@@ -399,7 +405,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(8)
   
   # dnvs catalogue
-  placePanel(where = c(0.97,0.19),width = 0.47,height = 0.21)
+  placePanel(where = c(0.97+movex,0.19+movey),width = 0.47,height = 0.21)
   if(!is.null(dbs_obj$DNV_catalogue)){
     plotDNVSignatures(convertToAlexandrovChannels(dbs_obj$DNV_catalogue),
                        textscaling = 0.6)
@@ -410,12 +416,12 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(9)
   
   # placePanel(where = c(1.55,0.21),width = 0.21,height = 0.105)
-  placePanel(where = c(1.61,0.21),width = 0.21,height = 0.105)
+  placePanel(where = c(1.61+movex,0.21+movey),width = 0.21,height = 0.105)
   plotCNVlegend(textscaling = 0.5)
   if(debug) drawDebugBox(10)
   
   # placePanel(where = c(1.41,0.22),width = 0.14,height = 0.1)
-  placePanel(where = c(1.47,0.22),width = 0.14,height = 0.1)
+  placePanel(where = c(1.47+movex,0.22+movey),width = 0.14,height = 0.1)
   plotClustersLegend(textscaling = 0.5)
   if(debug) drawDebugBox(11)
 
