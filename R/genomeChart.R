@@ -309,7 +309,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(4)
   
   # SV catalogue
-  placePanel(where = c(1.35,0.68),width = 0.44,height = 0.26)
+  placePanel(where = c(1.35,0.68-0.19),width = 0.44,height = 0.26)
   if(!is.null(sv_obj$rearr_catalogue)){
     plotRearrSignatures(sv_obj$rearr_catalogue,
                         textscaling = 0.6,
@@ -322,7 +322,7 @@ genomeChart <- function(outfilename,
   
   # SV junctions catalogue
   # placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
-  placePanel(where = c(1.74,0.73),width = 0.38,height = 0.21)
+  placePanel(where = c(1.74,0.73-0.19),width = 0.38,height = 0.21)
   if(!is.null(sv_obj$junctions_catalogue)){
     nImprecise <- NULL
     if(!is.null(sv_obj$nImprecise)){
@@ -368,10 +368,10 @@ genomeChart <- function(outfilename,
   
   # indels classification
   # placePanel(where = c(1.39,0.31),width = 0.4,height = 0.18)
-  placePanel(where = c(1.83,0.49),width = 0.25,height = 0.18)
+  placePanel(where = c(1.79,0.48+0.25),width = 0.29,height = 0.2)
   if(!is.null(indels_obj$count_proportion)){
     plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
-                           textscaling = 0.5,
+                           textscaling = 0.6,
                            mgp = c(1.5,0.5,0),
                            mar = c(2,4,2,0.5))
   }else{
@@ -382,7 +382,7 @@ genomeChart <- function(outfilename,
   
   # Indels catalogue 89
   # placePanel(where = c(1.43,0.49),width = 0.58,height = 0.19)
-  placePanel(where = c(1.38,0.49),width = 0.48,height = 0.19)
+  placePanel(where = c(1.38,0.49+0.255),width = 0.43,height = 0.19)
   if(!is.null(indels_obj89)){
     # check for indels filtered out
     nIndelsRemoved <- nrow(indels_obj89$indels_unfiltered) - nrow(indels_obj89$indels_annotated)
@@ -391,7 +391,7 @@ genomeChart <- function(outfilename,
                            mar=c(1.4,2,2,0.5),
                            add_to_titles = paste0("(",nIndelsRemoved," removed)"),
                            textscaling = 0.6,
-                           titlevpos=1)
+                           titlevpos=0.8)
   }else{
     plotMessage(msg = "Indels\nnot available",
                 textscaling = msgtextscaling)

@@ -206,7 +206,8 @@ tabToIndelsCatalogue89 <- function(indels,
   
   indels$trackingid <- 1:nrow(indels)
   indels_tab_classified <- indelsig.tools.lib::indel_classifier89(indels = indels,
-                                                                  genome.v = genome.v)
+                                                                  genome.v = genome.v,
+                                                                  verbose=FALSE)
   
   if(useHighSpecificityFilter) {
     indels_tab_classified_and_filtered <- indelsig.tools.lib::indel_highspecific(indel.classified = indels_tab_classified)
