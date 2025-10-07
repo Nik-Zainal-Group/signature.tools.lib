@@ -133,6 +133,7 @@ devtools::test(pkg = ".",filter = "strandBias")
 devtools::test(pkg = ".",filter = "mutationContext")
 devtools::test(pkg = ".",filter = "genomeChart")
 devtools::test(pkg = ".",filter = "plotRegion")
+devtools::test(pkg = ".",filter = "IndelsSignaturesLib")
 
 
 
