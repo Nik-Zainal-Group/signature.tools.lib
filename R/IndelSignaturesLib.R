@@ -166,10 +166,10 @@ plotIndelsSignatures89 <- function(signature_data_matrix,
 #' @param indel.data dataframe with indels from a single sample and the following minimal columns: Sample, chr, position, REF, ALT.  
 #' @param useHighSpecificityFilter recommended TRUE. Filters out indels in highly repeated regions (>= 10 repeats) and indels longer than 100 bps
 #' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19", "hg38", "mm10", "canFam3"
-#' @return the function returns a list with elements "indels_classified", which is a table with the indels and their classification, and "count_proportion", which is a summary of the count of indels and their proportion
+#' @return the function returns classified indels, as well as the indel catalogue
 #' @export
 #' @examples 
-#' res <- tabToIndelsClassification(indel.data,"testSample","hg19")
+#' res <- tabToIndelsCatalogue89(indel.data,"hg19")
 tabToIndelsCatalogue89 <- function(indels,
                                    useHighSpecificityFilter = TRUE,
                                    genome.v){
@@ -192,10 +192,9 @@ tabToIndelsCatalogue89 <- function(indels,
   }
   
   # add chr prefix if missing
-  if(!startsWith(as.character(indels_tab$chr[1]),prefix = "chr")) indels_tab$chr <- paste0("chr",indels_tab$chr)
+  if(!startsWith(as.character(indels$chr[1]),prefix = "chr")) indels$chr <- paste0("chr",indels$chr)
   
-  
-  indels_tab_classified <- indelsig.tools.lib::indel_classifier89(indels = indels_tab,
+  indels_tab_classified <- indelsig.tools.lib::indel_classifier89(indels = indels,
                                                                   genome.v = genome.v)
   indels_tab_classified$trackingid <- 1:nrow(indels_tab_classified)
   
@@ -226,4 +225,41 @@ tabToIndelsCatalogue89 <- function(indels,
   return(returnObj)
 }
 
-
+#' vcf to Indels Catalogue (89 channels)
+#' 
+#' Convert a dataframe containing Indels into a data frame where each indel is classified as repet-mediated, Microhomology-mediated or other. A summary of the count of indels (deletions and insertions) and their proportion with respect to the total is also provided.
+#' 
+#' @param indelsVcfFile filename of the vcf file containing only indels 
+#' @param sampleName name of the sample to process
+#' @param useHighSpecificityFilter recommended TRUE. Filters out indels in highly repeated regions (>= 10 repeats) and indels longer than 100 bps
+#' @param genome.v version of the genome to be used to look up the context of the indel, either "hg19", "hg38", "mm10", "canFam3"
+#' @return the function returns classified indels, as well as the indel catalogue
+#' @export
+#' @examples 
+#' res <- vcfToIndelsCatalogue89(indel.data,"sample","hg19")
+vcfToIndelsCatalogue89 <- function(indelsVcfFile,
+                                   sampleName,
+                                   useHighSpecificityFilter = TRUE,
+                                   genome.v){
+  # load the indel VCF file
+  vcf_data <- VariantAnnotation::readVcf(indelsVcfFile,genome.v)
+  vcf_data <- VariantAnnotation::expand(vcf_data)
+  
+  rd <- SummarizedExperiment::rowRanges(vcf_data)
+  ref <- as.character(rd$REF)
+  alt <- as.character(rd$ALT)
+  chr <- as.character(GenomeInfoDb::seqnames(vcf_data))
+  rgs <- IRanges::ranges(vcf_data)
+  position <- BiocGenerics::start(rgs)
+  muts_table <- data.frame(Sample = rep(sampleName,nrow(vcf_data)),
+                           chr = chr,
+                           position = position,
+                           REF = ref,
+                           ALT = alt,
+                           stringsAsFactors = F)
+  
+  return(tabToIndelsCatalogue89(indels = muts_table,
+                                useHighSpecificityFilter = useHighSpecificityFilter,
+                                genome.v = genome.v))
+  
+}
