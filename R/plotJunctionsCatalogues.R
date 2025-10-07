@@ -83,6 +83,7 @@ plotJunctionsCatalogues <-function(signature_data_matrix,
                      beside = FALSE,
                      cex.names = 0.8*textscaling,
                      cex.main = 0.9*textscaling,
+                     las = 2,
                      border = 0,
                      space = 0.1)
 

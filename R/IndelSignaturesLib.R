@@ -32,6 +32,7 @@ IDchannels <- c( "A[Ins(C):R0]A"       ,   "A[Ins(C):R0]T"     ,     "Ins(C):R(0
 #' @param mar set the option par(mar=mar)
 #' @param howManyInOnePage how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested
 #' @param ncolumns how many columns should be used to arrange the signatures/catalogues to plot
+#' @param textscaling scale the text of the plot, default is 1
 #' @export
 plotIndelsSignatures89 <- function(signature_data_matrix,
                                    output_file = NULL,
@@ -40,7 +41,9 @@ plotIndelsSignatures89 <- function(signature_data_matrix,
                                    add_to_titles = NULL,
                                    mar=NULL,
                                    howManyInOnePage=100,
-                                   ncolumns=1){
+                                   ncolumns=1,
+                                   textscaling=1,
+                                   titlevpos=1.5){
   
   # Check that the matrix contains the correct Indels channels
   if(nrow(signature_data_matrix)==length(IDchannels)){
@@ -112,8 +115,11 @@ plotIndelsSignatures89 <- function(signature_data_matrix,
               beside = TRUE,
               las=2,
               xaxs='i',
-              cex.names = 1,border = NA,space = 0.2)
-      title(main = titlei,cex.main = 0.9,line = 1.5)
+              cex.names = textscaling,
+              cex.axis = textscaling,
+              border = NA,
+              space = 0.2)
+      title(main = titlei,cex.main = 0.9*textscaling,line = titlevpos)
       par(xpd=TRUE)
       par(usr = c(0, 1, 0, 1))
       recttop <- -0.015
@@ -129,7 +135,7 @@ plotIndelsSignatures89 <- function(signature_data_matrix,
       start1 <- 0
       for(j in 1:length(muttypes)){
         textpos <- start1+(gap*nchannelsForEachType[j])/2
-        text(x = textpos,y = -0.08,labels = muttypes[j],col = muttypesTextCol[j],font = 2,cex = 0.9)
+        text(x = textpos,y = -0.08,labels = muttypes[j],col = muttypesTextCol[j],font = 2,cex = 0.8*textscaling)
         start1 <- start1+gap*nchannelsForEachType[j]
       }
       toplabels <- c("Insertions","Deletions","X")
@@ -144,17 +150,17 @@ plotIndelsSignatures89 <- function(signature_data_matrix,
       for(j in 1:length(toplabels)){
         rect(start1, rectbottom, start1+gap*toplablesNchannels[j], recttop,col = toplablesBackCol[j],border = NA)
         textpos <- start1+(gap*toplablesNchannels[j])/2
-        text(x = textpos,y = 1.08,labels = toplabels[j],col = toplablesTextCol[j],font = 2,cex = 0.9)
+        text(x = textpos,y = 1.08,labels = toplabels[j],col = toplablesTextCol[j],font = 2,cex = 0.8*textscaling)
         start1 <- start1+gap*toplablesNchannels[j]
       }
       # textposx <- 0.04+seq(8,88,16)/104
       # text(x = textposx[1:3],y = -0.09,labels = muttypes[1:3],col = "white",font = 2)
       # text(x = textposx[4:6],y = -0.09,labels = muttypes[4:6],col = "black",font = 2)
       #shadowtext(x = 0.04+seq(8,88,16)/104,y = rep(-0.09,6),labels = muttypes,col = "white",bg = "black",r=0.2)
-      text(x=0.5,y=-0.25,labels = "Indel Types",font = 2,cex = 0.9)
+      text(x=0.5,y=-0.25,labels = "Indel Types",font = 2,cex = 0.9*textscaling)
       par(xpd=FALSE)
     }
-    title(main = overall_title,outer = TRUE,cex.main = 1.5)
+    title(main = overall_title,outer = TRUE,cex.main = 1.5*textscaling)
     if(!is.null(output_file)) dev.off()
   }
 }
@@ -188,15 +194,19 @@ tabToIndelsCatalogue89 <- function(indels,
   # check nrows
   if(nrow(indels)==0){
     emptycatalogue <- data.frame(rep(0,length(IDchannels)),row.names = IDchannels,stringsAsFactors = F)
-    return(emptycatalogue)
+    returnObj <- list()
+    returnObj$catalogues <- emptycatalogue
+    returnObj$indels_unfiltered <- indels
+    returnObj$indels_annotated <- indels
+    return(returnObj)
   }
   
   # add chr prefix if missing
   if(!startsWith(as.character(indels$chr[1]),prefix = "chr")) indels$chr <- paste0("chr",indels$chr)
   
+  indels$trackingid <- 1:nrow(indels)
   indels_tab_classified <- indelsig.tools.lib::indel_classifier89(indels = indels,
                                                                   genome.v = genome.v)
-  indels_tab_classified$trackingid <- 1:nrow(indels_tab_classified)
   
   if(useHighSpecificityFilter) {
     indels_tab_classified_and_filtered <- indelsig.tools.lib::indel_highspecific(indel.classified = indels_tab_classified)
@@ -205,10 +215,12 @@ tabToIndelsCatalogue89 <- function(indels,
   }
   
   # add FILTER column to classified mutations
-  indels_tab_classified$FILTER <- "PASS"
-  indels_tab_classified$FILTER[!(indels_tab_classified$trackingid %in% indels_tab_classified_and_filtered$trackingid)] <- "HighSpeficity"
+  indels$FILTER <- "PASS"
+  indels$FILTER[!(indels$trackingid %in% indels_tab_classified$trackingid)] <- "Unclassified"
+  indels$FILTER[!(indels$trackingid %in% indels_tab_classified_and_filtered$trackingid) & (indels$trackingid %in% indels_tab_classified$trackingid)] <- "HighSpecificity"
   
   # remove the tracking id
+  indels$trackingid <- NULL
   indels_tab_classified$trackingid <- NULL
   indels_tab_classified_and_filtered$trackingid <- NULL
   
@@ -219,7 +231,7 @@ tabToIndelsCatalogue89 <- function(indels,
   # combine results
   returnObj <- list()
   returnObj$catalogues <- catalogues
-  returnObj$indels_unfiltered <- indels_tab_classified
+  returnObj$indels_unfiltered <- indels
   returnObj$indels_annotated <- indels_tab_classified_and_filtered
   
   return(returnObj)

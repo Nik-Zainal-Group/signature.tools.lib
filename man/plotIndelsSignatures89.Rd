@@ -12,7 +12,9 @@ plotIndelsSignatures89(
   add_to_titles = NULL,
   mar = NULL,
   howManyInOnePage = 100,
-  ncolumns = 1
+  ncolumns = 1,
+  textscaling = 1,
+  titlevpos = 1.5
 )
 }
 \arguments{
@@ -31,6 +33,8 @@ plotIndelsSignatures89(
 \item{howManyInOnePage}{how many signatures or catalogues should be plotted on one page. Multiple pages are plotted if more signatures/catalogues to plot have been requested}
 
 \item{ncolumns}{how many columns should be used to arrange the signatures/catalogues to plot}
+
+\item{textscaling}{scale the text of the plot, default is 1}
 }
 \description{
 Function to plot one or more indels signatures or catalogues.

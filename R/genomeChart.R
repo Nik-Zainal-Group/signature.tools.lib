@@ -39,6 +39,7 @@ genomeChart <- function(outfilename,
   sbs_obj <- NULL
   dbs_obj <- NULL
   indels_obj <- NULL
+  indels_obj89 <- NULL
   CNV_table <- NULL
   sv_obj <- NULL
   
@@ -87,6 +88,10 @@ genomeChart <- function(outfilename,
         message("[warning genomeChart] Indels_vcf_file ",Indels_vcf_file," contains no valid Indels. Ignoring and moving on.")
         Indels_vcf_file <- NULL
       }
+      indels_obj89 <- vcfToIndelsCatalogue89(indelsVcfFile = Indels_vcf_file,
+                                             sampleName = sample_name,
+                                             useHighSpecificityFilter = TRUE,
+                                             genome.v = genome.v)
     }else{
       message("[warning genomeChart] Indels_vcf_file file not found: ",Indels_vcf_file,". Ignoring and moving on.")
       Indels_vcf_file <- NULL
@@ -95,14 +100,19 @@ genomeChart <- function(outfilename,
   if(!is.null(Indels_tab_file)){
     if (file.exists(Indels_tab_file)){
       if(is.null(indels_obj)){
-        indels_obj <- tabToIndelsClassification(indel.data = read.table(file = Indels_tab_file,sep = "\t",header = TRUE,
-                                                                        check.names = FALSE,stringsAsFactors = FALSE),
+        indel_tab = read.table(file = Indels_tab_file,sep = "\t",header = TRUE,
+                               check.names = FALSE,stringsAsFactors = FALSE)
+        indels_obj <- tabToIndelsClassification(indel.data = indel_tab,
                                                 sampleID = sample_name,
                                                 genome.v = genome.v)
         if(is.null(indels_obj)){
           message("[warning genomeChart] Indels_tab_file ",Indels_tab_file," contains no valid Indels. Ignoring and moving on.")
           Indels_tab_file <- NULL
         }
+        indel_tab$Sample <- sample_name
+        indels_obj89 <- tabToIndelsCatalogue89(indels = indel_tab,
+                                               useHighSpecificityFilter = TRUE,
+                                               genome.v = genome.v)
       }else{
         message("[warning genomeChart] Indels_tab_file ignored because Indels already loaded from Indels_vcf_file")
         Indels_tab_file <- NULL
@@ -205,7 +215,7 @@ genomeChart <- function(outfilename,
   }
   
   # organise panels according to a certain plot dimension (x,y)
-  plotx <- 1.8
+  plotx <- 2.1
   ploty <- 1
   debug_grid_gap <- 0.1
   debug_grid_tick <- 0.01
@@ -311,7 +321,8 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(5)
   
   # SV junctions catalogue
-  placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
+  # placePanel(where = c(1.38,0.48),width = 0.38,height = 0.21)
+  placePanel(where = c(1.74,0.73),width = 0.38,height = 0.21)
   if(!is.null(sv_obj$junctions_catalogue)){
     nImprecise <- NULL
     if(!is.null(sv_obj$nImprecise)){
@@ -337,13 +348,14 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(6)
   
   # CN plot
-  placePanel(where = c(1,0.01),width = 0.78,height = 0.21)
+  # placePanel(where = c(1,0.01),width = 0.78,height = 0.21)
+  placePanel(where = c(1.4,0.29),width = 0.68,height = 0.21)
   if(!is.null(CNV_table)){
     plotCopyNumbers(sv_df = CNV_table,
                     sample_name = sample_name,
                     plottitle = "Copy Number Variations",
                     genome.v = genome.v,
-                    mar = c(1.5,2.5,2,1),
+                    mar = c(1.5,2.5,2,0.5),
                     textscaling = 0.6,
                     minorCNcolour = "#F08080FF",
                     totalCNcolour = "#9ACD32E6",
@@ -355,11 +367,31 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(7)
   
   # indels classification
-  placePanel(where = c(1.39,0.3),width = 0.4,height = 0.18)
+  # placePanel(where = c(1.39,0.31),width = 0.4,height = 0.18)
+  placePanel(where = c(1.83,0.49),width = 0.25,height = 0.18)
   if(!is.null(indels_obj$count_proportion)){
     plotIndelsClassSummary(indels_stats = indels_obj$count_proportion,
+                           textscaling = 0.5,
+                           mgp = c(1.5,0.5,0),
+                           mar = c(2,4,2,0.5))
+  }else{
+    plotMessage(msg = "Indels\nnot available",
+                textscaling = msgtextscaling)
+  }
+  if(debug) drawDebugBox(8)
+  
+  # Indels catalogue 89
+  # placePanel(where = c(1.43,0.49),width = 0.58,height = 0.19)
+  placePanel(where = c(1.38,0.49),width = 0.48,height = 0.19)
+  if(!is.null(indels_obj89)){
+    # check for indels filtered out
+    nIndelsRemoved <- nrow(indels_obj89$indels_unfiltered) - nrow(indels_obj89$indels_annotated)
+    plotIndelsSignatures89(signature_data_matrix = indels_obj89$catalogues,
+                           # mar=c(2.8,3.5,4,1),
+                           mar=c(1.4,2,2,0.5),
+                           add_to_titles = paste0("(",nIndelsRemoved," removed)"),
                            textscaling = 0.6,
-                           mar = c(2,4,2,1))
+                           titlevpos=1)
   }else{
     plotMessage(msg = "Indels\nnot available",
                 textscaling = msgtextscaling)
@@ -367,7 +399,7 @@ genomeChart <- function(outfilename,
   if(debug) drawDebugBox(8)
   
   # dnvs catalogue
-  placePanel(where = c(0.95,0.19),width = 0.47,height = 0.21)
+  placePanel(where = c(0.97,0.19),width = 0.47,height = 0.21)
   if(!is.null(dbs_obj$DNV_catalogue)){
     plotDNVSignatures(convertToAlexandrovChannels(dbs_obj$DNV_catalogue),
                        textscaling = 0.6)
@@ -377,11 +409,13 @@ genomeChart <- function(outfilename,
   }
   if(debug) drawDebugBox(9)
   
-  placePanel(where = c(1.55,0.21),width = 0.21,height = 0.105)
+  # placePanel(where = c(1.55,0.21),width = 0.21,height = 0.105)
+  placePanel(where = c(1.61,0.21),width = 0.21,height = 0.105)
   plotCNVlegend(textscaling = 0.5)
   if(debug) drawDebugBox(10)
   
-  placePanel(where = c(1.41,0.22),width = 0.14,height = 0.1)
+  # placePanel(where = c(1.41,0.22),width = 0.14,height = 0.1)
+  placePanel(where = c(1.47,0.22),width = 0.14,height = 0.1)
   plotClustersLegend(textscaling = 0.5)
   if(debug) drawDebugBox(11)
 
@@ -398,6 +432,7 @@ genomeChart <- function(outfilename,
   returnObj$kataegis_regions <- kataegis_regions
   returnObj$kataegisSBScatalogue_all <- kataegisSBScatalogue_all
   returnObj$indels_obj <- indels_obj
+  returnObj$indels_obj89 <- indels_obj89
   returnObj$CNV_table <- CNV_table
   returnObj$sv_obj <- sv_obj
   returnObj$clustering_regions_sbs_catalogues <- clustering_regions_sbs_catalogues
@@ -488,12 +523,13 @@ getClustersColours <- function(){
 
 plotIndelsClassSummary <- function(indels_stats,
                                    textscaling = 1,
-                                   mar = c(3,6,2,2)){
+                                   mar = c(3,6,2,2),
+                                   mgp = c(3,1,0)){
   indels_colours <- getIndelsClassColours()
   indels_colours <- indels_colours[c("del.mhomology","del.repeatmediated","del.other","insertion","indel.complex")]
   values_to_plot <- indels_stats[,c("del.mh","del.rep","del.none","ins","complex")]
   plot_labels <- c("deletion at MH","deletion at repeat","deletion other","insertion","complex")
-  par(mar=mar)
+  par(mar=mar,mgp=mgp)
   barplot(t(as.matrix(values_to_plot)),beside = T,
           horiz = T,space = 0.2,
           col = indels_colours,
@@ -504,6 +540,7 @@ plotIndelsClassSummary <- function(indels_stats,
           cex.axis = textscaling*0.7,
           cex.names = textscaling*0.7,
           border = NA,
+          tcl = -0.5*textscaling,
           cex.main=textscaling)
 }
 
