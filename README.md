@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"></a>
 
+2.5.0
+
+- added support for the new indels catalogues (Koh et al, 2025) and added the package ```indelsig.tools.lib``` as a dependency
+
 2.4.6
 
 - ```plotRegion``` function to plot variants in a given region
@@ -126,9 +130,11 @@ These are the research articles associated with ```signature.tools.lib```:
 
 - A. Degasperi et al. **Substitution mutational signatures in whole-genome-sequenced cancers in the UK population.** *Science*, doi:10.1126/science.abl9283, 2022.
 - A. Degasperi et al. **A practical framework and online tool for mutational signature analyses show intertissue variation and driver dependencies.** *Nature Cancer*, doi:10.1038/s43018-020-0027-5, 2020.
+- G. C. C. Koh et al. **A redefined InDel taxonomy provides insights into mutational signatures.** *Nature Genetics*, doi:10.1038/s41588-025-02152-y, 2025.
 
 More in details, these are the specific signatures and algorithms introduced in each publication:
 
+- Koh et al. 2025, *Nature Genetics*: Indels mutational catalogues.
 - Degasperi et al. 2022, *Science*: RefSig SBS v2, RefSig DBS v1, FitMS
 - Degasperi et al. 2020, *Nature Cancer*: RefSig SBS v1, RefSig Rearrangements (SV) v1, Fit with bootstrap, HRDetect with bootstrap.
 
@@ -162,41 +168,7 @@ automatically. In this case, an error will indicate which package could
 not be found, then simply install these packages manually. The
 installation should not take more than a few minutes.
 
-This is the full list of R package dependencies:
-
-```
-    VariantAnnotation,
-    BSgenome.Hsapiens.UCSC.hg38,
-    BSgenome.Hsapiens.1000genomes.hs37d5,
-    BSgenome.Mmusculus.UCSC.mm10,
-    BSgenome.Cfamiliaris.UCSC.canFam3,
-    SummarizedExperiment,
-    BiocGenerics,
-    GenomeInfoDb,
-    NMF,
-    foreach,
-    doParallel,
-    lpSolve,
-    methods,
-    cluster,
-    stats,
-    NNLM,
-    nnls,
-    GenSA,
-    gmp,
-    plyr,
-    RCircos,
-    scales,
-    GenomicRanges,
-    IRanges,
-    BSgenome, 
-    readr,
-    doRNG,
-    combinat,
-    limSolve,
-    getopt,
-    circlize
-```
+For a full list of dependencies see the DESCRIPTION file.
 
 We have noticed that the ```NNLM``` package is frequently unavailable to download automatically
 during the R installation, so we have changed the installation process to install ```NNLM``` from
@@ -335,6 +307,15 @@ indels.
 containing indels into a data frame where the indels are classified.
 Also returns a summary of count and proportion of the various classes of
 indels.
+
+Functions for indels catalogues (Koh et al. 2025, *Nature Genetics*):
+
+- **```vcfToIndelsCatalogue89(...)```**: generates the 89 channels indels
+catalogue from a vcf file of indels. This function depends on the ```indelsig.tools.lib``` package.
+- **```tabToIndelsCatalogue89(...)```**: generates the 89 channels indels
+catalogue from a table of indels. This function depends on the ```indelsig.tools.lib``` package.
+- **```plotIndelsSignatures89(...)```**: simple plot function for the
+89 channels indels catalogue
 
 Functions for HRDetect:
 
