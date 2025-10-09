@@ -194,6 +194,7 @@ tabToIndelsCatalogue89 <- function(indels,
   # check nrows
   if(nrow(indels)==0){
     emptycatalogue <- data.frame(rep(0,length(IDchannels)),row.names = IDchannels,stringsAsFactors = F)
+    colnames(emptycatalogue) <- "Indels Catalogue"
     returnObj <- list()
     returnObj$catalogues <- emptycatalogue
     returnObj$indels_unfiltered <- indels
@@ -209,10 +210,33 @@ tabToIndelsCatalogue89 <- function(indels,
                                                                   genome.v = genome.v,
                                                                   verbose=FALSE)
   
-  if(useHighSpecificityFilter) {
+  if(useHighSpecificityFilter & nrow(indels_tab_classified)>0) {
     indels_tab_classified_and_filtered <- indelsig.tools.lib::indel_highspecific(indel.classified = indels_tab_classified)
   }else{
     indels_tab_classified_and_filtered <- indels_tab_classified
+  }
+  
+  # check nrows
+  if(nrow(indels_tab_classified_and_filtered)==0){
+    
+    if(nrow(indels_tab_classified)==0){
+      indels$FILTER <- "Unclassified"
+    }else{
+      indels$FILTER <- "HighSpecificity"
+      indels$FILTER[!(indels$trackingid %in% indels_tab_classified$trackingid)] <- "Unclassified"
+    }
+    # remove the tracking id
+    indels$trackingid <- NULL
+    indels_tab_classified$trackingid <- NULL
+    indels_tab_classified_and_filtered$trackingid <- NULL
+    
+    emptycatalogue <- data.frame(rep(0,length(IDchannels)),row.names = IDchannels,stringsAsFactors = F)
+    colnames(emptycatalogue) <- indels$Sample[1] # we know indels has at least one row
+    returnObj <- list()
+    returnObj$catalogues <- emptycatalogue
+    returnObj$indels_unfiltered <- indels
+    returnObj$indels_annotated <- indels_tab_classified_and_filtered
+    return(returnObj)
   }
   
   # add FILTER column to classified mutations
