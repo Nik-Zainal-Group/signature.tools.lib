@@ -196,7 +196,7 @@ correct them, while it is the responsibility of the user to supply the
 necessary data formatted correctly with the necessary features and
 correct column names.
 
-<a name="docs"/>
+<a name="docs"></a>
 
 ## Package documentation
 
@@ -274,7 +274,6 @@ A manual for FitMS can be found in the ```userManuals``` folder.
 - **```plotFitResults(...)```**: this function can be used to plot result objects from both ```Fit``` and ```FitMS``` functions. The object type will be inferred automatically and either ```plotFit()``` or ```plotFitMS()``` will be used.
 - **```writeFitResultsToJSON(...)```**: this function can be used to write to file the content of the result objects from both ```Fit``` and ```FitMS``` functions as a compressed JSON file.
 
-
 Functions for organ-specific signatures and exposures conversion:
 
 - **```getOrganSignatures(...)```**: returns organ-specific signatures of a requested organ and mutation type.
@@ -341,6 +340,15 @@ score.
 - **```plot_HRDetect_BootstrapScores(...)```**: overall plot of scores obtained
 from the ```HRDetect_pipeline``` output when HRDetect with bootstrap is
 enabled.
+
+Function for SNV strand bias:
+
+- **```sampleStrandBias(...)```**: compute transcription and replication
+strand bias for a given set of SNVs, with p-value from odd ratio test
+- **```combineStrandBiasResults(...)```**: combine multiple results objects
+obtained from ```sampleStrandBias``` to calculate a p-value using t-test
+- **```plotStrandBiasResults(...)```**: plot strand bias results from the 
+```sampleStrandBias``` or ```combineStrandBiasResults``` functions
 
 Function for data visualisation:
 
