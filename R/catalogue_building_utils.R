@@ -2,9 +2,19 @@
 assignPvalues <- function(kat.regions, chrom.bps, bp.rate=NA) {
   
   if (is.na(bp.rate)) { # estimate the chromosome rate
-    left.bp <- min(chrom.bps$pos)
-    right.bp <-  max(chrom.bps$pos)
-    bp.rate <- nrow(chrom.bps)/ (right.bp - left.bp)
+    # get the chromosome size, approx is fine
+    chr_df <- getChromosomesBedTable(genomev = "hg38")
+    if(!startsWith(as.character(chrom.bps$chr[1]),prefix = "chr")){
+      chr_df$chr <- substr(chr_df$chr,4,6)
+    }
+    chrchoice <- chr_df$chr==as.character(chrom.bps$chr[1])
+    bp.rate <- nrow(chrom.bps)/(chr_df$end[chrchoice] - chr_df$start[chrchoice])
+    
+    # old code
+    # left.bp <- min(chrom.bps$pos)
+    # right.bp <-  max(chrom.bps$pos)
+    # bp.rate <- nrow(chrom.bps)/ (right.bp - left.bp)
+    
   }
   
   # assume binomial distribution
@@ -41,6 +51,103 @@ calcIntermutDist <- function (subs.type, first.chrom.na = FALSE) {
   subs.type.processed 
 }
 
+getIMD <- function(positions){
+  # some checks
+  requiredcolumns_pos <- c("chr","position")
+  if(!all(requiredcolumns_pos %in% colnames(positions))){
+    missingcolumns <- setdiff(requiredcolumns_pos,colnames(positions))
+    message("[error getIMD] missing required columns in positions table: ",paste(missingcolumns,collapse = ", "))
+    return(NULL)
+  }
+  
+  # compute the IMD, for each chromosome separately, sort first
+  positions <- sortPositions(positions = positions)
+  chroms <- unique(positions$chr)
+  new_positions <- NULL
+  for(chrom in chroms){
+    # chrom <- chroms[1]
+    chr_positions <- positions[positions$chr==chrom,,drop=F]
+    if(nrow(chr_positions)>0){
+      # get ready
+      chr_positions$leftIMD <- NA
+      chr_positions$rightIMD <- NA
+      chr_positions$aveIMD <- NA
+      # there is at least one row, so if it is only one row IMD=NA
+      # and just add to final table, otherwise we calculate the IMD and fill the table
+      if(nrow(chr_positions)>1){
+        IMD <- chr_positions$position[2:nrow(chr_positions)] - chr_positions$position[1:(nrow(chr_positions)-1)]
+        chr_positions[2:nrow(chr_positions),"leftIMD"] <- IMD
+        chr_positions[1:(nrow(chr_positions)-1),"rightIMD"] <- IMD
+        chr_positions[,"aveIMD"] <- apply(chr_positions[,c("leftIMD","rightIMD")],1,mean,na.rm=T)
+      }
+      new_positions <- rbind(new_positions,chr_positions)
+    }
+  }
+  return(new_positions)
+}
+
+
+sortChroms <- function(chroms,
+                       decreasing=FALSE){
+  txtchroms <- as.character(chroms)
+  n <- sapply(txtchroms,function(x){
+    if(startsWith(x,"chr")) x <- substr(x,4,5)
+    if(x=="X"){
+      return(23)
+    }else if (x=="Y"){
+      return(24)
+    }else if (x=="M"){
+      return(25)
+    }else{
+      return(as.numeric(x))
+    }
+  },USE.NAMES = F)
+  return(txtchroms[order(n,decreasing = decreasing)])
+}
+
+sortPositions <- function(positions){
+  if(!all(c("chr","position") %in% colnames(positions))){
+    misscol <- setdiff(c("chr","position"),colnames(positions))
+    message("[error sortPositions] missing columns: ",paste(misscol,collapse = ", "))
+    return(NULL)
+  }
+  if(nrow(positions)==0){
+    message("[warning sortPositions] no positions to sort")
+    return(positions)
+  }
+  positions$chr <- as.character(positions$chr)
+  sortedPositions <- NULL
+  chroms <- sortChroms(unique(positions$chr))
+  for (chrom in chroms){
+    # chrom <- chroms[1]
+    tmpTable <- positions[positions$chr==chrom,,drop=F]
+    tmpTable <- tmpTable[order(tmpTable$position),,drop=F]
+    sortedPositions <- dplyr::bind_rows(sortedPositions,tmpTable)
+  }
+  return(sortedPositions)
+}
+
+getChromosomesBedTable <- function(genomev){
+  # select reference genome
+  if(genomev=="hg19"){
+    expected_chroms <- paste0(c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.1000genomes.hs37d5::BSgenome.Hsapiens.1000genomes.hs37d5
+  }else if(genomev=="hg38"){
+    expected_chroms <- paste0("chr",c(seq(1:22),"X","Y"))
+    genomeSeq <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+  }
+  
+  # get chrom lengths info
+  chromsTable <- as.data.frame(GenomeInfoDb::seqinfo(genomeSeq))
+  chromsTable <- chromsTable[expected_chroms,]
+  
+  # set up table
+  regions_table <- data.frame(chr=rownames(chromsTable),
+                              start=rep(1,nrow(chromsTable)),
+                              end=chromsTable$seqlengths,
+                              stringsAsFactors = F)
+  return(regions_table)
+}
 
 
 extract.kat.regions <- function (res, imd, subs,  kmin.samples=10, pvalue.thresh=1, rate.factor.thresh=1, doMerging=FALSE, kmin.filter=NA, bp.rate=NA) {

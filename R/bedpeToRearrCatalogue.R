@@ -34,7 +34,7 @@
 #' res <- bedpeToRearrCatalogue(sv_bedpe)
 #' plotRearrSignatures(res$rearr_catalogue)
 bedpeToRearrCatalogue <- function(sv_bedpe,
-                                  kmin = 10,
+                                  kmin = 6,
                                   PEAK.FACTOR = 10){
 
   #check that the required columns are present
@@ -91,11 +91,12 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
       # now cluster
       clustering.result <- rearrangement.clustering_bedpe(sv_bedpe,
                                                           plot.path = NA,
-                                                          kmin=kmin,
+                                                          kmin=2, #for pcf
                                                           kmin.samples=1,
                                                           gamma.sdev=25,
                                                           PEAK.FACTOR=PEAK.FACTOR,
-                                                          thresh.dist=NA)
+                                                          thresh.dist=NA,
+                                                          kmin.filter = kmin) #min bp required in each cluster
       sv_bedpe <- clustering.result$sv_bedpe
       clustering_regions <- clustering.result$clustering_regions
     }else{
@@ -140,13 +141,13 @@ bedpeToRearrCatalogue <- function(sv_bedpe,
 
 rearrangement.clustering_bedpe <- function(sv_bedpe,
                                            plot.path=NA,
-                                           kmin=10,# how many points at minimum in a peak, for the pcf algorithm
-                                           kmin.samples=kmin, # how many different samples at minimum in  a peak
+                                           kmin=2,# how many points at minimum in a peak, for the pcf algorithm
+                                           kmin.samples=1, # how many different samples at minimum in  a peak
                                            gamma.sdev=25, #
                                            PEAK.FACTOR=4,
                                            thresh.dist=NA,
                                            gamma=NA,
-                                           kmin.filter=kmin # if the pcf parameter is different from the definition of a peak
+                                           kmin.filter=6 # if the pcf parameter is different from the definition of a peak
 ) {
 
   #add an id to the rearrangement
@@ -175,14 +176,28 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
 
   #run the algorithm
   genome.size <- 3 * 10^9
-  MIN.BPS <- 10 # minimal number of breakpoints on a chromosome to do any any segmentation
+  MIN.BPS <- kmin.filter # minimal number of breakpoints on a chromosome to do any any segmentation
 
   logScale <- FALSE
 
   exp.dist <-genome.size/nrow(sample.bps)
 
+  sample.bps <- getIMD(sample.bps)
+  
   if (logScale) {
     sample.bps$intermut.dist <- log10(calcIntermutDist(sample.bps, first.chrom.na=FALSE)$distPrev) # calculate the distances between the breakpoints
+    sample.bps$aveIMD <- sapply(sample.bps$aveIMD,function(x){
+      # return the log10 of aveIMD
+      if(is.na(x)){
+        # NA happens if there is only one breakpoint in a chromosome
+        # add a large number as a placeholder
+        return(8)
+      }else if(x==0){
+        return(0)
+      }else{
+        return(log10(x))
+      }
+    },USE.NAMES = F)
     if (is.na(thresh.dist)) {
       thresh.dist <- log10(exp.dist/PEAK.FACTOR) # calculate the threshold to call a peak
     }
@@ -197,8 +212,8 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
 
   if (is.na(gamma) & !is.na(gamma.sdev)) {
     # compute the mean absolute deviation
-    sdev <- getMad(sample.bps$intermut.dist);
-    gamma <- gamma.sdev*sdev
+    sdev <- getMad(sample.bps$aveIMD[!is.na(sample.bps$aveIMD)]);
+    gamma <- gamma.sdev*sdev*1e6
   }
 
 
@@ -213,7 +228,7 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
     #
     if (sum(sample.bps.flag )>MIN.BPS ) { # if there are enough breakpoints on a chromosome to run pcf
 
-      data.points <- sample.bps$intermut.dist[sample.bps.flag]
+      data.points <- sample.bps$aveIMD[sample.bps.flag]
 
       res = exactPcf(data.points, kmin, gamma, T)
 
@@ -233,16 +248,16 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
       }
     } else {
 
-      sample.bps$mean.intermut.dist[sample.bps.flag] <- mean(sample.bps$intermut.dist[sample.bps.flag])
+      sample.bps$mean.intermut.dist[sample.bps.flag] <- mean(sample.bps$aveIMD[sample.bps.flag])
     }
   }
 
 
 
-  if (!logScale) { # even if pcf was run on non-logged distances, I log the output
-    sample.bps$intermut.dist <- log10(sample.bps$intermut.dist)
-    sample.bps$mean.intermut.dist <- log10(sample.bps$mean.intermut.dist)
-  }
+  # if (!logScale) { # even if pcf was run on non-logged distances, I log the output
+  #   sample.bps$intermut.dist <- log10(sample.bps$intermut.dist)
+  #   sample.bps$mean.intermut.dist <- log10(sample.bps$mean.intermut.dist)
+  # }
 
   # a rearrangement is in a cluster if any of its breakpoints are
   sample.bps$is.clustered <- sample.bps$is.clustered.single

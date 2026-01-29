@@ -26,7 +26,7 @@ genomeChartSV <- function(outfilename,
                           SNV_tab_file = NULL,
                           SNV_table = NULL,
                           PEAK.FACTOR = 10,
-                          kmin = 10,
+                          kmin = 6,
                           plot_title = NULL,
                           genome.v = "hg19"){
 
@@ -324,14 +324,16 @@ plotCircosSV <- function(sv_bedpe,
   # draw unclustered links first
   if(colour_clusters){
     tmpBEDPE <- sv_bedpe[sv_bedpe$is.clustered==F,,drop=F]
-    for(j in 1:nrow(tmpBEDPE)){
-      circlize::circos.link(sector.index1 = tmpBEDPE$chrom1[j],
-                            point1 = tmpBEDPE$start1[j],
-                            sector.index2 = tmpBEDPE$chrom2[j],
-                            point2 = tmpBEDPE$start2[j],col = "lightgrey")
-      
+    if(nrow(tmpBEDPE)>0){
+      for(j in 1:nrow(tmpBEDPE)){
+        circlize::circos.link(sector.index1 = tmpBEDPE$chrom1[j],
+                              point1 = tmpBEDPE$start1[j],
+                              sector.index2 = tmpBEDPE$chrom2[j],
+                              point2 = tmpBEDPE$start2[j],col = "lightgrey")
+        
+      }
     }
-    
+
     # draw links from clusters
     if(!is.null(clustering_regions)){
       for(i in 1:nrow(clustering_regions)){
