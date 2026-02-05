@@ -26,7 +26,7 @@ genomeChartSV <- function(outfilename,
                           SNV_tab_file = NULL,
                           SNV_table = NULL,
                           PEAK.FACTOR = 10,
-                          kmin = 6,
+                          kmin = 10,
                           plot_title = NULL,
                           genome.v = "hg19"){
 
