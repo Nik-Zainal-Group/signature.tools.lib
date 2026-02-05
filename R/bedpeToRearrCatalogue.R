@@ -222,7 +222,7 @@ rearrangement.clustering_bedpe <- function(sv_bedpe,
 
       # prepare the points for pcf
       subs <- data.frame(chr=sample.bps$chr[sample.bps.flag], pos=sample.bps$position[sample.bps.flag], sample=sample.bps$sample[sample.bps.flag])
-      kat.regions <- extract.kat.regions(res, thresh.dist, subs, doMerging=TRUE, kmin.samples=1,  kmin.filter= kmin.filter) # extract peaks, this is special case as we want at least kmin samples
+      kat.regions <- extract.kat.regions(res=res, imd=thresh.dist, subs=subs, doMerging=TRUE, kmin.samples=1,  kmin.filter= kmin.filter) # extract peaks, this is special case as we want at least kmin samples
 
       all.kat.regions <- rbind(all.kat.regions, kat.regions)
       if (!is.null(kat.regions) && nrow( kat.regions )>0) { # if there are any kataegis regions found on this chormosome
