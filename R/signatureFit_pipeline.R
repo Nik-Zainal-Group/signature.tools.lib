@@ -434,32 +434,47 @@ signatureFit_pipeline <- function(catalogues=NULL,
         # an organ was requested.
         if(fit_method=="Fit"){
           if(mtype_catalogues %in% c("subs","rearr")){
-            signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
-            # need to check that the getOrganSignatures functions returned something
-            if(is.null(signatures)){
-              message("[error signatureFit_pipeline] RefSigv1 signatures not available for mutation type ",mtype_catalogues,
-                      " and organ ",organ,".")
-              return(returnObj)
-            }
-            if(commonSignatureTier=="T2"){
-              # need to convert
-              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
+            if(organ %in% c("Other","PanCan")){
               if(mtype_catalogues == "subs"){
-                signatures <- RefSigv1_subs[,convertedNames,drop=F]
+                signatures_others = c("RefSig1","RefSig2","RefSig3",
+                                      "RefSig5","RefSig8","RefSig13",
+                                      "RefSig17","RefSig18")
+                signatures <- RefSigv1_subs[,signatures_others,drop=F]
               }else {
-                signatures <- RefSigv1_rearr[,convertedNames,drop=F]
+                signatures_others = c("RefSigR1","RefSigR2","RefSigR3",
+                                      "RefSigR4","RefSigR5","RefSigR6a",
+                                      "RefSigR6b","RefSigR7","RefSigR8",
+                                      "RefSigR11","RefSigR13","RefSigR14",
+                                      "RefSigR20")
+                signatures <- RefSigv1_rearr[,signatures_others,drop=F]
               }
-            }else if(commonSignatureTier=="T3"){
-              convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues,mixedOnly = TRUE)
-              if(mtype_catalogues == "subs"){
-                combinedSigs <- cbind(RefSigv1_subs,all_organ_sigs_subs)
-                signatures <- combinedSigs[,convertedNames,drop=F]
-              }else {
-                combinedSigs <- cbind(RefSigv1_rearr,all_organ_sigs_rearr)
-                signatures <- combinedSigs[,convertedNames,drop=F]
+            }else{
+              signatures <- getOrganSignatures(organ = organ,version = 1,typemut = mtype_catalogues)
+              # need to check that the getOrganSignatures functions returned something
+              if(is.null(signatures)){
+                message("[error signatureFit_pipeline] RefSigv1 signatures not available for mutation type ",mtype_catalogues,
+                        " and organ ",organ,".")
+                return(returnObj)
+              }
+              if(commonSignatureTier=="T2"){
+                # need to convert
+                convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues)
+                if(mtype_catalogues == "subs"){
+                  signatures <- RefSigv1_subs[,convertedNames,drop=F]
+                }else {
+                  signatures <- RefSigv1_rearr[,convertedNames,drop=F]
+                }
+              }else if(commonSignatureTier=="T3"){
+                convertedNames <- convertSigNamesFromOrganToRefSigs(colnames(signatures),typemut = mtype_catalogues,mixedOnly = TRUE)
+                if(mtype_catalogues == "subs"){
+                  combinedSigs <- cbind(RefSigv1_subs,all_organ_sigs_subs)
+                  signatures <- combinedSigs[,convertedNames,drop=F]
+                }else {
+                  combinedSigs <- cbind(RefSigv1_rearr,all_organ_sigs_rearr)
+                  signatures <- combinedSigs[,convertedNames,drop=F]
+                }
               }
             }
-
           }else if(mtype_catalogues == "DNV"){
             # ---
           }else{
