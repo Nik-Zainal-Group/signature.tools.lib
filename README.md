@@ -40,6 +40,10 @@ the most important functions is given below.
 
 <a name="version"></a>
 
+2.5.1
+
+- fixes and improvements
+
 2.5.0
 
 - added support for the new indels catalogues (Koh et al, 2025) and added the package ```indelsig.tools.lib``` as a dependency
