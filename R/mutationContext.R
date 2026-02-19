@@ -18,7 +18,7 @@
 #' @param fiveprime if specified, filter mutations according to specific 3': C, A, T, G. Used only if mtype is specified
 #' @param context_length number of nucleotides on the 5' and 3' to consider
 #' @param genomev genome version, hg19 or hg38
-#' @return table of counts of base contexts
+#' @return table of counts of base contexts, counts of 5' and 3' n-mers
 #' @export
 findContextSNV <- function(snv_table,
                            mtype = NULL,
@@ -99,13 +99,43 @@ findContextSNV <- function(snv_table,
     }
   }
   
+  # some stats on recurrence of specific patterns
+  five_prime_nmers_count <- unclass(sort(table(five_prime),decreasing = T))
+  five_prime_possiblenmers <- 4**context_length
+  if(!is.null(fiveprime)) five_prime_possiblenmers <- five_prime_possiblenmers/4
+  five_prime_nmers_freq <- five_prime_nmers_count/sum(five_prime_nmers_count)
+  five_prime_nmers_freqFoldChangeFromExpected <- five_prime_nmers_freq*five_prime_possiblenmers
+  
+  three_prime_nmers_count <- unclass(sort(table(three_prime),decreasing = T))
+  three_prime_possiblenmers <- 4**context_length
+  if(!is.null(threeprime)) three_prime_possiblenmers <- three_prime_possiblenmers/4
+  three_prime_nmers_freq <- three_prime_nmers_count/sum(three_prime_nmers_count)
+  three_prime_nmers_freqFoldChangeFromExpected <- three_prime_nmers_freq*three_prime_possiblenmers
+  
+  five_prime_table <- data.frame(row.names = names(five_prime_nmers_count),
+                                 five_prime_nmers_count,
+                                 five_prime_nmers_freq,
+                                 five_prime_nmers_freqFoldChangeFromExpected,
+                                 stringsAsFactors = F)
+  three_prime_table <- data.frame(row.names = names(three_prime_nmers_count),
+                                  three_prime_nmers_count,
+                                  three_prime_nmers_freq,
+                                  three_prime_nmers_freqFoldChangeFromExpected,
+                                  stringsAsFactors = F)
+  
+  
   #combine
   pyrRefcount <- table(annotated_SNV$pyrwt)
   t_row <- c(0,0,0,0)
   names(t_row) <- c("C","T","A","G")
   t_row[names(pyrRefcount)] <- as.vector(pyrRefcount)
   data_table <- rbind(as.data.frame(five_prime_counts),t_row,as.data.frame(three_prime_counts))
-  return(data_table)
+  # return results
+  returnObj <- list()
+  returnObj$contextCounts <- data_table
+  returnObj$five_prime_table <- five_prime_table
+  returnObj$three_prime_table <- three_prime_table
+  return(returnObj)
 }
 
 #' plot SNV context

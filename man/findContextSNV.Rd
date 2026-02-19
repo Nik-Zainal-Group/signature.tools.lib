@@ -25,7 +25,7 @@ findContextSNV(
 \item{context_length}{number of nucleotides on the 5' and 3' to consider}
 }
 \value{
-table of counts of base contexts
+table of counts of base contexts, counts of 5' and 3' n-mers
 }
 \description{
 Given a table of SNVs, find the reference genome nucleotide bases that are at

@@ -12,6 +12,6 @@ test_that("test findContextSNV()", {
                                 mtype = "C>G",
                                 genomev = "hg19")
   
-  expect_equal(res_context$C,c(57,53,230,63,39))
+  expect_equal(res_context$contextCounts$C,c(57,53,230,63,39))
   
 })
