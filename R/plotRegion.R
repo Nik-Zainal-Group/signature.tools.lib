@@ -10,13 +10,23 @@
 #' @param plotSNVandIndels if TRUE then plot SNV and Indels at the bottom of the plot
 #' @param SNV_vcf_file name of the vcf file containing the SNVs
 #' @param SNV_tab_file name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.
+#' @param snvs_table dataframe with SNVs, columns: chr, position, REF, ALT 
 #' @param Indels_vcf_file name of the vcf file containing the Indels
 #' @param Indels_tab_file name of the tab separated file containing the Indels. Column names should be: chr, position, REF and ALT. If Indels_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.
+#' @param snvs_table dataframe with Indels, columns: chr, position, REF, ALT 
 #' @param CNV_tab_file name of the tab separated file containing the CNVs. Column names should be: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
+#' @param CNV_table dataframe with CNVs, columns 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
+#' @param totalCNcolour colour of the total copy number segments
 #' @param SV_bedpe_file name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'	and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.
+#' @param sv_table dataframe containing the SVs, bedpe format. Columns: see SV_bedpe_file parameter description.
 #' @param plot_title title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.
-#' @param genome.v genome version to use, either hg19 or hg38
 #' @param spreadSVlabels when one of the two structural variant breakpoints is not in the region, it's location is written as text above the location of the breakpoint that is in the region. If spreadSVlabels is TRUE, all these text labels will be spread out evenly, which is useful if a lot of labels are close to each other and overlapping.
+#' @param backgroundHighlighting_table table with columns chr, start, end. For each row draw a rectangle in the background to highlight a region
+#' @param backgroundHighlighting_colour colour to use for the background highlighting
+#' @param highlightDataList named list, where each element is a dataframe with positions or regions to plot. Positions columns: chr, position. Regions columns: chr, start, end. Optionally, add a colour column to use a specific colour for each element or table
+#' @param highlightDataListColour default colour for the highlightDataList elements. You can specify individual colours in the colour column in the individual dataframes in highlightDataList
+#' @param leftmargininch left margin of plot in inch, default is 1
+#' @param genome.v genome version to use, either hg19 or hg38
 #' @param debug if TRUE, show debug guidelines and grid when plotting (default is FALSE)
 #' @return all computed results, like catalogues and clustering regions, will be returned
 #' @export
@@ -34,10 +44,16 @@ plotRegion <- function(outfilename,
                        indels_table = NULL,
                        CNV_tab_file = NULL,
                        CNV_table = NULL,
+                       totalCNcolour = "#9ACD32E6",
                        SV_bedpe_file = NULL,
                        sv_table = NULL,
                        plot_title = NULL,
                        spreadSVlabels = TRUE,
+                       backgroundHighlighting_table=NULL,
+                       backgroundHighlighting_colour="lightgrey",
+                       highlightDataList = NULL,
+                       highlightDataListColour = "#999999",
+                       leftmargininch = 1,
                        genome.v = "hg19",
                        debug=FALSE){
   
@@ -230,6 +246,9 @@ plotRegion <- function(outfilename,
   }else{
     ploty <- 6.5 - 1.75
   }
+  if(!is.null(highlightDataList)){
+    ploty <- ploty + 0.25*length(highlightDataList)
+  }
   
   debug_grid_gap <- 1
   debug_grid_tick <- 0.05
@@ -286,23 +305,34 @@ plotRegion <- function(outfilename,
   # plot the SNVs at the bottom
   if(plotSNVandIndels){
     placePanel(where = c(0,0),width = 14,height =6.5)
-    par(mai=c(1,1,4,0.5))
-    plot(x = snvs_classified$position[-1]/1e6,
-         y = log10(snvs_classified$distPrev[-1]),
-         xlim = c(rstart/1e6,rend/1e6),
-         ylim = c(0,8),
-         las=1,
-         xaxs="i",
-         pch=16,
-         col=snvcolours[paste0(snvs_classified$pyrwt,">",snvs_classified$pyrmut)],
-         xlab = paste0("chromosome ",xlab," (Mb)"),
-         ylab = "log10(IMD)")
+    par(mai=c(1,leftmargininch,4,0.5))
+    if(!is.null(snvs_classified)){
+      plot(x = snvs_classified$position[-1]/1e6,
+           y = log10(snvs_classified$distPrev[-1]),
+           xlim = c(rstart/1e6,rend/1e6),
+           ylim = c(0,8),
+           las=1,
+           xaxs="i",
+           pch=16,
+           col=snvcolours[paste0(snvs_classified$pyrwt,">",snvs_classified$pyrmut)],
+           xlab = paste0("chromosome ",xlab," (Mb)"),
+           ylab = "log10(IMD)")
+    }else{
+      plot(x = NULL,
+           type="n",
+           xlim = c(rstart/1e6,rend/1e6),
+           ylim = c(0,8),
+           las=1,
+           xaxs="i",
+           xlab = paste0("chromosome ",xlab," (Mb)"),
+           ylab = "log10(IMD)")
+    }
     if(debug) drawDebugBox(1)
     
     #plot indels
     indels_colours <- getIndelsClassColours()
     placePanel(where = c(0,2.5),width = 14,height =0.25)
-    par(mai=c(0,1,0,0.5))
+    par(mai=c(0,leftmargininch,0,0.5))
     plot(x = NULL,
          xlim = c(rstart,rend),
          ylim = c(0,1),
@@ -326,8 +356,100 @@ plotRegion <- function(outfilename,
       }
     }
     if(debug) drawDebugBox(1)
+    
   }
-
+  
+  # add the highlight data
+  highlightdata_height <- 0
+  if(!is.null(highlightDataList)){
+    highlightdata_height <- 0.25*length(highlightDataList)
+    startfrompos <- 1
+    startfromheight <- 2.75
+    if(!plotSNVandIndels){
+      # place first panel at the bottom
+      placePanel(where = c(0,0),width = 14,height = 1.25)
+      par(mai=c(1,leftmargininch,0,0.5))
+      plot(x = NULL,
+           xlim = c(rstart/1e6,rend/1e6),
+           ylim = c(0,1),
+           xaxs="i",
+           xaxt="n",
+           yaxt="n",
+           xlab = paste0("chromosome ",xlab," (Mb)"),
+           ylab = "")
+      mtext(text = names(highlightDataList)[1],side=2,las=1,line=2.2)
+      currentData <- highlightDataList[[1]][highlightDataList[[1]]$chr==chr,,drop=F]
+      if(nrow(currentData)>0){
+        for(i in 1:nrow(currentData)){
+          # i <- 1
+          usecol <- highlightDataListColour
+          # check for colour
+          if("colour" %in% colnames(currentData)) usecol <- highlightDataListColour[[1]]$colour[i]
+          # plot according to data type
+          if("position" %in% colnames(currentData)){
+            lines(x=c(currentData$position[i]/1e6,
+                      currentData$position[i]/1e6),
+                  y=c(0,1),
+                  lwd=2,
+                  col=usecol)
+          }else if(all(c("start","end") %in% colnames(currentData))){
+            rect(border = NA,
+                 xleft = currentData$start[i]/1e6,
+                 xright = currentData$end[i]/1e6,
+                 ybottom = 0,
+                 ytop = 1,
+                 col=usecol)
+          }
+        }
+      }
+      startfrompos <- 2
+      startfromheight <- 1.25
+    }
+    
+    # now let's loop on the remaining tables
+    if(length(highlightDataList)>=startfrompos){
+      for(n in startfrompos:length(highlightDataList)){
+        # place the panel for plotting
+        placePanel(where = c(0,startfromheight),width = 14,height = 0.25)
+        par(mai=c(0,leftmargininch,0,0.5))
+        plot(x = NULL,
+             xlim = c(rstart/1e6,rend/1e6),
+             ylim = c(0,1),
+             xaxs="i",
+             xaxt="n",
+             yaxt="n",
+             xlab = "",
+             ylab = "")
+        mtext(text = names(highlightDataList)[n],side=2,las=1,line=2.2)
+        currentData <- highlightDataList[[n]][highlightDataList[[n]]$chr==chr,,drop=F]
+        if(nrow(currentData)>0){
+          for(i in 1:nrow(currentData)){
+            # i <- 1
+            usecol <- highlightDataListColour
+            # check for colour
+            if("colour" %in% colnames(currentData)) usecol <- highlightDataListColour[[n]]$colour[i]
+            # plot according to data type
+            if("position" %in% colnames(currentData)){
+              lines(x=c(currentData$position[i]/1e6,
+                        currentData$position[i]/1e6),
+                    y=c(0,1),
+                    lwd=2,
+                    col=usecol)
+            }else if(all(c("start","end") %in% colnames(currentData))){
+              rect(border = NA,
+                   xleft = currentData$start[i]/1e6,
+                   xright = currentData$end[i]/1e6,
+                   ybottom = 0,
+                   ytop = 1,
+                   col=usecol)
+            }
+          }
+        }
+        startfromheight <- startfromheight+0.25
+      }
+    }
+    
+  }
   
   # plot copy numbers
   max_CN <- 2
@@ -338,11 +460,11 @@ plotRegion <- function(outfilename,
     }
   }
   
-  totalCNcolour <- "#9ACD32E6"
+  totalCNcolour <- totalCNcolour
   
   if(plotSNVandIndels){
-    placePanel(where = c(0,2.75),width = 14,height = 1)
-    par(mai=c(0,1,0,0.5))
+    placePanel(where = c(0,2.75+highlightdata_height),width = 14,height = 1)
+    par(mai=c(0,leftmargininch,0,0.5))
     plot(x = NULL,
          xlim = c(rstart,rend)/1e6,
          ylim = c(0,max_CN),
@@ -352,29 +474,44 @@ plotRegion <- function(outfilename,
          xlab = "",
          ylab = "Total CN")
   }else{
-    placePanel(where = c(0,0),width = 14,height = 2)
-    par(mai=c(1,1,0,0.5))
-    plot(x = NULL,
-         xlim = c(rstart,rend)/1e6,
-         ylim = c(0,max_CN),
-         las=1,
-         xaxs="i",
-         xlab = paste0("chromosome ",xlab," (Mb)"),
-         ylab = "Total CN")
+    if(highlightdata_height==0){
+      placePanel(where = c(0,0),width = 14,height = 2)
+      par(mai=c(1,leftmargininch,0,0.5))
+      plot(x = NULL,
+           xlim = c(rstart,rend)/1e6,
+           ylim = c(0,max_CN),
+           las=1,
+           xaxs="i",
+           xlab = paste0("chromosome ",xlab," (Mb)"),
+           ylab = "Total CN")
+    }else{
+      placePanel(where = c(0,highlightdata_height+1),width = 14,height = 1)
+      par(mai=c(0,leftmargininch,0,0.5))
+      plot(x = NULL,
+           xlim = c(rstart,rend)/1e6,
+           ylim = c(0,max_CN),
+           las=1,
+           xaxs="i",
+           xaxt="n",
+           xlab = "",
+           ylab = "Total CN")
+    }
+
   }
-
   
-  if(!is.null(CNV_table)){
-    if(nrow(CNV_table)>0){
-
-      for (i in 1:nrow(CNV_table)) {
-        # i <- 1
-        lines(x = c(CNV_table$chromStart[i],
-                    CNV_table$chromEnd[i])/1e6,
-              y=c(CNV_table$total.copy.number.inTumour[i],
-                  CNV_table$total.copy.number.inTumour[i]),
-              col=totalCNcolour,
-              lwd=2)
+  # add a background highlighting   
+  if(!is.null(backgroundHighlighting_table)){
+    for(bhi in 1:nrow(backgroundHighlighting_table)){
+      bhchr <- backgroundHighlighting_table$chr[bhi]
+      bhstart <- backgroundHighlighting_table$start[bhi]
+      bhend <- backgroundHighlighting_table$end[bhi]
+      if(bhchr==chr){
+        rect(xleft = bhstart/1e6,
+             ybottom = 0,
+             xright = bhend/1e6,
+             ytop = max_CN,
+             col = backgroundHighlighting_colour,
+             border = NA)
       }
     }
   }
@@ -383,11 +520,11 @@ plotRegion <- function(outfilename,
   # placePanel(where = c(0,0),width = 14,height =7)
   # par(mai=c(1,1,4,0.5))
   if(plotSNVandIndels){
-    placePanel(where = c(0,2.75),width = 14,height = 3.75)
+    placePanel(where = c(0,2.75+highlightdata_height),width = 14,height = 3.75)
   }else{
-    placePanel(where = c(0,1),width = 14,height = 3.75)
+    placePanel(where = c(0,1+highlightdata_height),width = 14,height = 3.75)
   }
-  par(mai=c(0,1,2.75,0.5))
+  par(mai=c(0,leftmargininch,2.75,0.5))
   plot(x = NULL,
        xlim = c(rstart,rend),
        ylim = c(0,4),
@@ -533,6 +670,48 @@ plotRegion <- function(outfilename,
   }
   par(xpd=F)
 
+  if(plotSNVandIndels){
+    placePanel(where = c(0,2.75+highlightdata_height),width = 14,height = 1)
+    par(mai=c(0,leftmargininch,0,0.5))
+    plot(x = NULL,
+         xlim = c(rstart,rend)/1e6,
+         ylim = c(0,max_CN),
+         las=1,
+         xaxs="i",
+         xaxt="n",
+         yaxt="n",
+         xlab = "",
+         ylab = "",
+         bty="n")
+  }else{
+    placePanel(where = c(0,highlightdata_height),width = 14,height = 2)
+    par(mai=c(1,leftmargininch,0,0.5))
+    plot(x = NULL,
+         xlim = c(rstart,rend)/1e6,
+         ylim = c(0,max_CN),
+         las=1,
+         xaxs="i",
+         xaxt="n",
+         yaxt="n",
+         xlab = paste0(""),
+         ylab = "")
+  }
+  
+  
+  if(!is.null(CNV_table)){
+    if(nrow(CNV_table)>0){
+      
+      for (i in 1:nrow(CNV_table)) {
+        # i <- 1
+        lines(x = c(CNV_table$chromStart[i],
+                    CNV_table$chromEnd[i])/1e6,
+              y=c(CNV_table$total.copy.number.inTumour[i],
+                  CNV_table$total.copy.number.inTumour[i]),
+              col=totalCNcolour,
+              lwd=2)
+      }
+    }
+  }
   
   # close the file
   dev.off()

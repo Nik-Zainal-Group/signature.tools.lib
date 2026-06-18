@@ -19,10 +19,16 @@ plotRegion(
   indels_table = NULL,
   CNV_tab_file = NULL,
   CNV_table = NULL,
+  totalCNcolour = "#9ACD32E6",
   SV_bedpe_file = NULL,
   sv_table = NULL,
   plot_title = NULL,
   spreadSVlabels = TRUE,
+  backgroundHighlighting_table = NULL,
+  backgroundHighlighting_colour = "lightgrey",
+  highlightDataList = NULL,
+  highlightDataListColour = "#999999",
+  leftmargininch = 1,
   genome.v = "hg19",
   debug = FALSE
 )
@@ -44,17 +50,35 @@ plotRegion(
 
 \item{SNV_tab_file}{name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
 
+\item{snvs_table}{dataframe with Indels, columns: chr, position, REF, ALT}
+
 \item{Indels_vcf_file}{name of the vcf file containing the Indels}
 
 \item{Indels_tab_file}{name of the tab separated file containing the Indels. Column names should be: chr, position, REF and ALT. If Indels_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
 
 \item{CNV_tab_file}{name of the tab separated file containing the CNVs. Column names should be: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
 
+\item{CNV_table}{dataframe with CNVs, columns 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
+
+\item{totalCNcolour}{colour of the total copy number segments}
+
 \item{SV_bedpe_file}{name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'    and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.}
+
+\item{sv_table}{dataframe containing the SVs, bedpe format. Columns: see SV_bedpe_file parameter description.}
 
 \item{plot_title}{title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.}
 
 \item{spreadSVlabels}{when one of the two structural variant breakpoints is not in the region, it's location is written as text above the location of the breakpoint that is in the region. If spreadSVlabels is TRUE, all these text labels will be spread out evenly, which is useful if a lot of labels are close to each other and overlapping.}
+
+\item{backgroundHighlighting_table}{table with columns chr, start, end. For each row draw a rectangle in the background to highlight a region}
+
+\item{backgroundHighlighting_colour}{colour to use for the background highlighting}
+
+\item{highlightDataList}{named list, where each element is a dataframe with positions or regions to plot. Positions columns: chr, position. Regions columns: chr, start, end. Optionally, add a colour column to use a specific colour for each element or table}
+
+\item{highlightDataListColour}{default colour for the highlightDataList elements. You can specify individual colours in the colour column in the individual dataframes in highlightDataList}
+
+\item{leftmargininch}{left margin of plot in inch, default is 1}
 
 \item{genome.v}{genome version to use, either hg19 or hg38}
 
