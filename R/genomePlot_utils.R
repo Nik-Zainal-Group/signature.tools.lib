@@ -113,7 +113,7 @@ info.data <- VariantAnnotation::info(vcf_data)
 rgs <- IRanges::ranges(vcf_data)
 starts <- BiocGenerics::start(rgs)
 ends <-  BiocGenerics::end(rgs)
-chroms <- GenomeInfoDb::seqnames(vcf_data)
+chroms <- vcf_data@rowRanges@seqnames
 if (genome.v=="mm10"){
   chroms <- paste('chr',chroms,sep='')
 }

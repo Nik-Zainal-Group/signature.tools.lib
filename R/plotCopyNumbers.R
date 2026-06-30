@@ -55,16 +55,16 @@ plotCopyNumbers <- function(sv_df,
   }
   if(is.null(plottitle)) plottitle <- sample_name
   if(genome.v=="hg38"){
-    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Hsapiens.UCSC.hg38::Hsapiens)[1:24]
+    chromosome_lengths <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens@seqinfo@seqlengths[1:24]
     chrom_names <- substr(names(chromosome_lengths),4,5)
   }else if(genome.v=="hg19"){
-    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Hsapiens.1000genomes.hs37d5::hs37d5)[1:24]
+    chromosome_lengths <- BSgenome.Hsapiens.1000genomes.hs37d5::hs37d5@seqinfo@seqlengths[1:24]
     chrom_names <- names(chromosome_lengths)
   }else if(genome.v=="mm10"){
-    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10)[1:21]
+    chromosome_lengths <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10@seqinfo@seqlengths[1:21]
     chrom_names <- substr(names(chromosome_lengths),4,5)
   }else if(genome.v=="canFam3"){
-    chromosome_lengths <- GenomeInfoDb::seqlengths(BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3)[1:39]
+    chromosome_lengths <- BSgenome.Cfamiliaris.UCSC.canFam3::BSgenome.Cfamiliaris.UCSC.canFam3@seqinfo@seqlengths[1:39]
     chrom_names <- substr(names(chromosome_lengths),4,5)
   }else{
     message("[error plotCopyNumbers] genome version ",genome.v," not supported.")

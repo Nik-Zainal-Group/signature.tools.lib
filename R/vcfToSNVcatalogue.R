@@ -92,7 +92,7 @@ vcfToSNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   ends <-  BiocGenerics::end(rgs)
   
   #Check chromosomes exist
-  chroms <- GenomeInfoDb::seqnames(vcf_data)
+  chroms <- vcf_data@rowRanges@seqnames
 
   if (length(chroms)==0){ 
     # return early an empty catalogue

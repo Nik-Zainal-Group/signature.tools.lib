@@ -307,7 +307,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   ends <-  BiocGenerics::end(rgs)
 
   #Check chromosomes exist
-  chroms <- as.character(GenomeInfoDb::seqnames(vcf_data))
+  chroms <- as.character(vcf_data@rowRanges@seqnames)
 
   if (length(chroms)==0){
     stop("[vcfToDNVcatalogue error] Input vcf does not contain variants ", vcfFilename)

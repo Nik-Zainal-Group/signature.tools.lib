@@ -111,7 +111,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
     
     min.position <- BiocGenerics::start(indel.data)
     max.position <- BiocGenerics::start(indel.data) + indel.length 
-    indel.chr <- as.character(GenomeInfoDb::seqnames(indel.data))
+    indel.chr <- as.character(indel.data@rowRanges@seqnames)
 
     if (genome.v=="hg38" || genome.v=="mm10") {
       if(length(intersect(indel.chr,expected_chroms))==0) indel.chr <- paste0("chr",indel.chr)
@@ -128,7 +128,7 @@ prepare.indel.df <- function(indel.data,genomeSeq,genome.v,expected_chroms) {
     
 
     indel.df <- data.frame(
-      chr=as.character(GenomeInfoDb::seqnames(indel.data)),
+      chr=as.character(indel.data@rowRanges@seqnames),
       pos=BiocGenerics::start(IRanges::ranges(indel.data)),
       ref=as.character(SummarizedExperiment::rowRanges(indel.data)$REF),
       alt=as.character(SummarizedExperiment::rowRanges(indel.data)$ALT),
