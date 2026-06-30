@@ -270,15 +270,27 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   gr <- GenomicRanges::GRanges(genomeSeq@seqinfo)
 
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
-  if (genome.v=="hg38" || genome.v=="mm10") {
-    if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)
+  if (genome.v=="hg38" || genome.v=="mm10" || genome.v=="mm10") {
+    if(!startsWith(vcf_seqnames,prefix = "chr")) vcf_seqnames <- paste0("chr",vcf_seqnames)
   }
 
-  gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
-
+  # gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+  target_chroms <- intersect(vcf_seqnames,expected_chroms)
+  gr <- gr[as.character(gr@seqnames) %in% target_chroms]
+  
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
-  if (genome.v=="hg38" || genome.v=="mm10") {
-    if(length(intersect(vcf_seqnames,expected_chroms))==0) GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  if (genome.v=="hg38" || genome.v=="mm10" || genome.v=="mm10") {
+    if(!startsWith(vcf_seqnames,prefix = "chr")) {
+      # GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+      new_names <- sub("chr", "", gr@seqnames)
+      gr <- GenomicRanges::GRanges(
+        seqnames = new_names,
+        ranges   = gr@ranges,
+        strand   = gr@strand,
+        mcols    = gr@elementMetadata
+      )
+      names(gr) <- new_names
+    }
   }
 
   # load the vcf file

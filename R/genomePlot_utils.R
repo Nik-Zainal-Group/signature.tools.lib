@@ -68,12 +68,22 @@ if(genome.v=="hg19"){
 
 # read only chr seqnames from VCF, not contigs
 gr <- GenomicRanges::GRanges(genomeSeq@seqinfo)
-if (genome.v=="hg19" || genome.v=="mm10") {
-  GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+if (genome.v=="hg19" || genome.v=="mm10" || genome.v=="canFam3") {
+  # GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
+  new_names <- sub("chr", "", gr@seqnames)
+  gr <- GenomicRanges::GRanges(
+    seqnames = new_names,
+    ranges   = gr@ranges,
+    strand   = gr@strand,
+    mcols    = gr@elementMetadata
+  )
+  names(gr) <- new_names
 }
 vcf_seqnames <- Rsamtools::headerTabix(myFile)$seqnames 
 
-gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+# gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
+target_chroms <- intersect(vcf_seqnames,expected_chroms)
+gr <- gr[as.character(gr@seqnames) %in% target_chroms]
 
 # load the vcf file
 vcf_data <- VariantAnnotation::readVcf(myFile, genome.v, gr)
