@@ -29,7 +29,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,
   }
 
   # read only chr seqnames from VCF, not contigs
-  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
+  gr <- GenomicRanges::GRanges(genomeSeq@seqinfo)
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
   if (genome.v=="hg38" || genome.v=="mm10") {
     if(length(intersect(vcf_seqnames,expected_chroms))==0) vcf_seqnames <- paste0("chr",vcf_seqnames)

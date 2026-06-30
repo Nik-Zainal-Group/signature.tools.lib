@@ -65,7 +65,7 @@ getChromosomesBedTable <- function(genomev){
   }
   
   # get chrom lengths info
-  chromsTable <- as.data.frame(GenomeInfoDb::seqinfo(genomeSeq))
+  chromsTable <- as.data.frame(genomeSeq@seqinfo)
   chromsTable <- chromsTable[expected_chroms,]
   
   # set up table

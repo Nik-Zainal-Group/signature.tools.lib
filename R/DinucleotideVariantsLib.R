@@ -267,7 +267,7 @@ vcfToDNVcatalogue <- function(vcfFilename, genome.v="hg19") {
   }
 
   # read only chr seqnames from VCF, not contigs
-  gr <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(genomeSeq))
+  gr <- GenomicRanges::GRanges(genomeSeq@seqinfo)
 
   vcf_seqnames <- Rsamtools::headerTabix(vcfFilename)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10") {
