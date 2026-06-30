@@ -212,7 +212,7 @@ fromVcfToTable <- function(vcfFilename,
   rd <- SummarizedExperiment::rowRanges(vcf_data)
   ref <- as.character(rd$REF)
   alt <- as.character(rd$ALT)
-  chr <- as.character(GenomeInfoDb::seqnames(vcf_data))
+  chr <- as.character(vcf_data@rowRanges@seqnames)
   rgs <- IRanges::ranges(vcf_data)
   position <- BiocGenerics::start(rgs)
   muts_table <- data.frame(chr = chr,
