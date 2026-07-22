@@ -9,10 +9,14 @@ genomeChart(
   sample_name,
   SNV_vcf_file = NULL,
   SNV_tab_file = NULL,
+  snvs_table = NULL,
   Indels_vcf_file = NULL,
   Indels_tab_file = NULL,
+  indels_table = NULL,
   CNV_tab_file = NULL,
+  CNV_table = NULL,
   SV_bedpe_file = NULL,
+  sv_table = NULL,
   plot_title = NULL,
   runKataegis = TRUE,
   genome.v = "hg19",
@@ -28,13 +32,21 @@ genomeChart(
 
 \item{SNV_tab_file}{name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
 
+\item{snvs_table}{dataframe with SNVs, columns: chr, position, REF, ALT}
+
 \item{Indels_vcf_file}{name of the vcf file containing the Indels}
 
 \item{Indels_tab_file}{name of the tab separated file containing the Indels. Column names should be: chr, position, REF and ALT. If Indels_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
 
+\item{indels_table}{dataframe with Indels, columns: chr, position, REF, ALT}
+
 \item{CNV_tab_file}{name of the tab separated file containing the CNVs. Column names should be: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
 
+\item{CNV_table}{dataframe with CNVs, columns 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
+
 \item{SV_bedpe_file}{name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'    and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.}
+
+\item{sv_table}{dataframe containing the SVs, bedpe format. Columns: see SV_bedpe_file parameter description.}
 
 \item{plot_title}{title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.}
 

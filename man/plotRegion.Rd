@@ -50,11 +50,13 @@ plotRegion(
 
 \item{SNV_tab_file}{name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
 
-\item{snvs_table}{dataframe with Indels, columns: chr, position, REF, ALT}
+\item{snvs_table}{dataframe with SNVs, columns: chr, position, REF, ALT}
 
 \item{Indels_vcf_file}{name of the vcf file containing the Indels}
 
 \item{Indels_tab_file}{name of the tab separated file containing the Indels. Column names should be: chr, position, REF and ALT. If Indels_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.}
+
+\item{indels_table}{dataframe with Indels, columns: chr, position, REF, ALT}
 
 \item{CNV_tab_file}{name of the tab separated file containing the CNVs. Column names should be: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'}
 

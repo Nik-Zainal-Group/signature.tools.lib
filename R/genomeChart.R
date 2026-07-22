@@ -11,10 +11,14 @@
 #' @param sample_name name of sample
 #' @param SNV_vcf_file name of the vcf file containing the SNVs
 #' @param SNV_tab_file name of the tab separated file containing the SNVs. Column names should be: chr, position, REF and ALT. If SNV_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.
+#' @param snvs_table dataframe with SNVs, columns: chr, position, REF, ALT 
 #' @param Indels_vcf_file name of the vcf file containing the Indels
 #' @param Indels_tab_file name of the tab separated file containing the Indels. Column names should be: chr, position, REF and ALT. If Indels_vcf_file is also specified, these variants will be ignored and the variants in the vcf file will be used instead.
+#' @param indels_table dataframe with Indels, columns: chr, position, REF, ALT 
 #' @param CNV_tab_file name of the tab separated file containing the CNVs. Column names should be: 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
+#' @param CNV_table dataframe with CNVs, columns 'seg_no', 'Chromosome', 'chromStart', 'chromEnd', 'total.copy.number.inNormal', 'minor.copy.number.inNormal', 'total.copy.number.inTumour', 'minor.copy.number.inTumour'
 #' @param SV_bedpe_file name of the tab separated bedpe file containing the SVs. The file should contain a rearrangement for each row (two breakpoint positions should be on one row as determined by a pair of mates of paired-end sequencing) and should already be filtered according to the user preference, as all rearrangements in the file will be used and no filter will be applied. The files should contain a header in the first line with the following columns: "chrom1", "start1", "end1", "chrom2", "start2", "end2" and "sample" (sample name). In addition, either two columns indicating the strands of the mates, "strand1" (+ or -) and "strand2" (+ or -), or one column indicating the structural variant class, "svclass": translocation, inversion, deletion, tandem-duplication. The column "svclass" should correspond to (Sanger BRASS convention): inversion (strands +/- or -/+ and mates on the same chromosome), deletion (strands +/+ and mates on the same chromosome), tandem-duplication (strands -/- and mates on the same chromosome), translocation (mates are on different chromosomes). In addition, columns 'non-template'	and 'micro-homology' can be specified, including the non-templated insertion or micro-homology deletion sequence, which will be used to build an SV junctions catalogue.
+#' @param sv_table dataframe containing the SVs, bedpe format. Columns: see SV_bedpe_file parameter description.
 #' @param plot_title title of the plot. If NULL, then the sample_name will be used as title. Use "", the empty string, to have no title.
 #' @param runKataegis whether or not to run the kataegis algorithm (default is TRUE)
 #' @param genome.v genome version to use, either hg19 or hg38
@@ -25,26 +29,31 @@ genomeChart <- function(outfilename,
                         sample_name,
                         SNV_vcf_file = NULL,
                         SNV_tab_file = NULL,
+                        snvs_table = NULL,
                         Indels_vcf_file = NULL,
                         Indels_tab_file = NULL,
+                        indels_table = NULL,
                         CNV_tab_file = NULL,
+                        CNV_table = NULL,
                         SV_bedpe_file = NULL,
+                        sv_table = NULL,
                         plot_title = NULL,
                         runKataegis = TRUE,
                         genome.v = "hg19",
                         debug=FALSE){
   
   # set up some variables
-  snvs_table <- NULL
   sbs_obj <- NULL
   dbs_obj <- NULL
   indels_obj <- NULL
   indels_obj89 <- NULL
-  CNV_table <- NULL
   sv_obj <- NULL
   
   # Loading SNVs if available
-  if(!is.null(SNV_vcf_file)){
+  if(!is.null(snvs_table) & !is.null(SNV_vcf_file)){
+    message("[warning genomeChart] SNV_vcf_file ignored because SNVs already loaded from snvs_table input parameter.")
+  }
+  if(!is.null(SNV_vcf_file) & is.null(snvs_table)){
     if (file.exists(SNV_vcf_file)){
       snvs_table <- fromVcfToTable(vcfFilename = SNV_vcf_file,
                                    genome.v = genome.v)
@@ -69,7 +78,7 @@ genomeChart <- function(outfilename,
           SNV_tab_file <- NULL
         }
       }else{
-        message("[warning genomeChart] SNV_tab_file ignored because SNVs already loaded from SNV_vcf_file.")
+        message("[warning genomeChart] SNV_tab_file ignored because SNVs already loaded from SNV_vcf_file or from snvs_table input parameter.")
         SNV_tab_file <- NULL
       }
     }else{
@@ -79,7 +88,7 @@ genomeChart <- function(outfilename,
   }
   
   # Loading Indels if available
-  if(!is.null(Indels_vcf_file)){
+  if(!is.null(Indels_vcf_file) & is.null(indels_table)){
     if (file.exists(Indels_vcf_file)){
       indels_obj <- vcfToIndelsClassification(indelsVCF.file = Indels_vcf_file,
                                               sampleID = sample_name,
@@ -97,7 +106,7 @@ genomeChart <- function(outfilename,
       Indels_vcf_file <- NULL
     }
   }
-  if(!is.null(Indels_tab_file)){
+  if(!is.null(Indels_tab_file) & is.null(indels_table)){
     if (file.exists(Indels_tab_file)){
       if(is.null(indels_obj)){
         indel_tab = read.table(file = Indels_tab_file,sep = "\t",header = TRUE,
@@ -122,9 +131,22 @@ genomeChart <- function(outfilename,
       Indels_tab_file <- NULL
     }
   }
+  if(!is.null(indels_table)){
+    indels_obj <- tabToIndelsClassification(indel.data = indels_table,
+                                            sampleID = sample_name,
+                                            genome.v = genome.v)
+    if(is.null(indels_obj)){
+      message("[warning genomeChart] indels_table input parameter contains no valid Indels. Ignoring and moving on.")
+      Indels_tab_file <- NULL
+    }
+    indels_table$Sample <- sample_name
+    indels_obj89 <- tabToIndelsCatalogue89(indels = indels_table,
+                                           useHighSpecificityFilter = TRUE,
+                                           genome.v = genome.v)
+  }
   
   # Loading CNV file
-  if(!is.null(CNV_tab_file)){
+  if(!is.null(CNV_tab_file) & is.null(CNV_table)){
     if (file.exists(CNV_tab_file)){
       CNV_table <- read.table(file = CNV_tab_file,sep = "\t",header = TRUE,
                               check.names = FALSE,stringsAsFactors = FALSE)
@@ -135,19 +157,22 @@ genomeChart <- function(outfilename,
   }
   
   # Loading SV bedpe file
-  if(!is.null(SV_bedpe_file)){
+  if(!is.null(SV_bedpe_file) & is.null(sv_table)){
     if (file.exists(SV_bedpe_file)){
-      sv_obj <- bedpeToRearrCatalogue(sv_bedpe = readTable(file = SV_bedpe_file))
-      colnames(sv_obj$rearr_catalogue) <- "SV catalogue"
-      if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junction catalogue"
+      sv_table <- readTable(file = SV_bedpe_file)
     }else{
       message("[warning genomeChart] SV_bedpe_file file not found: ",SV_bedpe_file,". Ignoring and moving on.")
       SV_bedpe_file <- NULL
     }
   }
+  if(!is.null(sv_table)){
+    sv_obj <- bedpeToRearrCatalogue(sv_bedpe = sv_table)
+    colnames(sv_obj$rearr_catalogue) <- "SV catalogue"
+    if(!is.null(sv_obj$junctions_catalogue)) colnames(sv_obj$junctions_catalogue) <- "SV junction catalogue"
+  }
   
   # check if there is anything at all to plot
-  if(is.null(SNV_vcf_file) & is.null(SNV_tab_file) & is.null(Indels_vcf_file) & is.null(Indels_tab_file) & is.null(CNV_tab_file) & is.null(SV_bedpe_file)){
+  if(is.null(snvs_table) & is.null(indels_obj) & is.null(snv_table) & is.null(sv_table)){
     message("[error genomeChart] no data found, nothing to plot. Quit.")
     return(NULL)
   }
