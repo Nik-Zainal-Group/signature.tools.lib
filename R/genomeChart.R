@@ -172,7 +172,7 @@ genomeChart <- function(outfilename,
   }
   
   # check if there is anything at all to plot
-  if(is.null(snvs_table) & is.null(indels_obj) & is.null(snv_table) & is.null(sv_table)){
+  if(is.null(snvs_table) & is.null(indels_obj) & is.null(CNV_table) & is.null(sv_table)){
     message("[error genomeChart] no data found, nothing to plot. Quit.")
     return(NULL)
   }

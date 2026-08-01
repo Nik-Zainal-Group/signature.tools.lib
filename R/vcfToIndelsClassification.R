@@ -32,7 +32,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,
   gr <- GenomicRanges::GRanges(genomeSeq@seqinfo)
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames 
   if (genome.v=="hg38" || genome.v=="mm10" || genome.v=="canFam3") {
-    if(!startsWith(vcf_seqnames,prefix = "chr")) vcf_seqnames <- paste0("chr",vcf_seqnames)
+    if(any(!startsWith(vcf_seqnames,prefix = "chr"))) vcf_seqnames <- paste0("chr",vcf_seqnames)
   }
   
   # gr <- GenomeInfoDb::keepSeqlevels(gr,intersect(vcf_seqnames,expected_chroms),pruning.mode = "coarse")
@@ -41,7 +41,7 @@ vcfToIndelsClassification <- function(indelsVCF.file,
     
   vcf_seqnames <- Rsamtools::headerTabix(indelsVCF.file)$seqnames
   if (genome.v=="hg38" || genome.v=="mm10" || genome.v=="canFam3") {
-    if(!startsWith(vcf_seqnames,prefix = "chr")) {
+    if(any(!startsWith(vcf_seqnames,prefix = "chr"))) {
       # GenomeInfoDb::seqlevels(gr) <- sub("chr", "", GenomeInfoDb::seqlevels(gr))
       new_names <- sub("chr", "", gr@seqnames)
       gr <- GenomicRanges::GRanges(
