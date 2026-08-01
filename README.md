@@ -40,7 +40,7 @@ the most important functions is given below.
 
 <a name="version"></a>
 
-2.5.1
+2.5.1 - 2.5.2
 
 - fixes and improvements
 
